@@ -1,9 +1,0 @@
-ALTER TABLE users
-ADD COLUMN first_name VARCHAR(100),
-ADD COLUMN last_name VARCHAR(100),
-ADD COLUMN age INTEGER,
-ADD COLUMN address TEXT,
-ADD COLUMN occupation VARCHAR(100);
-
-GRANT ALL PRIVILEGES ON TABLE users TO family_admin;
-GRANT USAGE, SELECT ON SEQUENCE users_id_seq TO family_admin;

@@ -1,5 +1,0 @@
-ALTER TABLE events
-ADD COLUMN IF NOT EXISTS is_private BOOLEAN DEFAULT false;
-
-GRANT ALL PRIVILEGES ON TABLE events TO family_admin;
-GRANT USAGE, SELECT ON SEQUENCE events_id_seq TO family_admin;
