@@ -1,0 +1,12 @@
+.auth-link {
+    text-align: center;
+    font-size: 13px;
+    color: var(--text-secondary);
+  }
+  
+  .auth-link a {
+    color: var(--btn-color);
+    font-weight: 600;
+  }
+  
+  .auth-link a:hover { text-decoration: underline; }

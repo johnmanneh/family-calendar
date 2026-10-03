@@ -1,0 +1,50 @@
+.time-roller {
+  display: inline-flex;
+  align-items: center;
+  gap: 0;
+  background: rgba(0, 0, 0, 0.04);
+  border-radius: 5px;
+  padding: 0 3px;
+}
+
+.time-roller-drum {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  user-select: none;
+}
+
+.time-roller-arrow {
+  background: none;
+  border: none;
+  color: #c7c7cc;
+  font-size: 5px;
+  cursor: pointer;
+  padding: 2px 4px;
+  line-height: 1;
+  transition: color 0.12s;
+}
+
+.time-roller-arrow:hover {
+  color: #1d1d1f;
+}
+
+.time-roller-value {
+  font-size: 11px;
+  font-weight: 600;
+  color: #1d1d1f;
+  font-variant-numeric: tabular-nums;
+  font-family: -apple-system, "SF Pro Text", system-ui, sans-serif;
+  line-height: 1;
+  min-width: 16px;
+  text-align: center;
+}
+
+.time-roller-colon {
+  color: #1d1d1f;
+  font-size: 11px;
+  font-weight: 600;
+  font-family: -apple-system, "SF Pro Text", system-ui, sans-serif;
+  padding: 0 1px;
+  line-height: 1;
+}

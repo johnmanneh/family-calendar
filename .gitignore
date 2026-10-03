@@ -1,0 +1,9 @@
+# Kept local only — credentials, system design, AI working rules
+docs/ARCHITECTURE.md
+CLAUDE.md
+
+# macOS
+.DS_Store
+
+# Screenshots — local only
+screenshots/

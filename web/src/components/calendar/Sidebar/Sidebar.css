@@ -1,0 +1,1102 @@
+/* ─────────────────────────────────────────
+   Sidebar shell
+───────────────────────────────────────── */
+.sidebar {
+  height: 100vh;
+  background: #f5f5f7;
+  border-right: 1px solid rgba(0,0,0,0.07);
+  overflow-y: auto;
+  overflow-x: hidden;
+  padding: 20px 0 24px;
+  display: flex;
+  flex-direction: column;
+}
+
+/* ─────────────────────────────────────────
+   Shared section wrapper
+───────────────────────────────────────── */
+.sidebar-section {
+  padding: 0 16px;
+}
+
+.sidebar-label {
+  font-size: 10px;
+  font-weight: 700;
+  letter-spacing: 1.5px;
+  color: #aeaeb2;
+  margin: 0 0 10px;
+  text-transform: uppercase;
+}
+
+/* ─────────────────────────────────────────
+   Divider
+───────────────────────────────────────── */
+.sidebar-divider {
+  height: 1px;
+  background: rgba(0,0,0,0.06);
+  margin: 18px 16px;
+}
+
+/* ─────────────────────────────────────────
+   Family header
+───────────────────────────────────────── */
+.sidebar-family {
+  padding: 0 16px 4px;
+}
+
+.sidebar-family-name {
+  font-size: 17px;
+  font-weight: 700;
+  color: #1d1d1f;
+  letter-spacing: -0.4px;
+  margin-bottom: 3px;
+}
+
+.sidebar-invite {
+  font-size: 12px;
+  color: #6e6e73;
+}
+
+.sidebar-invite strong {
+  color: var(--btn-color, #1a8fa8);
+  font-weight: 600;
+}
+
+/* ─────────────────────────────────────────
+   Member bubbles
+───────────────────────────────────────── */
+.sidebar-members-row {
+  display: grid;
+  grid-template-columns: repeat(3, 1fr);
+  gap: 12px 0;
+  margin-top: 8px;
+}
+
+.sidebar-member-bubble {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-self: center;
+  gap: 5px;
+  cursor: pointer;
+  transition: transform 0.18s ease;
+}
+
+.sidebar-member-bubble:hover {
+  transform: translateY(-2px);
+}
+
+.sidebar-member-avatar {
+  width: 40px;
+  height: 40px;
+  border-radius: 50%;
+  flex-shrink: 0;
+  object-fit: cover;
+}
+
+.sidebar-member-bubble.active .sidebar-member-avatar {
+  box-shadow: 0 0 0 3px #f5f5f7, 0 0 0 5px var(--btn-color, #1a8fa8);
+}
+
+.sidebar-member-bubble-footer {
+  display: flex;
+  align-items: center;
+  gap: 3px;
+}
+
+.sidebar-member-bubble-name {
+  font-size: 10px;
+  color: #6e6e73;
+  font-weight: 500;
+}
+
+.sidebar-member-relationship {
+  font-size: 9px;
+  color: #aeaeb2;
+  font-weight: 400;
+  line-height: 1;
+}
+
+.sidebar-member-settings-btn {
+  width: 16px;
+  height: 16px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  background: transparent;
+  border: none;
+  border-radius: 50%;
+  color: #aeaeb2;
+  cursor: pointer;
+  padding: 0;
+  line-height: 1;
+  transition: color 0.15s;
+  opacity: 0;
+}
+
+.sidebar-member-bubble:hover .sidebar-member-settings-btn,
+.sidebar-member-bubble.is-me .sidebar-member-settings-btn,
+.sidebar-member-bubble.active .sidebar-member-settings-btn {
+  opacity: 1;
+}
+
+.sidebar-member-settings-btn:hover {
+  color: var(--btn-color, #1a8fa8);
+}
+
+/* ─────────────────────────────────────────
+   Member panel
+───────────────────────────────────────── */
+.sidebar-member-panel {
+  margin-top: 12px;
+  padding: 12px;
+  background: white;
+  border-radius: 8px;
+  box-shadow: 0 1px 4px rgba(0,0,0,0.07);
+}
+
+.sidebar-member-panel-name {
+  font-size: 11px;
+  font-weight: 700;
+  letter-spacing: 0.8px;
+  text-transform: uppercase;
+  color: #aeaeb2;
+  margin-bottom: 10px;
+}
+
+.sidebar-current-user {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  margin-top: 10px;
+}
+
+.sidebar-current-user-avatar {
+  width: 38px;
+  height: 38px;
+  border-radius: 50%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 13px;
+  font-weight: 700;
+  color: white;
+  flex-shrink: 0;
+}
+
+.sidebar-current-user-name {
+  font-size: 13px;
+  font-weight: 600;
+  color: #1d1d1f;
+}
+
+.sidebar-current-user-role {
+  font-size: 11px;
+  color: #aeaeb2;
+  text-transform: capitalize;
+  margin-top: 1px;
+}
+
+/* ─────────────────────────────────────────
+   Tasks
+───────────────────────────────────────── */
+.sidebar-tasks-empty {
+  font-size: 12px;
+  color: #aeaeb2;
+  padding: 4px 0 8px;
+}
+
+.sidebar-task-list,
+.sidebar-member-tasks {
+  display: flex;
+  flex-direction: column;
+  gap: 7px;
+  margin-bottom: 10px;
+}
+
+.sidebar-task-card {
+  display: flex;
+  align-items: stretch;
+  background: transparent;
+  border-radius: 8px;
+  overflow: hidden;
+  transition: background 0.15s;
+  margin: 0 -4px;
+  padding: 0 4px;
+}
+
+.sidebar-task-card:hover {
+  background: rgba(0,0,0,0.05);
+}
+
+.sidebar-task-accent {
+  width: 4px;
+  flex-shrink: 0;
+  border-radius: 0;
+}
+
+.sidebar-task-body {
+  flex: 1;
+  padding: 10px 10px 10px 11px;
+  min-width: 0;
+}
+
+.sidebar-task-title {
+  font-size: 13px;
+  font-weight: 600;
+  color: #1d1d1f;
+  margin: 0 0 2px;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.sidebar-task-sub {
+  font-size: 11px;
+  color: #8e8e93;
+  margin: 0 0 4px;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.sidebar-task-date {
+  font-size: 11px;
+  color: #aeaeb2;
+  font-weight: 500;
+}
+
+.sidebar-task-badge-pending {
+  display: inline-block;
+  font-size: 10px;
+  font-weight: 700;
+  letter-spacing: 0.4px;
+  color: #f59e0b;
+  background: #fff8e6;
+  border-radius: 5px;
+  padding: 1px 6px;
+}
+
+.sidebar-task-complete {
+  width: 44px;
+  flex-shrink: 0;
+  background: transparent;
+  border: none;
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  position: relative;
+  opacity: 0;
+  transition: opacity 0.15s;
+}
+
+.sidebar-task-card:hover .sidebar-task-complete {
+  opacity: 1;
+}
+
+.sidebar-task-complete::after {
+  content: '';
+  width: 20px;
+  height: 20px;
+  border-radius: 50%;
+  border: 1.5px solid var(--accent, #34c759);
+  display: block;
+  transition: background 0.15s, border-color 0.15s;
+}
+
+.sidebar-task-complete:hover::after {
+  background: var(--accent, #34c759);
+}
+
+/* checkmark on hover */
+.sidebar-task-complete:hover::before {
+  content: '✓';
+  position: absolute;
+  font-size: 11px;
+  font-weight: 700;
+  color: white;
+  z-index: 1;
+}
+
+.sidebar-task-add {
+  width: calc(100% + 8px);
+  padding: 8px 0;
+  background: rgba(0,0,0,0.05);
+  border: none;
+  border-radius: 8px;
+  font-size: 13px;
+  font-weight: 500;
+  color: #aeaeb2;
+  cursor: pointer;
+  font-family: inherit;
+  text-align: center;
+  transition: background 0.15s, color 0.15s;
+  margin: 0 -4px;
+}
+
+.sidebar-task-add:hover {
+  background: rgba(0,0,0,0.09);
+  color: #6e6e73;
+}
+
+/* ─────────────────────────────────────────
+   Groups
+───────────────────────────────────────── */
+.sidebar-groups-empty {
+  font-size: 12px;
+  color: #aeaeb2;
+  margin-bottom: 8px;
+}
+
+.sidebar-group-row {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  padding: 8px 10px;
+  cursor: pointer;
+  border-radius: 8px;
+  transition: background 0.15s;
+  margin: 0 -4px;
+}
+
+.sidebar-group-row:hover {
+  background: rgba(0,0,0,0.05);
+}
+
+.sidebar-group-icon {
+  width: 34px;
+  height: 34px;
+  border-radius: 7px;
+  background: #1a8fa8;
+  color: #fff;
+  font-size: 14px;
+  font-weight: 700;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  flex-shrink: 0;
+}
+
+.sidebar-group-info {
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  gap: 1px;
+  min-width: 0;
+}
+
+.sidebar-group-name {
+  font-size: 13px;
+  font-weight: 600;
+  color: #1d1d1f;
+}
+
+.sidebar-group-meta {
+  font-size: 10px;
+  color: #aeaeb2;
+  font-weight: 500;
+}
+
+.sidebar-group-admin-badge {
+  font-size: 9px;
+  font-weight: 700;
+  background: rgba(26,143,168,0.1);
+  color: #1a8fa8;
+  padding: 2px 7px;
+  border-radius: 20px;
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
+  flex-shrink: 0;
+}
+
+.sidebar-group-delete-btn {
+  background: transparent;
+  border: none;
+  cursor: pointer;
+  font-size: 13px;
+  padding: 2px 4px;
+  border-radius: 6px;
+  opacity: 0;
+  transition: opacity 0.15s;
+  flex-shrink: 0;
+}
+
+.sidebar-group-row:hover .sidebar-group-delete-btn {
+  opacity: 0.5;
+}
+
+.sidebar-group-delete-btn:hover {
+  opacity: 1 !important;
+}
+
+.sidebar-group-delete-confirm {
+  padding: 6px 4px 4px 48px;
+}
+
+.sidebar-group-delete-text {
+  font-size: 12px;
+  color: #ff3b30;
+  font-weight: 500;
+  margin-bottom: 6px;
+}
+
+.sidebar-group-actions {
+  display: flex;
+  flex-direction: row;
+  gap: 6px;
+  margin: 0 -4px;
+  transition: opacity 0.15s;
+}
+
+.sidebar-section:has(.sidebar-group-row:hover) .sidebar-group-action-btn {
+  background: #f5f5f7;
+  color: #c7c7cc;
+}
+
+.sidebar-section:has(.sidebar-task-card:hover) .sidebar-task-add {
+  background: #f5f5f7;
+  color: #c7c7cc;
+}
+
+.sidebar-group-action-btn {
+  flex: 1;
+  padding: 8px 0;
+  border: none;
+  border-radius: 8px;
+  background: rgba(0,0,0,0.05);
+  font-size: 13px;
+  font-weight: 500;
+  color: #aeaeb2;
+  cursor: pointer;
+  font-family: inherit;
+  text-align: center;
+  transition: background 0.15s, color 0.15s;
+}
+
+.sidebar-group-action-btn:hover {
+  background: rgba(0,0,0,0.09);
+  color: #6e6e73;
+}
+
+.sidebar-group-form {
+  margin-top: 8px;
+}
+
+.sidebar-group-input {
+  width: 100%;
+  padding: 9px 12px;
+  border: 1.5px solid rgba(0,0,0,0.10);
+  border-radius: 7px;
+  font-size: 13px;
+  font-family: inherit;
+  background: white;
+  color: #1d1d1f;
+  outline: none;
+  box-sizing: border-box;
+  margin-bottom: 7px;
+  transition: border-color 0.15s, box-shadow 0.15s;
+}
+
+.sidebar-group-input:focus {
+  border-color: #1a8fa8;
+  box-shadow: 0 0 0 3px rgba(26,143,168,0.12);
+}
+
+.sidebar-group-form-row {
+  display: flex;
+  gap: 6px;
+}
+
+.sidebar-group-btn-confirm {
+  flex: 1;
+  padding: 7px 0;
+  background: #1a8fa8;
+  color: #fff;
+  border: none;
+  border-radius: 7px;
+  font-size: 12px;
+  font-weight: 600;
+  font-family: inherit;
+  cursor: pointer;
+  transition: opacity 0.15s;
+}
+
+.sidebar-group-btn-confirm:hover {
+  opacity: 0.88;
+}
+
+.sidebar-group-btn-cancel {
+  flex: 1;
+  padding: 7px 0;
+  background: white;
+  color: #6e6e73;
+  border: 1.5px solid rgba(0,0,0,0.10);
+  border-radius: 7px;
+  font-size: 12px;
+  font-weight: 600;
+  font-family: inherit;
+  cursor: pointer;
+}
+
+.sidebar-group-btn-danger {
+  flex: 1;
+  padding: 7px 0;
+  background: #ff3b30;
+  color: #fff;
+  border: none;
+  border-radius: 7px;
+  font-size: 12px;
+  font-weight: 600;
+  font-family: inherit;
+  cursor: pointer;
+}
+
+.sidebar-group-btn-danger:disabled {
+  opacity: 0.5;
+  cursor: default;
+}
+
+.sidebar-group-error {
+  font-size: 11px;
+  color: #ff3b30;
+  margin-bottom: 4px;
+}
+
+.sidebar-group-delete-btn {
+  background: transparent;
+  border: none;
+  cursor: pointer;
+  font-size: 13px;
+  padding: 2px 4px;
+  border-radius: 6px;
+  opacity: 0;
+  transition: opacity 0.15s;
+  flex-shrink: 0;
+}
+
+.sidebar-group-row:hover .sidebar-group-delete-btn {
+  opacity: 0.5;
+}
+
+.sidebar-group-delete-btn:hover {
+  opacity: 1 !important;
+}
+
+.sidebar-group-delete-confirm {
+  padding: 6px 4px 4px 48px;
+}
+
+.sidebar-group-delete-text {
+  font-size: 12px;
+  color: #ff3b30;
+  font-weight: 500;
+  margin-bottom: 6px;
+}
+
+.sidebar-group-btn-danger {
+  flex: 1;
+  padding: 7px 0;
+  background: #ff3b30;
+  color: #fff;
+  border: none;
+  border-radius: 7px;
+  font-size: 12px;
+  font-weight: 600;
+  font-family: inherit;
+  cursor: pointer;
+}
+
+.sidebar-group-btn-danger:disabled {
+  opacity: 0.5;
+  cursor: default;
+}
+
+/* ─────────────────────────────────────────
+   Group Invitations
+───────────────────────────────────────── */
+.sidebar-group-invites {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+  margin-bottom: 10px;
+}
+
+.sidebar-group-invite {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  background: #fffbf0;
+  border: 1px solid rgba(244,140,6,0.3);
+  border-radius: 8px;
+  padding: 10px 12px;
+}
+
+.sidebar-group-invite-info {
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+}
+
+.sidebar-group-invite-name {
+  font-size: 12px;
+  font-weight: 700;
+  color: #1d1d1f;
+}
+
+.sidebar-group-invite-from {
+  font-size: 10px;
+  color: #aeaeb2;
+}
+
+.sidebar-group-invite-actions {
+  display: flex;
+  gap: 6px;
+}
+
+.sidebar-group-invite-accept,
+.sidebar-group-invite-deny {
+  width: 28px;
+  height: 28px;
+  border-radius: 50%;
+  border: none;
+  font-size: 12px;
+  font-weight: 700;
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-family: inherit;
+  transition: opacity 0.15s, transform 0.15s;
+}
+
+.sidebar-group-invite-accept {
+  background: #e4f8ed;
+  color: #34c759;
+}
+
+.sidebar-group-invite-deny {
+  background: #ffeeed;
+  color: #ff3b30;
+}
+
+.sidebar-group-invite-accept:hover,
+.sidebar-group-invite-deny:hover {
+  transform: scale(1.1);
+}
+
+.sidebar-group-invite-accept:disabled,
+.sidebar-group-invite-deny:disabled {
+  opacity: 0.4;
+  cursor: default;
+}
+
+/* ─────────────────────────────────────────
+   Pending Event Invitations
+───────────────────────────────────────── */
+.sidebar-pending-list {
+  display: flex;
+  flex-direction: column;
+  gap: 7px;
+}
+
+.sidebar-pending-item {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  background: #fffbf0;
+  border: 1px solid rgba(244,140,6,0.3);
+  border-radius: 8px;
+  padding: 10px 12px;
+  transition: box-shadow 0.15s;
+}
+
+.sidebar-pending-item:hover {
+  box-shadow: 0 3px 10px rgba(244,140,6,0.12);
+}
+
+.sidebar-pending-color {
+  width: 4px;
+  border-radius: 4px;
+  align-self: stretch;
+  flex-shrink: 0;
+}
+
+.sidebar-pending-info {
+  flex: 1;
+  min-width: 0;
+}
+
+.sidebar-pending-title {
+  font-size: 12px;
+  font-weight: 700;
+  color: #1d1d1f;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.sidebar-pending-meta {
+  font-size: 10px;
+  color: #6e6e73;
+  margin-top: 2px;
+}
+
+.sidebar-pending-from {
+  font-size: 10px;
+  color: #aeaeb2;
+  margin-top: 1px;
+}
+
+.sidebar-pending-actions {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+  flex-shrink: 0;
+}
+
+.sidebar-pending-accept,
+.sidebar-pending-deny {
+  width: 26px;
+  height: 26px;
+  border-radius: 50%;
+  border: none;
+  font-size: 11px;
+  font-weight: 700;
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-family: inherit;
+  transition: transform 0.15s;
+}
+
+.sidebar-pending-accept {
+  background: #e4f8ed;
+  color: #34c759;
+}
+
+.sidebar-pending-deny {
+  background: #ffeeed;
+  color: #ff3b30;
+}
+
+.sidebar-pending-accept:hover,
+.sidebar-pending-deny:hover {
+  transform: scale(1.1);
+}
+
+.sidebar-pending-accept:disabled,
+.sidebar-pending-deny:disabled {
+  opacity: 0.4;
+  cursor: default;
+}
+
+/* ─────────────────────────────────────────
+   Pending task variants + cascade
+───────────────────────────────────────── */
+
+/* ── Folder/tree group: event header + cascading task cards ── */
+.sidebar-pending-group {
+  display: flex;
+  flex-direction: column;
+  margin-bottom: 10px;
+}
+
+/* Event card on top — elevated so tasks appear to slide under it */
+.sidebar-pending-group > .sidebar-pending-item {
+  position: relative;
+  z-index: 10;
+  box-shadow: 0 6px 16px rgba(0, 0, 0, 0.13);
+}
+
+
+/* Each task wrapper pulls UP into the card above it */
+.sidebar-pending-task-cascade {
+  position: relative;
+  margin-top: -10px;
+  padding-left: 12px;
+}
+
+/* Task card: square top so it looks tucked behind the card above */
+.sidebar-pending-task-cascade .sidebar-pending-item {
+  border-top-left-radius: 0;
+  border-top-right-radius: 4px;
+  box-shadow: 0 4px 10px rgba(0, 0, 0, 0.08);
+}
+
+/* Each successive task sits a little lower in the z stack */
+.sidebar-pending-task-cascade:nth-child(2) { z-index: 9; }
+.sidebar-pending-task-cascade:nth-child(3) { z-index: 8; }
+.sidebar-pending-task-cascade:nth-child(4) { z-index: 7; }
+.sidebar-pending-task-cascade:nth-child(5) { z-index: 6; }
+
+.sidebar-pending-task {
+  background: #f0f6ff;
+  border-color: rgba(0, 122, 255, 0.25);
+}
+
+.sidebar-pending-subtasks {
+  margin: 6px 0 5px 4px;
+  display: flex;
+  flex-direction: column;
+  gap: 3px;
+  border-left: 2px solid #93c5fd;
+  padding-left: 10px;
+}
+
+.sidebar-pending-subtask {
+  display: flex;
+  align-items: center;
+  gap: 5px;
+}
+
+.sidebar-pending-subtask-line {
+  font-size: 11px;
+  color: #60a5fa;
+  line-height: 1;
+  flex-shrink: 0;
+  font-family: monospace;
+}
+
+.sidebar-pending-subtask-title {
+  font-size: 11px;
+  color: #1d1d1f;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  background: rgba(255,255,255,0.6);
+  padding: 1px 6px;
+  border-radius: 4px;
+}
+
+.sidebar-pending-notif {
+  background: #fff8ee;
+  border-color: rgba(255, 159, 10, 0.3);
+}
+
+.sidebar-pending-accepted {
+  background: #f0fff4;
+  border-color: rgba(52, 199, 89, 0.3);
+}
+
+.sidebar-pending-task-label.accepted {
+  color: #34c759;
+}
+
+.sidebar-pending-task-label {
+  font-size: 8px;
+  font-weight: 700;
+  letter-spacing: 1.2px;
+  color: #007aff;
+  margin: 0 0 2px;
+}
+
+.sidebar-pending-notif .sidebar-pending-task-label {
+  color: #ff9f0a;
+}
+
+.sidebar-pending-task-actions {
+  flex-direction: column;
+  gap: 3px;
+}
+
+.sidebar-pending-counter-btn {
+  width: 26px;
+  height: 26px;
+  border-radius: 50%;
+  border: none;
+  font-size: 13px;
+  font-weight: 700;
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  background: #e8e8ed;
+  color: #3a3a3c;
+  font-family: inherit;
+  transition: transform 0.15s;
+}
+
+.sidebar-pending-counter-btn:hover {
+  transform: scale(1.1);
+}
+
+.sidebar-pending-counter-btn:disabled {
+  opacity: 0.4;
+  cursor: default;
+}
+
+.sidebar-pending-counter {
+  margin-top: 8px;
+}
+
+.sidebar-pending-counter input {
+  width: 100%;
+  border: 1px solid rgba(0,122,255,0.3);
+  border-radius: 6px;
+  padding: 5px 8px;
+  font-size: 11px;
+  font-family: inherit;
+  outline: none;
+  background: #fff;
+  box-sizing: border-box;
+}
+
+.sidebar-pending-counter input:focus {
+  border-color: #007aff;
+}
+
+.sidebar-pending-counter-actions {
+  display: flex;
+  gap: 6px;
+  margin-top: 5px;
+}
+
+.sidebar-pending-counter-send,
+.sidebar-pending-counter-cancel {
+  font-size: 10px;
+  font-weight: 600;
+  border: none;
+  border-radius: 5px;
+  padding: 3px 8px;
+  cursor: pointer;
+  font-family: inherit;
+}
+
+.sidebar-pending-counter-send {
+  background: #007aff;
+  color: #fff;
+}
+
+.sidebar-pending-counter-send:disabled {
+  opacity: 0.4;
+  cursor: default;
+}
+
+.sidebar-pending-counter-cancel {
+  background: #e8e8ed;
+  color: #3a3a3c;
+}
+
+.sidebar-pending-counter-offer {
+  font-size: 11px;
+  color: #3a3a3c;
+  font-style: italic;
+  margin-top: 3px;
+}
+
+/* ─────────────────────────────────────────
+   Task time roller (sidebar)
+───────────────────────────────────────── */
+.sidebar-task-timeslot {
+  display: flex;
+  flex-direction: row;
+  align-items: center;
+  justify-content: space-between;
+  margin-top: 8px;
+  padding-top: 7px;
+  border-top: 1px solid rgba(0,0,0,0.06);
+}
+
+.sidebar-task-timeslot-label {
+  font-size: 10px;
+  font-weight: 500;
+  color: #aeaeb2;
+}
+
+/* ─────────────────────────────────────────
+   Bottom / Logout
+───────────────────────────────────────── */
+.sidebar-bottom {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  padding: 0 16px;
+  margin-top: 12px;
+}
+
+.sidebar-logout {
+  flex: 1;
+  padding: 9px;
+  background: white;
+  color: #8e8e93;
+  border: none;
+  border-radius: 8px;
+  font-size: 12px;
+  font-weight: 600;
+  cursor: pointer;
+  font-family: inherit;
+  transition: all 0.18s ease;
+  box-shadow: 0 1px 3px rgba(0,0,0,0.06);
+}
+
+.sidebar-logout:hover {
+  color: #ff3b30;
+  box-shadow: 0 2px 8px rgba(255,59,48,0.15);
+}
+
+/* ─────────────────────────────────────────
+   Gear button
+───────────────────────────────────────── */
+.sidebar-gear {
+  width: 34px;
+  height: 34px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  background: white;
+  border: none;
+  border-radius: 7px;
+  cursor: pointer;
+  font-size: 15px;
+  transition: all 0.18s ease;
+  box-shadow: 0 1px 3px rgba(0,0,0,0.07);
+  flex-shrink: 0;
+}
+
+.sidebar-gear:hover {
+  box-shadow: 0 2px 8px rgba(0,0,0,0.12);
+}
+
+/* ─────────────────────────────────────────
+   Profile row
+───────────────────────────────────────── */
+.sidebar-profile {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  padding: 8px 16px;
+  cursor: pointer;
+  transition: background 0.15s;
+  border-radius: 8px;
+}
+
+.sidebar-profile:hover {
+  background: rgba(0,0,0,0.04);
+}
+
+.sidebar-profile-avatar {
+  width: 42px;
+  height: 42px;
+  border-radius: 50%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 14px;
+  font-weight: 700;
+  color: white;
+  flex-shrink: 0;
+}
+
+.sidebar-profile-name {
+  font-size: 14px;
+  font-weight: 600;
+  color: #1d1d1f;
+}
+
+.sidebar-profile-role {
+  font-size: 11px;
+  color: #aeaeb2;
+  text-transform: capitalize;
+}

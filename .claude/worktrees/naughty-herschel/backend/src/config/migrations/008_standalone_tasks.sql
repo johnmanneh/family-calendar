@@ -1,0 +1,2 @@
+ALTER TABLE tasks ADD COLUMN is_standalone BOOLEAN DEFAULT false;
+ALTER TABLE tasks ADD COLUMN due_date TIMESTAMP;

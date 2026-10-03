@@ -1,0 +1,3 @@
+ALTER TABLE tasks ADD COLUMN IF NOT EXISTS last_counter_by INTEGER REFERENCES users(id);
+
+GRANT ALL PRIVILEGES ON TABLE tasks TO family_admin;

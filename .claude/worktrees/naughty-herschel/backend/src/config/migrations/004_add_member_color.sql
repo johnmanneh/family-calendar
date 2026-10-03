@@ -1,0 +1,2 @@
+ALTER TABLE family_members
+ADD COLUMN IF NOT EXISTS color VARCHAR(20) DEFAULT '#1a8fa8';

@@ -1,0 +1,2 @@
+ALTER TABLE events ADD COLUMN updated_by INTEGER REFERENCES users(id);
+ALTER TABLE events ADD COLUMN updated_at TIMESTAMP;
