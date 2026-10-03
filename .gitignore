@@ -5,6 +5,9 @@ CLAUDE.md
 # Claude Code internal files
 .claude/
 
+# User uploaded content
+backend/uploads/
+
 # macOS
 .DS_Store
 
