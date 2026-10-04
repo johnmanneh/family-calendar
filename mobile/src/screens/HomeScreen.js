@@ -164,19 +164,14 @@ export default function HomeScreen({ navigation }) {
   const [pendingCount, setPendingCount] = useState(0);
   const [drawerOpen, setDrawerOpen] = useState(false);
 
-  // ── Swipe right anywhere to open drawer ──────────────────────────────────
-  // onMoveShouldSetPanResponder (not capture) — children like FlatList and
-  // horizontal ScrollView handle their own touches first. We only claim the
-  // gesture when it's clearly a horizontal rightward swipe (dx > dy * 2),
-  // which the vertical FlatList won't claim. The horizontal member ScrollView
-  // will still win for its own area, which is the correct behaviour.
-  const swipePan = useRef(
+  // ── Edge swipe to open drawer ─────────────────────────────────────────────
+  // A dedicated 20px strip on the left edge captures the gesture so it never
+  // conflicts with the member bubbles ScrollView or the event FlatList.
+  const edgePan = useRef(
     PanResponder.create({
-      onStartShouldSetPanResponder: () => false,
-      onMoveShouldSetPanResponder: (_, g) => g.dx > 2 && g.dx > Math.abs(g.dy),
+      onStartShouldSetPanResponder: () => true,   // claim the touch immediately
       onPanResponderMove: (_, g) => {
-        // Open immediately as soon as we see a rightward swipe — no waiting for release
-        if (g.dx > 10) setDrawerOpen(true);
+        if (g.dx > 30) setDrawerOpen(true);
       },
     })
   ).current;
@@ -267,9 +262,12 @@ export default function HomeScreen({ navigation }) {
 
   return (
     // SafeAreaView keeps content below the notch and above the home bar
-    <SafeAreaView style={styles.container} {...swipePan.panHandlers}>
+    <SafeAreaView style={styles.container}>
 
       <DrawerMenu visible={drawerOpen} onClose={() => setDrawerOpen(false)} />
+
+      {/* Left edge strip — 20px wide, full height, captures swipe-right */}
+      <View style={styles.edgeZone} {...edgePan.panHandlers} />
 
       {/* ── Header ── */}
       <View style={styles.header}>

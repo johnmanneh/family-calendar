@@ -67,6 +67,16 @@ const styles = StyleSheet.create({
     fontWeight: '700',
   },
 
+  // Left edge swipe zone — 20px wide, sits above everything, invisible
+  edgeZone: {
+    position: 'absolute',
+    left: 0,
+    top: 0,
+    bottom: 0,
+    width: 20,
+    zIndex: 999,
+  },
+
   // Member bubbles row
   membersRow: {
     height: 106,

@@ -55,10 +55,9 @@ export default function DrawerMenu({ visible, onClose }) {
   // ── Swipe left on the drawer to close ────────────────────────────────────
   const closePan = useRef(
     PanResponder.create({
-      onStartShouldSetPanResponder: () => false,
-      onMoveShouldSetPanResponder: (_, g) => g.dx < -2 && Math.abs(g.dx) > Math.abs(g.dy),
+      onStartShouldSetPanResponder: () => true,
       onPanResponderMove: (_, g) => {
-        if (g.dx < -10) onClose();
+        if (g.dx < -30) onClose();
       },
     })
   ).current;
