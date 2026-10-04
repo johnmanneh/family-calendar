@@ -8,6 +8,7 @@ import {
   ScrollView,
   TextInput,
   Alert,
+  Clipboard,
 } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { Ionicons } from '@expo/vector-icons';
@@ -85,13 +86,16 @@ function TaskItem({ task }) {
 
 // ─── Settings tab ────────────────────────────────────────────────────────────
 
-function SettingsTab({ member, user, fetchFamily }) {
+function SettingsTab({ member, user, family, fetchFamily }) {
   const { logout } = useAuth();
 
   // ── Colour state ─────────────────────────────────────────────────────────
-  // selectedColor starts from the member's current colour in context
   const [selectedColor, setSelectedColor] = useState(member?.color || '#1a8fa8');
   const [colorSaving, setColorSaving] = useState(false);
+  const [colorExpanded, setColorExpanded] = useState(false);
+
+  // Show first 7 swatches collapsed (one row), all 21 when expanded
+  const visibleColors = colorExpanded ? MEMBER_COLORS : MEMBER_COLORS.slice(0, 7);
 
   // ── Profile info state ───────────────────────────────────────────────────
   const [profileData, setProfileData] = useState({ age: '', address: '', occupation: '' });
@@ -172,14 +176,46 @@ function SettingsTab({ member, user, fetchFamily }) {
     );
   };
 
+  const [codeCopied, setCodeCopied] = useState(false);
+
+  const handleCopyCode = () => {
+    Clipboard.setString(family?.invite_code || '');
+    setCodeCopied(true);
+    setTimeout(() => setCodeCopied(false), 2000);
+  };
+
   return (
     <ScrollView style={styles.scroll} contentContainerStyle={styles.scrollContent}>
+
+      {/* ── Family ── */}
+      {family && (
+        <>
+          <Text style={styles.settingsSectionHeader}>Your Family</Text>
+          <View style={styles.settingsCard}>
+            <Text style={styles.familyName}>{family.name}</Text>
+            <Text style={styles.familyLabel}>Invite code — share this so others can join</Text>
+            <View style={styles.inviteRow}>
+              <Text style={styles.inviteCode}>{family.invite_code}</Text>
+              <TouchableOpacity style={styles.copyBtn} onPress={handleCopyCode}>
+                <Ionicons
+                  name={codeCopied ? 'checkmark' : 'copy-outline'}
+                  size={16}
+                  color={codeCopied ? '#34c759' : '#1a8fa8'}
+                />
+                <Text style={[styles.copyBtnText, codeCopied && { color: '#34c759' }]}>
+                  {codeCopied ? 'Copied!' : 'Copy'}
+                </Text>
+              </TouchableOpacity>
+            </View>
+          </View>
+        </>
+      )}
 
       {/* ── Colour picker ── */}
       <Text style={styles.settingsSectionHeader}>Your colour</Text>
       <View style={styles.settingsCard}>
         <View style={styles.colorGrid}>
-          {MEMBER_COLORS.map(color => (
+          {visibleColors.map(color => (
             <TouchableOpacity
               key={color}
               style={[
@@ -191,12 +227,17 @@ function SettingsTab({ member, user, fetchFamily }) {
               activeOpacity={0.8}
             >
               {selectedColor === color && (
-                // White tick on the selected swatch
                 <Ionicons name="checkmark" size={16} color="#fff" />
               )}
             </TouchableOpacity>
           ))}
         </View>
+        <TouchableOpacity style={styles.colorToggleBtn} onPress={() => setColorExpanded(e => !e)}>
+          <Text style={styles.colorToggleText}>
+            {colorExpanded ? 'Show less' : 'Show more colours'}
+          </Text>
+          <Ionicons name={colorExpanded ? 'chevron-up' : 'chevron-down'} size={14} color="#1a8fa8" />
+        </TouchableOpacity>
         {colorSaving && (
           <Text style={styles.savingText}>Saving…</Text>
         )}
@@ -276,7 +317,7 @@ function SettingsTab({ member, user, fetchFamily }) {
 export default function MemberProfileScreen({ route, navigation }) {
   const { memberId } = route.params;
   const { user } = useAuth();
-  const { members, fetchFamily } = useFamily();
+  const { family, members, fetchFamily } = useFamily();
 
   const member = members.find(m => Number(m.id) === Number(memberId));
   const isOwnProfile = Number(user?.id) === Number(memberId);
@@ -402,7 +443,7 @@ export default function MemberProfileScreen({ route, navigation }) {
           </ScrollView>
         )
       ) : (
-        <SettingsTab member={member} user={user} fetchFamily={fetchFamily} />
+        <SettingsTab member={member} user={user} family={family} fetchFamily={fetchFamily} />
       )}
 
     </SafeAreaView>

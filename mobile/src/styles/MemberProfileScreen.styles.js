@@ -226,6 +226,51 @@ const styles = StyleSheet.create({
     elevation: 1,
   },
 
+  // ── Family invite code ────────────────────────────────────────────────────
+  familyName: {
+    fontSize: 17,
+    fontWeight: '700',
+    color: '#1d1d1f',
+    marginBottom: 6,
+  },
+  familyLabel: {
+    fontSize: 12,
+    color: '#aeaeb2',
+    marginBottom: 10,
+  },
+  inviteRow: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    backgroundColor: '#f5f5f7',
+    borderRadius: 10,
+    paddingVertical: 10,
+    paddingHorizontal: 14,
+    gap: 12,
+  },
+  inviteCode: {
+    flex: 1,
+    fontSize: 18,
+    fontWeight: '700',
+    color: '#1d1d1f',
+    letterSpacing: 2,
+  },
+  copyBtn: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 4,
+    paddingVertical: 6,
+    paddingHorizontal: 12,
+    backgroundColor: '#fff',
+    borderRadius: 8,
+    borderWidth: 1,
+    borderColor: '#e5e5ea',
+  },
+  copyBtnText: {
+    fontSize: 13,
+    fontWeight: '600',
+    color: '#1a8fa8',
+  },
+
   // ── Colour picker ─────────────────────────────────────────────────────────
   // 7 swatches per row — flex wrap handles it
   colorGrid: {
@@ -248,6 +293,21 @@ const styles = StyleSheet.create({
     shadowRadius: 4,
     shadowOffset: { width: 0, height: 2 },
     elevation: 4,
+  },
+  colorToggleBtn: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'center',
+    gap: 4,
+    marginTop: 10,
+    paddingTop: 8,
+    borderTopWidth: 1,
+    borderTopColor: '#f2f2f7',
+  },
+  colorToggleText: {
+    fontSize: 13,
+    color: '#1a8fa8',
+    fontWeight: '500',
   },
   savingText: {
     marginTop: 10,
