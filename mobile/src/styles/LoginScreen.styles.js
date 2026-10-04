@@ -33,46 +33,9 @@ const styles = StyleSheet.create({
   },
 
   // ── Logo ─────────────────────────────────────────────────────────────────
+  // Styles live in WhenLogo.js — only the wrapper margin needed here
   logoWrapper: {
-    alignItems: 'center',
     marginBottom: 28,
-  },
-  gradientBar: {
-    width: '80%',
-    height: 3,
-    borderRadius: 2,
-  },
-  logoText: {
-    fontSize: 40,
-    fontWeight: '900',
-    color: '#1d1d1f',
-    letterSpacing: -2,
-    marginVertical: 6,
-  },
-  seasonsRow: {
-    flexDirection: 'row',
-    justifyContent: 'space-around',
-    width: '80%',
-    marginTop: 2,
-  },
-  seasonItem: {
-    alignItems: 'center',
-  },
-  string: {
-    width: 1.5,
-    height: 14,
-    backgroundColor: '#d2d2d7',
-  },
-  seasonEmoji: {
-    fontSize: 18,
-    marginTop: 2,
-  },
-  scripture: {
-    fontSize: 11,
-    color: '#aeaeb2',
-    fontStyle: 'italic',
-    marginTop: 10,
-    letterSpacing: 0.3,
   },
 
   // ── Headings ─────────────────────────────────────────────────────────────

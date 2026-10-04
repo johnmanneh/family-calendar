@@ -9,59 +9,11 @@ import {
   ActivityIndicator,
   ScrollView,
 } from 'react-native';
-import { LinearGradient } from 'expo-linear-gradient';
 import API from '../api/axios';
+import WhenLogo from '../components/WhenLogo';
 import { useAuth } from '../context/AuthContext';
 import styles from '../styles/LoginScreen.styles';
 
-// ─── Logo ────────────────────────────────────────────────────────────────────
-// Recreates the web SVG logo using React Native primitives + LinearGradient.
-// Structure: gradient bar → WHEN → gradient bar → hanging strings → season emojis
-
-const GRADIENT_COLORS = ['#56e39f', '#4facfe', '#f857a6', '#f48c06'];
-
-// The four season emojis hang below the bottom gradient bar, evenly spaced
-const SEASONS = ['🌸', '☀️', '🍂', '❄️'];
-
-function WhenLogo() {
-  return (
-    <View style={styles.logoWrapper}>
-
-      {/* Top gradient bar */}
-      <LinearGradient
-        colors={GRADIENT_COLORS}
-        start={{ x: 0, y: 0 }}
-        end={{ x: 1, y: 0 }}
-        style={styles.gradientBar}
-      />
-
-      {/* WHEN title */}
-      <Text style={styles.logoText}>WHEN</Text>
-
-      {/* Bottom gradient bar */}
-      <LinearGradient
-        colors={GRADIENT_COLORS}
-        start={{ x: 0, y: 0 }}
-        end={{ x: 1, y: 0 }}
-        style={styles.gradientBar}
-      />
-
-      {/* Hanging strings + emojis */}
-      <View style={styles.seasonsRow}>
-        {SEASONS.map((emoji, i) => (
-          <View key={i} style={styles.seasonItem}>
-            {/* The thin vertical "string" */}
-            <View style={styles.string} />
-            <Text style={styles.seasonEmoji}>{emoji}</Text>
-          </View>
-        ))}
-      </View>
-
-      {/* Scripture tag */}
-      <Text style={styles.scripture}>To every season, a time · Eccl. 3:1</Text>
-    </View>
-  );
-}
 
 // ─── LoginScreen ─────────────────────────────────────────────────────────────
 
@@ -100,7 +52,9 @@ export default function LoginScreen() {
         {/* ── White card ── */}
         <View style={styles.card}>
 
-          <WhenLogo />
+          <View style={styles.logoWrapper}>
+            <WhenLogo />
+          </View>
 
           <Text style={styles.heading}>Welcome back</Text>
           <Text style={styles.subtitle}>Sign in to your family calendar</Text>

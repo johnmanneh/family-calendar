@@ -9,6 +9,8 @@ import {
   RefreshControl,
 } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
+import { Ionicons } from '@expo/vector-icons';
+import WhenLogo from '../components/WhenLogo';
 import styles from '../styles/HomeScreen.styles';
 import API from '../api/axios';
 import { useAuth } from '../context/AuthContext';
@@ -142,13 +144,22 @@ function EventRow({ event, navigation }) {
 // ─── HomeScreen ──────────────────────────────────────────────────────────────
 
 export default function HomeScreen({ navigation }) {
-  const { logout } = useAuth();
+  const { logout, user } = useAuth();
   const { members } = useFamily();
+
+  // Put the logged-in user first, everyone else follows in original order
+  const sortedMembers = user
+    ? [
+        ...members.filter(m => Number(m.id) === Number(user.id)),
+        ...members.filter(m => Number(m.id) !== Number(user.id)),
+      ]
+    : members;
 
   const [events, setEvents] = useState([]);
   const [loading, setLoading] = useState(true);
-  const [refreshing, setRefreshing] = useState(false);   // for pull-to-refresh
-  const [selectedMember, setSelectedMember] = useState(null); // null = show all
+  const [refreshing, setRefreshing] = useState(false);
+  const [selectedMember, setSelectedMember] = useState(null);
+  const [pendingCount, setPendingCount] = useState(0); // badge on the bell icon
 
   // ── Fetch events ──────────────────────────────────────────────────────────
   const fetchEvents = useCallback(async () => {
@@ -163,10 +174,38 @@ export default function HomeScreen({ navigation }) {
     }
   }, []);
 
+  // ── Fetch pending count for the badge ────────────────────────────────────
+  // Adds up pending tasks + notifications + event invitations
+  const fetchPendingCount = useCallback(async () => {
+    try {
+      const [tasks, notifs, invites, assigneeNotifs] = await Promise.all([
+        API.get('/tasks/pending'),
+        API.get('/tasks/notifications'),
+        API.get('/events/invitations'),
+        API.get('/tasks/assignee-notifications'),
+      ]);
+      const count =
+        (tasks.data.tasks?.length || 0) +
+        (notifs.data.notifications?.length || 0) +
+        (invites.data.invitations?.length || 0) +
+        (assigneeNotifs.data.notifications?.length || 0);
+      setPendingCount(count);
+    } catch {
+      // silently ignore — badge just won't show
+    }
+  }, []);
+
   // Fetch on mount
   useEffect(() => {
     fetchEvents();
-  }, [fetchEvents]);
+    fetchPendingCount();
+  }, [fetchEvents, fetchPendingCount]);
+
+  // Refresh badge when returning from PendingScreen
+  useEffect(() => {
+    const unsubscribe = navigation.addListener('focus', fetchPendingCount);
+    return unsubscribe;
+  }, [navigation, fetchPendingCount]);
 
   // Pull-to-refresh handler
   const onRefresh = () => {
@@ -212,10 +251,30 @@ export default function HomeScreen({ navigation }) {
 
       {/* ── Header ── */}
       <View style={styles.header}>
-        <Text style={styles.logo}>when</Text>
-        <TouchableOpacity onPress={logout} style={styles.logoutBtn}>
-          <Text style={styles.logoutText}>Sign out</Text>
-        </TouchableOpacity>
+        <WhenLogo compact />
+        <View style={styles.headerRight}>
+          {/* Bell icon — navigates to PendingScreen, shows red badge if items exist */}
+          <TouchableOpacity
+            style={styles.bellBtn}
+            onPress={() => navigation.navigate('Pending')}
+          >
+            <Ionicons
+              name={pendingCount > 0 ? 'notifications' : 'notifications-outline'}
+              size={24}
+              color={pendingCount > 0 ? '#1a8fa8' : '#8e8e93'}
+            />
+            {pendingCount > 0 && (
+              <View style={styles.badge}>
+                <Text style={styles.badgeText}>
+                  {pendingCount > 9 ? '9+' : pendingCount}
+                </Text>
+              </View>
+            )}
+          </TouchableOpacity>
+          <TouchableOpacity onPress={logout} style={styles.logoutBtn}>
+            <Text style={styles.logoutText}>Sign out</Text>
+          </TouchableOpacity>
+        </View>
       </View>
 
       {/* ── Member bubbles ── */}
@@ -225,7 +284,7 @@ export default function HomeScreen({ navigation }) {
         style={styles.membersRow}
         contentContainerStyle={styles.membersContent}
       >
-        {members.map((member) => (
+        {sortedMembers.map((member) => (
           <MemberBubble
             key={member.id}
             member={member}
