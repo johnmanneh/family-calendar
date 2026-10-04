@@ -73,7 +73,7 @@ function groupByDate(events) {
 
 // Shows a coloured circle with the member's initials.
 // `selected` adds a teal ring so the user knows which filter is active.
-function MemberBubble({ member, selected, onPress }) {
+function MemberBubble({ member, selected, onPress, onLongPress }) {
   const fullName = member.name
     || [member.first_name, member.last_name].filter(Boolean).join(' ')
     || member.email
@@ -102,7 +102,7 @@ function MemberBubble({ member, selected, onPress }) {
   ];
 
   return (
-    <TouchableOpacity style={styles.bubble} onPress={onPress}>
+    <TouchableOpacity style={styles.bubble} onPress={onPress} onLongPress={onLongPress} delayLongPress={400}>
       <View style={circleStyle}>
         <Text style={styles.bubbleInitials}>{initials}</Text>
       </View>
@@ -264,7 +264,7 @@ export default function HomeScreen({ navigation }) {
     // SafeAreaView keeps content below the notch and above the home bar
     <SafeAreaView style={styles.container}>
 
-      <DrawerMenu visible={drawerOpen} onClose={() => setDrawerOpen(false)} />
+      <DrawerMenu visible={drawerOpen} onClose={() => setDrawerOpen(false)} navigation={navigation} />
 
       {/* Left edge strip — 20px wide, full height, captures swipe-right */}
       <View style={styles.edgeZone} {...edgePan.panHandlers} />
@@ -326,6 +326,7 @@ export default function HomeScreen({ navigation }) {
             member={member}
             selected={Number(selectedMember) === Number(member.id)}
             onPress={() => handleMemberPress(member.id)}
+            onLongPress={() => navigation.navigate('MemberProfile', { memberId: member.id })}
           />
         ))}
       </ScrollView>

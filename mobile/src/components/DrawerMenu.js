@@ -15,7 +15,7 @@ import { useFamily } from '../context/FamilyContext';
 
 const DRAWER_WIDTH = Dimensions.get('window').width * 0.75;
 
-export default function DrawerMenu({ visible, onClose }) {
+export default function DrawerMenu({ visible, onClose, navigation }) {
   const { user, logout } = useAuth();
   const { members } = useFamily();
 
@@ -97,7 +97,14 @@ export default function DrawerMenu({ visible, onClose }) {
 
           {/* Nav items */}
           <View style={styles.nav}>
-            <TouchableOpacity style={styles.navItem} onPress={onClose}>
+            <TouchableOpacity
+              style={styles.navItem}
+              onPress={() => {
+                onClose();
+                // Short delay so the drawer closes before pushing the new screen
+                setTimeout(() => navigation.navigate('MemberProfile', { memberId: user?.id }), 250);
+              }}
+            >
               <Ionicons name="person-outline" size={20} color="#1d1d1f" />
               <Text style={styles.navLabel}>Profile</Text>
             </TouchableOpacity>

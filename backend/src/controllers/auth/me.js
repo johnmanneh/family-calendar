@@ -5,7 +5,7 @@ const me = async (req, res) => {
   const userId = req.user.id;
   try {
     const result = await pool.query(
-      'SELECT id, first_name, last_name, email, avatar_url FROM users WHERE id = $1',
+      'SELECT id, first_name, last_name, email, avatar_url, age, address, occupation FROM users WHERE id = $1',
       [userId]
     );
     if (result.rows.length === 0) {

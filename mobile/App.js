@@ -9,6 +9,7 @@ import LoginScreen from './src/screens/LoginScreen';
 import HomeScreen from './src/screens/HomeScreen';
 import EventDetailsScreen from './src/screens/EventDetailsScreen';
 import PendingScreen from './src/screens/PendingScreen';
+import MemberProfileScreen from './src/screens/MemberProfileScreen';
 
 const Stack = createNativeStackNavigator();
 
@@ -34,6 +35,7 @@ function AppNavigator() {
             <Stack.Screen name="Home" component={HomeScreen} />
             <Stack.Screen name="EventDetails" component={EventDetailsScreen} />
             <Stack.Screen name="Pending" component={PendingScreen} />
+            <Stack.Screen name="MemberProfile" component={MemberProfileScreen} />
           </>
         ) : (
           // Not logged in — show Login
