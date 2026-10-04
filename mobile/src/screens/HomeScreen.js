@@ -216,11 +216,15 @@ export default function HomeScreen({ navigation }) {
     fetchPendingCount();
   }, [fetchEvents, fetchPendingCount]);
 
-  // Refresh badge when returning from PendingScreen
+  // Re-fetch events and badge whenever this screen comes back into focus
+  // This covers: returning from EventForm (create/edit), PendingScreen, etc.
   useEffect(() => {
-    const unsubscribe = navigation.addListener('focus', fetchPendingCount);
+    const unsubscribe = navigation.addListener('focus', () => {
+      fetchEvents();
+      fetchPendingCount();
+    });
     return unsubscribe;
-  }, [navigation, fetchPendingCount]);
+  }, [navigation, fetchEvents, fetchPendingCount]);
 
   // Pull-to-refresh handler
   const onRefresh = () => {
@@ -231,7 +235,10 @@ export default function HomeScreen({ navigation }) {
   // ── Filter + group ────────────────────────────────────────────────────────
 
   // If a member bubble is selected, only show events that include that member
-  const filteredEvents = selectedMember
+  const today = new Date();
+  today.setHours(0, 0, 0, 0);
+
+  const memberFiltered = selectedMember
     ? events.filter(
         (e) =>
           Number(e.created_by) === Number(selectedMember) ||
@@ -239,8 +246,18 @@ export default function HomeScreen({ navigation }) {
       )
     : events;
 
-  // Group into [{ type: 'header', label }, { type: 'event', event }, ...]
-  const listItems = groupByDate(filteredEvents);
+  // Split into upcoming (today+) and past, so upcoming always appears first
+  const upcomingEvents = memberFiltered.filter(e => new Date(e.start_date) >= today);
+  const pastEvents     = memberFiltered.filter(e => new Date(e.start_date) <  today)
+                                       .reverse(); // most recent past first
+
+  // Build list: upcoming grouped by date, then a Past divider, then past events grouped
+  const listItems = [
+    ...groupByDate(upcomingEvents),
+    ...(pastEvents.length > 0
+      ? [{ type: 'header', label: 'Past Events', key: 'header-past' }, ...groupByDate(pastEvents)]
+      : []),
+  ];
 
   // ── Toggle member filter ──────────────────────────────────────────────────
   const handleMemberPress = (memberId) => {
@@ -286,6 +303,11 @@ export default function HomeScreen({ navigation }) {
 
         {/* Right — message + bell */}
         <View style={styles.headerRight}>
+          {/* Add event button */}
+          <TouchableOpacity style={styles.iconBtn} onPress={() => navigation.navigate('EventForm')}>
+            <Ionicons name="add-circle-outline" size={24} color="#1a8fa8" />
+          </TouchableOpacity>
+
           {/* Message icon — placeholder until DM feature is built */}
           <TouchableOpacity style={styles.iconBtn}>
             <Ionicons name="chatbubble-outline" size={22} color="#8e8e93" />

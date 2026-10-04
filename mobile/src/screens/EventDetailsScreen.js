@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useCallback } from 'react';
 import {
   View,
   Text,
@@ -152,19 +152,24 @@ export default function EventDetailsScreen({ route, navigation }) {
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState('');
 
-  useEffect(() => {
-    const fetchEvent = async () => {
-      try {
-        const res = await API.get(`/events/${eventId}`);
-        setEvent(res.data.event || res.data);
-      } catch {
-        setError('Could not load event.');
-      } finally {
-        setLoading(false);
-      }
-    };
-    fetchEvent();
+  const fetchEvent = useCallback(async () => {
+    try {
+      const res = await API.get(`/events/${eventId}`);
+      setEvent(res.data.event || res.data);
+    } catch {
+      setError('Could not load event.');
+    } finally {
+      setLoading(false);
+    }
   }, [eventId]);
+
+  useEffect(() => { fetchEvent(); }, [fetchEvent]);
+
+  // Re-fetch when returning from EventFormScreen so edits show immediately
+  useEffect(() => {
+    const unsubscribe = navigation.addListener('focus', fetchEvent);
+    return unsubscribe;
+  }, [navigation, fetchEvent]);
 
   if (loading) {
     return (
@@ -278,7 +283,10 @@ export default function EventDetailsScreen({ route, navigation }) {
 
         {/* ── Actions — Edit + Delete, same as web ── */}
         <View style={styles.actions}>
-          <TouchableOpacity style={styles.editBtn}>
+          <TouchableOpacity
+            style={styles.editBtn}
+            onPress={() => navigation.navigate('EventForm', { event })}
+          >
             <Text style={styles.editBtnText}>Edit</Text>
           </TouchableOpacity>
           <TouchableOpacity style={styles.deleteBtn}>
