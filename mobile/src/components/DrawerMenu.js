@@ -109,14 +109,15 @@ export default function DrawerMenu({ visible, onClose, navigation }) {
               <Text style={styles.navLabel}>Profile</Text>
             </TouchableOpacity>
 
-            <TouchableOpacity style={styles.navItem} onPress={onClose}>
-              <Ionicons name="calendar-outline" size={20} color="#1d1d1f" />
-              <Text style={styles.navLabel}>Calendar</Text>
-            </TouchableOpacity>
-
-            <TouchableOpacity style={styles.navItem} onPress={onClose}>
-              <Ionicons name="settings-outline" size={20} color="#1d1d1f" />
-              <Text style={styles.navLabel}>Settings</Text>
+            <TouchableOpacity
+              style={styles.navItem}
+              onPress={() => {
+                onClose();
+                setTimeout(() => navigation.navigate('Groups'), 250);
+              }}
+            >
+              <Ionicons name="people-outline" size={20} color="#1d1d1f" />
+              <Text style={styles.navLabel}>Groups</Text>
             </TouchableOpacity>
           </View>
 

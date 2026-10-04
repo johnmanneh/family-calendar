@@ -6,6 +6,7 @@ import {
   TouchableOpacity,
   ActivityIndicator,
   Linking,
+  Alert,
 } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import API from '../api/axios';
@@ -165,6 +166,28 @@ export default function EventDetailsScreen({ route, navigation }) {
 
   useEffect(() => { fetchEvent(); }, [fetchEvent]);
 
+  const handleDelete = () => {
+    Alert.alert(
+      'Delete Event',
+      `Are you sure you want to delete "${event?.title}"?`,
+      [
+        { text: 'Cancel', style: 'cancel' },
+        {
+          text: 'Delete',
+          style: 'destructive',
+          onPress: async () => {
+            try {
+              await API.delete(`/events/${eventId}`);
+              navigation.goBack();
+            } catch (err) {
+              Alert.alert('Error', err.response?.data?.message || 'Could not delete event');
+            }
+          },
+        },
+      ]
+    );
+  };
+
   // Re-fetch when returning from EventFormScreen so edits show immediately
   useEffect(() => {
     const unsubscribe = navigation.addListener('focus', fetchEvent);
@@ -289,7 +312,7 @@ export default function EventDetailsScreen({ route, navigation }) {
           >
             <Text style={styles.editBtnText}>Edit</Text>
           </TouchableOpacity>
-          <TouchableOpacity style={styles.deleteBtn}>
+          <TouchableOpacity style={styles.deleteBtn} onPress={handleDelete}>
             <Text style={styles.deleteBtnText}>Delete</Text>
           </TouchableOpacity>
         </View>

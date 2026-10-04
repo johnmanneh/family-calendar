@@ -11,6 +11,8 @@ import EventDetailsScreen from './src/screens/EventDetailsScreen';
 import PendingScreen from './src/screens/PendingScreen';
 import MemberProfileScreen from './src/screens/MemberProfileScreen';
 import EventFormScreen from './src/screens/EventFormScreen';
+import TaskFormScreen from './src/screens/TaskFormScreen';
+import GroupsScreen from './src/screens/GroupsScreen';
 
 const Stack = createNativeStackNavigator();
 
@@ -38,6 +40,8 @@ function AppNavigator() {
             <Stack.Screen name="Pending" component={PendingScreen} />
             <Stack.Screen name="MemberProfile" component={MemberProfileScreen} />
             <Stack.Screen name="EventForm" component={EventFormScreen} />
+            <Stack.Screen name="TaskForm" component={TaskFormScreen} />
+            <Stack.Screen name="Groups" component={GroupsScreen} />
           </>
         ) : (
           // Not logged in — show Login

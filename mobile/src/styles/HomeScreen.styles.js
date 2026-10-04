@@ -5,6 +5,27 @@ const styles = StyleSheet.create({
     flex: 1,
     backgroundColor: '#f2f2f7',
   },
+  safeArea: {
+    flex: 1,
+  },
+
+  // FAB — circular teal button, bottom right corner
+  fab: {
+    position: 'absolute',
+    bottom: 32,
+    right: 24,
+    width: 56,
+    height: 56,
+    borderRadius: 28,
+    backgroundColor: '#1a8fa8',
+    alignItems: 'center',
+    justifyContent: 'center',
+    shadowColor: '#000',
+    shadowOpacity: 0.25,
+    shadowRadius: 8,
+    shadowOffset: { width: 0, height: 4 },
+    elevation: 8,
+  },
 
   // Header
   header: {

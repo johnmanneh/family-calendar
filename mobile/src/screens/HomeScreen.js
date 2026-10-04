@@ -8,6 +8,7 @@ import {
   ActivityIndicator,
   RefreshControl,
   PanResponder,
+  Alert,
 } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { Ionicons } from '@expo/vector-icons';
@@ -278,8 +279,7 @@ export default function HomeScreen({ navigation }) {
   // ── Main render ───────────────────────────────────────────────────────────
 
   return (
-    // SafeAreaView keeps content below the notch and above the home bar
-    <SafeAreaView style={styles.container}>
+    <View style={styles.container}><SafeAreaView style={styles.safeArea}>
 
       <DrawerMenu visible={drawerOpen} onClose={() => setDrawerOpen(false)} navigation={navigation} />
 
@@ -303,11 +303,6 @@ export default function HomeScreen({ navigation }) {
 
         {/* Right — message + bell */}
         <View style={styles.headerRight}>
-          {/* Add event button */}
-          <TouchableOpacity style={styles.iconBtn} onPress={() => navigation.navigate('EventForm')}>
-            <Ionicons name="add-circle-outline" size={24} color="#1a8fa8" />
-          </TouchableOpacity>
-
           {/* Message icon — placeholder until DM feature is built */}
           <TouchableOpacity style={styles.iconBtn}>
             <Ionicons name="chatbubble-outline" size={22} color="#8e8e93" />
@@ -376,6 +371,23 @@ export default function HomeScreen({ navigation }) {
         />
       )}
     </SafeAreaView>
+
+      {/* ── FAB — floating + button, bottom right ── */}
+      <TouchableOpacity
+        style={styles.fab}
+        onPress={() =>
+          Alert.alert('Create', 'What would you like to add?', [
+            { text: 'New Event', onPress: () => navigation.navigate('EventForm') },
+            { text: 'New Task',  onPress: () => navigation.navigate('TaskForm') },
+            { text: 'Cancel', style: 'cancel' },
+          ])
+        }
+        activeOpacity={0.85}
+      >
+        <Ionicons name="add" size={28} color="#fff" />
+      </TouchableOpacity>
+
+    </View>
   );
 }
 
