@@ -1,0 +1,263 @@
+import React, { useState, useEffect, useCallback } from 'react';
+import {
+  View,
+  Text,
+  FlatList,
+  ScrollView,
+  TouchableOpacity,
+  ActivityIndicator,
+  RefreshControl,
+} from 'react-native';
+import { SafeAreaView } from 'react-native-safe-area-context';
+import styles from '../styles/HomeScreen.styles';
+import API from '../api/axios';
+import { useAuth } from '../context/AuthContext';
+import { useFamily } from '../context/FamilyContext';
+
+// ─── Helpers ────────────────────────────────────────────────────────────────
+
+// Returns "Today", "Tomorrow", or a formatted date string like "Mon 5 Jan"
+function dateLabel(dateStr) {
+  const today = new Date();
+  const tomorrow = new Date(today);
+  tomorrow.setDate(today.getDate() + 1);
+
+  const d = new Date(dateStr);
+
+  const sameDay = (a, b) =>
+    a.getFullYear() === b.getFullYear() &&
+    a.getMonth() === b.getMonth() &&
+    a.getDate() === b.getDate();
+
+  if (sameDay(d, today)) return 'Today';
+  if (sameDay(d, tomorrow)) return 'Tomorrow';
+
+  return d.toLocaleDateString('en-GB', {
+    weekday: 'short',
+    day: 'numeric',
+    month: 'short',
+  });
+}
+
+// Formats a datetime string to "9:00 AM" — returns "All day" for all-day events
+function formatTime(event) {
+  if (event.is_all_day) return 'All day';
+  const d = new Date(event.start_date);
+  return d.toLocaleTimeString('en-US', { hour: 'numeric', minute: '2-digit' });
+}
+
+// Groups a flat events array into sections: [{ title, data }]
+// FlatList's SectionList needs this shape — we build it ourselves so we can
+// use a regular FlatList and render section headers inline
+function groupByDate(events) {
+  const sections = [];
+  const seen = {};                            // tracks which date labels we've added
+
+  events.forEach((event) => {
+    const label = dateLabel(event.start_date);
+    if (!seen[label]) {
+      seen[label] = true;
+      sections.push({ type: 'header', label, key: `header-${label}` });
+    }
+    sections.push({ type: 'event', event, key: `event-${event.id}` });
+  });
+
+  return sections;
+}
+
+// ─── Avatar bubble ───────────────────────────────────────────────────────────
+
+// Shows a coloured circle with the member's initials.
+// `selected` adds a teal ring so the user knows which filter is active.
+function MemberBubble({ member, selected, onPress }) {
+  const fullName = member.name
+    || [member.first_name, member.last_name].filter(Boolean).join(' ')
+    || member.email
+    || '?';
+  const initials = fullName
+    .split(' ')
+    .map((w) => w[0])
+    .join('')
+    .toUpperCase()
+    .slice(0, 2);
+
+  const memberColor = member.color || '#1a8fa8';
+
+  // When selected, ring uses the member's own colour — same as the web sidebar
+  const circleStyle = [
+    styles.bubbleCircle,
+    { backgroundColor: memberColor },
+    selected && {
+      borderColor: memberColor,
+      shadowColor: memberColor,
+      shadowOpacity: 0.5,
+      shadowRadius: 4,
+      shadowOffset: { width: 0, height: 0 },
+      elevation: 4,
+    },
+  ];
+
+  return (
+    <TouchableOpacity style={styles.bubble} onPress={onPress}>
+      <View style={circleStyle}>
+        <Text style={styles.bubbleInitials}>{initials}</Text>
+      </View>
+      <Text style={styles.bubbleName} numberOfLines={1}>
+        {member.first_name || fullName.split(' ')[0]}
+      </Text>
+      {member.relationship ? (
+        <Text style={styles.bubbleRelationship} numberOfLines={1}>
+          {member.relationship}
+        </Text>
+      ) : null}
+    </TouchableOpacity>
+  );
+}
+
+// ─── Event row ───────────────────────────────────────────────────────────────
+
+function EventRow({ event, navigation }) {
+  const color = event.color || '#1a8fa8';
+
+  return (
+    // TouchableOpacity makes the whole card pressable
+    <TouchableOpacity
+      style={styles.eventRow}
+      onPress={() => navigation.navigate('EventDetails', { eventId: event.id })}
+      activeOpacity={0.75}
+    >
+      {/* Coloured left stripe — same visual as the web calendar dots */}
+      <View style={[styles.eventStripe, { backgroundColor: color }]} />
+
+      <View style={styles.eventBody}>
+        <Text style={styles.eventTitle} numberOfLines={1}>
+          {event.title}
+        </Text>
+        <Text style={styles.eventTime}>{formatTime(event)}</Text>
+      </View>
+    </TouchableOpacity>
+  );
+}
+
+// ─── HomeScreen ──────────────────────────────────────────────────────────────
+
+export default function HomeScreen({ navigation }) {
+  const { logout } = useAuth();
+  const { members } = useFamily();
+
+  const [events, setEvents] = useState([]);
+  const [loading, setLoading] = useState(true);
+  const [refreshing, setRefreshing] = useState(false);   // for pull-to-refresh
+  const [selectedMember, setSelectedMember] = useState(null); // null = show all
+
+  // ── Fetch events ──────────────────────────────────────────────────────────
+  const fetchEvents = useCallback(async () => {
+    try {
+      const res = await API.get('/events');
+      setEvents(res.data.events || []);
+    } catch (err) {
+      console.error('fetchEvents error:', err.message);
+    } finally {
+      setLoading(false);
+      setRefreshing(false);
+    }
+  }, []);
+
+  // Fetch on mount
+  useEffect(() => {
+    fetchEvents();
+  }, [fetchEvents]);
+
+  // Pull-to-refresh handler
+  const onRefresh = () => {
+    setRefreshing(true);
+    fetchEvents();
+  };
+
+  // ── Filter + group ────────────────────────────────────────────────────────
+
+  // If a member bubble is selected, only show events that include that member
+  const filteredEvents = selectedMember
+    ? events.filter(
+        (e) =>
+          Number(e.created_by) === Number(selectedMember) ||
+          (e.attendees && e.attendees.some((a) => Number(a.user_id) === Number(selectedMember)))
+      )
+    : events;
+
+  // Group into [{ type: 'header', label }, { type: 'event', event }, ...]
+  const listItems = groupByDate(filteredEvents);
+
+  // ── Toggle member filter ──────────────────────────────────────────────────
+  const handleMemberPress = (memberId) => {
+    // Tap same member again → clear the filter
+    setSelectedMember((prev) => (Number(prev) === Number(memberId) ? null : memberId));
+  };
+
+  // ── Render helpers ────────────────────────────────────────────────────────
+
+  // FlatList calls this for every item in listItems
+  const renderItem = ({ item }) => {
+    if (item.type === 'header') {
+      return <Text style={styles.sectionHeader}>{item.label}</Text>;
+    }
+    return <EventRow event={item.event} navigation={navigation} />;
+  };
+
+  // ── Main render ───────────────────────────────────────────────────────────
+
+  return (
+    // SafeAreaView keeps content below the notch and above the home bar
+    <SafeAreaView style={styles.container}>
+
+      {/* ── Header ── */}
+      <View style={styles.header}>
+        <Text style={styles.logo}>when</Text>
+        <TouchableOpacity onPress={logout} style={styles.logoutBtn}>
+          <Text style={styles.logoutText}>Sign out</Text>
+        </TouchableOpacity>
+      </View>
+
+      {/* ── Member bubbles ── */}
+      <ScrollView
+        horizontal                         // side-scrolling row
+        showsHorizontalScrollIndicator={false}
+        style={styles.membersRow}
+        contentContainerStyle={styles.membersContent}
+      >
+        {members.map((member) => (
+          <MemberBubble
+            key={member.id}
+            member={member}
+            selected={Number(selectedMember) === Number(member.id)}
+            onPress={() => handleMemberPress(member.id)}
+          />
+        ))}
+      </ScrollView>
+
+      {/* ── Events list ── */}
+      {loading ? (
+        <ActivityIndicator size="large" color="#1a8fa8" style={styles.spinner} />
+      ) : (
+        <FlatList
+          data={listItems}
+          keyExtractor={(item) => item.key}
+          renderItem={renderItem}
+          contentContainerStyle={styles.listContent}
+          refreshControl={
+            // Pull-to-refresh — teal spinner matches the app colour
+            <RefreshControl
+              refreshing={refreshing}
+              onRefresh={onRefresh}
+              tintColor="#1a8fa8"
+            />
+          }
+          ListEmptyComponent={
+            <Text style={styles.emptyText}>No upcoming events</Text>
+          }
+        />
+      )}
+    </SafeAreaView>
+  );
+}
+
