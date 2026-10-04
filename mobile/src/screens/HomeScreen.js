@@ -1,4 +1,4 @@
-import React, { useState, useEffect, useCallback } from 'react';
+import React, { useState, useEffect, useCallback, useRef } from 'react';
 import {
   View,
   Text,
@@ -7,10 +7,12 @@ import {
   TouchableOpacity,
   ActivityIndicator,
   RefreshControl,
+  PanResponder,
 } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { Ionicons } from '@expo/vector-icons';
 import { LinearGradient } from 'expo-linear-gradient';
+import DrawerMenu from '../components/DrawerMenu';
 import styles from '../styles/HomeScreen.styles';
 import API from '../api/axios';
 import { useAuth } from '../context/AuthContext';
@@ -159,7 +161,25 @@ export default function HomeScreen({ navigation }) {
   const [loading, setLoading] = useState(true);
   const [refreshing, setRefreshing] = useState(false);
   const [selectedMember, setSelectedMember] = useState(null);
-  const [pendingCount, setPendingCount] = useState(0); // badge on the bell icon
+  const [pendingCount, setPendingCount] = useState(0);
+  const [drawerOpen, setDrawerOpen] = useState(false);
+
+  // ── Swipe right anywhere to open drawer ──────────────────────────────────
+  // onMoveShouldSetPanResponder (not capture) — children like FlatList and
+  // horizontal ScrollView handle their own touches first. We only claim the
+  // gesture when it's clearly a horizontal rightward swipe (dx > dy * 2),
+  // which the vertical FlatList won't claim. The horizontal member ScrollView
+  // will still win for its own area, which is the correct behaviour.
+  const swipePan = useRef(
+    PanResponder.create({
+      onStartShouldSetPanResponder: () => false,
+      onMoveShouldSetPanResponder: (_, g) => g.dx > 2 && g.dx > Math.abs(g.dy),
+      onPanResponderMove: (_, g) => {
+        // Open immediately as soon as we see a rightward swipe — no waiting for release
+        if (g.dx > 10) setDrawerOpen(true);
+      },
+    })
+  ).current;
 
   // ── Fetch events ──────────────────────────────────────────────────────────
   const fetchEvents = useCallback(async () => {
@@ -247,13 +267,15 @@ export default function HomeScreen({ navigation }) {
 
   return (
     // SafeAreaView keeps content below the notch and above the home bar
-    <SafeAreaView style={styles.container}>
+    <SafeAreaView style={styles.container} {...swipePan.panHandlers}>
+
+      <DrawerMenu visible={drawerOpen} onClose={() => setDrawerOpen(false)} />
 
       {/* ── Header ── */}
       <View style={styles.header}>
 
         {/* Left — gradient hamburger */}
-        <TouchableOpacity style={styles.iconBtn} onPress={() => {}}>
+        <TouchableOpacity style={styles.iconBtn} onPress={() => setDrawerOpen(true)}>
           <View style={styles.hamburger}>
             <LinearGradient colors={['#56e39f','#4facfe','#f857a6','#f48c06']} start={{x:0,y:0}} end={{x:1,y:0}} style={styles.hamburgerLine} />
             <LinearGradient colors={['#56e39f','#4facfe','#f857a6','#f48c06']} start={{x:0,y:0}} end={{x:1,y:0}} style={styles.hamburgerLine} />
