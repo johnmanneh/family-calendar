@@ -10,7 +10,7 @@ import {
 } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { Ionicons } from '@expo/vector-icons';
-import WhenLogo from '../components/WhenLogo';
+import { LinearGradient } from 'expo-linear-gradient';
 import styles from '../styles/HomeScreen.styles';
 import API from '../api/axios';
 import { useAuth } from '../context/AuthContext';
@@ -251,16 +251,34 @@ export default function HomeScreen({ navigation }) {
 
       {/* ── Header ── */}
       <View style={styles.header}>
-        <WhenLogo compact />
+
+        {/* Left — gradient hamburger */}
+        <TouchableOpacity style={styles.iconBtn} onPress={() => {}}>
+          <View style={styles.hamburger}>
+            <LinearGradient colors={['#56e39f','#4facfe','#f857a6','#f48c06']} start={{x:0,y:0}} end={{x:1,y:0}} style={styles.hamburgerLine} />
+            <LinearGradient colors={['#56e39f','#4facfe','#f857a6','#f48c06']} start={{x:0,y:0}} end={{x:1,y:0}} style={styles.hamburgerLine} />
+            <LinearGradient colors={['#56e39f','#4facfe','#f857a6','#f48c06']} start={{x:0,y:0}} end={{x:1,y:0}} style={styles.hamburgerLine} />
+          </View>
+        </TouchableOpacity>
+
+        {/* Centre — WHEN title */}
+        <Text style={styles.headerTitle}>WHEN</Text>
+
+        {/* Right — message + bell */}
         <View style={styles.headerRight}>
-          {/* Bell icon — navigates to PendingScreen, shows red badge if items exist */}
+          {/* Message icon — placeholder until DM feature is built */}
+          <TouchableOpacity style={styles.iconBtn}>
+            <Ionicons name="chatbubble-outline" size={22} color="#8e8e93" />
+          </TouchableOpacity>
+
+          {/* Bell — navigates to PendingScreen, red badge when items exist */}
           <TouchableOpacity
-            style={styles.bellBtn}
+            style={styles.iconBtn}
             onPress={() => navigation.navigate('Pending')}
           >
             <Ionicons
               name={pendingCount > 0 ? 'notifications' : 'notifications-outline'}
-              size={24}
+              size={22}
               color={pendingCount > 0 ? '#1a8fa8' : '#8e8e93'}
             />
             {pendingCount > 0 && (
@@ -271,10 +289,8 @@ export default function HomeScreen({ navigation }) {
               </View>
             )}
           </TouchableOpacity>
-          <TouchableOpacity onPress={logout} style={styles.logoutBtn}>
-            <Text style={styles.logoutText}>Sign out</Text>
-          </TouchableOpacity>
         </View>
+
       </View>
 
       {/* ── Member bubbles ── */}

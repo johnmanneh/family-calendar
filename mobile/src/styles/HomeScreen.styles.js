@@ -11,25 +11,48 @@ const styles = StyleSheet.create({
     flexDirection: 'row',
     alignItems: 'center',
     justifyContent: 'space-between',
-    paddingHorizontal: 20,
-    paddingVertical: 12,
+    paddingHorizontal: 16,
+    paddingVertical: 10,
     backgroundColor: '#fff',
     borderBottomWidth: 1,
     borderBottomColor: '#e5e5ea',
   },
+  // Title sits absolutely centred so left/right icon groups don't push it off
+  headerTitle: {
+    position: 'absolute',
+    left: 0,
+    right: 0,
+    textAlign: 'center',
+    fontSize: 20,
+    fontWeight: '900',
+    color: '#1d1d1f',
+    letterSpacing: -1,
+    // pointerEvents none so taps pass through to buttons behind it
+    pointerEvents: 'none',
+  },
+  hamburger: {
+    gap: 5,
+    justifyContent: 'center',
+    padding: 8,
+  },
+  hamburgerLine: {
+    width: 22,
+    height: 2.5,
+    borderRadius: 2,
+  },
   headerRight: {
     flexDirection: 'row',
     alignItems: 'center',
-    gap: 8,
+    gap: 4,
   },
-  bellBtn: {
+  iconBtn: {
     position: 'relative',
-    padding: 6,
+    padding: 8,
   },
   badge: {
     position: 'absolute',
-    top: 0,
-    right: 0,
+    top: 4,
+    right: 4,
     backgroundColor: '#ff3b30',
     borderRadius: 8,
     minWidth: 16,
@@ -42,16 +65,6 @@ const styles = StyleSheet.create({
     color: '#fff',
     fontSize: 9,
     fontWeight: '700',
-  },
-  logoutBtn: {
-    paddingHorizontal: 12,
-    paddingVertical: 6,
-    borderRadius: 8,
-    backgroundColor: '#f2f2f7',
-  },
-  logoutText: {
-    fontSize: 14,
-    color: '#888',
   },
 
   // Member bubbles row
