@@ -278,26 +278,19 @@ export default function HomeScreen({ navigation }) {
   // Events for the selected day
   const dayEvents = memberFiltered.filter(e => onSameDay(e.start_date, selectedDate));
 
-  // Tasks filtered by member then by day
-  // For event-linked tasks: use start_date (the event date)
-  // For standalone tasks: use due_date
+  // Tasks filtered by member only — no day filter.
+  // Events are day-specific; tasks are an ongoing to-do list that stays
+  // visible regardless of which day is selected in the strip.
   const memberFilteredTasks = selectedMember
     ? tasks.filter(t => Number(t.assigned_to) === Number(selectedMember))
     : tasks;
 
-  const dayTasks = memberFilteredTasks.filter(t => {
-    const dateStr = t.start_date || t.due_date;
-    // Tasks with no date have no specific day — show them always
-    if (!dateStr) return true;
-    return onSameDay(dateStr, selectedDate);
-  });
-
   // Combined list for FlatList — section headers interleaved with data rows
   const listData = [
-    ...(dayEvents.length > 0 ? [{ type: 'sectionHeader', title: 'Events', key: 'sh-events' }] : []),
+    ...(dayEvents.length > 0          ? [{ type: 'sectionHeader', title: 'Events', key: 'sh-events' }] : []),
     ...dayEvents.map(e => ({ type: 'event', data: e, key: `e-${e.id}` })),
-    ...(dayTasks.length > 0  ? [{ type: 'sectionHeader', title: 'Tasks',  key: 'sh-tasks'  }] : []),
-    ...dayTasks.map(t => ({ type: 'task', data: t, key: `t-${t.id}` })),
+    ...(memberFilteredTasks.length > 0 ? [{ type: 'sectionHeader', title: 'Tasks',  key: 'sh-tasks'  }] : []),
+    ...memberFilteredTasks.map(t => ({ type: 'task', data: t, key: `t-${t.id}` })),
   ];
 
   // ── Toggle member filter ──────────────────────────────────────────────────
