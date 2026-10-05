@@ -139,16 +139,12 @@ function EventRow({ event, navigation, eventTasks }) {
 const STATUS_COLOR = { pending: '#ff9500', accepted: '#34c759', countered: '#ff3b30' };
 const STATUS_LABEL = { pending: 'Pending', accepted: 'Accepted', countered: 'Counter' };
 
-function TaskRow({ task, navigation, onComplete, onDelete, onAccept, currentUserId }) {
+function TaskRow({ task, navigation, onComplete, onDelete, onAccept }) {
   const color = task.color || task.assigned_color || '#1a8fa8';
   const badge = STATUS_COLOR[task.status] || '#aeaeb2';
 
-  // Swipe RIGHT → Accept (only for pending tasks assigned to the current user)
-  const canAccept =
-    task.status === 'pending' &&
-    Number(task.assigned_to) === Number(currentUserId);
-
-  const renderLeftActions = canAccept
+  // Swipe RIGHT → Accept (all pending tasks)
+  const renderLeftActions = task.status === 'pending'
     ? () => (
         <TouchableOpacity
           style={[styles.swipeAction, styles.swipeActionAccept]}
@@ -509,7 +505,6 @@ export default function HomeScreen({ navigation }) {
                   onComplete={handleCompleteTask}
                   onDelete={handleDeleteTask}
                   onAccept={handleAcceptTask}
-                  currentUserId={user?.id}
                 />
               );
             }
