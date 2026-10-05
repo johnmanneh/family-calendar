@@ -202,8 +202,8 @@ export default function EventFormScreen({ route, navigation }) {
         recurrence_end_date: formData.recurrence ? toDateOnly(recurrenceEnd) : null,
       };
 
-      // Tasks that have both a title and an assignee (matches web validation)
-      const validTasks = tasks.filter(t => t.title.trim() && t.assigned_to);
+      // Only require a title — assigned_to can be null ("Anyone")
+      const validTasks = tasks.filter(t => t.title.trim());
 
       if (isEdit) {
         // ── Update event ──────────────────────────────────────────────────
@@ -222,7 +222,10 @@ export default function EventFormScreen({ route, navigation }) {
         // Add any new tasks (web doesn't delete existing tasks on edit, only adds new ones)
         if (validTasks.length > 0) {
           await Promise.all(
-            validTasks.map(t => API.post(`/events/${event.id}/tasks`, t))
+            validTasks.map(t => API.post(`/events/${event.id}/tasks`, {
+              ...t,
+              assigned_to: t.assigned_to || null,
+            }))
           );
         }
       } else {
@@ -240,7 +243,10 @@ export default function EventFormScreen({ route, navigation }) {
         // Add tasks one-by-one
         if (validTasks.length > 0) {
           await Promise.all(
-            validTasks.map(t => API.post(`/events/${newId}/tasks`, t))
+            validTasks.map(t => API.post(`/events/${newId}/tasks`, {
+              ...t,
+              assigned_to: t.assigned_to || null,
+            }))
           );
         }
       }
@@ -464,7 +470,7 @@ export default function EventFormScreen({ route, navigation }) {
                 onChangeText={v => updateTask(i, 'title', v)}
               />
 
-              {/* Assign to — only show attendees that are selected */}
+              {/* Assign to — all family members, not just event attendees */}
               <ScrollView horizontal showsHorizontalScrollIndicator={false} style={styles.taskAssignRow}>
                 <TouchableOpacity
                   style={[styles.assignChip, task.assigned_to === '' && styles.assignChipActive]}
@@ -474,20 +480,17 @@ export default function EventFormScreen({ route, navigation }) {
                     Anyone
                   </Text>
                 </TouchableOpacity>
-                {members
-                  .filter(m => selectedAttendees.includes(Number(m.id)))
-                  .map(m => (
-                    <TouchableOpacity
-                      key={m.id}
-                      style={[styles.assignChip, task.assigned_to === String(m.id) && styles.assignChipActive]}
-                      onPress={() => updateTask(i, 'assigned_to', String(m.id))}
-                    >
-                      <Text style={[styles.assignChipText, task.assigned_to === String(m.id) && styles.assignChipTextActive]}>
-                        {m.first_name}
-                      </Text>
-                    </TouchableOpacity>
-                  ))
-                }
+                {members.map(m => (
+                  <TouchableOpacity
+                    key={m.id}
+                    style={[styles.assignChip, task.assigned_to === String(m.id) && styles.assignChipActive]}
+                    onPress={() => updateTask(i, 'assigned_to', String(m.id))}
+                  >
+                    <Text style={[styles.assignChipText, task.assigned_to === String(m.id) && styles.assignChipTextActive]}>
+                      {m.first_name}
+                    </Text>
+                  </TouchableOpacity>
+                ))}
               </ScrollView>
 
               {/* Position */}

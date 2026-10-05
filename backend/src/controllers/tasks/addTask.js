@@ -7,12 +7,12 @@ const addTask = async (req, res) => {
   const { assigned_to, title, position } = req.body;
   const created_by = req.user.id;
 
-  if (!title || !assigned_to) {
-    return errorResponse(res, 400, 'Title and assigned_to are required');
+  if (!title) {
+    return errorResponse(res, 400, 'Title is required');
   }
 
-  // Self-assigned tasks skip the pending flow
-  const status = Number(assigned_to) === Number(created_by) ? 'accepted' : 'pending';
+  // Self-assigned or unassigned ("Anyone") tasks are immediately accepted
+  const status = (!assigned_to || Number(assigned_to) === Number(created_by)) ? 'accepted' : 'pending';
 
   try {
     const result = await pool.query(
