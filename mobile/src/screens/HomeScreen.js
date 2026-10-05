@@ -300,12 +300,9 @@ export default function HomeScreen({ navigation }) {
     ? tasks.filter(t => Number(t.assigned_to) === Number(selectedMember))
     : tasks;
 
-  // Standalone tasks → shown in their own section
-  const standaloneTasks = memberFilteredTasks.filter(t => t.is_standalone);
-
   // Combined list:
   //   Events section  → each event card also shows its linked tasks inline
-  //   Tasks section   → standalone tasks only
+  //   Tasks section   → ALL tasks (event-linked + standalone) so they're always visible
   const listData = [
     ...(dayEvents.length > 0
       ? [{ type: 'sectionHeader', title: 'Events', key: 'sh-events' }]
@@ -313,14 +310,13 @@ export default function HomeScreen({ navigation }) {
     ...dayEvents.map(e => ({
       type: 'event',
       data: e,
-      // Attach tasks that belong to this event so EventRow can show them inline
       eventTasks: memberFilteredTasks.filter(t => Number(t.event_id) === Number(e.id)),
       key: `e-${e.id}`,
     })),
-    ...(standaloneTasks.length > 0
+    ...(memberFilteredTasks.length > 0
       ? [{ type: 'sectionHeader', title: 'Tasks', key: 'sh-tasks' }]
       : []),
-    ...standaloneTasks.map(t => ({ type: 'task', data: t, key: `t-${t.id}` })),
+    ...memberFilteredTasks.map(t => ({ type: 'task', data: t, key: `t-${t.id}` })),
   ];
 
   // ── Toggle member filter ──────────────────────────────────────────────────
