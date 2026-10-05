@@ -292,22 +292,24 @@ export default function HomeScreen({ navigation }) {
       </View>
 
       {/* ── Member bubbles ── */}
-      <ScrollView
-        horizontal                         // side-scrolling row
-        showsHorizontalScrollIndicator={false}
-        style={styles.membersRow}
-        contentContainerStyle={styles.membersContent}
-      >
-        {sortedMembers.map((member) => (
-          <MemberBubble
-            key={member.id}
-            member={member}
-            selected={Number(selectedMember) === Number(member.id)}
-            onPress={() => handleMemberPress(member.id)}
-            onLongPress={() => navigation.navigate('MemberProfile', { memberId: member.id })}
-          />
-        ))}
-      </ScrollView>
+      <View style={styles.membersRowWrapper}>
+        <ScrollView
+          horizontal
+          showsHorizontalScrollIndicator={false}
+          style={styles.membersRow}
+          contentContainerStyle={styles.membersContent}
+        >
+          {sortedMembers.map((member) => (
+            <MemberBubble
+              key={member.id}
+              member={member}
+              selected={Number(selectedMember) === Number(member.id)}
+              onPress={() => handleMemberPress(member.id)}
+              onLongPress={() => navigation.navigate('MemberProfile', { memberId: member.id })}
+            />
+          ))}
+        </ScrollView>
+      </View>
 
       {/* ── Week strip ── */}
       {!loading && (

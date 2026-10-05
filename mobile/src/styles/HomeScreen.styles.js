@@ -98,12 +98,16 @@ const styles = StyleSheet.create({
     zIndex: 999,
   },
 
-  // Member bubbles row
-  membersRow: {
+  // Member bubbles row — outer View enforces height, ScrollView fills it
+  membersRowWrapper: {
     height: 106,
     backgroundColor: '#fff',
     borderBottomWidth: 1,
     borderBottomColor: '#e5e5ea',
+    flexShrink: 0,
+  },
+  membersRow: {
+    flex: 1,
   },
   membersContent: {
     paddingHorizontal: 16,
