@@ -121,12 +121,28 @@ function EventRow({ event, navigation }) {
 const STATUS_COLOR = { pending: '#ff9500', accepted: '#34c759', countered: '#ff3b30' };
 const STATUS_LABEL = { pending: 'Pending', accepted: 'Accepted', countered: 'Counter' };
 
-function TaskRow({ task }) {
+function TaskRow({ task, navigation, onComplete }) {
   const color = task.color || task.assigned_color || '#1a8fa8';
   const badge = STATUS_COLOR[task.status] || '#aeaeb2';
 
+  const handlePress = () => {
+    if (task.event_id) {
+      // Event-linked task → go to the event
+      navigation.navigate('EventDetails', { eventId: task.event_id });
+    } else {
+      // Standalone task → quick action sheet
+      Alert.alert(task.title, null, [
+        {
+          text: '✅ Mark Complete',
+          onPress: () => onComplete(task.id),
+        },
+        { text: 'Cancel', style: 'cancel' },
+      ]);
+    }
+  };
+
   return (
-    <View style={styles.eventRow}>
+    <TouchableOpacity style={styles.eventRow} onPress={handlePress} activeOpacity={0.75}>
       <View style={[styles.eventStripe, { backgroundColor: color }]} />
       <View style={styles.eventBody}>
         <View style={styles.taskTitleRow}>
@@ -146,7 +162,7 @@ function TaskRow({ task }) {
       <View style={[styles.statusBadge, { backgroundColor: badge }]}>
         <Text style={styles.statusBadgeText}>{STATUS_LABEL[task.status] || task.status}</Text>
       </View>
-    </View>
+    </TouchableOpacity>
   );
 }
 
@@ -289,6 +305,17 @@ export default function HomeScreen({ navigation }) {
     setSelectedMember((prev) => (Number(prev) === Number(memberId) ? null : memberId));
   };
 
+  // ── Complete a standalone task ────────────────────────────────────────────
+  const handleCompleteTask = useCallback(async (taskId) => {
+    try {
+      await API.patch(`/tasks/${taskId}/complete`);
+      // Remove from local state immediately so it disappears from the list
+      setTasks(prev => prev.filter(t => t.id !== taskId));
+    } catch {
+      Alert.alert('Error', 'Could not mark task complete');
+    }
+  }, []);
+
   // ── Day label for the events section ─────────────────────────────────────
   const todayNow = new Date();
   todayNow.setHours(0, 0, 0, 0);
@@ -402,7 +429,7 @@ export default function HomeScreen({ navigation }) {
               return <EventRow event={item.data} navigation={navigation} />;
             }
             if (item.type === 'task') {
-              return <TaskRow task={item.data} />;
+              return <TaskRow task={item.data} navigation={navigation} onComplete={handleCompleteTask} />;
             }
             return null;
           }}
