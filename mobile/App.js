@@ -2,6 +2,7 @@ import React from 'react';
 import { NavigationContainer } from '@react-navigation/native';
 import { createNativeStackNavigator } from '@react-navigation/native-stack';
 import { ActivityIndicator, View } from 'react-native';
+import { GestureHandlerRootView } from 'react-native-gesture-handler';
 
 import { AuthProvider, useAuth } from './src/context/AuthContext';
 import { FamilyProvider } from './src/context/FamilyContext';
@@ -55,10 +56,12 @@ function AppNavigator() {
 // AuthProvider wraps everything so useAuth() works anywhere in the tree
 export default function App() {
   return (
-    <AuthProvider>
-      <FamilyProvider>
-        <AppNavigator />
-      </FamilyProvider>
-    </AuthProvider>
+    <GestureHandlerRootView style={{ flex: 1 }}>
+      <AuthProvider>
+        <FamilyProvider>
+          <AppNavigator />
+        </FamilyProvider>
+      </AuthProvider>
+    </GestureHandlerRootView>
   );
 }

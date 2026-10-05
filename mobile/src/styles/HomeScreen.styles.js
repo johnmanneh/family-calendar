@@ -225,10 +225,21 @@ const styles = StyleSheet.create({
   taskIcon: {
     flexShrink: 0,
   },
-  checkBtn: {
-    paddingHorizontal: 10,
+  // Swipe actions revealed when swiping left on a task row
+  swipeActions: {
+    flexDirection: 'row',
+    marginBottom: 8,
+  },
+  swipeAction: {
+    width: 72,
     justifyContent: 'center',
     alignItems: 'center',
+    gap: 3,
+  },
+  swipeActionText: {
+    color: '#fff',
+    fontSize: 11,
+    fontWeight: '600',
   },
   statusBadge: {
     paddingHorizontal: 8,

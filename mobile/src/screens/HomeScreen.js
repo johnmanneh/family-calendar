@@ -1,4 +1,5 @@
 import React, { useState, useEffect, useCallback, useRef } from 'react';
+import { Swipeable } from 'react-native-gesture-handler';
 import {
   View,
   Text,
@@ -138,8 +139,7 @@ function EventRow({ event, navigation, eventTasks }) {
 const STATUS_COLOR = { pending: '#ff9500', accepted: '#34c759', countered: '#ff3b30' };
 const STATUS_LABEL = { pending: 'Pending', accepted: 'Accepted', countered: 'Counter' };
 
-function TaskRow({ task, navigation, onComplete }) {
-  const [checked, setChecked] = useState(false);
+function TaskRow({ task, navigation, onComplete, onDelete }) {
   const color = task.color || task.assigned_color || '#1a8fa8';
   const badge = STATUS_COLOR[task.status] || '#aeaeb2';
 
@@ -149,41 +149,47 @@ function TaskRow({ task, navigation, onComplete }) {
     }
   };
 
-  const handleCheck = () => {
-    setChecked(true);
-    // Short pause so the green tick is visible before the row disappears
-    setTimeout(() => onComplete(task.id), 400);
-  };
+  // Right-side swipe actions: Done (green) + Delete (red)
+  const renderRightActions = () => (
+    <View style={styles.swipeActions}>
+      <TouchableOpacity
+        style={[styles.swipeAction, { backgroundColor: '#34c759' }]}
+        onPress={() => onComplete(task.id)}
+      >
+        <Ionicons name="checkmark" size={22} color="#fff" />
+        <Text style={styles.swipeActionText}>Done</Text>
+      </TouchableOpacity>
+      <TouchableOpacity
+        style={[styles.swipeAction, { backgroundColor: '#ff3b30' }]}
+        onPress={() => onDelete(task.id)}
+      >
+        <Ionicons name="trash" size={20} color="#fff" />
+        <Text style={styles.swipeActionText}>Delete</Text>
+      </TouchableOpacity>
+    </View>
+  );
 
   return (
-    <TouchableOpacity style={styles.eventRow} onPress={handleRowPress} activeOpacity={0.75}>
-      <View style={[styles.eventStripe, { backgroundColor: color }]} />
-      <View style={styles.eventBody}>
-        <View style={styles.taskTitleRow}>
+    <Swipeable renderRightActions={renderRightActions} overshootRight={false}>
+      <TouchableOpacity style={styles.eventRow} onPress={handleRowPress} activeOpacity={0.75}>
+        <View style={[styles.eventStripe, { backgroundColor: color }]} />
+        <View style={styles.eventBody}>
           <Text style={styles.eventTitle} numberOfLines={1}>{task.title}</Text>
+          {task.event_title ? (
+            <Text style={styles.eventTime}>📅 {task.event_title}</Text>
+          ) : task.due_date ? (
+            <Text style={styles.eventTime}>
+              Due {new Date(task.due_date.replace(/Z$/, '')).toLocaleDateString('en-GB', { day: 'numeric', month: 'short' })}
+            </Text>
+          ) : (
+            <Text style={styles.eventTime}>No due date</Text>
+          )}
         </View>
-        {task.event_title ? (
-          <Text style={styles.eventTime}>📅 {task.event_title}</Text>
-        ) : task.due_date ? (
-          <Text style={styles.eventTime}>
-            Due {new Date(task.due_date.replace(/Z$/, '')).toLocaleDateString('en-GB', { day: 'numeric', month: 'short' })}
-          </Text>
-        ) : (
-          <Text style={styles.eventTime}>No due date</Text>
-        )}
-      </View>
-      <View style={[styles.statusBadge, { backgroundColor: badge }]}>
-        <Text style={styles.statusBadgeText}>{STATUS_LABEL[task.status] || task.status}</Text>
-      </View>
-      {/* Checkbox — tap to complete, turns green before disappearing */}
-      <TouchableOpacity style={styles.checkBtn} onPress={handleCheck} hitSlop={{ top: 8, bottom: 8, left: 8, right: 8 }}>
-        <Ionicons
-          name={checked ? 'checkmark-circle' : 'ellipse-outline'}
-          size={22}
-          color={checked ? '#34c759' : '#c7c7cc'}
-        />
+        <View style={[styles.statusBadge, { backgroundColor: badge }]}>
+          <Text style={styles.statusBadgeText}>{STATUS_LABEL[task.status] || task.status}</Text>
+        </View>
       </TouchableOpacity>
-    </TouchableOpacity>
+    </Swipeable>
   );
 }
 
@@ -328,14 +334,23 @@ export default function HomeScreen({ navigation }) {
     setSelectedMember((prev) => (Number(prev) === Number(memberId) ? null : memberId));
   };
 
-  // ── Complete a standalone task ────────────────────────────────────────────
+  // ── Complete a task ───────────────────────────────────────────────────────
   const handleCompleteTask = useCallback(async (taskId) => {
     try {
       await API.patch(`/tasks/${taskId}/complete`);
-      // Remove from local state immediately so it disappears from the list
       setTasks(prev => prev.filter(t => t.id !== taskId));
     } catch {
       Alert.alert('Error', 'Could not mark task complete');
+    }
+  }, []);
+
+  // ── Delete a task ─────────────────────────────────────────────────────────
+  const handleDeleteTask = useCallback(async (taskId) => {
+    try {
+      await API.delete(`/tasks/${taskId}`);
+      setTasks(prev => prev.filter(t => t.id !== taskId));
+    } catch {
+      Alert.alert('Error', 'Could not delete task');
     }
   }, []);
 
@@ -452,7 +467,7 @@ export default function HomeScreen({ navigation }) {
               return <EventRow event={item.data} navigation={navigation} eventTasks={item.eventTasks} />;
             }
             if (item.type === 'task') {
-              return <TaskRow task={item.data} navigation={navigation} onComplete={handleCompleteTask} />;
+              return <TaskRow task={item.data} navigation={navigation} onComplete={handleCompleteTask} onDelete={handleDeleteTask} />;
             }
             return null;
           }}

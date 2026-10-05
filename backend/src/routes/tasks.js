@@ -11,6 +11,7 @@ const getAssigneeNotifications = require('../controllers/tasks/getAssigneeNotifi
 const acknowledgeAssigneeNotification = require('../controllers/tasks/acknowledgeAssigneeNotification');
 const updateTaskDueDate = require('../controllers/tasks/updateTaskDueDate');
 const getFamilyTasks = require('../controllers/tasks/getFamilyTasks');
+const deleteTask = require('../controllers/tasks/deleteTask');
 
 router.post('/standalone', verifyToken, createStandaloneTask);
 router.get('/family', verifyToken, getFamilyTasks);
@@ -18,6 +19,7 @@ router.get('/pending', verifyToken, getPendingTasks);
 router.get('/notifications', verifyToken, getTaskNotifications);
 router.get('/assignee-notifications', verifyToken, getAssigneeNotifications);
 router.patch('/:taskId/complete', verifyToken, completeTask);
+router.delete('/:taskId', verifyToken, deleteTask);
 router.patch('/:taskId/respond', verifyToken, respondToTask);
 router.patch('/:taskId/acknowledge', verifyToken, acknowledgeTaskResponse);
 router.patch('/:taskId/assignee-acknowledge', verifyToken, acknowledgeAssigneeNotification);
