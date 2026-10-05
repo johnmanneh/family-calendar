@@ -180,6 +180,42 @@ const styles = StyleSheet.create({
     marginBottom: 6,
   },
 
+  // Inline tasks listed under an event card
+  inlineTasksList: {
+    borderLeftWidth: 3,
+    marginLeft: 4,
+    paddingVertical: 4,
+    paddingLeft: 10,
+    paddingRight: 10,
+    gap: 5,
+    backgroundColor: '#fafafa',
+  },
+  inlineTaskRow: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 6,
+  },
+  inlineTaskTitle: {
+    flex: 1,
+    fontSize: 13,
+    color: '#1d1d1f',
+    fontWeight: '500',
+  },
+  inlineTaskAssignee: {
+    fontSize: 11,
+    color: '#8e8e93',
+  },
+  inlineTaskBadge: {
+    paddingHorizontal: 6,
+    paddingVertical: 2,
+    borderRadius: 8,
+  },
+  inlineTaskBadgeText: {
+    color: '#fff',
+    fontSize: 9,
+    fontWeight: '700',
+  },
+
   // Task row extras
   taskTitleRow: {
     flexDirection: 'row',
@@ -201,8 +237,8 @@ const styles = StyleSheet.create({
     fontSize: 10,
     fontWeight: '700',
   },
-  eventRow: {
-    flexDirection: 'row',
+  // Outer wrapper — holds the event tap row + inline tasks below it
+  eventCard: {
     backgroundColor: '#fff',
     borderRadius: 10,
     marginBottom: 8,
@@ -212,6 +248,9 @@ const styles = StyleSheet.create({
     shadowRadius: 4,
     shadowOffset: { width: 0, height: 2 },
     elevation: 1,
+  },
+  eventRow: {
+    flexDirection: 'row',
   },
   eventStripe: {
     width: 4,

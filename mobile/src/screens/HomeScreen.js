@@ -92,27 +92,44 @@ function MemberBubble({ member, selected, onPress, onLongPress }) {
 }
 
 // ─── Event row ───────────────────────────────────────────────────────────────
+// `eventTasks` are the tasks linked to this event — shown inline below it.
 
-function EventRow({ event, navigation }) {
+function EventRow({ event, navigation, eventTasks }) {
   const color = event.color || '#1a8fa8';
 
   return (
-    // TouchableOpacity makes the whole card pressable
-    <TouchableOpacity
-      style={styles.eventRow}
-      onPress={() => navigation.navigate('EventDetails', { eventId: event.id })}
-      activeOpacity={0.75}
-    >
-      {/* Coloured left stripe — same visual as the web calendar dots */}
-      <View style={[styles.eventStripe, { backgroundColor: color }]} />
+    <View style={styles.eventCard}>
+      {/* Main event tap target */}
+      <TouchableOpacity
+        style={styles.eventRow}
+        onPress={() => navigation.navigate('EventDetails', { eventId: event.id })}
+        activeOpacity={0.75}
+      >
+        <View style={[styles.eventStripe, { backgroundColor: color }]} />
+        <View style={styles.eventBody}>
+          <Text style={styles.eventTitle} numberOfLines={1}>{event.title}</Text>
+          <Text style={styles.eventTime}>{formatTime(event)}</Text>
+        </View>
+      </TouchableOpacity>
 
-      <View style={styles.eventBody}>
-        <Text style={styles.eventTitle} numberOfLines={1}>
-          {event.title}
-        </Text>
-        <Text style={styles.eventTime}>{formatTime(event)}</Text>
-      </View>
-    </TouchableOpacity>
+      {/* Inline tasks for this event */}
+      {eventTasks?.length > 0 && (
+        <View style={[styles.inlineTasksList, { borderLeftColor: color }]}>
+          {eventTasks.map(t => (
+            <View key={t.id} style={styles.inlineTaskRow}>
+              <Ionicons name="checkmark-circle-outline" size={13} color={STATUS_COLOR[t.status] || '#aeaeb2'} />
+              <Text style={styles.inlineTaskTitle} numberOfLines={1}>{t.title}</Text>
+              {t.assigned_first_name && (
+                <Text style={styles.inlineTaskAssignee}>{t.assigned_first_name}</Text>
+              )}
+              <View style={[styles.inlineTaskBadge, { backgroundColor: STATUS_COLOR[t.status] || '#aeaeb2' }]}>
+                <Text style={styles.inlineTaskBadgeText}>{STATUS_LABEL[t.status] || t.status}</Text>
+              </View>
+            </View>
+          ))}
+        </View>
+      )}
+    </View>
   );
 }
 
@@ -278,19 +295,32 @@ export default function HomeScreen({ navigation }) {
   // Events for the selected day
   const dayEvents = memberFiltered.filter(e => onSameDay(e.start_date, selectedDate));
 
-  // Tasks filtered by member only — no day filter.
-  // Events are day-specific; tasks are an ongoing to-do list that stays
-  // visible regardless of which day is selected in the strip.
+  // Tasks filtered by member only
   const memberFilteredTasks = selectedMember
     ? tasks.filter(t => Number(t.assigned_to) === Number(selectedMember))
     : tasks;
 
-  // Combined list for FlatList — section headers interleaved with data rows
+  // Standalone tasks → shown in their own section
+  const standaloneTasks = memberFilteredTasks.filter(t => t.is_standalone);
+
+  // Combined list:
+  //   Events section  → each event card also shows its linked tasks inline
+  //   Tasks section   → standalone tasks only
   const listData = [
-    ...(dayEvents.length > 0          ? [{ type: 'sectionHeader', title: 'Events', key: 'sh-events' }] : []),
-    ...dayEvents.map(e => ({ type: 'event', data: e, key: `e-${e.id}` })),
-    ...(memberFilteredTasks.length > 0 ? [{ type: 'sectionHeader', title: 'Tasks',  key: 'sh-tasks'  }] : []),
-    ...memberFilteredTasks.map(t => ({ type: 'task', data: t, key: `t-${t.id}` })),
+    ...(dayEvents.length > 0
+      ? [{ type: 'sectionHeader', title: 'Events', key: 'sh-events' }]
+      : []),
+    ...dayEvents.map(e => ({
+      type: 'event',
+      data: e,
+      // Attach tasks that belong to this event so EventRow can show them inline
+      eventTasks: memberFilteredTasks.filter(t => Number(t.event_id) === Number(e.id)),
+      key: `e-${e.id}`,
+    })),
+    ...(standaloneTasks.length > 0
+      ? [{ type: 'sectionHeader', title: 'Tasks', key: 'sh-tasks' }]
+      : []),
+    ...standaloneTasks.map(t => ({ type: 'task', data: t, key: `t-${t.id}` })),
   ];
 
   // ── Toggle member filter ──────────────────────────────────────────────────
@@ -419,7 +449,7 @@ export default function HomeScreen({ navigation }) {
               return <Text style={styles.sectionHeader}>{item.title}</Text>;
             }
             if (item.type === 'event') {
-              return <EventRow event={item.data} navigation={navigation} />;
+              return <EventRow event={item.data} navigation={navigation} eventTasks={item.eventTasks} />;
             }
             if (item.type === 'task') {
               return <TaskRow task={item.data} navigation={navigation} onComplete={handleCompleteTask} />;
