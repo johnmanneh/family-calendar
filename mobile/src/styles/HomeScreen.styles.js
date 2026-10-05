@@ -231,14 +231,16 @@ const styles = StyleSheet.create({
     marginBottom: 8,
   },
   swipeAction: {
-    width: 72,
+    width: 76,
     justifyContent: 'center',
     alignItems: 'center',
-    gap: 3,
+    gap: 4,
   },
-  swipeActionAccept: {
-    backgroundColor: '#1a8fa8',
-    marginBottom: 8,
+  // iOS only — round the right edge of the last button to match the card
+  swipeActionFirst: {},
+  swipeActionLast: {
+    borderTopRightRadius: 10,
+    borderBottomRightRadius: 10,
   },
   swipeActionText: {
     color: '#fff',

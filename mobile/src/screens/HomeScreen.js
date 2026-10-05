@@ -3,13 +3,16 @@ import { Swipeable } from 'react-native-gesture-handler';
 import {
   View,
   Text,
+  Animated,
   FlatList,
   ScrollView,
   TouchableOpacity,
+  TouchableNativeFeedback,
   ActivityIndicator,
   RefreshControl,
   PanResponder,
   Alert,
+  Platform,
 } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { Ionicons } from '@expo/vector-icons';
@@ -142,39 +145,58 @@ const STATUS_LABEL = { pending: 'Pending', accepted: 'Accepted', countered: 'Cou
 function TaskRow({ task, navigation, onComplete, onDelete, onAccept }) {
   const color = task.color || task.assigned_color || '#1a8fa8';
   const badge = STATUS_COLOR[task.status] || '#aeaeb2';
+  const badgeOpacity = useRef(new Animated.Value(1)).current;
 
-  // Swipe RIGHT → Accept (all pending tasks)
-  const renderLeftActions = task.status === 'pending'
-    ? () => (
+  // Pending → Accept, anything else → Done
+  const isPending = task.status === 'pending';
+
+  const primaryColor  = isPending ? '#1a8fa8' : '#34c759';
+  const primaryIcon   = isPending ? 'checkmark-done' : 'checkmark';
+  const primaryLabel  = isPending ? 'Accept' : 'Done';
+  const primaryAction = isPending ? () => onAccept(task.id) : () => onComplete(task.id);
+
+  const renderRightActions = () =>
+    Platform.OS === 'ios' ? (
+      // iOS — pill buttons matching native Mail style
+      <View style={styles.swipeActions}>
         <TouchableOpacity
-          style={[styles.swipeAction, styles.swipeActionAccept]}
-          onPress={() => onAccept(task.id)}
+          style={[styles.swipeAction, styles.swipeActionFirst, { backgroundColor: primaryColor }]}
+          onPress={primaryAction}
         >
-          <Ionicons name="checkmark-done" size={22} color="#fff" />
-          <Text style={styles.swipeActionText}>Accept</Text>
+          <Ionicons name={primaryIcon} size={22} color="#fff" />
+          <Text style={styles.swipeActionText}>{primaryLabel}</Text>
         </TouchableOpacity>
-      )
-    : null;
-
-  // Swipe LEFT → Done (green) + Delete (red)
-  const renderRightActions = () => (
-    <View style={styles.swipeActions}>
-      <TouchableOpacity
-        style={[styles.swipeAction, { backgroundColor: '#34c759' }]}
-        onPress={() => onComplete(task.id)}
-      >
-        <Ionicons name="checkmark" size={22} color="#fff" />
-        <Text style={styles.swipeActionText}>Done</Text>
-      </TouchableOpacity>
-      <TouchableOpacity
-        style={[styles.swipeAction, { backgroundColor: '#ff3b30' }]}
-        onPress={() => onDelete(task.id)}
-      >
-        <Ionicons name="trash" size={20} color="#fff" />
-        <Text style={styles.swipeActionText}>Delete</Text>
-      </TouchableOpacity>
-    </View>
-  );
+        <TouchableOpacity
+          style={[styles.swipeAction, styles.swipeActionLast, { backgroundColor: '#ff3b30' }]}
+          onPress={() => onDelete(task.id)}
+        >
+          <Ionicons name="trash" size={20} color="#fff" />
+          <Text style={styles.swipeActionText}>Delete</Text>
+        </TouchableOpacity>
+      </View>
+    ) : (
+      // Android — full-height ripple buttons (Material style)
+      <View style={styles.swipeActions}>
+        <TouchableNativeFeedback
+          onPress={primaryAction}
+          background={TouchableNativeFeedback.Ripple('rgba(255,255,255,0.3)', false)}
+        >
+          <View style={[styles.swipeAction, { backgroundColor: primaryColor }]}>
+            <Ionicons name={primaryIcon} size={22} color="#fff" />
+            <Text style={styles.swipeActionText}>{primaryLabel}</Text>
+          </View>
+        </TouchableNativeFeedback>
+        <TouchableNativeFeedback
+          onPress={() => onDelete(task.id)}
+          background={TouchableNativeFeedback.Ripple('rgba(255,255,255,0.3)', false)}
+        >
+          <View style={[styles.swipeAction, { backgroundColor: '#ff3b30' }]}>
+            <Ionicons name="trash" size={20} color="#fff" />
+            <Text style={styles.swipeActionText}>Delete</Text>
+          </View>
+        </TouchableNativeFeedback>
+      </View>
+    );
 
   const handleRowPress = () => {
     if (task.event_id) {
@@ -184,10 +206,10 @@ function TaskRow({ task, navigation, onComplete, onDelete, onAccept }) {
 
   return (
     <Swipeable
-      renderLeftActions={renderLeftActions}
       renderRightActions={renderRightActions}
-      overshootLeft={false}
       overshootRight={false}
+      onSwipeableWillOpen={() => Animated.timing(badgeOpacity, { toValue: 0, duration: 150, useNativeDriver: true }).start()}
+      onSwipeableWillClose={() => Animated.timing(badgeOpacity, { toValue: 1, duration: 200, useNativeDriver: true }).start()}
     >
       <TouchableOpacity style={styles.eventRow} onPress={handleRowPress} activeOpacity={0.75}>
         <View style={[styles.eventStripe, { backgroundColor: color }]} />
@@ -203,9 +225,9 @@ function TaskRow({ task, navigation, onComplete, onDelete, onAccept }) {
             <Text style={styles.eventTime}>No due date</Text>
           )}
         </View>
-        <View style={[styles.statusBadge, { backgroundColor: badge }]}>
+        <Animated.View style={[styles.statusBadge, { backgroundColor: badge, opacity: badgeOpacity }]}>
           <Text style={styles.statusBadgeText}>{STATUS_LABEL[task.status] || task.status}</Text>
-        </View>
+        </Animated.View>
       </TouchableOpacity>
     </Swipeable>
   );
@@ -380,8 +402,10 @@ export default function HomeScreen({ navigation }) {
       setTasks(prev => prev.map(t =>
         t.id === taskId ? { ...t, status: 'accepted' } : t
       ));
-    } catch {
-      Alert.alert('Error', 'Could not accept task');
+    } catch (err) {
+      const msg = err.response?.data?.message || err.message || 'Could not accept task';
+      console.error('handleAcceptTask error:', msg);
+      Alert.alert('Error', msg);
     }
   }, []);
 

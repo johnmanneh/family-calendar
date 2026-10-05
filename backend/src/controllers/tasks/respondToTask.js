@@ -29,17 +29,17 @@ const respondToTask = async (req, res) => {
     const isAssignee = Number(task.assigned_to) === Number(userId);
     const isCreator  = Number(task.created_by)  === Number(userId);
 
-    // Determine if it's this user's turn:
-    // - Assignee's turn: status=pending, OR status=countered and creator sent last counter
-    // - Creator's turn:  status=countered and assignee sent last counter
+    // For pending tasks: any family member can accept/decline (home screen quick-accept).
+    // For countered tasks: strict turn-based — only the other party can respond.
+    const canRespondToPending = task.status === 'pending';
+
     const assigneeTurn =
-      (task.status === 'pending' && isAssignee) ||
       (task.status === 'countered' && isAssignee && Number(task.last_counter_by) === Number(task.created_by));
 
     const creatorTurn =
       task.status === 'countered' && isCreator && Number(task.last_counter_by) === Number(task.assigned_to);
 
-    if (!assigneeTurn && !creatorTurn) {
+    if (!canRespondToPending && !assigneeTurn && !creatorTurn) {
       return errorResponse(res, 403, 'Not your turn to respond');
     }
 
@@ -98,7 +98,8 @@ const respondToTask = async (req, res) => {
 
     return successResponse(res, 200, 'Task response saved', { task: result.rows[0] });
   } catch (error) {
-    return errorResponse(res, 500, 'Server error');
+    console.error('respondToTask error:', error.message);
+    return errorResponse(res, 500, error.message);
   }
 };
 
