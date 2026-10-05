@@ -139,7 +139,9 @@ function TaskRow({ task }) {
           <Text style={styles.eventTime}>
             Due {new Date(task.due_date.replace(/Z$/, '')).toLocaleDateString('en-GB', { day: 'numeric', month: 'short' })}
           </Text>
-        ) : null}
+        ) : (
+          <Text style={styles.eventTime}>No due date</Text>
+        )}
       </View>
       <View style={[styles.statusBadge, { backgroundColor: badge }]}>
         <Text style={styles.statusBadgeText}>{STATUS_LABEL[task.status] || task.status}</Text>
@@ -269,6 +271,8 @@ export default function HomeScreen({ navigation }) {
 
   const dayTasks = memberFilteredTasks.filter(t => {
     const dateStr = t.start_date || t.due_date;
+    // Tasks with no date have no specific day — show them always
+    if (!dateStr) return true;
     return onSameDay(dateStr, selectedDate);
   });
 
