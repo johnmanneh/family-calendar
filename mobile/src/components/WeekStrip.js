@@ -12,6 +12,16 @@ const DAY_WIDTH    = Math.floor(SCREEN_WIDTH / 7);
 const MAX_CHIPS    = 3; // max event chips shown per day before "+N more"
 const DAY_LETTERS  = ['Sun', 'Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat'];
 
+// Converts "#1a8fa8" + alpha (0–1) → "rgba(26,143,168,0.12)"
+// Used for chip backgrounds so each event takes its own colour
+function hexToRgba(hex, alpha) {
+  if (!hex || hex.length < 7) return `rgba(26,143,168,${alpha})`;
+  const r = parseInt(hex.slice(1, 3), 16);
+  const g = parseInt(hex.slice(3, 5), 16);
+  const b = parseInt(hex.slice(5, 7), 16);
+  return `rgba(${r},${g},${b},${alpha})`;
+}
+
 // ─── Helpers ─────────────────────────────────────────────────────────────────
 
 function getMonday(date) {
@@ -154,15 +164,21 @@ export default function WeekStrip({ events, selectedDate, onSelectDate }) {
 
               {/* Event chips */}
               <View style={styles.chipsCol}>
-                {visible.map((ev, j) => (
-                  <View key={j} style={styles.chip}>
-                    <View style={[styles.chipStripe, { backgroundColor: ev.color || '#1a8fa8' }]} />
-                    <View style={styles.chipText}>
-                      <Text style={styles.chipTitle} numberOfLines={1}>{ev.title}</Text>
-                      <Text style={styles.chipTime}>{shortTime(ev)}</Text>
+                {visible.map((ev, j) => {
+                  const evColor = ev.color || '#1a8fa8';
+                  return (
+                    <View
+                      key={j}
+                      style={[styles.chip, { backgroundColor: hexToRgba(evColor, 0.15) }]}
+                    >
+                      <View style={[styles.chipStripe, { backgroundColor: evColor }]} />
+                      <View style={styles.chipText}>
+                        <Text style={styles.chipTitle} numberOfLines={1}>{ev.title}</Text>
+                        <Text style={[styles.chipTime, { color: evColor }]}>{shortTime(ev)}</Text>
+                      </View>
                     </View>
-                  </View>
-                ))}
+                  );
+                })}
                 {overflow > 0 && (
                   <Text style={styles.overflow}>+{overflow}</Text>
                 )}
@@ -268,13 +284,12 @@ const styles = {
   },
   chip: {
     flexDirection: 'row',
-    backgroundColor: '#f5f5f7',
     borderRadius: 4,
     overflow: 'hidden',
-    height: 30,
+    height: 32,
   },
   chipStripe: {
-    width: 3,
+    width: 4,
   },
   chipText: {
     flex: 1,
@@ -282,15 +297,15 @@ const styles = {
     justifyContent: 'center',
   },
   chipTitle: {
-    fontSize: 9,
-    fontWeight: '600',
+    fontSize: 10,
+    fontWeight: '700',
     color: '#1d1d1f',
-    lineHeight: 12,
+    lineHeight: 13,
   },
   chipTime: {
-    fontSize: 8,
-    color: '#888',
-    lineHeight: 11,
+    fontSize: 9,
+    fontWeight: '500',
+    lineHeight: 12,
   },
   overflow: {
     fontSize: 9,
