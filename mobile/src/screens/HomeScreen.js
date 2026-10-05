@@ -139,31 +139,27 @@ const STATUS_COLOR = { pending: '#ff9500', accepted: '#34c759', countered: '#ff3
 const STATUS_LABEL = { pending: 'Pending', accepted: 'Accepted', countered: 'Counter' };
 
 function TaskRow({ task, navigation, onComplete }) {
+  const [checked, setChecked] = useState(false);
   const color = task.color || task.assigned_color || '#1a8fa8';
   const badge = STATUS_COLOR[task.status] || '#aeaeb2';
 
-  const handlePress = () => {
+  const handleRowPress = () => {
     if (task.event_id) {
-      // Event-linked task → go to the event
       navigation.navigate('EventDetails', { eventId: task.event_id });
-    } else {
-      // Standalone task → quick action sheet
-      Alert.alert(task.title, null, [
-        {
-          text: '✅ Mark Complete',
-          onPress: () => onComplete(task.id),
-        },
-        { text: 'Cancel', style: 'cancel' },
-      ]);
     }
   };
 
+  const handleCheck = () => {
+    setChecked(true);
+    // Short pause so the green tick is visible before the row disappears
+    setTimeout(() => onComplete(task.id), 400);
+  };
+
   return (
-    <TouchableOpacity style={styles.eventRow} onPress={handlePress} activeOpacity={0.75}>
+    <TouchableOpacity style={styles.eventRow} onPress={handleRowPress} activeOpacity={0.75}>
       <View style={[styles.eventStripe, { backgroundColor: color }]} />
       <View style={styles.eventBody}>
         <View style={styles.taskTitleRow}>
-          <Ionicons name="checkmark-circle-outline" size={14} color={color} style={styles.taskIcon} />
           <Text style={styles.eventTitle} numberOfLines={1}>{task.title}</Text>
         </View>
         {task.event_title ? (
@@ -179,6 +175,14 @@ function TaskRow({ task, navigation, onComplete }) {
       <View style={[styles.statusBadge, { backgroundColor: badge }]}>
         <Text style={styles.statusBadgeText}>{STATUS_LABEL[task.status] || task.status}</Text>
       </View>
+      {/* Checkbox — tap to complete, turns green before disappearing */}
+      <TouchableOpacity style={styles.checkBtn} onPress={handleCheck} hitSlop={{ top: 8, bottom: 8, left: 8, right: 8 }}>
+        <Ionicons
+          name={checked ? 'checkmark-circle' : 'ellipse-outline'}
+          size={22}
+          color={checked ? '#34c759' : '#c7c7cc'}
+        />
+      </TouchableOpacity>
     </TouchableOpacity>
   );
 }

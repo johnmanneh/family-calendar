@@ -225,6 +225,11 @@ const styles = StyleSheet.create({
   taskIcon: {
     flexShrink: 0,
   },
+  checkBtn: {
+    paddingHorizontal: 10,
+    justifyContent: 'center',
+    alignItems: 'center',
+  },
   statusBadge: {
     paddingHorizontal: 8,
     paddingVertical: 3,
