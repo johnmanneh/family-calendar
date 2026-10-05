@@ -102,29 +102,30 @@ const styles = StyleSheet.create({
     fontWeight: '600',
   },
 
-  // ── Footer ───────────────────────────────────────────────────────────────
-  tag: {
-    textAlign: 'center',
-    marginTop: 16,
-    fontSize: 12,
-    fontWeight: '500',
-    color: '#1a8fa8',
-  },
-  divider: {
+  // ── Name row (register only) ─────────────────────────────────────────────
+  nameRow: {
     flexDirection: 'row',
-    alignItems: 'center',
-    marginTop: 20,
     gap: 12,
+    marginBottom: 0,
   },
-  dividerLine: {
+  nameField: {
     flex: 1,
-    height: 1,
-    backgroundColor: '#e0e0e5',
   },
-  dividerText: {
-    fontSize: 11,
-    color: '#aeaeb2',
-    letterSpacing: 1,
+
+  // ── Footer ───────────────────────────────────────────────────────────────
+  switchRow: {
+    flexDirection: 'row',
+    justifyContent: 'center',
+    marginTop: 20,
+  },
+  switchText: {
+    fontSize: 13,
+    color: '#6e6e73',
+  },
+  switchLink: {
+    fontSize: 13,
+    fontWeight: '600',
+    color: '#1a8fa8',
   },
 
 });

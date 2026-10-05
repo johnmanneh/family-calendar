@@ -1,5 +1,5 @@
 import React, { useState, useEffect, useCallback, useRef } from 'react';
-import { Swipeable } from 'react-native-gesture-handler';
+import Swipeable from 'react-native-gesture-handler/Swipeable';
 import {
   View,
   Text,
@@ -7,7 +7,6 @@ import {
   FlatList,
   ScrollView,
   TouchableOpacity,
-  TouchableNativeFeedback,
   ActivityIndicator,
   RefreshControl,
   PanResponder,
@@ -19,6 +18,7 @@ import { Ionicons } from '@expo/vector-icons';
 import { LinearGradient } from 'expo-linear-gradient';
 import DrawerMenu from '../components/DrawerMenu';
 import WeekStrip from '../components/WeekStrip';
+import MonthCalendar from '../components/MonthCalendar';
 import styles from '../styles/HomeScreen.styles';
 import API from '../api/axios';
 import { useAuth } from '../context/AuthContext';
@@ -155,48 +155,26 @@ function TaskRow({ task, navigation, onComplete, onDelete, onAccept }) {
   const primaryLabel  = isPending ? 'Accept' : 'Done';
   const primaryAction = isPending ? () => onAccept(task.id) : () => onComplete(task.id);
 
-  const renderRightActions = () =>
-    Platform.OS === 'ios' ? (
-      // iOS — pill buttons matching native Mail style
-      <View style={styles.swipeActions}>
-        <TouchableOpacity
-          style={[styles.swipeAction, styles.swipeActionFirst, { backgroundColor: primaryColor }]}
-          onPress={primaryAction}
-        >
-          <Ionicons name={primaryIcon} size={22} color="#fff" />
-          <Text style={styles.swipeActionText}>{primaryLabel}</Text>
-        </TouchableOpacity>
-        <TouchableOpacity
-          style={[styles.swipeAction, styles.swipeActionLast, { backgroundColor: '#ff3b30' }]}
-          onPress={() => onDelete(task.id)}
-        >
-          <Ionicons name="trash" size={20} color="#fff" />
-          <Text style={styles.swipeActionText}>Delete</Text>
-        </TouchableOpacity>
-      </View>
-    ) : (
-      // Android — full-height ripple buttons (Material style)
-      <View style={styles.swipeActions}>
-        <TouchableNativeFeedback
-          onPress={primaryAction}
-          background={TouchableNativeFeedback.Ripple('rgba(255,255,255,0.3)', false)}
-        >
-          <View style={[styles.swipeAction, { backgroundColor: primaryColor }]}>
-            <Ionicons name={primaryIcon} size={22} color="#fff" />
-            <Text style={styles.swipeActionText}>{primaryLabel}</Text>
-          </View>
-        </TouchableNativeFeedback>
-        <TouchableNativeFeedback
-          onPress={() => onDelete(task.id)}
-          background={TouchableNativeFeedback.Ripple('rgba(255,255,255,0.3)', false)}
-        >
-          <View style={[styles.swipeAction, { backgroundColor: '#ff3b30' }]}>
-            <Ionicons name="trash" size={20} color="#fff" />
-            <Text style={styles.swipeActionText}>Delete</Text>
-          </View>
-        </TouchableNativeFeedback>
-      </View>
-    );
+  const renderRightActions = () => (
+    <View style={styles.swipeActions}>
+      <TouchableOpacity
+        style={[styles.swipeAction, { backgroundColor: primaryColor }]}
+        onPress={primaryAction}
+        activeOpacity={0.85}
+      >
+        <Ionicons name={primaryIcon} size={22} color="#fff" />
+        <Text style={styles.swipeActionText}>{primaryLabel}</Text>
+      </TouchableOpacity>
+      <TouchableOpacity
+        style={[styles.swipeAction, styles.swipeActionLast, { backgroundColor: '#ff3b30' }]}
+        onPress={() => onDelete(task.id)}
+        activeOpacity={0.85}
+      >
+        <Ionicons name="trash" size={20} color="#fff" />
+        <Text style={styles.swipeActionText}>Delete</Text>
+      </TouchableOpacity>
+    </View>
+  );
 
   const handleRowPress = () => {
     if (task.event_id) {
@@ -260,6 +238,45 @@ export default function HomeScreen({ navigation }) {
   todayStart.setHours(0, 0, 0, 0);
   const [selectedDate, setSelectedDate] = useState(todayStart);
 
+  // Calendar view mode — 'week' or 'month'
+  // Starts as month so new users always see the full calendar on first load.
+  // Switches to week once the user has data (members or events).
+  const [viewMode, setViewMode] = useState('month');
+
+  // Pinch gesture tracking — two-finger spread/compress switches view
+  const pinch = useRef({ startDist: null, currentDist: null });
+
+  const pinchDist = (touches) =>
+    Math.hypot(touches[1].pageX - touches[0].pageX, touches[1].pageY - touches[0].pageY);
+
+  const onCalTouchStart = (e) => {
+    if (e.nativeEvent.touches.length === 2)
+      pinch.current.startDist = pinchDist(e.nativeEvent.touches);
+  };
+  const onCalTouchMove = (e) => {
+    if (e.nativeEvent.touches.length === 2)
+      pinch.current.currentDist = pinchDist(e.nativeEvent.touches);
+  };
+  const onCalTouchEnd = () => {
+    const { startDist, currentDist } = pinch.current;
+    if (startDist && currentDist) {
+      const scale = currentDist / startDist;
+      if (scale > 1.3) {
+        // Spread fingers → zoom out → month view
+        setViewMode('month');
+      } else if (scale < 0.75) {
+        if (viewMode === 'month') {
+          // Pinch in from month → week view
+          setViewMode('week');
+        } else {
+          // Pinch in from week → day drill-down
+          navigation.navigate('DayView', { dateStr: selectedDate.toISOString() });
+        }
+      }
+    }
+    pinch.current = { startDist: null, currentDist: null };
+  };
+
   // ── Edge swipe to open drawer ─────────────────────────────────────────────
   // A dedicated 20px strip on the left edge captures the gesture so it never
   // conflicts with the member bubbles ScrollView or the event FlatList.
@@ -273,14 +290,15 @@ export default function HomeScreen({ navigation }) {
   ).current;
 
   // ── Fetch events + tasks together ────────────────────────────────────────
+  // Use allSettled so a 404 (new user with no family) doesn't crash the other request.
   const fetchEvents = useCallback(async () => {
     try {
-      const [eventsRes, tasksRes] = await Promise.all([
+      const [eventsRes, tasksRes] = await Promise.allSettled([
         API.get('/events'),
         API.get('/tasks/family'),
       ]);
-      setEvents(eventsRes.data.events || []);
-      setTasks(tasksRes.data.tasks || []);
+      setEvents(eventsRes.status === 'fulfilled' ? (eventsRes.value.data.events || []) : []);
+      setTasks(tasksRes.status === 'fulfilled'   ? (tasksRes.value.data.tasks   || []) : []);
     } catch (err) {
       console.error('fetchEvents error:', err.message);
     } finally {
@@ -292,22 +310,19 @@ export default function HomeScreen({ navigation }) {
   // ── Fetch pending count for the badge ────────────────────────────────────
   // Adds up pending tasks + notifications + event invitations
   const fetchPendingCount = useCallback(async () => {
-    try {
-      const [pendingRes, notifs, invites, assigneeNotifs] = await Promise.all([
-        API.get('/tasks/pending'),
-        API.get('/tasks/notifications'),
-        API.get('/events/invitations'),
-        API.get('/tasks/assignee-notifications'),
-      ]);
-      const count =
-        (pendingRes.data.tasks?.length || 0) +
-        (notifs.data.notifications?.length || 0) +
-        (invites.data.invitations?.length || 0) +
-        (assigneeNotifs.data.notifications?.length || 0);
-      setPendingCount(count);
-    } catch {
-      // silently ignore — badge just won't show
-    }
+    const [pendingRes, notifs, invites, assigneeNotifs] = await Promise.allSettled([
+      API.get('/tasks/pending'),
+      API.get('/tasks/notifications'),
+      API.get('/events/invitations'),
+      API.get('/tasks/assignee-notifications'),
+    ]);
+    const get = (r, key) => r.status === 'fulfilled' ? (r.value.data[key]?.length || 0) : 0;
+    setPendingCount(
+      get(pendingRes,      'tasks') +
+      get(notifs,          'notifications') +
+      get(invites,         'invitations') +
+      get(assigneeNotifs,  'notifications')
+    );
   }, []);
 
   // Fetch on mount
@@ -325,6 +340,18 @@ export default function HomeScreen({ navigation }) {
     });
     return unsubscribe;
   }, [navigation, fetchEvents, fetchPendingCount]);
+
+  // Switch to week view only when there's actual content to show.
+  // Stay in month when there are no events and no tasks.
+  useEffect(() => {
+    if (!loading) {
+      if (events.length > 0 || tasks.length > 0) {
+        setViewMode('week');
+      } else {
+        setViewMode('month');
+      }
+    }
+  }, [loading, events.length, tasks.length]);
 
   // Pull-to-refresh handler
   const onRefresh = () => {
@@ -478,34 +505,61 @@ export default function HomeScreen({ navigation }) {
 
       </View>
 
-      {/* ── Member bubbles ── */}
-      <View style={styles.membersRowWrapper}>
-        <ScrollView
-          horizontal
-          showsHorizontalScrollIndicator={false}
-          style={styles.membersRow}
-          contentContainerStyle={styles.membersContent}
-        >
-          {sortedMembers.map((member) => (
-            <MemberBubble
-              key={member.id}
-              member={member}
-              selected={Number(selectedMember) === Number(member.id)}
-              onPress={() => handleMemberPress(member.id)}
-              onLongPress={() => navigation.navigate('MemberProfile', { memberId: member.id })}
-            />
-          ))}
-        </ScrollView>
-      </View>
-
-      {/* ── Week strip ── */}
-      {!loading && (
-        <WeekStrip
-          events={memberFiltered}
-          selectedDate={selectedDate}
-          onSelectDate={setSelectedDate}
-        />
+      {/* ── Member bubbles — hidden when no members ── */}
+      {sortedMembers.length > 0 && (
+        <View style={styles.membersRowWrapper}>
+          <ScrollView
+            horizontal
+            showsHorizontalScrollIndicator={false}
+            style={styles.membersRow}
+            contentContainerStyle={styles.membersContent}
+          >
+            {sortedMembers.map((member) => (
+              <MemberBubble
+                key={member.id}
+                member={member}
+                selected={Number(selectedMember) === Number(member.id)}
+                onPress={() => handleMemberPress(member.id)}
+                onLongPress={() => navigation.navigate('MemberProfile', { memberId: member.id })}
+              />
+            ))}
+          </ScrollView>
+        </View>
       )}
+
+      {/* ── Calendar: pinch out = month, pinch in = day, tap = select ── */}
+      {!loading && (() => {
+        const isEmpty = events.length === 0 && tasks.length === 0;
+        // Always show month when there's no data; respect viewMode otherwise
+        const showMonth = isEmpty || viewMode === 'month';
+        const goToDay = (day) => {
+          setSelectedDate(day);
+          navigation.navigate('DayView', { dateStr: day.toISOString() });
+        };
+        const selectDay = (day) => setSelectedDate(day);
+
+        return (
+          <View
+            onTouchStart={onCalTouchStart}
+            onTouchMove={onCalTouchMove}
+            onTouchEnd={onCalTouchEnd}
+          >
+            {showMonth ? (
+              <MonthCalendar
+                events={memberFiltered}
+                selectedDate={selectedDate}
+                onSelectDate={goToDay}
+              />
+            ) : (
+              <WeekStrip
+                events={memberFiltered}
+                selectedDate={selectedDate}
+                onSelectDate={selectDay}
+              />
+            )}
+          </View>
+        );
+      })()}
 
       {/* ── Day events list ── */}
       {loading ? (
