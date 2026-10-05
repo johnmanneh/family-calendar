@@ -160,14 +160,46 @@ const styles = StyleSheet.create({
     paddingHorizontal: 16,
     paddingBottom: 40,
   },
+  // Day label at the very top of the list ("Today", "Tomorrow", date)
+  dayLabel: {
+    fontSize: 17,
+    fontWeight: '700',
+    color: '#1d1d1f',
+    marginTop: 16,
+    marginBottom: 4,
+  },
+
+  // Section headers within the list ("Events", "Tasks")
   sectionHeader: {
-    fontSize: 13,
+    fontSize: 12,
     fontWeight: '600',
-    color: '#888',
+    color: '#8e8e93',
     textTransform: 'uppercase',
-    letterSpacing: 0.5,
-    marginTop: 20,
+    letterSpacing: 0.6,
+    marginTop: 16,
     marginBottom: 6,
+  },
+
+  // Task row extras
+  taskTitleRow: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 5,
+  },
+  taskIcon: {
+    flexShrink: 0,
+  },
+  statusBadge: {
+    paddingHorizontal: 8,
+    paddingVertical: 3,
+    borderRadius: 10,
+    alignSelf: 'center',
+    marginRight: 12,
+  },
+  statusBadgeText: {
+    color: '#fff',
+    fontSize: 10,
+    fontWeight: '700',
   },
   eventRow: {
     flexDirection: 'row',

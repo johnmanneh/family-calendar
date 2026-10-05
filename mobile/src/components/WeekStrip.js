@@ -42,6 +42,19 @@ function sameDay(a, b) {
   );
 }
 
+// Reads YYYY-MM-DD from the stored ISO string directly — avoids timezone
+// shifts that can push the date one day forward or back.
+function onSameDay(dateStr, day) {
+  if (!dateStr) return false;
+  const s = typeof dateStr === 'string' ? dateStr : new Date(dateStr).toISOString();
+  const [y, m, d] = s.slice(0, 10).split('-').map(Number);
+  return (
+    y === day.getFullYear() &&
+    (m - 1) === day.getMonth() &&
+    d === day.getDate()
+  );
+}
+
 function shortTime(event) {
   if (event.is_all_day) return 'All day';
   const d = new Date(event.start_date);
@@ -131,7 +144,7 @@ export default function WeekStrip({ events, selectedDate, onSelectDate }) {
         {weekDays.map((day, i) => {
           const isToday    = sameDay(day, today);
           const isSelected = sameDay(day, selectedDate || today);
-          const dayEvents  = events.filter(e => sameDay(new Date(e.start_date), day));
+          const dayEvents  = events.filter(e => onSameDay(e.start_date, day));
           const visible    = dayEvents.slice(0, MAX_CHIPS);
           const overflow   = dayEvents.length - visible.length;
 

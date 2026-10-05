@@ -29,6 +29,19 @@ function formatTime(event) {
   return d.toLocaleTimeString('en-US', { hour: 'numeric', minute: '2-digit' });
 }
 
+// Timezone-safe day match: reads the YYYY-MM-DD portion of the ISO string
+// directly so timezone offsets never shift the displayed date.
+function onSameDay(dateStr, selectedDate) {
+  if (!dateStr) return false;
+  const s = typeof dateStr === 'string' ? dateStr : new Date(dateStr).toISOString();
+  const [y, m, d] = s.slice(0, 10).split('-').map(Number);
+  return (
+    y === selectedDate.getFullYear() &&
+    (m - 1) === selectedDate.getMonth() &&
+    d === selectedDate.getDate()
+  );
+}
+
 // ─── Avatar bubble ───────────────────────────────────────────────────────────
 
 // Shows a coloured circle with the member's initials.
@@ -103,6 +116,38 @@ function EventRow({ event, navigation }) {
   );
 }
 
+// ─── Task row ────────────────────────────────────────────────────────────────
+
+const STATUS_COLOR = { pending: '#ff9500', accepted: '#34c759', countered: '#ff3b30' };
+const STATUS_LABEL = { pending: 'Pending', accepted: 'Accepted', countered: 'Counter' };
+
+function TaskRow({ task }) {
+  const color = task.color || task.assigned_color || '#1a8fa8';
+  const badge = STATUS_COLOR[task.status] || '#aeaeb2';
+
+  return (
+    <View style={styles.eventRow}>
+      <View style={[styles.eventStripe, { backgroundColor: color }]} />
+      <View style={styles.eventBody}>
+        <View style={styles.taskTitleRow}>
+          <Ionicons name="checkmark-circle-outline" size={14} color={color} style={styles.taskIcon} />
+          <Text style={styles.eventTitle} numberOfLines={1}>{task.title}</Text>
+        </View>
+        {task.event_title ? (
+          <Text style={styles.eventTime}>📅 {task.event_title}</Text>
+        ) : task.due_date ? (
+          <Text style={styles.eventTime}>
+            Due {new Date(task.due_date.replace(/Z$/, '')).toLocaleDateString('en-GB', { day: 'numeric', month: 'short' })}
+          </Text>
+        ) : null}
+      </View>
+      <View style={[styles.statusBadge, { backgroundColor: badge }]}>
+        <Text style={styles.statusBadgeText}>{STATUS_LABEL[task.status] || task.status}</Text>
+      </View>
+    </View>
+  );
+}
+
 // ─── HomeScreen ──────────────────────────────────────────────────────────────
 
 export default function HomeScreen({ navigation }) {
@@ -118,6 +163,7 @@ export default function HomeScreen({ navigation }) {
     : members;
 
   const [events, setEvents] = useState([]);
+  const [tasks, setTasks] = useState([]);
   const [loading, setLoading] = useState(true);
   const [refreshing, setRefreshing] = useState(false);
   const [selectedMember, setSelectedMember] = useState(null);
@@ -141,11 +187,15 @@ export default function HomeScreen({ navigation }) {
     })
   ).current;
 
-  // ── Fetch events ──────────────────────────────────────────────────────────
+  // ── Fetch events + tasks together ────────────────────────────────────────
   const fetchEvents = useCallback(async () => {
     try {
-      const res = await API.get('/events');
-      setEvents(res.data.events || []);
+      const [eventsRes, tasksRes] = await Promise.all([
+        API.get('/events'),
+        API.get('/tasks/family'),
+      ]);
+      setEvents(eventsRes.data.events || []);
+      setTasks(tasksRes.data.tasks || []);
     } catch (err) {
       console.error('fetchEvents error:', err.message);
     } finally {
@@ -158,14 +208,14 @@ export default function HomeScreen({ navigation }) {
   // Adds up pending tasks + notifications + event invitations
   const fetchPendingCount = useCallback(async () => {
     try {
-      const [tasks, notifs, invites, assigneeNotifs] = await Promise.all([
+      const [pendingRes, notifs, invites, assigneeNotifs] = await Promise.all([
         API.get('/tasks/pending'),
         API.get('/tasks/notifications'),
         API.get('/events/invitations'),
         API.get('/tasks/assignee-notifications'),
       ]);
       const count =
-        (tasks.data.tasks?.length || 0) +
+        (pendingRes.data.tasks?.length || 0) +
         (notifs.data.notifications?.length || 0) +
         (invites.data.invitations?.length || 0) +
         (assigneeNotifs.data.notifications?.length || 0);
@@ -207,15 +257,28 @@ export default function HomeScreen({ navigation }) {
       )
     : events;
 
-  // Events for the selected day shown in the list below the week strip
-  const dayEvents = memberFiltered.filter(e => {
-    const d = new Date(e.start_date);
-    return (
-      d.getFullYear() === selectedDate.getFullYear() &&
-      d.getMonth()    === selectedDate.getMonth()    &&
-      d.getDate()     === selectedDate.getDate()
-    );
+  // Events for the selected day
+  const dayEvents = memberFiltered.filter(e => onSameDay(e.start_date, selectedDate));
+
+  // Tasks filtered by member then by day
+  // For event-linked tasks: use start_date (the event date)
+  // For standalone tasks: use due_date
+  const memberFilteredTasks = selectedMember
+    ? tasks.filter(t => Number(t.assigned_to) === Number(selectedMember))
+    : tasks;
+
+  const dayTasks = memberFilteredTasks.filter(t => {
+    const dateStr = t.start_date || t.due_date;
+    return onSameDay(dateStr, selectedDate);
   });
+
+  // Combined list for FlatList — section headers interleaved with data rows
+  const listData = [
+    ...(dayEvents.length > 0 ? [{ type: 'sectionHeader', title: 'Events', key: 'sh-events' }] : []),
+    ...dayEvents.map(e => ({ type: 'event', data: e, key: `e-${e.id}` })),
+    ...(dayTasks.length > 0  ? [{ type: 'sectionHeader', title: 'Tasks',  key: 'sh-tasks'  }] : []),
+    ...dayTasks.map(t => ({ type: 'task', data: t, key: `t-${t.id}` })),
+  ];
 
   // ── Toggle member filter ──────────────────────────────────────────────────
   const handleMemberPress = (memberId) => {
@@ -325,18 +388,29 @@ export default function HomeScreen({ navigation }) {
         <ActivityIndicator size="large" color="#1a8fa8" style={styles.spinner} />
       ) : (
         <FlatList
-          data={dayEvents}
-          keyExtractor={(item) => String(item.id)}
-          renderItem={({ item }) => <EventRow event={item} navigation={navigation} />}
+          data={listData}
+          keyExtractor={(item) => item.key}
+          renderItem={({ item }) => {
+            if (item.type === 'sectionHeader') {
+              return <Text style={styles.sectionHeader}>{item.title}</Text>;
+            }
+            if (item.type === 'event') {
+              return <EventRow event={item.data} navigation={navigation} />;
+            }
+            if (item.type === 'task') {
+              return <TaskRow task={item.data} />;
+            }
+            return null;
+          }}
           contentContainerStyle={styles.listContent}
           refreshControl={
             <RefreshControl refreshing={refreshing} onRefresh={onRefresh} tintColor="#1a8fa8" />
           }
           ListHeaderComponent={
-            <Text style={styles.sectionHeader}>{dayHeader(selectedDate)}</Text>
+            <Text style={styles.dayLabel}>{dayHeader(selectedDate)}</Text>
           }
           ListEmptyComponent={
-            <Text style={styles.emptyText}>No events</Text>
+            <Text style={styles.emptyText}>No events or tasks</Text>
           }
         />
       )}

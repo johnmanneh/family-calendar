@@ -10,8 +10,10 @@ const acknowledgeTaskResponse = require('../controllers/tasks/acknowledgeTaskRes
 const getAssigneeNotifications = require('../controllers/tasks/getAssigneeNotifications');
 const acknowledgeAssigneeNotification = require('../controllers/tasks/acknowledgeAssigneeNotification');
 const updateTaskDueDate = require('../controllers/tasks/updateTaskDueDate');
+const getFamilyTasks = require('../controllers/tasks/getFamilyTasks');
 
 router.post('/standalone', verifyToken, createStandaloneTask);
+router.get('/family', verifyToken, getFamilyTasks);
 router.get('/pending', verifyToken, getPendingTasks);
 router.get('/notifications', verifyToken, getTaskNotifications);
 router.get('/assignee-notifications', verifyToken, getAssigneeNotifications);
