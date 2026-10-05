@@ -14,6 +14,7 @@ import { SafeAreaView } from 'react-native-safe-area-context';
 import { Ionicons } from '@expo/vector-icons';
 import { LinearGradient } from 'expo-linear-gradient';
 import DrawerMenu from '../components/DrawerMenu';
+import WeekStrip from '../components/WeekStrip';
 import styles from '../styles/HomeScreen.styles';
 import API from '../api/axios';
 import { useAuth } from '../context/AuthContext';
@@ -21,53 +22,11 @@ import { useFamily } from '../context/FamilyContext';
 
 // ─── Helpers ────────────────────────────────────────────────────────────────
 
-// Returns "Today", "Tomorrow", or a formatted date string like "Mon 5 Jan"
-function dateLabel(dateStr) {
-  const today = new Date();
-  const tomorrow = new Date(today);
-  tomorrow.setDate(today.getDate() + 1);
-
-  const d = new Date(dateStr);
-
-  const sameDay = (a, b) =>
-    a.getFullYear() === b.getFullYear() &&
-    a.getMonth() === b.getMonth() &&
-    a.getDate() === b.getDate();
-
-  if (sameDay(d, today)) return 'Today';
-  if (sameDay(d, tomorrow)) return 'Tomorrow';
-
-  return d.toLocaleDateString('en-GB', {
-    weekday: 'short',
-    day: 'numeric',
-    month: 'short',
-  });
-}
-
 // Formats a datetime string to "9:00 AM" — returns "All day" for all-day events
 function formatTime(event) {
   if (event.is_all_day) return 'All day';
   const d = new Date(event.start_date);
   return d.toLocaleTimeString('en-US', { hour: 'numeric', minute: '2-digit' });
-}
-
-// Groups a flat events array into sections: [{ title, data }]
-// FlatList's SectionList needs this shape — we build it ourselves so we can
-// use a regular FlatList and render section headers inline
-function groupByDate(events) {
-  const sections = [];
-  const seen = {};                            // tracks which date labels we've added
-
-  events.forEach((event) => {
-    const label = dateLabel(event.start_date);
-    if (!seen[label]) {
-      seen[label] = true;
-      sections.push({ type: 'header', label, key: `header-${label}` });
-    }
-    sections.push({ type: 'event', event, key: `event-${event.id}` });
-  });
-
-  return sections;
 }
 
 // ─── Avatar bubble ───────────────────────────────────────────────────────────
@@ -165,6 +124,11 @@ export default function HomeScreen({ navigation }) {
   const [pendingCount, setPendingCount] = useState(0);
   const [drawerOpen, setDrawerOpen] = useState(false);
 
+  // Selected day in the week strip — defaults to today
+  const todayStart = new Date();
+  todayStart.setHours(0, 0, 0, 0);
+  const [selectedDate, setSelectedDate] = useState(todayStart);
+
   // ── Edge swipe to open drawer ─────────────────────────────────────────────
   // A dedicated 20px strip on the left edge captures the gesture so it never
   // conflicts with the member bubbles ScrollView or the event FlatList.
@@ -233,11 +197,7 @@ export default function HomeScreen({ navigation }) {
     fetchEvents();
   };
 
-  // ── Filter + group ────────────────────────────────────────────────────────
-
-  // If a member bubble is selected, only show events that include that member
-  const today = new Date();
-  today.setHours(0, 0, 0, 0);
+  // ── Filter ───────────────────────────────────────────────────────────────
 
   const memberFiltered = selectedMember
     ? events.filter(
@@ -247,34 +207,35 @@ export default function HomeScreen({ navigation }) {
       )
     : events;
 
-  // Split into upcoming (today+) and past, so upcoming always appears first
-  const upcomingEvents = memberFiltered.filter(e => new Date(e.start_date) >= today);
-  const pastEvents     = memberFiltered.filter(e => new Date(e.start_date) <  today)
-                                       .reverse(); // most recent past first
-
-  // Build list: upcoming grouped by date, then a Past divider, then past events grouped
-  const listItems = [
-    ...groupByDate(upcomingEvents),
-    ...(pastEvents.length > 0
-      ? [{ type: 'header', label: 'Past Events', key: 'header-past' }, ...groupByDate(pastEvents)]
-      : []),
-  ];
+  // Events for the selected day shown in the list below the week strip
+  const dayEvents = memberFiltered.filter(e => {
+    const d = new Date(e.start_date);
+    return (
+      d.getFullYear() === selectedDate.getFullYear() &&
+      d.getMonth()    === selectedDate.getMonth()    &&
+      d.getDate()     === selectedDate.getDate()
+    );
+  });
 
   // ── Toggle member filter ──────────────────────────────────────────────────
   const handleMemberPress = (memberId) => {
-    // Tap same member again → clear the filter
     setSelectedMember((prev) => (Number(prev) === Number(memberId) ? null : memberId));
   };
 
-  // ── Render helpers ────────────────────────────────────────────────────────
+  // ── Day label for the events section ─────────────────────────────────────
+  const todayNow = new Date();
+  todayNow.setHours(0, 0, 0, 0);
+  const tomorrow = new Date(todayNow);
+  tomorrow.setDate(todayNow.getDate() + 1);
+  const yesterday = new Date(todayNow);
+  yesterday.setDate(todayNow.getDate() - 1);
 
-  // FlatList calls this for every item in listItems
-  const renderItem = ({ item }) => {
-    if (item.type === 'header') {
-      return <Text style={styles.sectionHeader}>{item.label}</Text>;
-    }
-    return <EventRow event={item.event} navigation={navigation} />;
-  };
+  function dayHeader(date) {
+    if (date.getTime() === todayNow.getTime())    return 'Today';
+    if (date.getTime() === tomorrow.getTime())    return 'Tomorrow';
+    if (date.getTime() === yesterday.getTime())   return 'Yesterday';
+    return date.toLocaleDateString('en-GB', { weekday: 'long', day: 'numeric', month: 'long' });
+  }
 
   // ── Main render ───────────────────────────────────────────────────────────
 
@@ -348,25 +309,32 @@ export default function HomeScreen({ navigation }) {
         ))}
       </ScrollView>
 
-      {/* ── Events list ── */}
+      {/* ── Week strip ── */}
+      {!loading && (
+        <WeekStrip
+          events={memberFiltered}
+          selectedDate={selectedDate}
+          onSelectDate={setSelectedDate}
+        />
+      )}
+
+      {/* ── Day events list ── */}
       {loading ? (
         <ActivityIndicator size="large" color="#1a8fa8" style={styles.spinner} />
       ) : (
         <FlatList
-          data={listItems}
-          keyExtractor={(item) => item.key}
-          renderItem={renderItem}
+          data={dayEvents}
+          keyExtractor={(item) => String(item.id)}
+          renderItem={({ item }) => <EventRow event={item} navigation={navigation} />}
           contentContainerStyle={styles.listContent}
           refreshControl={
-            // Pull-to-refresh — teal spinner matches the app colour
-            <RefreshControl
-              refreshing={refreshing}
-              onRefresh={onRefresh}
-              tintColor="#1a8fa8"
-            />
+            <RefreshControl refreshing={refreshing} onRefresh={onRefresh} tintColor="#1a8fa8" />
+          }
+          ListHeaderComponent={
+            <Text style={styles.sectionHeader}>{dayHeader(selectedDate)}</Text>
           }
           ListEmptyComponent={
-            <Text style={styles.emptyText}>No upcoming events</Text>
+            <Text style={styles.emptyText}>No events</Text>
           }
         />
       )}
