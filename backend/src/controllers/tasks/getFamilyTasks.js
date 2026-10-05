@@ -39,6 +39,7 @@ const getFamilyTasks = async (req, res) => {
        LEFT JOIN family_members  fm ON t.assigned_to = fm.user_id AND fm.family_id = $1
        LEFT JOIN users           uc ON t.created_by  = uc.id
        WHERE t.completed = false
+         AND t.status != 'declined'
          AND (
            -- Event-linked task whose event belongs to this family
            (t.is_standalone = false AND e.family_id = $1)

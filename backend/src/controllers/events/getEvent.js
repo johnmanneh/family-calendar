@@ -62,7 +62,7 @@ const getEvent = async (req, res) => {
        JOIN  users           u  ON t.assigned_to = u.id
        LEFT JOIN family_members fm ON u.id = fm.user_id AND fm.family_id = $2
        LEFT JOIN sub_tasks   st ON t.id = st.task_id
-       WHERE t.event_id = $1 AND t.completed = false
+       WHERE t.event_id = $1 AND t.completed = false AND t.status != 'declined'
        ORDER BY t.created_at ASC, st.created_at ASC`,
       [id, familyId]
     );
