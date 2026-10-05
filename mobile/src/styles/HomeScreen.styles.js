@@ -100,7 +100,7 @@ const styles = StyleSheet.create({
 
   // Member bubbles row — outer View enforces height, ScrollView fills it
   membersRowWrapper: {
-    height: 106,
+    height: 76,
     backgroundColor: '#fff',
     borderBottomWidth: 1,
     borderBottomColor: '#e5e5ea',
@@ -111,19 +111,19 @@ const styles = StyleSheet.create({
   },
   membersContent: {
     paddingHorizontal: 16,
-    paddingTop: 10,
-    paddingBottom: 14,
+    paddingTop: 8,
+    paddingBottom: 8,
   },
   bubble: {
     alignItems: 'center',
-    width: 56,
-    marginRight: 12,
+    width: 46,
+    marginRight: 10,
   },
   bubbleSelected: {},
   bubbleCircle: {
-    width: 44,
-    height: 44,
-    borderRadius: 22,
+    width: 36,
+    height: 36,
+    borderRadius: 18,
     alignItems: 'center',
     justifyContent: 'center',
     borderWidth: 2,
@@ -135,13 +135,13 @@ const styles = StyleSheet.create({
   bubbleInitials: {
     color: '#fff',
     fontWeight: '700',
-    fontSize: 15,
+    fontSize: 12,
   },
   bubbleName: {
-    fontSize: 11,
+    fontSize: 10,
     color: '#555',
-    marginTop: 3,
-    maxWidth: 56,
+    marginTop: 2,
+    maxWidth: 46,
     textAlign: 'center',
   },
   bubbleRelationship: {
