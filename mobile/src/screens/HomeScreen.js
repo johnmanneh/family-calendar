@@ -139,17 +139,28 @@ function EventRow({ event, navigation, eventTasks }) {
 const STATUS_COLOR = { pending: '#ff9500', accepted: '#34c759', countered: '#ff3b30' };
 const STATUS_LABEL = { pending: 'Pending', accepted: 'Accepted', countered: 'Counter' };
 
-function TaskRow({ task, navigation, onComplete, onDelete }) {
+function TaskRow({ task, navigation, onComplete, onDelete, onAccept, currentUserId }) {
   const color = task.color || task.assigned_color || '#1a8fa8';
   const badge = STATUS_COLOR[task.status] || '#aeaeb2';
 
-  const handleRowPress = () => {
-    if (task.event_id) {
-      navigation.navigate('EventDetails', { eventId: task.event_id });
-    }
-  };
+  // Swipe RIGHT → Accept (only for pending tasks assigned to the current user)
+  const canAccept =
+    task.status === 'pending' &&
+    Number(task.assigned_to) === Number(currentUserId);
 
-  // Right-side swipe actions: Done (green) + Delete (red)
+  const renderLeftActions = canAccept
+    ? () => (
+        <TouchableOpacity
+          style={[styles.swipeAction, styles.swipeActionAccept]}
+          onPress={() => onAccept(task.id)}
+        >
+          <Ionicons name="checkmark-done" size={22} color="#fff" />
+          <Text style={styles.swipeActionText}>Accept</Text>
+        </TouchableOpacity>
+      )
+    : null;
+
+  // Swipe LEFT → Done (green) + Delete (red)
   const renderRightActions = () => (
     <View style={styles.swipeActions}>
       <TouchableOpacity
@@ -169,8 +180,19 @@ function TaskRow({ task, navigation, onComplete, onDelete }) {
     </View>
   );
 
+  const handleRowPress = () => {
+    if (task.event_id) {
+      navigation.navigate('EventDetails', { eventId: task.event_id });
+    }
+  };
+
   return (
-    <Swipeable renderRightActions={renderRightActions} overshootRight={false}>
+    <Swipeable
+      renderLeftActions={renderLeftActions}
+      renderRightActions={renderRightActions}
+      overshootLeft={false}
+      overshootRight={false}
+    >
       <TouchableOpacity style={styles.eventRow} onPress={handleRowPress} activeOpacity={0.75}>
         <View style={[styles.eventStripe, { backgroundColor: color }]} />
         <View style={styles.eventBody}>
@@ -354,6 +376,19 @@ export default function HomeScreen({ navigation }) {
     }
   }, []);
 
+  // ── Accept a pending task (swipe right, no remarks) ───────────────────────
+  const handleAcceptTask = useCallback(async (taskId) => {
+    try {
+      await API.patch(`/tasks/${taskId}/respond`, { response: 'accepted' });
+      // Update status in local state so badge changes immediately
+      setTasks(prev => prev.map(t =>
+        t.id === taskId ? { ...t, status: 'accepted' } : t
+      ));
+    } catch {
+      Alert.alert('Error', 'Could not accept task');
+    }
+  }, []);
+
   // ── Day label for the events section ─────────────────────────────────────
   const todayNow = new Date();
   todayNow.setHours(0, 0, 0, 0);
@@ -467,7 +502,16 @@ export default function HomeScreen({ navigation }) {
               return <EventRow event={item.data} navigation={navigation} eventTasks={item.eventTasks} />;
             }
             if (item.type === 'task') {
-              return <TaskRow task={item.data} navigation={navigation} onComplete={handleCompleteTask} onDelete={handleDeleteTask} />;
+              return (
+                <TaskRow
+                  task={item.data}
+                  navigation={navigation}
+                  onComplete={handleCompleteTask}
+                  onDelete={handleDeleteTask}
+                  onAccept={handleAcceptTask}
+                  currentUserId={user?.id}
+                />
+              );
             }
             return null;
           }}

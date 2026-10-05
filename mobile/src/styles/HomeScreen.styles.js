@@ -236,6 +236,10 @@ const styles = StyleSheet.create({
     alignItems: 'center',
     gap: 3,
   },
+  swipeActionAccept: {
+    backgroundColor: '#1a8fa8',
+    marginBottom: 8,
+  },
   swipeActionText: {
     color: '#fff',
     fontSize: 11,
