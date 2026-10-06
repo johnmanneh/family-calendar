@@ -1,6 +1,7 @@
 import React, { createContext, useState, useContext, useEffect } from 'react';
 import storage from '../utils/storage';
 import API from '../api/axios';
+import { registerPushToken } from '../utils/registerPushToken';
 
 const AuthContext = createContext();
 
@@ -18,6 +19,8 @@ export const AuthProvider = ({ children }) => {
           setToken(savedToken);
           const res = await API.get('/auth/me');
           setUser(res.data.user);
+          // Re-register push token on restore in case token rotated or was cleared
+          registerPushToken();
         }
       } catch (err) {
         await storage.deleteItem('token'); // token expired or invalid
@@ -32,6 +35,8 @@ export const AuthProvider = ({ children }) => {
     setUser(userData);
     setToken(userToken);
     await storage.setItem('token', userToken);
+    // Register push token after login — fire and forget, never blocks login flow
+    registerPushToken();
   };
 
   const logout = async () => {

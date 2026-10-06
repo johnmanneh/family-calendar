@@ -7,6 +7,7 @@ const me = require('../controllers/auth/me');
 const updateProfile = require('../controllers/auth/updateProfile');
 const uploadAvatar = require('../controllers/auth/uploadAvatar');
 const deleteAccount = require('../controllers/auth/deleteAccount');
+const savePushToken = require('../controllers/auth/savePushToken');
 
 router.post('/register', register);
 router.post('/login', login);
@@ -14,6 +15,7 @@ router.get('/me', verifyToken, me);
 router.put('/profile', verifyToken, updateProfile);
 router.post('/avatar', verifyToken, uploadAvatar);
 router.delete('/account', verifyToken, deleteAccount);
+router.put('/push-token', verifyToken, savePushToken);
 
 
 module.exports = router;

@@ -1,6 +1,7 @@
 const pool = require('../../config/db');
 const { successResponse, errorResponse } = require('../../utils/response/responseHandlers');
 const { broadcast } = require('../../utils/sseClients');
+const sendPush = require('../../utils/sendPush');
 
 const addTask = async (req, res) => {
   const { id } = req.params; // event_id
@@ -27,6 +28,30 @@ const addTask = async (req, res) => {
     );
     if (memberRes.rowCount > 0) {
       broadcast(memberRes.rows[0].family_id, 'task_update', { taskId: result.rows[0].id });
+    }
+
+    // Push notification to assignee when a task is pending (assigned to someone else)
+    if (status === 'pending' && assigned_to) {
+      const creatorRes = await pool.query(
+        'SELECT first_name, last_name FROM users WHERE id = $1',
+        [created_by]
+      );
+      const assigneeRes = await pool.query(
+        'SELECT push_token FROM users WHERE id = $1',
+        [assigned_to]
+      );
+      const creator = creatorRes.rows[0];
+      const creatorName = creator
+        ? [creator.first_name, creator.last_name].filter(Boolean).join(' ') || 'Someone'
+        : 'Someone';
+      if (assigneeRes.rows[0]?.push_token) {
+        sendPush(
+          assigneeRes.rows[0].push_token,
+          'New task assigned',
+          `${creatorName}: ${title}`,
+          { type: 'task', taskId: result.rows[0].id }
+        );
+      }
     }
 
     return successResponse(res, 201, 'Task added successfully', {

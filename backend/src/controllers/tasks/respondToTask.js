@@ -1,6 +1,7 @@
 const pool = require('../../config/db');
 const { successResponse, errorResponse } = require('../../utils/response/responseHandlers');
 const { broadcast } = require('../../utils/sseClients');
+const sendPush = require('../../utils/sendPush');
 
 const respondToTask = async (req, res) => {
   const userId = req.user.id;
@@ -94,6 +95,45 @@ const respondToTask = async (req, res) => {
     );
     if (memberRes.rowCount > 0) {
       broadcast(memberRes.rows[0].family_id, 'task_update', { taskId });
+    }
+
+    // Push notification to the other party
+    const actorRes = await pool.query(
+      'SELECT first_name, last_name FROM users WHERE id = $1',
+      [userId]
+    );
+    const actor = actorRes.rows[0];
+    const actorName = actor
+      ? [actor.first_name, actor.last_name].filter(Boolean).join(' ') || 'Someone'
+      : 'Someone';
+
+    const updatedTask = result.rows[0];
+    const taskTitle   = updatedTask.title || 'a task';
+
+    // Figure out who to push to: the other party
+    const recipientId = isAssignee ? task.created_by : task.assigned_to;
+    if (recipientId) {
+      const recipientRes = await pool.query(
+        'SELECT push_token FROM users WHERE id = $1',
+        [recipientId]
+      );
+      const token = recipientRes.rows[0]?.push_token;
+      if (token) {
+        let pushTitle, pushBody;
+        if (response === 'accepted') {
+          pushTitle = 'Task accepted';
+          pushBody  = `${actorName} accepted: ${taskTitle}`;
+        } else if (response === 'declined') {
+          pushTitle = 'Task declined';
+          pushBody  = `${actorName} declined: ${taskTitle}`;
+        } else if (response === 'countered') {
+          pushTitle = 'Counter offer';
+          pushBody  = `${actorName}: ${counter_offer?.trim()}`;
+        }
+        if (pushTitle) {
+          sendPush(token, pushTitle, pushBody, { type: 'task', taskId });
+        }
+      }
     }
 
     return successResponse(res, 200, 'Task response saved', { task: result.rows[0] });
