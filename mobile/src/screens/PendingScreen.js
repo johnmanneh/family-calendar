@@ -10,6 +10,7 @@ import {
 } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import API from '../api/axios';
+import { useSSE } from '../context/SSEContext';
 import styles from '../styles/PendingScreen.styles';
 
 // ─── Helpers ────────────────────────────────────────────────────────────────
@@ -99,6 +100,8 @@ function CounterInput({ value, onChange, onSend, onCancel, loading }) {
 // ─── PendingScreen ───────────────────────────────────────────────────────────
 
 export default function PendingScreen({ navigation }) {
+  const { taskTick } = useSSE();
+
   // ── Data ──────────────────────────────────────────────────────────────────
   const [pendingTasks, setPendingTasks] = useState([]);
   const [invitations, setInvitations] = useState([]);
@@ -141,6 +144,9 @@ export default function PendingScreen({ navigation }) {
   }, []);
 
   useEffect(() => { fetchAll(); }, [fetchAll]);
+
+  // SSE — re-fetch whenever the server fires a task_update
+  useEffect(() => { if (taskTick > 0) fetchAll(); }, [taskTick]);
 
   const onRefresh = () => { setRefreshing(true); fetchAll(); };
 

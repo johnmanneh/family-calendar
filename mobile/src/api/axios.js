@@ -1,8 +1,10 @@
 import axios from 'axios';
 import storage from '../utils/storage';
 
+export const BASE_URL = 'http://192.168.1.73:8000/api';
+
 const API = axios.create({
-  baseURL: 'http://192.168.1.73:8000/api',
+  baseURL: BASE_URL,
 });
 
 // Before every request, read the JWT from device storage and attach it

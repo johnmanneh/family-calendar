@@ -24,6 +24,7 @@ import styles from '../styles/HomeScreen.styles';
 import API from '../api/axios';
 import { useAuth } from '../context/AuthContext';
 import { useFamily } from '../context/FamilyContext';
+import { useSSE } from '../context/SSEContext';
 
 // ─── Helpers ────────────────────────────────────────────────────────────────
 
@@ -217,6 +218,7 @@ function TaskRow({ task, navigation, onComplete, onDelete, onAccept }) {
 export default function HomeScreen({ navigation }) {
   const { logout, user } = useAuth();
   const { members } = useFamily();
+  const { eventTick, taskTick } = useSSE();
 
   // Put the logged-in user first, everyone else follows in original order
   const sortedMembers = user
@@ -357,8 +359,7 @@ export default function HomeScreen({ navigation }) {
     fetchPendingCount();
   }, [fetchEvents, fetchPendingCount]);
 
-  // Re-fetch events and badge whenever this screen comes back into focus
-  // This covers: returning from EventForm (create/edit), PendingScreen, etc.
+  // Re-fetch when this screen comes back into focus (returning from other screens)
   useEffect(() => {
     const unsubscribe = navigation.addListener('focus', () => {
       fetchEvents();
@@ -366,6 +367,13 @@ export default function HomeScreen({ navigation }) {
     });
     return unsubscribe;
   }, [navigation, fetchEvents, fetchPendingCount]);
+
+  // SSE — live updates while the app is in the foreground.
+  // eventTick increments whenever the server fires event_update.
+  // taskTick  increments whenever the server fires task_update.
+  // Skip the very first render (tick = 0) since mount already fetches.
+  useEffect(() => { if (eventTick > 0) fetchEvents(); },       [eventTick]);
+  useEffect(() => { if (taskTick  > 0) fetchPendingCount(); }, [taskTick]);
 
   // Switch to week view only when there's actual content to show.
   // Stay in month when there are no events and no tasks.
