@@ -297,6 +297,59 @@ const styles = StyleSheet.create({
     marginTop: 60,
     fontSize: 15,
   },
+
+  // Arrival time row inside task card
+  arrivalRow: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 4,
+    marginTop: 4,
+  },
+  arrivalText: {
+    fontSize: 12,
+    color: '#1a8fa8',
+    fontWeight: '500',
+  },
+  arrivalPlaceholder: {
+    color: '#aeaeb2',
+    fontWeight: '400',
+  },
+
+  // Arrival time picker bottom sheet
+  pickerBackdrop: {
+    flex: 1,
+    justifyContent: 'flex-end',
+    backgroundColor: 'rgba(0,0,0,0.35)',
+  },
+  pickerSheet: {
+    backgroundColor: '#fff',
+    borderTopLeftRadius: 16,
+    borderTopRightRadius: 16,
+    paddingBottom: 34,
+  },
+  pickerHeader: {
+    flexDirection: 'row',
+    justifyContent: 'space-between',
+    alignItems: 'center',
+    paddingHorizontal: 20,
+    paddingVertical: 14,
+    borderBottomWidth: 1,
+    borderBottomColor: '#f2f2f7',
+  },
+  pickerTitle: {
+    fontSize: 16,
+    fontWeight: '600',
+    color: '#1d1d1f',
+  },
+  pickerCancel: {
+    fontSize: 16,
+    color: '#8e8e93',
+  },
+  pickerDone: {
+    fontSize: 16,
+    fontWeight: '600',
+    color: '#1a8fa8',
+  },
 });
 
 export default styles;

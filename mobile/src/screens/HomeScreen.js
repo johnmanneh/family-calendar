@@ -13,7 +13,9 @@ import {
   PanResponder,
   Alert,
   Platform,
+  Modal,
 } from 'react-native';
+import DateTimePicker from '@react-native-community/datetimepicker';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { Ionicons } from '@expo/vector-icons';
 import { LinearGradient } from 'expo-linear-gradient';
@@ -144,10 +146,30 @@ function EventRow({ event, navigation, eventTasks }) {
 const STATUS_COLOR = { pending: '#ff9500', accepted: '#34c759', countered: '#ff3b30' };
 const STATUS_LABEL = { pending: 'Pending', accepted: 'Accepted', countered: 'Counter' };
 
-function TaskRow({ task, navigation, onComplete, onDelete, onAccept }) {
+function TaskRow({ task, navigation, onComplete, onDelete, onAccept, onSetArrivalTime, currentUserId }) {
   const color = task.color || task.assigned_color || '#1a8fa8';
   const badge = STATUS_COLOR[task.status] || '#aeaeb2';
   const badgeOpacity = useRef(new Animated.Value(1)).current;
+
+  // Arrival time picker state
+  const [showPicker, setShowPicker]   = useState(false);
+  // Initialise from task.due_date if already set, otherwise null
+  const [pickerTime, setPickerTime]   = useState(
+    task.due_date ? new Date(task.due_date) : new Date()
+  );
+
+  // Show arrival time row when:
+  //   - task is accepted
+  //   - current user is the assignee
+  //   - someone else created the task (not self-assigned)
+  const isMyAccepted =
+    task.status === 'accepted' &&
+    Number(task.assigned_to) === Number(currentUserId) &&
+    Number(task.created_by)  !== Number(currentUserId);
+
+  const arrivalLabel = task.due_date
+    ? new Date(task.due_date).toLocaleTimeString('en-US', { hour: 'numeric', minute: '2-digit' })
+    : 'Set arrival time';
 
   // Pending → Accept, anything else → Done
   const isPending = task.status === 'pending';
@@ -184,32 +206,79 @@ function TaskRow({ task, navigation, onComplete, onDelete, onAccept }) {
     }
   };
 
+  const handlePickerDone = () => {
+    setShowPicker(false);
+    onSetArrivalTime(task.id, pickerTime);
+  };
+
   return (
-    <Swipeable
-      renderRightActions={renderRightActions}
-      overshootRight={false}
-      onSwipeableWillOpen={() => Animated.timing(badgeOpacity, { toValue: 0, duration: 150, useNativeDriver: true }).start()}
-      onSwipeableWillClose={() => Animated.timing(badgeOpacity, { toValue: 1, duration: 200, useNativeDriver: true }).start()}
-    >
-      <TouchableOpacity style={styles.eventRow} onPress={handleRowPress} activeOpacity={0.75}>
-        <View style={[styles.eventStripe, { backgroundColor: color }]} />
-        <View style={styles.eventBody}>
-          <Text style={styles.eventTitle} numberOfLines={1}>{task.title}</Text>
-          {task.event_title ? (
-            <Text style={styles.eventTime}>📅 {task.event_title}</Text>
-          ) : task.due_date ? (
-            <Text style={styles.eventTime}>
-              Due {new Date(task.due_date.replace(/Z$/, '')).toLocaleDateString('en-GB', { day: 'numeric', month: 'short' })}
-            </Text>
-          ) : (
-            <Text style={styles.eventTime}>No due date</Text>
-          )}
+    <>
+      <Swipeable
+        renderRightActions={renderRightActions}
+        overshootRight={false}
+        onSwipeableWillOpen={() => Animated.timing(badgeOpacity, { toValue: 0, duration: 150, useNativeDriver: true }).start()}
+        onSwipeableWillClose={() => Animated.timing(badgeOpacity, { toValue: 1, duration: 200, useNativeDriver: true }).start()}
+      >
+        <TouchableOpacity style={styles.eventRow} onPress={handleRowPress} activeOpacity={0.75}>
+          <View style={[styles.eventStripe, { backgroundColor: color }]} />
+          <View style={styles.eventBody}>
+            <Text style={styles.eventTitle} numberOfLines={1}>{task.title}</Text>
+            {task.event_title ? (
+              <Text style={styles.eventTime}>📅 {task.event_title}</Text>
+            ) : task.due_date ? (
+              <Text style={styles.eventTime}>
+                Due {new Date(task.due_date.replace(/Z$/, '')).toLocaleDateString('en-GB', { day: 'numeric', month: 'short' })}
+              </Text>
+            ) : (
+              <Text style={styles.eventTime}>No due date</Text>
+            )}
+            {/* Arrival time row — only for accepted tasks assigned to me by someone else */}
+            {isMyAccepted && (
+              <TouchableOpacity
+                style={styles.arrivalRow}
+                onPress={() => setShowPicker(true)}
+                activeOpacity={0.7}
+              >
+                <Ionicons name="time-outline" size={12} color="#1a8fa8" />
+                <Text style={[styles.arrivalText, !task.due_date && styles.arrivalPlaceholder]}>
+                  {arrivalLabel}
+                </Text>
+              </TouchableOpacity>
+            )}
+          </View>
+          <Animated.View style={[styles.statusBadge, { backgroundColor: badge, opacity: badgeOpacity }]}>
+            <Text style={styles.statusBadgeText}>{STATUS_LABEL[task.status] || task.status}</Text>
+          </Animated.View>
+        </TouchableOpacity>
+      </Swipeable>
+
+      {/* ── Arrival time picker modal ── */}
+      <Modal visible={showPicker} transparent animationType="slide">
+        <View style={styles.pickerBackdrop}>
+          <View style={styles.pickerSheet}>
+            {/* Header */}
+            <View style={styles.pickerHeader}>
+              <TouchableOpacity onPress={() => setShowPicker(false)}>
+                <Text style={styles.pickerCancel}>Cancel</Text>
+              </TouchableOpacity>
+              <Text style={styles.pickerTitle}>Arrival Time</Text>
+              <TouchableOpacity onPress={handlePickerDone}>
+                <Text style={styles.pickerDone}>Done</Text>
+              </TouchableOpacity>
+            </View>
+            {/* iOS drum-roller time picker */}
+            <DateTimePicker
+              value={pickerTime}
+              mode="time"
+              display="spinner"
+              onChange={(_, date) => { if (date) setPickerTime(date); }}
+              style={{ width: '100%' }}
+              textColor="#1d1d1f"
+            />
+          </View>
         </View>
-        <Animated.View style={[styles.statusBadge, { backgroundColor: badge, opacity: badgeOpacity }]}>
-          <Text style={styles.statusBadgeText}>{STATUS_LABEL[task.status] || task.status}</Text>
-        </Animated.View>
-      </TouchableOpacity>
-    </Swipeable>
+      </Modal>
+    </>
   );
 }
 
@@ -455,6 +524,19 @@ export default function HomeScreen({ navigation }) {
     }
   }, []);
 
+  // ── Set arrival time on an accepted task ─────────────────────────────────
+  const handleSetArrivalTime = useCallback(async (taskId, date) => {
+    try {
+      await API.patch(`/tasks/${taskId}/due-date`, { due_date: date.toISOString() });
+      // Update local state so the row shows the new time immediately
+      setTasks(prev => prev.map(t =>
+        t.id === taskId ? { ...t, due_date: date.toISOString() } : t
+      ));
+    } catch {
+      Alert.alert('Error', 'Could not save arrival time');
+    }
+  }, []);
+
   // ── Accept a pending task (swipe right, no remarks) ───────────────────────
   const handleAcceptTask = useCallback(async (taskId) => {
     try {
@@ -622,6 +704,8 @@ export default function HomeScreen({ navigation }) {
                   onComplete={handleCompleteTask}
                   onDelete={handleDeleteTask}
                   onAccept={handleAcceptTask}
+                  onSetArrivalTime={handleSetArrivalTime}
+                  currentUserId={user?.id}
                 />
               );
             }
