@@ -3,15 +3,17 @@ const { successResponse, errorResponse } = require('../../utils/response/respons
 
 const updateProfile = async (req, res) => {
   const userId = req.user.id;
-  const { age, address, occupation } = req.body;
+  const { first_name, last_name, age, address, occupation } = req.body;
 
   // Only update fields that were actually sent
   const fields = [];
   const values = [];
   let index = 1;
 
-  if (age !== undefined) { fields.push(`age = $${index++}`); values.push(age); }
-  if (address !== undefined) { fields.push(`address = $${index++}`); values.push(address); }
+  if (first_name !== undefined) { fields.push(`first_name = $${index++}`); values.push(first_name); }
+  if (last_name  !== undefined) { fields.push(`last_name = $${index++}`);  values.push(last_name); }
+  if (age !== undefined)        { fields.push(`age = $${index++}`);        values.push(age); }
+  if (address !== undefined)    { fields.push(`address = $${index++}`);    values.push(address); }
   if (occupation !== undefined) { fields.push(`occupation = $${index++}`); values.push(occupation); }
 
   if (fields.length === 0) {

@@ -9,16 +9,19 @@ import {
   TextInput,
   Alert,
   Clipboard,
+  Image,
+  ActionSheetIOS,
+  Platform,
 } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { Ionicons } from '@expo/vector-icons';
-import API from '../api/axios';
+import * as ImagePicker from 'expo-image-picker';
+import API, { SERVER_URL } from '../api/axios';
 import { useAuth } from '../context/AuthContext';
 import { useFamily } from '../context/FamilyContext';
 import styles from '../styles/MemberProfileScreen.styles';
 
 // ─── Colour palette ───────────────────────────────────────────────────────────
-// Same 21 colours as the web version (MemberColors.js)
 const MEMBER_COLORS = [
   '#56e39f', '#00c896', '#a8e063',
   '#4facfe', '#0061ff', '#48c6ef',
@@ -33,8 +36,50 @@ const MEMBER_COLORS = [
 
 function formatDate(dateStr) {
   if (!dateStr) return '';
-  const d = new Date(dateStr);
-  return d.toLocaleDateString('en-GB', { day: 'numeric', month: 'short', year: 'numeric' });
+  return new Date(dateStr).toLocaleDateString('en-GB', { day: 'numeric', month: 'short', year: 'numeric' });
+}
+
+// Build the full URL for an avatar stored as a relative path like /uploads/avatars/...
+function avatarUrl(path) {
+  if (!path) return null;
+  if (path.startsWith('http')) return path;
+  return `${SERVER_URL}${path}`;
+}
+
+// ─── Avatar component ────────────────────────────────────────────────────────
+// Shows photo if available, coloured initials otherwise.
+// `editable` adds a camera-icon overlay (own profile in settings tab).
+
+function Avatar({ member, size = 80, editable = false, onPress }) {
+  const color    = member?.color || '#1a8fa8';
+  const initials = [member?.first_name?.[0], member?.last_name?.[0]]
+    .filter(Boolean).join('').toUpperCase() || '?';
+  const photo    = avatarUrl(member?.avatar_url);
+
+  return (
+    <TouchableOpacity
+      style={[styles.avatarWrap, { width: size, height: size, borderRadius: size / 2 }]}
+      onPress={onPress}
+      disabled={!editable}
+      activeOpacity={editable ? 0.75 : 1}
+    >
+      {photo ? (
+        <Image
+          source={{ uri: photo }}
+          style={{ width: size, height: size, borderRadius: size / 2 }}
+        />
+      ) : (
+        <View style={[styles.avatarInitials, { backgroundColor: color, borderRadius: size / 2 }]}>
+          <Text style={[styles.avatarText, { fontSize: size * 0.32 }]}>{initials}</Text>
+        </View>
+      )}
+      {editable && (
+        <View style={styles.avatarEditBadge}>
+          <Ionicons name="camera" size={12} color="#fff" />
+        </View>
+      )}
+    </TouchableOpacity>
+  );
 }
 
 // ─── Event row ───────────────────────────────────────────────────────────────
@@ -51,8 +96,7 @@ function EventItem({ event, navigation }) {
       <View style={styles.eventBody}>
         <Text style={styles.eventTitle} numberOfLines={1}>{event.title}</Text>
         <Text style={styles.eventMeta}>
-          {formatDate(event.start_date)}
-          {event.location ? `  ·  ${event.location}` : ''}
+          {formatDate(event.start_date)}{event.location ? `  ·  ${event.location}` : ''}
         </Text>
       </View>
     </TouchableOpacity>
@@ -62,10 +106,8 @@ function EventItem({ event, navigation }) {
 // ─── Task row ────────────────────────────────────────────────────────────────
 
 const STATUS_COLOR = {
-  pending:   '#f48c06',
-  accepted:  '#34c759',
-  declined:  '#ff3b30',
-  countered: '#af52de',
+  pending: '#f48c06', accepted: '#34c759',
+  declined: '#ff3b30', countered: '#af52de',
 };
 
 function TaskItem({ task }) {
@@ -86,64 +128,66 @@ function TaskItem({ task }) {
 
 // ─── Settings tab ────────────────────────────────────────────────────────────
 
-function SettingsTab({ member, user, family, fetchFamily }) {
+function SettingsTab({ member, user, family, fetchFamily, onAvatarChange }) {
   const { logout } = useAuth();
 
-  // ── Colour state ─────────────────────────────────────────────────────────
+  // ── Colour ───────────────────────────────────────────────────────────────
   const [selectedColor, setSelectedColor] = useState(member?.color || '#1a8fa8');
-  const [colorSaving, setColorSaving] = useState(false);
+  const [colorSaving, setColorSaving]     = useState(false);
   const [colorExpanded, setColorExpanded] = useState(false);
-
-  // Show first 7 swatches collapsed (one row), all 21 when expanded
   const visibleColors = colorExpanded ? MEMBER_COLORS : MEMBER_COLORS.slice(0, 7);
 
-  // ── Profile info state ───────────────────────────────────────────────────
-  const [profileData, setProfileData] = useState({ age: '', address: '', occupation: '' });
+  // ── Profile fields ────────────────────────────────────────────────────────
+  const [profileData, setProfileData]     = useState({
+    first_name: '', last_name: '', age: '', address: '', occupation: '',
+  });
   const [profileLoading, setProfileLoading] = useState(true);
-  const [profileSaving, setProfileSaving] = useState(false);
-  const [profileError, setProfileError] = useState('');
+  const [profileSaving, setProfileSaving]   = useState(false);
+  const [profileError, setProfileError]     = useState('');
   const [profileSuccess, setProfileSuccess] = useState('');
 
-  // Fetch current age/address/occupation on mount — /auth/me now returns them
+  // ── Avatar upload state ───────────────────────────────────────────────────
+  const [avatarUploading, setAvatarUploading] = useState(false);
+
   useEffect(() => {
     API.get('/auth/me')
       .then(res => {
         const u = res.data.user;
         setProfileData({
-          age:        u.age        || '',
-          address:    u.address    || '',
-          occupation: u.occupation || '',
+          first_name: u.first_name  || '',
+          last_name:  u.last_name   || '',
+          age:        u.age         || '',
+          address:    u.address     || '',
+          occupation: u.occupation  || '',
         });
       })
       .catch(() => {})
       .finally(() => setProfileLoading(false));
   }, []);
 
-  // ── Save colour ──────────────────────────────────────────────────────────
-  // Called immediately when a swatch is tapped — same UX as web
+  // ── Colour save ──────────────────────────────────────────────────────────
   const handleColorPress = async (color) => {
     if (color === selectedColor || colorSaving) return;
     setSelectedColor(color);
     setColorSaving(true);
     try {
       await API.put('/family/member/color', { color });
-      // Refresh FamilyContext so the bubble in HomeScreen updates too
       fetchFamily();
     } catch {
-      // Revert optimistic update on failure
       setSelectedColor(member?.color || '#1a8fa8');
     } finally {
       setColorSaving(false);
     }
   };
 
-  // ── Save profile info ────────────────────────────────────────────────────
+  // ── Profile save ─────────────────────────────────────────────────────────
   const handleSaveProfile = async () => {
     setProfileError('');
     setProfileSuccess('');
     setProfileSaving(true);
     try {
       await API.put('/auth/profile', profileData);
+      fetchFamily(); // refresh member list so name updates everywhere
       setProfileSuccess('Saved');
       setTimeout(() => setProfileSuccess(''), 2000);
     } catch (err) {
@@ -151,6 +195,65 @@ function SettingsTab({ member, user, family, fetchFamily }) {
     } finally {
       setProfileSaving(false);
     }
+  };
+
+  // ── Avatar pick + upload ──────────────────────────────────────────────────
+  const pickAndUpload = async (source) => {
+    let result;
+    if (source === 'camera') {
+      const perm = await ImagePicker.requestCameraPermissionsAsync();
+      if (!perm.granted) { Alert.alert('Permission needed', 'Allow camera access in Settings.'); return; }
+      result = await ImagePicker.launchCameraAsync({ mediaTypes: ['images'], quality: 0.8 });
+    } else {
+      const perm = await ImagePicker.requestMediaLibraryPermissionsAsync();
+      if (!perm.granted) { Alert.alert('Permission needed', 'Allow photo library access in Settings.'); return; }
+      result = await ImagePicker.launchImageLibraryAsync({ mediaTypes: ['images'], quality: 0.8 });
+    }
+    if (result.canceled) return;
+
+    const asset = result.assets[0];
+    const ext   = asset.uri.split('.').pop().toLowerCase();
+    const form  = new FormData();
+    form.append('avatar', { uri: asset.uri, name: `avatar.${ext}`, type: `image/${ext}` });
+
+    setAvatarUploading(true);
+    try {
+      const res = await API.post('/auth/avatar', form, {
+        headers: { 'Content-Type': 'multipart/form-data' },
+      });
+      onAvatarChange(res.data.data.avatar_url);
+      fetchFamily();
+    } catch (err) {
+      Alert.alert('Error', 'Could not upload photo');
+    } finally {
+      setAvatarUploading(false);
+    }
+  };
+
+  const handleAvatarPress = () => {
+    if (Platform.OS === 'ios') {
+      ActionSheetIOS.showActionSheetWithOptions(
+        { options: ['Cancel', 'Take Photo', 'Choose from Library'], cancelButtonIndex: 0 },
+        (idx) => {
+          if (idx === 1) pickAndUpload('camera');
+          if (idx === 2) pickAndUpload('library');
+        }
+      );
+    } else {
+      Alert.alert('Change Photo', '', [
+        { text: 'Take Photo',           onPress: () => pickAndUpload('camera') },
+        { text: 'Choose from Library',  onPress: () => pickAndUpload('library') },
+        { text: 'Cancel', style: 'cancel' },
+      ]);
+    }
+  };
+
+  // ── Family code ──────────────────────────────────────────────────────────
+  const [codeCopied, setCodeCopied] = useState(false);
+  const handleCopyCode = () => {
+    Clipboard.setString(family?.invite_code || '');
+    setCodeCopied(true);
+    setTimeout(() => setCodeCopied(false), 2000);
   };
 
   // ── Delete account ───────────────────────────────────────────────────────
@@ -161,31 +264,31 @@ function SettingsTab({ member, user, family, fetchFamily }) {
       [
         { text: 'Cancel', style: 'cancel' },
         {
-          text: 'Delete',
-          style: 'destructive',
+          text: 'Delete', style: 'destructive',
           onPress: async () => {
-            try {
-              await API.delete('/auth/account');
-              logout();
-            } catch (err) {
-              Alert.alert('Error', err.response?.data?.message || 'Could not delete account');
-            }
+            try { await API.delete('/auth/account'); logout(); }
+            catch (err) { Alert.alert('Error', err.response?.data?.message || 'Could not delete account'); }
           },
         },
       ]
     );
   };
 
-  const [codeCopied, setCodeCopied] = useState(false);
-
-  const handleCopyCode = () => {
-    Clipboard.setString(family?.invite_code || '');
-    setCodeCopied(true);
-    setTimeout(() => setCodeCopied(false), 2000);
-  };
-
   return (
     <ScrollView style={styles.scroll} contentContainerStyle={styles.scrollContent}>
+
+      {/* ── Photo ── */}
+      <Text style={styles.settingsSectionHeader}>Photo</Text>
+      <View style={[styles.settingsCard, { alignItems: 'center', paddingVertical: 20 }]}>
+        {avatarUploading ? (
+          <ActivityIndicator size="large" color="#1a8fa8" style={{ height: 80 }} />
+        ) : (
+          <Avatar member={member} size={80} editable onPress={handleAvatarPress} />
+        )}
+        <TouchableOpacity onPress={handleAvatarPress} style={{ marginTop: 10 }}>
+          <Text style={{ color: '#1a8fa8', fontSize: 14, fontWeight: '500' }}>Change photo</Text>
+        </TouchableOpacity>
+      </View>
 
       {/* ── Family ── */}
       {family && (
@@ -197,11 +300,8 @@ function SettingsTab({ member, user, family, fetchFamily }) {
             <View style={styles.inviteRow}>
               <Text style={styles.inviteCode}>{family.invite_code}</Text>
               <TouchableOpacity style={styles.copyBtn} onPress={handleCopyCode}>
-                <Ionicons
-                  name={codeCopied ? 'checkmark' : 'copy-outline'}
-                  size={16}
-                  color={codeCopied ? '#34c759' : '#1a8fa8'}
-                />
+                <Ionicons name={codeCopied ? 'checkmark' : 'copy-outline'} size={16}
+                  color={codeCopied ? '#34c759' : '#1a8fa8'} />
                 <Text style={[styles.copyBtnText, codeCopied && { color: '#34c759' }]}>
                   {codeCopied ? 'Copied!' : 'Copy'}
                 </Text>
@@ -218,17 +318,12 @@ function SettingsTab({ member, user, family, fetchFamily }) {
           {visibleColors.map(color => (
             <TouchableOpacity
               key={color}
-              style={[
-                styles.colorSwatch,
-                { backgroundColor: color },
-                selectedColor === color && styles.colorSwatchSelected,
-              ]}
+              style={[styles.colorSwatch, { backgroundColor: color },
+                selectedColor === color && styles.colorSwatchSelected]}
               onPress={() => handleColorPress(color)}
               activeOpacity={0.8}
             >
-              {selectedColor === color && (
-                <Ionicons name="checkmark" size={16} color="#fff" />
-              )}
+              {selectedColor === color && <Ionicons name="checkmark" size={16} color="#fff" />}
             </TouchableOpacity>
           ))}
         </View>
@@ -238,18 +333,37 @@ function SettingsTab({ member, user, family, fetchFamily }) {
           </Text>
           <Ionicons name={colorExpanded ? 'chevron-up' : 'chevron-down'} size={14} color="#1a8fa8" />
         </TouchableOpacity>
-        {colorSaving && (
-          <Text style={styles.savingText}>Saving…</Text>
-        )}
+        {colorSaving && <Text style={styles.savingText}>Saving…</Text>}
       </View>
 
       {/* ── Profile info ── */}
       <Text style={styles.settingsSectionHeader}>About you</Text>
       <View style={styles.settingsCard}>
-        {profileLoading ? (
-          <ActivityIndicator color="#1a8fa8" />
-        ) : (
+        {profileLoading ? <ActivityIndicator color="#1a8fa8" /> : (
           <>
+            <View style={styles.nameRow}>
+              <View style={styles.nameField}>
+                <Text style={styles.inputLabel}>First name</Text>
+                <TextInput
+                  style={styles.settingsInput}
+                  placeholder="First name"
+                  placeholderTextColor="#aaa"
+                  value={profileData.first_name}
+                  onChangeText={v => setProfileData(p => ({ ...p, first_name: v }))}
+                />
+              </View>
+              <View style={styles.nameField}>
+                <Text style={styles.inputLabel}>Last name</Text>
+                <TextInput
+                  style={styles.settingsInput}
+                  placeholder="Last name"
+                  placeholderTextColor="#aaa"
+                  value={profileData.last_name}
+                  onChangeText={v => setProfileData(p => ({ ...p, last_name: v }))}
+                />
+              </View>
+            </View>
+
             <Text style={styles.inputLabel}>Age</Text>
             <TextInput
               style={styles.settingsInput}
@@ -278,7 +392,7 @@ function SettingsTab({ member, user, family, fetchFamily }) {
               onChangeText={v => setProfileData(p => ({ ...p, address: v }))}
             />
 
-            {profileError ? <Text style={styles.errorText}>{profileError}</Text> : null}
+            {profileError   ? <Text style={styles.errorText}>{profileError}</Text>   : null}
             {profileSuccess ? <Text style={styles.successText}>{profileSuccess}</Text> : null}
 
             <TouchableOpacity
@@ -288,8 +402,7 @@ function SettingsTab({ member, user, family, fetchFamily }) {
             >
               {profileSaving
                 ? <ActivityIndicator color="#fff" size="small" />
-                : <Text style={styles.saveBtnText}>Save</Text>
-              }
+                : <Text style={styles.saveBtnText}>Save</Text>}
             </TouchableOpacity>
           </>
         )}
@@ -319,24 +432,27 @@ export default function MemberProfileScreen({ route, navigation }) {
   const { user } = useAuth();
   const { family, members, fetchFamily } = useFamily();
 
-  const member = members.find(m => Number(m.id) === Number(memberId));
+  const member      = members.find(m => Number(m.id) === Number(memberId));
   const isOwnProfile = Number(user?.id) === Number(memberId);
 
-  // Use live color from context so it updates after colour picker saves
   const memberColor = member?.color || '#1a8fa8';
-  const initials = [member?.first_name?.[0], member?.last_name?.[0]]
-    .filter(Boolean).join('').toUpperCase() || '?';
   const displayName = member
     ? `${member.first_name || ''} ${member.last_name || ''}`.trim()
     : 'Member';
 
-  // ── Tabs ─────────────────────────────────────────────────────────────────
+  // Local avatar_url so it updates immediately after upload without waiting for FamilyContext refresh
+  const [localAvatarUrl, setLocalAvatarUrl] = useState(member?.avatar_url || null);
+  useEffect(() => { setLocalAvatarUrl(member?.avatar_url || null); }, [member?.avatar_url]);
+
+  const displayMember = { ...member, avatar_url: localAvatarUrl };
+
+  // ── Tabs ────────────────────────────────────────────────────────────────
   const [activeTab, setActiveTab] = useState('personal');
 
   // ── Personal tab data ────────────────────────────────────────────────────
-  const [events, setEvents] = useState([]);
-  const [tasks, setTasks] = useState([]);
-  const [loading, setLoading] = useState(true);
+  const [events,    setEvents]    = useState([]);
+  const [tasks,     setTasks]     = useState([]);
+  const [loading,   setLoading]   = useState(true);
   const [refreshing, setRefreshing] = useState(false);
 
   const fetchData = useCallback(async () => {
@@ -346,7 +462,7 @@ export default function MemberProfileScreen({ route, navigation }) {
         API.get(`/family/members/${memberId}/tasks`),
       ]);
       setEvents(evRes.data.events || []);
-      setTasks(tkRes.data.tasks || []);
+      setTasks(tkRes.data.tasks   || []);
     } catch (err) {
       console.error('MemberProfile fetch error:', err.message);
     } finally {
@@ -357,10 +473,7 @@ export default function MemberProfileScreen({ route, navigation }) {
 
   useEffect(() => { fetchData(); }, [fetchData]);
 
-  const onRefresh = () => {
-    setRefreshing(true);
-    fetchData();
-  };
+  const onRefresh = () => { setRefreshing(true); fetchData(); };
 
   return (
     <SafeAreaView style={styles.container}>
@@ -376,16 +489,10 @@ export default function MemberProfileScreen({ route, navigation }) {
 
       {/* ── Profile card ── */}
       <View style={styles.profileCard}>
-        <View style={[styles.avatar, { backgroundColor: memberColor }]}>
-          <Text style={styles.avatarText}>{initials}</Text>
-        </View>
+        <Avatar member={displayMember} size={80} />
         <Text style={styles.memberName}>{displayName}</Text>
-        {member?.relationship ? (
-          <Text style={styles.memberRelationship}>{member.relationship}</Text>
-        ) : null}
-        {member?.email ? (
-          <Text style={styles.memberEmail}>{member.email}</Text>
-        ) : null}
+        {member?.relationship ? <Text style={styles.memberRelationship}>{member.relationship}</Text> : null}
+        {member?.email        ? <Text style={styles.memberEmail}>{member.email}</Text>               : null}
       </View>
 
       {/* ── Tab bar ── */}
@@ -394,19 +501,14 @@ export default function MemberProfileScreen({ route, navigation }) {
           style={[styles.tab, activeTab === 'personal' && styles.tabActive]}
           onPress={() => setActiveTab('personal')}
         >
-          <Text style={[styles.tabLabel, activeTab === 'personal' && styles.tabLabelActive]}>
-            Personal
-          </Text>
+          <Text style={[styles.tabLabel, activeTab === 'personal' && styles.tabLabelActive]}>Personal</Text>
         </TouchableOpacity>
-
         {isOwnProfile && (
           <TouchableOpacity
             style={[styles.tab, activeTab === 'settings' && styles.tabActive]}
             onPress={() => setActiveTab('settings')}
           >
-            <Text style={[styles.tabLabel, activeTab === 'settings' && styles.tabLabelActive]}>
-              Settings
-            </Text>
+            <Text style={[styles.tabLabel, activeTab === 'settings' && styles.tabLabelActive]}>Settings</Text>
           </TouchableOpacity>
         )}
       </View>
@@ -419,31 +521,28 @@ export default function MemberProfileScreen({ route, navigation }) {
           <ScrollView
             style={styles.scroll}
             contentContainerStyle={styles.scrollContent}
-            refreshControl={
-              <RefreshControl refreshing={refreshing} onRefresh={onRefresh} tintColor="#1a8fa8" />
-            }
+            refreshControl={<RefreshControl refreshing={refreshing} onRefresh={onRefresh} tintColor="#1a8fa8" />}
           >
             <Text style={styles.sectionHeader}>Events</Text>
-            {events.length === 0 ? (
-              <Text style={styles.emptyText}>No events</Text>
-            ) : (
-              events.map(ev => (
-                <EventItem key={ev.id} event={ev} navigation={navigation} />
-              ))
-            )}
-
+            {events.length === 0
+              ? <Text style={styles.emptyText}>No events</Text>
+              : events.map(ev => <EventItem key={ev.id} event={ev} navigation={navigation} />)
+            }
             <Text style={[styles.sectionHeader, { marginTop: 24 }]}>Tasks</Text>
-            {tasks.length === 0 ? (
-              <Text style={styles.emptyText}>No tasks</Text>
-            ) : (
-              tasks.map(tk => (
-                <TaskItem key={tk.id} task={tk} />
-              ))
-            )}
+            {tasks.length === 0
+              ? <Text style={styles.emptyText}>No tasks</Text>
+              : tasks.map(tk => <TaskItem key={tk.id} task={tk} />)
+            }
           </ScrollView>
         )
       ) : (
-        <SettingsTab member={member} user={user} family={family} fetchFamily={fetchFamily} />
+        <SettingsTab
+          member={displayMember}
+          user={user}
+          family={family}
+          fetchFamily={fetchFamily}
+          onAvatarChange={setLocalAvatarUrl}
+        />
       )}
 
     </SafeAreaView>

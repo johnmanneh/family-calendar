@@ -54,6 +54,34 @@ const styles = StyleSheet.create({
     fontSize: 26,
     fontWeight: '700',
   },
+
+  // ── Avatar component ──────────────────────────────────────────────────────
+  // Outer touchable — size/radius set inline from `size` prop
+  avatarWrap: {
+    overflow: 'hidden',
+    marginBottom: 12,
+  },
+  // Full-size coloured circle that holds the initials text
+  avatarInitials: {
+    width: '100%',
+    height: '100%',
+    alignItems: 'center',
+    justifyContent: 'center',
+  },
+  // Small camera badge — bottom-right corner
+  avatarEditBadge: {
+    position: 'absolute',
+    bottom: 2,
+    right: 2,
+    width: 24,
+    height: 24,
+    borderRadius: 12,
+    backgroundColor: '#1a8fa8',
+    alignItems: 'center',
+    justifyContent: 'center',
+    borderWidth: 2,
+    borderColor: '#fff',
+  },
   memberName: {
     fontSize: 20,
     fontWeight: '700',
@@ -317,6 +345,15 @@ const styles = StyleSheet.create({
   },
 
   // ── Profile info form ──────────────────────────────────────────────────────
+  // First + last name side by side
+  nameRow: {
+    flexDirection: 'row',
+    gap: 10,
+    marginBottom: 4,
+  },
+  nameField: {
+    flex: 1,
+  },
   inputLabel: {
     fontSize: 13,
     fontWeight: '500',
