@@ -395,6 +395,46 @@ const styles = StyleSheet.create({
     fontWeight: '600',
   },
 
+  // ── Admin circle control ──────────────────────────────────────────────────
+  circleRow: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    paddingVertical: 12,
+    gap: 12,
+  },
+  circleRowBorder: {
+    borderBottomWidth: 1,
+    borderBottomColor: '#f2f2f7',
+  },
+  circleRowSelected: {
+    // subtle tint so the selected row is easy to spot
+  },
+  circleRadio: {
+    width: 20,
+    height: 20,
+    borderRadius: 10,
+    borderWidth: 2,
+    borderColor: '#1a8fa8',
+    alignItems: 'center',
+    justifyContent: 'center',
+  },
+  circleRadioDot: {
+    width: 10,
+    height: 10,
+    borderRadius: 5,
+    backgroundColor: '#1a8fa8',
+  },
+  circleLabel: {
+    fontSize: 15,
+    fontWeight: '600',
+    color: '#1d1d1f',
+    marginBottom: 1,
+  },
+  circleDescription: {
+    fontSize: 12,
+    color: '#8e8e93',
+  },
+
   // ── Danger zone ───────────────────────────────────────────────────────────
   dangerDescription: {
     fontSize: 13,

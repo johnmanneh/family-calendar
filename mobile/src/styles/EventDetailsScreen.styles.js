@@ -262,6 +262,50 @@ const styles = StyleSheet.create({
     color: '#ff3b30',
   },
 
+  // ── Subtask add UI ────────────────────────────────────────────────────────
+  addSubTaskBtn: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 4,
+    marginTop: 6,
+  },
+  addSubTaskText: {
+    fontSize: 12,
+    color: '#1a8fa8',
+    fontWeight: '500',
+  },
+  subTaskInputRow: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 6,
+    marginTop: 6,
+  },
+  subTaskInput: {
+    flex: 1,
+    backgroundColor: '#f5f5f7',
+    borderRadius: 8,
+    paddingVertical: 6,
+    paddingHorizontal: 10,
+    fontSize: 13,
+    color: '#1d1d1f',
+  },
+  subTaskAddBtn: {
+    width: 28,
+    height: 28,
+    borderRadius: 14,
+    backgroundColor: '#1a8fa8',
+    alignItems: 'center',
+    justifyContent: 'center',
+  },
+  subTaskCancelBtn: {
+    width: 28,
+    height: 28,
+    borderRadius: 14,
+    backgroundColor: '#f2f2f7',
+    alignItems: 'center',
+    justifyContent: 'center',
+  },
+
 });
 
 export default styles;

@@ -425,6 +425,68 @@ function SettingsTab({ member, user, family, fetchFamily, onAvatarChange }) {
   );
 }
 
+// ─── Admin circle control ─────────────────────────────────────────────────────
+// Shown at the bottom of the Personal tab when an admin views another member.
+// Three options: inner / extended / outer — matches web's 3-way circle picker.
+
+const CIRCLE_OPTIONS = [
+  { value: 'inner',    label: 'Inner',    description: 'Sees all family events' },
+  { value: 'extended', label: 'Extended', description: 'Extended family access' },
+  { value: 'outer',    label: 'Outer',    description: 'Own events only' },
+];
+
+function AdminCircleControl({ memberId, currentCircle, fetchFamily }) {
+  const [saving, setSaving]   = useState(false);
+  const [selected, setSelected] = useState(currentCircle || 'inner');
+
+  const handleChange = async (value) => {
+    if (value === selected || saving) return;
+    setSaving(true);
+    const prev = selected;
+    setSelected(value); // optimistic
+    try {
+      await API.put('/family/member/circle', { user_id: memberId, circle_type: value });
+      fetchFamily();
+    } catch (err) {
+      setSelected(prev); // rollback
+      Alert.alert('Error', err.response?.data?.message || 'Could not update circle');
+    } finally {
+      setSaving(false);
+    }
+  };
+
+  return (
+    <View style={{ marginTop: 32 }}>
+      <Text style={styles.sectionHeader}>Circle type</Text>
+      <View style={styles.settingsCard}>
+        {CIRCLE_OPTIONS.map((opt, i) => (
+          <TouchableOpacity
+            key={opt.value}
+            style={[
+              styles.circleRow,
+              i < CIRCLE_OPTIONS.length - 1 && styles.circleRowBorder,
+              selected === opt.value && styles.circleRowSelected,
+            ]}
+            onPress={() => handleChange(opt.value)}
+            activeOpacity={0.7}
+          >
+            <View style={styles.circleRadio}>
+              {selected === opt.value && <View style={styles.circleRadioDot} />}
+            </View>
+            <View style={{ flex: 1 }}>
+              <Text style={styles.circleLabel}>{opt.label}</Text>
+              <Text style={styles.circleDescription}>{opt.description}</Text>
+            </View>
+            {saving && selected === opt.value && (
+              <ActivityIndicator size="small" color="#1a8fa8" />
+            )}
+          </TouchableOpacity>
+        ))}
+      </View>
+    </View>
+  );
+}
+
 // ─── MemberProfileScreen ─────────────────────────────────────────────────────
 
 export default function MemberProfileScreen({ route, navigation }) {
@@ -434,6 +496,10 @@ export default function MemberProfileScreen({ route, navigation }) {
 
   const member      = members.find(m => Number(m.id) === Number(memberId));
   const isOwnProfile = Number(user?.id) === Number(memberId);
+
+  // Current user's membership info — used to determine admin status
+  const myMembership = members.find(m => Number(m.id) === Number(user?.id));
+  const isAdmin = myMembership?.role === 'admin';
 
   const memberColor = member?.color || '#1a8fa8';
   const displayName = member
@@ -533,6 +599,17 @@ export default function MemberProfileScreen({ route, navigation }) {
               ? <Text style={styles.emptyText}>No tasks</Text>
               : tasks.map(tk => <TaskItem key={tk.id} task={tk} />)
             }
+
+            {/* Circle control — admin only, other member's profile only */}
+            {isAdmin && !isOwnProfile && (
+              <AdminCircleControl
+                memberId={memberId}
+                currentCircle={member?.circle_type}
+                fetchFamily={fetchFamily}
+              />
+            )}
+
+            <View style={{ height: 40 }} />
           </ScrollView>
         )
       ) : (

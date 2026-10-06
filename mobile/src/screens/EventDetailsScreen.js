@@ -5,11 +5,14 @@ import {
   ScrollView,
   TouchableOpacity,
   ActivityIndicator,
+  TextInput,
   Linking,
   Alert,
 } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
+import { Ionicons } from '@expo/vector-icons';
 import API from '../api/axios';
+import { useAuth } from '../context/AuthContext';
 import styles from '../styles/EventDetailsScreen.styles';
 
 // ─── Helpers ────────────────────────────────────────────────────────────────
@@ -86,10 +89,38 @@ function AttendeeAvatar({ attendee }) {
 }
 
 // ─── Task row ────────────────────────────────────────────────────────────────
+// `eventId` and `onRefresh` are needed for the add-subtask flow.
+// `currentUserId` restricts the add button to the creator or assignee.
 
-function TaskRow({ task }) {
+function TaskRow({ task, eventId, onRefresh, currentUserId }) {
+  const [showInput, setShowInput]   = useState(false);
+  const [subTaskText, setSubTaskText] = useState('');
+  const [adding, setAdding]         = useState(false);
+
   const initials = [task.first_name?.[0], task.last_name?.[0]]
     .filter(Boolean).join('').toUpperCase() || '?';
+
+  // Only creator or assignee may add subtasks
+  const canAddSubTask =
+    Number(currentUserId) === Number(task.created_by) ||
+    Number(currentUserId) === Number(task.user_id);
+
+  const handleAddSubTask = async () => {
+    if (!subTaskText.trim()) return;
+    setAdding(true);
+    try {
+      await API.post(`/events/${eventId}/tasks/${task.id}/subtasks`, {
+        title: subTaskText.trim(),
+      });
+      setSubTaskText('');
+      setShowInput(false);
+      onRefresh();
+    } catch (err) {
+      Alert.alert('Error', err.response?.data?.message || 'Could not add subtask');
+    } finally {
+      setAdding(false);
+    }
+  };
 
   return (
     <View style={styles.taskRow}>
@@ -139,6 +170,48 @@ function TaskRow({ task }) {
             ))}
           </View>
         )}
+
+        {/* Add subtask — inline input or trigger button */}
+        {canAddSubTask && (
+          showInput ? (
+            <View style={styles.subTaskInputRow}>
+              <TextInput
+                style={styles.subTaskInput}
+                placeholder="Add a subtask…"
+                placeholderTextColor="#aaa"
+                value={subTaskText}
+                onChangeText={setSubTaskText}
+                onSubmitEditing={handleAddSubTask}
+                returnKeyType="done"
+                autoFocus
+              />
+              <TouchableOpacity
+                style={[styles.subTaskAddBtn, (!subTaskText.trim() || adding) && { opacity: 0.4 }]}
+                onPress={handleAddSubTask}
+                disabled={!subTaskText.trim() || adding}
+              >
+                {adding
+                  ? <ActivityIndicator size="small" color="#fff" />
+                  : <Ionicons name="checkmark" size={14} color="#fff" />
+                }
+              </TouchableOpacity>
+              <TouchableOpacity
+                style={styles.subTaskCancelBtn}
+                onPress={() => { setShowInput(false); setSubTaskText(''); }}
+              >
+                <Ionicons name="close" size={14} color="#8e8e93" />
+              </TouchableOpacity>
+            </View>
+          ) : (
+            <TouchableOpacity
+              style={styles.addSubTaskBtn}
+              onPress={() => setShowInput(true)}
+            >
+              <Ionicons name="add" size={13} color="#1a8fa8" />
+              <Text style={styles.addSubTaskText}>Add subtask</Text>
+            </TouchableOpacity>
+          )
+        )}
       </View>
     </View>
   );
@@ -148,6 +221,7 @@ function TaskRow({ task }) {
 
 export default function EventDetailsScreen({ route, navigation }) {
   const { eventId } = route.params;
+  const { user } = useAuth();
 
   const [event, setEvent] = useState(null);
   const [loading, setLoading] = useState(true);
@@ -242,7 +316,15 @@ export default function EventDetailsScreen({ route, navigation }) {
         {/* ── Tasks card — shown above info, same order as web ── */}
         {tasks.length > 0 && (
           <View style={styles.card}>
-            {tasks.map(task => <TaskRow key={task.id} task={task} />)}
+            {tasks.map(task => (
+              <TaskRow
+                key={task.id}
+                task={task}
+                eventId={eventId}
+                currentUserId={user?.id}
+                onRefresh={fetchEvent}
+              />
+            ))}
           </View>
         )}
 

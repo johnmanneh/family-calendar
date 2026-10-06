@@ -58,7 +58,7 @@ function MemberRow({ member, isMe, navigation }) {
       </View>
 
       {/* Role badge */}
-      {member.role === 'owner' && (
+      {member.role === 'admin' && (
         <View style={styles.ownerBadge}>
           <Text style={styles.ownerBadgeText}>Owner</Text>
         </View>
@@ -79,7 +79,7 @@ export default function FamilyScreen({ navigation }) {
   const [leaving,    setLeaving]    = useState(false);
 
   const myMembership = members.find(m => Number(m.id) === Number(user?.id));
-  const isOwner = myMembership?.role === 'owner';
+  const isOwner = myMembership?.role === 'admin';
 
   const handleCopyCode = () => {
     Clipboard.setString(family?.invite_code || '');
