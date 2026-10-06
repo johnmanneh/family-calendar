@@ -70,19 +70,22 @@ function MemberBubble({ member, selected, onPress, onLongPress }) {
 
   return (
     <TouchableOpacity
-      style={[styles.bubble, selected && { transform: [{ scale: 1.12 }] }]}
+      style={styles.bubble}
       onPress={onPress}
       onLongPress={onLongPress}
       delayLongPress={400}
     >
-      {/*
-        Two-layer ring — iOS-style selection indicator:
-        outer ring (member colour) → white gap (padding) → coloured avatar
-        When not selected both borders are transparent so it looks identical.
-      */}
+      {/* Soft glow wrapper — only active when selected.
+          The shadow sits on this view so it renders outside the circle bounds. */}
       <View style={[
-        styles.bubbleRing,
-        selected && { borderColor: memberColor },
+        styles.bubbleGlow,
+        selected && {
+          shadowColor: memberColor,
+          shadowOpacity: 0.45,
+          shadowRadius: 10,
+          shadowOffset: { width: 0, height: 0 },
+          elevation: 10,
+        },
       ]}>
         <View style={[styles.bubbleCircle, { backgroundColor: memberColor }]}>
           <Text style={styles.bubbleInitials}>{initials}</Text>

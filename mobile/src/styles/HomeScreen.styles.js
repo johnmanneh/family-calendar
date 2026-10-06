@@ -119,14 +119,14 @@ const styles = StyleSheet.create({
     width: 46,
     marginRight: 10,
   },
-  // Outer ring — transparent when unselected, member colour when selected.
-  // The 2px padding between ring and avatar creates the white gap.
-  bubbleRing: {
-    borderRadius: 22,
-    borderWidth: 2,
-    borderColor: 'transparent',
-    padding: 2,
-    backgroundColor: '#fff',
+  // Wrapper that carries the glow shadow when the bubble is selected.
+  // Needs a background + borderRadius matching the circle so iOS renders
+  // the shadow correctly.
+  bubbleGlow: {
+    width: 36,
+    height: 36,
+    borderRadius: 18,
+    backgroundColor: 'transparent',
   },
   bubbleCircle: {
     width: 36,
