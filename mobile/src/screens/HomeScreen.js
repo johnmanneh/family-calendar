@@ -653,10 +653,7 @@ export default function HomeScreen({ navigation }) {
                 <MonthCalendar
                   events={memberFiltered}
                   selectedDate={selectedDate}
-                  onSelectDate={(day) => {
-                    setSelectedDate(day);
-                    navigation.navigate('DayView', { dateStr: day.toISOString() });
-                  }}
+                  onSelectDate={(day) => setSelectedDate(day)}
                   onLongPressDate={(day) => {
                     setSelectedDate(day);
                     navigation.navigate('DayView', { dateStr: day.toISOString() });
@@ -666,10 +663,7 @@ export default function HomeScreen({ navigation }) {
                 <WeekStrip
                   events={memberFiltered}
                   selectedDate={selectedDate}
-                  onSelectDate={(day) => {
-                    setSelectedDate(day);
-                    navigation.navigate('DayView', { dateStr: day.toISOString() });
-                  }}
+                  onSelectDate={(day) => setSelectedDate(day)}
                   onLongPressDate={(day) => {
                     setSelectedDate(day);
                     navigation.navigate('DayView', { dateStr: day.toISOString() });
