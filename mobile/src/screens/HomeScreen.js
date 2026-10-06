@@ -68,26 +68,31 @@ function MemberBubble({ member, selected, onPress, onLongPress }) {
 
   const memberColor = member.color || '#1a8fa8';
 
-  // When selected, ring uses the member's own colour — same as the web sidebar
-  const circleStyle = [
-    styles.bubbleCircle,
-    { backgroundColor: memberColor },
-    selected && {
-      borderColor: memberColor,
-      shadowColor: memberColor,
-      shadowOpacity: 0.5,
-      shadowRadius: 4,
-      shadowOffset: { width: 0, height: 0 },
-      elevation: 4,
-    },
-  ];
-
   return (
-    <TouchableOpacity style={styles.bubble} onPress={onPress} onLongPress={onLongPress} delayLongPress={400}>
-      <View style={circleStyle}>
-        <Text style={styles.bubbleInitials}>{initials}</Text>
+    <TouchableOpacity
+      style={[styles.bubble, selected && { transform: [{ scale: 1.12 }] }]}
+      onPress={onPress}
+      onLongPress={onLongPress}
+      delayLongPress={400}
+    >
+      {/*
+        Two-layer ring — iOS-style selection indicator:
+        outer ring (member colour) → white gap (padding) → coloured avatar
+        When not selected both borders are transparent so it looks identical.
+      */}
+      <View style={[
+        styles.bubbleRing,
+        selected && { borderColor: memberColor },
+      ]}>
+        <View style={[styles.bubbleCircle, { backgroundColor: memberColor }]}>
+          <Text style={styles.bubbleInitials}>{initials}</Text>
+        </View>
       </View>
-      <Text style={styles.bubbleName} numberOfLines={1}>
+
+      <Text style={[
+        styles.bubbleName,
+        selected && { color: memberColor, fontWeight: '700' },
+      ]} numberOfLines={1}>
         {member.first_name || fullName.split(' ')[0]}
       </Text>
       {member.relationship ? (

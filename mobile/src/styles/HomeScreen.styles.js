@@ -119,18 +119,21 @@ const styles = StyleSheet.create({
     width: 46,
     marginRight: 10,
   },
-  bubbleSelected: {},
+  // Outer ring — transparent when unselected, member colour when selected.
+  // The 2px padding between ring and avatar creates the white gap.
+  bubbleRing: {
+    borderRadius: 22,
+    borderWidth: 2,
+    borderColor: 'transparent',
+    padding: 2,
+    backgroundColor: '#fff',
+  },
   bubbleCircle: {
     width: 36,
     height: 36,
     borderRadius: 18,
     alignItems: 'center',
     justifyContent: 'center',
-    borderWidth: 2,
-    borderColor: 'transparent',
-  },
-  bubbleCircleSelected: {
-    borderColor: '#1a8fa8',
   },
   bubbleInitials: {
     color: '#fff',
