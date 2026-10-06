@@ -75,18 +75,16 @@ function MemberBubble({ member, selected, onPress, onLongPress }) {
       onLongPress={onLongPress}
       delayLongPress={400}
     >
-      {/* Soft glow wrapper — only active when selected.
-          The shadow sits on this view so it renders outside the circle bounds. */}
-      <View style={[
-        styles.bubbleGlow,
-        selected && {
-          shadowColor: memberColor,
-          shadowOpacity: 0.45,
-          shadowRadius: 10,
-          shadowOffset: { width: 0, height: 0 },
-          elevation: 10,
-        },
-      ]}>
+      {/* Halo container — slightly larger than the circle, centred.
+          When selected: a faded circle of the member's colour sits behind
+          the avatar. Works on iOS and Android without shadow API quirks. */}
+      <View style={styles.bubbleHaloWrap}>
+        {selected && (
+          <View style={[
+            styles.bubbleHalo,
+            { backgroundColor: memberColor, opacity: 0.25 },
+          ]} />
+        )}
         <View style={[styles.bubbleCircle, { backgroundColor: memberColor }]}>
           <Text style={styles.bubbleInitials}>{initials}</Text>
         </View>

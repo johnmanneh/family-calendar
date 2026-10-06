@@ -119,14 +119,19 @@ const styles = StyleSheet.create({
     width: 46,
     marginRight: 10,
   },
-  // Wrapper that carries the glow shadow when the bubble is selected.
-  // Needs a background + borderRadius matching the circle so iOS renders
-  // the shadow correctly.
-  bubbleGlow: {
-    width: 36,
-    height: 36,
-    borderRadius: 18,
-    backgroundColor: 'transparent',
+  // Outer container — sized to fit the halo (44px) and keep things centred
+  bubbleHaloWrap: {
+    width: 44,
+    height: 44,
+    alignItems: 'center',
+    justifyContent: 'center',
+  },
+  // The faded circle that peeks out behind the avatar when selected
+  bubbleHalo: {
+    position: 'absolute',
+    width: 44,
+    height: 44,
+    borderRadius: 22,
   },
   bubbleCircle: {
     width: 36,
