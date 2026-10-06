@@ -13,7 +13,7 @@ function onSameDay(dateStr, day) {
   return y === day.getFullYear() && (m - 1) === day.getMonth() && d === day.getDate();
 }
 
-export default function MonthCalendar({ events = [], selectedDate, onSelectDate }) {
+export default function MonthCalendar({ events = [], selectedDate, onSelectDate, onLongPressDate }) {
   const today = new Date();
   today.setHours(0, 0, 0, 0);
 
@@ -80,6 +80,8 @@ export default function MonthCalendar({ events = [], selectedDate, onSelectDate 
               key={i}
               style={s.cell}
               onPress={() => onSelectDate(day)}
+              onLongPress={() => onLongPressDate?.(day)}
+              delayLongPress={400}
               activeOpacity={0.7}
             >
               <View style={[

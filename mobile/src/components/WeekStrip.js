@@ -83,7 +83,7 @@ function monthLabel(weekStart) {
 
 // ─── WeekStrip ────────────────────────────────────────────────────────────────
 
-export default function WeekStrip({ events, selectedDate, onSelectDate }) {
+export default function WeekStrip({ events, selectedDate, onSelectDate, onLongPressDate }) {
   const today = new Date();
   today.setHours(0, 0, 0, 0);
 
@@ -153,6 +153,8 @@ export default function WeekStrip({ events, selectedDate, onSelectDate }) {
               key={i}
               style={styles.dayCol}
               onPress={() => onSelectDate(day)}
+              onLongPress={() => onLongPressDate?.(day)}
+              delayLongPress={400}
               activeOpacity={0.7}
             >
               {/* Day letter */}

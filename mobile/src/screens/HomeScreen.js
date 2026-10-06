@@ -1,5 +1,6 @@
 import React, { useState, useEffect, useCallback, useRef } from 'react';
 import Swipeable from 'react-native-gesture-handler/Swipeable';
+import { GestureDetector, Gesture } from 'react-native-gesture-handler';
 import {
   View,
   Text,
@@ -243,39 +244,64 @@ export default function HomeScreen({ navigation }) {
   // Switches to week once the user has data (members or events).
   const [viewMode, setViewMode] = useState('month');
 
-  // Pinch gesture tracking — two-finger spread/compress switches view
-  const pinch = useRef({ startDist: null, currentDist: null });
+  // Mirror mutable state into refs so gesture callbacks always read the latest value.
+  const viewModeRef     = useRef(viewMode);
+  const selectedDateRef = useRef(selectedDate);
+  useEffect(() => { viewModeRef.current = viewMode; },     [viewMode]);
+  useEffect(() => { selectedDateRef.current = selectedDate; }, [selectedDate]);
 
-  const pinchDist = (touches) =>
-    Math.hypot(touches[1].pageX - touches[0].pageX, touches[1].pageY - touches[0].pageY);
+  // ── Animated values for Apple-Calendar-style pinch ───────────────────────
+  // liveScale:     live pinch feedback on the calendar.
+  // viewAlpha:     calendar fade during view switch.
+  // listAlpha:     task list fade during view switch.
+  // listTranslateY: task list slides up on exit, floats in from below on enter.
+  const liveScale      = useRef(new Animated.Value(1)).current;
+  const viewAlpha      = useRef(new Animated.Value(1)).current;
+  const listAlpha      = useRef(new Animated.Value(1)).current;
+  const listTranslateY = useRef(new Animated.Value(0)).current;
 
-  const onCalTouchStart = (e) => {
-    if (e.nativeEvent.touches.length === 2)
-      pinch.current.startDist = pinchDist(e.nativeEvent.touches);
-  };
-  const onCalTouchMove = (e) => {
-    if (e.nativeEvent.touches.length === 2)
-      pinch.current.currentDist = pinchDist(e.nativeEvent.touches);
-  };
-  const onCalTouchEnd = () => {
-    const { startDist, currentDist } = pinch.current;
-    if (startDist && currentDist) {
-      const scale = currentDist / startDist;
-      if (scale > 1.3) {
-        // Spread fingers → zoom out → month view
-        setViewMode('month');
-      } else if (scale < 0.75) {
-        if (viewMode === 'month') {
-          // Pinch in from month → week view
-          setViewMode('week');
-        } else {
-          // Pinch in from week → day drill-down
-          navigation.navigate('DayView', { dateStr: selectedDate.toISOString() });
-        }
+  const switchCalendarView = useCallback((newMode) => {
+    // Phase 1 — slide list up + fade everything out
+    Animated.parallel([
+      Animated.timing(viewAlpha,      { toValue: 0,  duration: 180, useNativeDriver: true }),
+      Animated.timing(listAlpha,      { toValue: 0,  duration: 180, useNativeDriver: true }),
+      Animated.timing(listTranslateY, { toValue: -12, duration: 180, useNativeDriver: true }),
+    ]).start(() => {
+      // Swap content while invisible
+      setViewMode(newMode);
+      viewModeRef.current = newMode;
+      liveScale.setValue(1);
+      // Reset list to start below, ready to float up into view
+      listTranslateY.setValue(16);
+      // Phase 2 — float list in from below + fade everything back in
+      Animated.parallel([
+        Animated.timing(viewAlpha,      { toValue: 1, duration: 220, useNativeDriver: true }),
+        Animated.timing(listAlpha,      { toValue: 1, duration: 220, useNativeDriver: true }),
+        Animated.timing(listTranslateY, { toValue: 0, duration: 220, useNativeDriver: true }),
+      ]).start();
+    });
+  }, [liveScale, viewAlpha, listAlpha, listTranslateY]);
+
+  // Pinch gesture — runOnJS(true) means NO reanimated needed.
+  // onUpdate: apply live scale so user sees the calendar responding immediately.
+  // onEnd:    commit the view change or spring back if threshold wasn't crossed.
+  const pinchGesture = Gesture.Pinch()
+    .runOnJS(true)
+    .onUpdate((e) => {
+      liveScale.setValue(e.scale);
+    })
+    .onEnd((e) => {
+      if (e.scale > 1.15) {
+        // Fingers apart → week view
+        switchCalendarView('week');
+      } else if (e.scale < 0.85) {
+        // Fingers together → month view
+        switchCalendarView('month');
+      } else {
+        // Didn't cross threshold — spring back to original size
+        Animated.spring(liveScale, { toValue: 1, friction: 6, tension: 100, useNativeDriver: true }).start();
       }
-    }
-    pinch.current = { startDist: null, currentDist: null };
-  };
+    });
 
   // ── Edge swipe to open drawer ─────────────────────────────────────────────
   // A dedicated 20px strip on the left edge captures the gesture so it never
@@ -527,44 +553,49 @@ export default function HomeScreen({ navigation }) {
         </View>
       )}
 
-      {/* ── Calendar: pinch out = month, pinch in = day, tap = select ── */}
-      {!loading && (() => {
-        const isEmpty = events.length === 0 && tasks.length === 0;
-        // Always show month when there's no data; respect viewMode otherwise
-        const showMonth = isEmpty || viewMode === 'month';
-        const goToDay = (day) => {
-          setSelectedDate(day);
-          navigation.navigate('DayView', { dateStr: day.toISOString() });
-        };
-        const selectDay = (day) => setSelectedDate(day);
-
-        return (
-          <View
-            onTouchStart={onCalTouchStart}
-            onTouchMove={onCalTouchMove}
-            onTouchEnd={onCalTouchEnd}
-          >
-            {showMonth ? (
-              <MonthCalendar
-                events={memberFiltered}
-                selectedDate={selectedDate}
-                onSelectDate={goToDay}
-              />
-            ) : (
-              <WeekStrip
-                events={memberFiltered}
-                selectedDate={selectedDate}
-                onSelectDate={selectDay}
-              />
-            )}
-          </View>
-        );
-      })()}
+      {/* ── Calendar: pinch out = month, pinch in = week/day ── */}
+      {!loading && (
+        <>
+          <GestureDetector gesture={pinchGesture}>
+            {/* scale: live pinch feedback · opacity: cross-fade when view switches */}
+            <Animated.View style={{ transform: [{ scale: liveScale }], opacity: viewAlpha }}>
+              {(events.length === 0 && tasks.length === 0) || viewMode === 'month' ? (
+                <MonthCalendar
+                  events={memberFiltered}
+                  selectedDate={selectedDate}
+                  onSelectDate={(day) => {
+                    setSelectedDate(day);
+                    navigation.navigate('DayView', { dateStr: day.toISOString() });
+                  }}
+                  onLongPressDate={(day) => {
+                    setSelectedDate(day);
+                    navigation.navigate('DayView', { dateStr: day.toISOString() });
+                  }}
+                />
+              ) : (
+                <WeekStrip
+                  events={memberFiltered}
+                  selectedDate={selectedDate}
+                  onSelectDate={(day) => {
+                    setSelectedDate(day);
+                    navigation.navigate('DayView', { dateStr: day.toISOString() });
+                  }}
+                  onLongPressDate={(day) => {
+                    setSelectedDate(day);
+                    navigation.navigate('DayView', { dateStr: day.toISOString() });
+                  }}
+                />
+              )}
+            </Animated.View>
+          </GestureDetector>
+        </>
+      )}
 
       {/* ── Day events list ── */}
       {loading ? (
         <ActivityIndicator size="large" color="#1a8fa8" style={styles.spinner} />
       ) : (
+        <Animated.View style={{ flex: 1, opacity: listAlpha, transform: [{ translateY: listTranslateY }] }}>
         <FlatList
           data={listData}
           keyExtractor={(item) => item.key}
@@ -599,6 +630,7 @@ export default function HomeScreen({ navigation }) {
             <Text style={styles.emptyText}>No events or tasks</Text>
           }
         />
+        </Animated.View>
       )}
     </SafeAreaView>
 
