@@ -16,6 +16,7 @@ import EventFormScreen from './src/screens/EventFormScreen';
 import TaskFormScreen from './src/screens/TaskFormScreen';
 import GroupsScreen from './src/screens/GroupsScreen';
 import DayViewScreen from './src/screens/DayViewScreen';
+import FamilyScreen from './src/screens/FamilyScreen';
 
 const Stack = createNativeStackNavigator();
 
@@ -46,6 +47,7 @@ function AppNavigator() {
             <Stack.Screen name="TaskForm" component={TaskFormScreen} />
             <Stack.Screen name="Groups" component={GroupsScreen} />
             <Stack.Screen name="DayView" component={DayViewScreen} />
+            <Stack.Screen name="Family" component={FamilyScreen} />
           </>
         ) : (
           // Not logged in — show Login

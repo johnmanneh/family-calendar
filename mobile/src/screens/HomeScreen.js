@@ -572,7 +572,7 @@ export default function HomeScreen({ navigation }) {
   return (
     <View style={styles.container}><SafeAreaView style={styles.safeArea}>
 
-      <DrawerMenu visible={drawerOpen} onClose={() => setDrawerOpen(false)} navigation={navigation} />
+      <DrawerMenu visible={drawerOpen} onClose={() => setDrawerOpen(false)} navigation={navigation} pendingCount={pendingCount} />
 
       {/* Left edge strip — 20px wide, full height, captures swipe-right */}
       <View style={styles.edgeZone} {...edgePan.panHandlers} />

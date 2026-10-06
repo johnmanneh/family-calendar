@@ -8,14 +8,16 @@ import {
   StyleSheet,
   Dimensions,
   PanResponder,
+  Image,
 } from 'react-native';
 import { Ionicons } from '@expo/vector-icons';
 import { useAuth } from '../context/AuthContext';
 import { useFamily } from '../context/FamilyContext';
+import { SERVER_URL } from '../api/axios';
 
 const DRAWER_WIDTH = Dimensions.get('window').width * 0.75;
 
-export default function DrawerMenu({ visible, onClose, navigation }) {
+export default function DrawerMenu({ visible, onClose, navigation, pendingCount = 0 }) {
   const { user, logout } = useAuth();
   const { members } = useFamily();
 
@@ -26,6 +28,10 @@ export default function DrawerMenu({ visible, onClose, navigation }) {
   const displayName = me
     ? `${me.first_name || ''} ${me.last_name || ''}`.trim()
     : user?.email || '';
+  // Build a full URL if the avatar is stored as a relative path
+  const avatarPhoto = me?.avatar_url
+    ? (me.avatar_url.startsWith('http') ? me.avatar_url : `${SERVER_URL}${me.avatar_url}`)
+    : null;
 
   // ── Slide animation ───────────────────────────────────────────────────────
   const slideX = useRef(new Animated.Value(-DRAWER_WIDTH)).current;
@@ -86,9 +92,13 @@ export default function DrawerMenu({ visible, onClose, navigation }) {
 
           {/* User section */}
           <View style={styles.userSection}>
-            <View style={[styles.avatar, { backgroundColor: memberColor }]}>
-              <Text style={styles.avatarText}>{initials}</Text>
-            </View>
+            {avatarPhoto ? (
+              <Image source={{ uri: avatarPhoto }} style={styles.avatar} />
+            ) : (
+              <View style={[styles.avatar, { backgroundColor: memberColor }]}>
+                <Text style={styles.avatarText}>{initials}</Text>
+              </View>
+            )}
             <Text style={styles.userName}>{displayName}</Text>
             <Text style={styles.userEmail}>{user?.email || ''}</Text>
           </View>
@@ -101,12 +111,46 @@ export default function DrawerMenu({ visible, onClose, navigation }) {
               style={styles.navItem}
               onPress={() => {
                 onClose();
-                // Short delay so the drawer closes before pushing the new screen
                 setTimeout(() => navigation.navigate('MemberProfile', { memberId: user?.id }), 250);
               }}
             >
               <Ionicons name="person-outline" size={20} color="#1d1d1f" />
               <Text style={styles.navLabel}>Profile</Text>
+            </TouchableOpacity>
+
+            {/* Pending tasks — badge shows count when > 0 */}
+            <TouchableOpacity
+              style={styles.navItem}
+              onPress={() => {
+                onClose();
+                setTimeout(() => navigation.navigate('Pending'), 250);
+              }}
+            >
+              <View style={styles.navIconWrap}>
+                <Ionicons name="notifications-outline" size={20} color="#1d1d1f" />
+                {pendingCount > 0 && (
+                  <View style={styles.navBadge}>
+                    <Text style={styles.navBadgeText}>{pendingCount > 9 ? '9+' : pendingCount}</Text>
+                  </View>
+                )}
+              </View>
+              <Text style={styles.navLabel}>Pending</Text>
+              {pendingCount > 0 && (
+                <View style={styles.navBadgePill}>
+                  <Text style={styles.navBadgePillText}>{pendingCount > 9 ? '9+' : pendingCount}</Text>
+                </View>
+              )}
+            </TouchableOpacity>
+
+            <TouchableOpacity
+              style={styles.navItem}
+              onPress={() => {
+                onClose();
+                setTimeout(() => navigation.navigate('Family'), 250);
+              }}
+            >
+              <Ionicons name="home-outline" size={20} color="#1d1d1f" />
+              <Text style={styles.navLabel}>Family</Text>
             </TouchableOpacity>
 
             <TouchableOpacity
@@ -217,6 +261,46 @@ const styles = StyleSheet.create({
     fontSize: 16,
     color: '#1d1d1f',
     fontWeight: '500',
+    flex: 1,
+  },
+  // Wrapper so the icon + small dot badge sit together
+  navIconWrap: {
+    position: 'relative',
+    width: 20,
+    height: 20,
+  },
+  // Small dot on the icon corner
+  navBadge: {
+    position: 'absolute',
+    top: -4,
+    right: -6,
+    backgroundColor: '#ff3b30',
+    borderRadius: 6,
+    minWidth: 12,
+    height: 12,
+    alignItems: 'center',
+    justifyContent: 'center',
+    paddingHorizontal: 2,
+  },
+  navBadgeText: {
+    color: '#fff',
+    fontSize: 8,
+    fontWeight: '700',
+  },
+  // Pill on the right edge of the row
+  navBadgePill: {
+    backgroundColor: '#ff3b30',
+    borderRadius: 10,
+    minWidth: 20,
+    height: 20,
+    alignItems: 'center',
+    justifyContent: 'center',
+    paddingHorizontal: 5,
+  },
+  navBadgePillText: {
+    color: '#fff',
+    fontSize: 11,
+    fontWeight: '700',
   },
 
   // Sign out
