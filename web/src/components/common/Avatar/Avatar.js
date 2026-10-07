@@ -1,7 +1,9 @@
 import React from "react";
 import "./Avatar.css";
 
-const BACKEND_URL = "http://localhost:8000";
+const BACKEND_URL = process.env.REACT_APP_API_URL
+  ? process.env.REACT_APP_API_URL.replace('/api', '')
+  : 'http://localhost:8000';
 
 /**
  * Avatar — shows profile photo if available, otherwise initials.

@@ -313,6 +313,44 @@ export const EventProvider = ({ children }) => {
   };
   //
   //
+  // ── Notifications inbox ───────────────────────────────────────────────────
+  const fetchNotifications = async () => {
+    try {
+      const res = await API.get('/notifications');
+      return { notifications: res.data.notifications || [], unread_count: res.data.unread_count || 0 };
+    } catch {
+      return { notifications: [], unread_count: 0 };
+    }
+  };
+
+  const markAllNotificationsRead = async () => {
+    try { await API.patch('/notifications/read-all'); } catch {}
+  };
+
+  const markNotificationRead = async (id) => {
+    try { await API.patch(`/notifications/${id}/read`); } catch {}
+  };
+  //
+  //
+  const fetchMessages = async () => {
+    try {
+      const res = await API.get('/chat');
+      return res.data.messages || [];
+    } catch {
+      return [];
+    }
+  };
+
+  const sendMessage = async (body) => {
+    try {
+      const res = await API.post('/chat', { body });
+      return res.data.message || null;
+    } catch {
+      return null;
+    }
+  };
+  //
+  //
   const getMemberTask = async member => {
     setLoading(true);
     try {
@@ -331,12 +369,17 @@ export const EventProvider = ({ children }) => {
   const selectedEventRef = useRef(null);
   selectedEventRef.current = selectedEvent;
 
+  // chat_message SSE handler calls this to push the new message into chat panels
+  const chatMessageCallbackRef = useRef(null);
+  const onChatMessage = (cb) => { chatMessageCallbackRef.current = cb; };
+
   const connectSSE = () => {
     const token = localStorage.getItem('token');
     if (!token) return;
     if (sseRef.current) sseRef.current.close();
 
-    const es = new EventSource(`http://localhost:8000/api/stream?token=${token}`);
+    const sseBase = process.env.REACT_APP_API_URL || 'http://localhost:8000/api';
+    const es = new EventSource(`${sseBase}/stream?token=${token}`);
     sseRef.current = es;
 
     es.addEventListener('task_update', () => {
@@ -350,6 +393,13 @@ export const EventProvider = ({ children }) => {
 
     es.addEventListener('event_update', () => {
       fetchEvents();
+    });
+
+    es.addEventListener('chat_message', (e) => {
+      try {
+        const msg = JSON.parse(e.data);
+        if (chatMessageCallbackRef.current) chatMessageCallbackRef.current(msg);
+      } catch { /* silent */ }
     });
 
     es.onerror = () => {
@@ -410,6 +460,12 @@ export const EventProvider = ({ children }) => {
         respondToCounter,
         fetchAssigneeNotifications,
         acknowledgeAssigneeNotification,
+        fetchNotifications,
+        markAllNotificationsRead,
+        markNotificationRead,
+        fetchMessages,
+        sendMessage,
+        onChatMessage,
       }}
     >
       {children}
