@@ -21,7 +21,7 @@ import {
   Image,
 } from 'react-native';
 import DateTimePicker from '@react-native-community/datetimepicker';
-import { SafeAreaView } from 'react-native-safe-area-context';
+import { SafeAreaView, useSafeAreaInsets } from 'react-native-safe-area-context';
 import { Ionicons } from '@expo/vector-icons';
 import { LinearGradient } from 'expo-linear-gradient';
 import DrawerMenu from '../components/DrawerMenu';
@@ -354,6 +354,7 @@ const CATEGORIES = [
 export default function HomeScreen({ navigation }) {
   const { t } = useTranslation();
   const styles = useStyles();
+  const insets = useSafeAreaInsets();
   const { logout, user } = useAuth();
   const { members } = useFamily();
   const { eventTick, taskTick, lastChatMsg } = useSSE();
@@ -388,6 +389,8 @@ export default function HomeScreen({ navigation }) {
   const [voiceTranscript,  setVoiceTranscript]  = useState('');
   const fabPulse = useRef(new Animated.Value(1)).current;
   const pulseLoop = useRef(null);
+  const fabRef    = useRef(null);
+  const [fabCenter, setFabCenter] = useState({ x: 0, y: 0 });
 
   // ── Success toast — shown after a voice-created event ───────────────────
   // null = hidden, string = message to show
@@ -695,6 +698,7 @@ export default function HomeScreen({ navigation }) {
 
     try {
       await API.post('/events/create', payload);
+      setSelectedDate(startDate);           // jump calendar to the event's date
       fetchEvents();                        // refresh calendar in background
       setVoiceStatus('idle');
       hasNavigatedRef.current = false;
@@ -718,14 +722,36 @@ export default function HomeScreen({ navigation }) {
 
     if (STT_AVAILABLE) {
       try {
-        await ExpoSpeechRecognitionModule.requestPermissionsAsync();
-        ExpoSpeechRecognitionModule.start({ lang: 'en-US', interimResults: true });
+        const { granted } = await ExpoSpeechRecognitionModule.requestPermissionsAsync();
+        if (!granted) {
+          setIsRecording(false);
+          isRecordingRef.current = false;
+          setVoiceStatus('idle');
+          stopFabPulse();
+          showSuccessToast('Microphone permission denied');
+          return;
+        }
+        // Guard: user may have released the FAB while the permission dialog was showing
+        if (!isRecordingRef.current) {
+          stopFabPulse();
+          return;
+        }
+        ExpoSpeechRecognitionModule.start({ lang: 'en-US', interimResults: true, continuous: false });
       } catch (err) {
         console.warn('Could not start speech recognition:', err);
         setIsRecording(false);
+        isRecordingRef.current = false;
         setVoiceStatus('idle');
         stopFabPulse();
+        showSuccessToast('Voice not available — try again');
       }
+    } else {
+      // No STT module — show a clear message instead of silently failing
+      setIsRecording(false);
+      isRecordingRef.current = false;
+      setVoiceStatus('idle');
+      stopFabPulse();
+      showSuccessToast('Voice requires a dev build');
     }
     // In Expo Go (no STT): pill shows "Listening…" and releasing triggers the
     // fallback path via handleFabRelease → handleFinalTranscript('').
@@ -740,11 +766,9 @@ export default function HomeScreen({ navigation }) {
       try { ExpoSpeechRecognitionModule.stop(); } catch (_) {}
       // The STT 'end' event is the guaranteed trigger for handleFinalTranscript
       // (works on both iOS and Android, even when isFinal is never set).
-    } else {
-      // No STT — navigate to blank form
-      handleFinalTranscript('');
     }
-  }, [handleFinalTranscript]);
+    // No STT: handleFabLongPress already reset state and showed the toast
+  }, []);
 
   // Seed UI from cache immediately so the screen is never blank while fetching
   useEffect(() => {
@@ -1199,7 +1223,7 @@ export default function HomeScreen({ navigation }) {
 
       {/* ── Voice status pill — floats above the FAB while recording ── */}
       {(isRecording || voiceStatus === 'creating') && (
-        <View style={styles.voicePill}>
+        <View style={[styles.voicePill, { bottom: 96 + insets.bottom }]}>
           <Animated.View style={[styles.voicePillDot, { opacity: fabPulse.interpolate({ inputRange: [1, 1.5], outputRange: [1, 0.3] }) }]} />
           <View>
             <Text style={styles.voicePillText}>
@@ -1216,7 +1240,7 @@ export default function HomeScreen({ navigation }) {
 
       {/* ── Success toast — brief green pill above FAB after voice create ── */}
       {successToast && (
-        <View style={styles.successPill}>
+        <View style={[styles.successPill, { bottom: 96 + insets.bottom }]}>
           <Ionicons name="checkmark-circle" size={16} color="#fff" />
           <Text style={styles.successPillText}>{successToast}</Text>
         </View>
@@ -1226,7 +1250,7 @@ export default function HomeScreen({ navigation }) {
       {/* Short press → opens radial pie menu.            */}
       {/* Long press (hold) → FAB becomes mic, records.   */}
       {/* Lift finger (pressOut) → stops recording.       */}
-      <View style={[styles.fab, styles.fabSmall, { alignItems: 'center', justifyContent: 'center' }]}
+      <View style={[styles.fab, styles.fabSmall, { alignItems: 'center', justifyContent: 'center', bottom: 32 + insets.bottom }]}
         pointerEvents="box-none"
       >
         {/* Pulse ring — expands outward while recording */}
@@ -1241,8 +1265,16 @@ export default function HomeScreen({ navigation }) {
           />
         )}
         <Pressable
+          ref={fabRef}
           style={{ width: 48, height: 48, borderRadius: 24, backgroundColor: isRecording ? '#0e6d82' : '#1a8fa8', alignItems: 'center', justifyContent: 'center' }}
-          onPress={() => { if (!isRecording) setRadialVisible(true); }}
+          onPress={() => {
+            if (!isRecording) {
+              fabRef.current?.measure((_x, _y, w, h, px, py) => {
+                setFabCenter({ x: px + w / 2, y: py + h / 2 });
+                setRadialVisible(true);
+              });
+            }
+          }}
           onLongPress={handleFabLongPress}
           onPressOut={handleFabRelease}
           delayLongPress={400}
@@ -1254,6 +1286,7 @@ export default function HomeScreen({ navigation }) {
       {/* ── Radial pie menu ── */}
       <RadialMenu
         visible={radialVisible}
+        fabCenter={fabCenter}
         onClose={() => setRadialVisible(false)}
         onNewEvent={() => navigation.navigate('EventForm')}
         onNewTask={() => navigation.navigate('TaskForm')}

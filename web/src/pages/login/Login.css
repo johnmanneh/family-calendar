@@ -27,6 +27,10 @@
   margin-bottom: 36px;
 }
 
+.login-logo svg {
+  color: #1d1d1f;
+}
+
 .login-logo p {
   font-size: 11px;
   color: #aeaeb2;
@@ -114,4 +118,16 @@
   font-size: 11px;
   color: #aeaeb2;
   letter-spacing: 1px;
+}
+
+@media (prefers-color-scheme: dark) {
+  .login-page { background: radial-gradient(ellipse 60% 40% at 20% 20%, rgba(86,227,159,0.06), transparent), radial-gradient(ellipse 60% 40% at 80% 80%, rgba(79,172,254,0.06), transparent), #000; }
+  .login-container { background: #1c1c1e; box-shadow: 0 2px 8px rgba(0,0,0,0.3), 0 8px 32px rgba(0,0,0,0.4); }
+  .login-container h2 { color: #fff; }
+  .login-subtitle { color: #aeaeb2; }
+  .season-badge { background: #2c2c2e; }
+  .season-badge:hover { background: #3a3a3c; }
+  .login-divider::before, .login-divider::after { background: #3a3a3c; }
+  .login-logo svg { color: #ffffff; }
+  .login-logo .logo-string { stroke: #5a5a5e; }
 }

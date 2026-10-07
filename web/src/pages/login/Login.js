@@ -69,7 +69,7 @@ const Login = () => {
               y="42"
               fontSize="36"
               fontWeight="900"
-              fill="#1d1d1f"
+              fill="currentColor"
               textAnchor="middle"
               fontFamily="Inter"
               letterSpacing="-2"
@@ -95,6 +95,7 @@ const Login = () => {
               y2="72"
               stroke="#d2d2d7"
               strokeWidth="1.5"
+              className="logo-string"
             />
             <line
               x1="63"
@@ -103,6 +104,7 @@ const Login = () => {
               y2="72"
               stroke="#d2d2d7"
               strokeWidth="1.5"
+              className="logo-string"
             />
             <line
               x1="97"
@@ -111,6 +113,7 @@ const Login = () => {
               y2="72"
               stroke="#d2d2d7"
               strokeWidth="1.5"
+              className="logo-string"
             />
             <line
               x1="130"
@@ -119,6 +122,7 @@ const Login = () => {
               y2="72"
               stroke="#d2d2d7"
               strokeWidth="1.5"
+              className="logo-string"
             />
 
             {/* Season emojis */}
