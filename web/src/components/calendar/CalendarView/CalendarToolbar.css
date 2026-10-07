@@ -1,0 +1,105 @@
+.calendar-toolbar {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+  padding: 8px 10px 4px;
+  background: #fff;
+  border-bottom: 1px solid #e5e7eb;
+}
+
+/* ── Search ── */
+.calendar-toolbar-search-wrap {
+  position: relative;
+  display: flex;
+  align-items: center;
+}
+
+.calendar-toolbar-search-icon {
+  position: absolute;
+  left: 10px;
+  font-size: 13px;
+  pointer-events: none;
+}
+
+.calendar-toolbar-search {
+  width: 100%;
+  padding: 7px 32px 7px 32px;
+  border: 1px solid #d1d5db;
+  border-radius: 8px;
+  font-size: 14px;
+  background: #f9fafb;
+  outline: none;
+  transition: border-color 0.15s;
+}
+
+.calendar-toolbar-search:focus {
+  border-color: #1a8fa8;
+  background: #fff;
+}
+
+.calendar-toolbar-clear {
+  position: absolute;
+  right: 10px;
+  background: none;
+  border: none;
+  font-size: 18px;
+  line-height: 1;
+  color: #9ca3af;
+  cursor: pointer;
+  padding: 0 2px;
+}
+
+.calendar-toolbar-clear:hover {
+  color: #374151;
+}
+
+/* ── Category chips ── */
+.calendar-toolbar-chips {
+  display: flex;
+  gap: 6px;
+  flex-wrap: wrap;
+}
+
+.calendar-toolbar-chip {
+  padding: 4px 10px;
+  border: 1px solid #d1d5db;
+  border-radius: 20px;
+  font-size: 12px;
+  background: #f3f4f6;
+  color: #374151;
+  cursor: pointer;
+  transition: background 0.15s, border-color 0.15s, color 0.15s;
+  white-space: nowrap;
+}
+
+.calendar-toolbar-chip:hover {
+  background: #e5e7eb;
+}
+
+.calendar-toolbar-chip-active {
+  background: #1a8fa8;
+  border-color: #1a8fa8;
+  color: #fff;
+}
+
+@media (prefers-color-scheme: dark) {
+  .calendar-toolbar {
+    background: #1c1c1e;
+    border-bottom-color: #3a3a3c;
+  }
+  .calendar-toolbar-search {
+    background: #2c2c2e;
+    border-color: #3a3a3c;
+    color: #fff;
+  }
+  .calendar-toolbar-search::placeholder { color: #636366; }
+  .calendar-toolbar-search:focus { background: #2c2c2e; }
+  .calendar-toolbar-chip {
+    background: #2c2c2e;
+    border-color: #3a3a3c;
+    color: #aeaeb2;
+  }
+  .calendar-toolbar-chip:hover { background: #3a3a3c; }
+  .calendar-toolbar-clear { color: #636366; }
+  .calendar-toolbar-clear:hover { color: #aeaeb2; }
+}
