@@ -31,6 +31,53 @@ function formatTime(dateStr) {
   });
 }
 
+// ─── Recurrence parser ───────────────────────────────────────────────────────
+// Converts an rrule string like "FREQ=WEEKLY;BYDAY=MO,WE" into plain English.
+// No external library — parses only the parts the app actually stores.
+
+const DAY_NAMES = {
+  MO: 'Monday', TU: 'Tuesday', WE: 'Wednesday', TH: 'Thursday',
+  FR: 'Friday',  SA: 'Saturday', SU: 'Sunday',
+};
+
+function parseRecurrence(rrule) {
+  if (!rrule) return '';
+
+  // Pull each key=value pair into a plain object
+  const parts = {};
+  rrule.split(';').forEach(segment => {
+    const [key, value] = segment.split('=');
+    if (key && value !== undefined) parts[key.toUpperCase()] = value.toUpperCase();
+  });
+
+  const freq  = parts.FREQ  || '';
+  const byday = parts.BYDAY || '';
+  const interval = parseInt(parts.INTERVAL || '1', 10);
+
+  // Map BYDAY abbreviations to full names, e.g. "MO,WE" → "Monday, Wednesday"
+  const dayLabel = byday
+    ? byday.split(',').map(d => DAY_NAMES[d] || d).join(', ')
+    : '';
+
+  // Build a human-readable label
+  if (freq === 'DAILY') {
+    return interval > 1 ? `Every ${interval} days` : 'Daily';
+  }
+  if (freq === 'WEEKLY') {
+    const base = interval > 1 ? `Every ${interval} weeks` : 'Weekly';
+    return dayLabel ? `${base} on ${dayLabel}` : base;
+  }
+  if (freq === 'MONTHLY') {
+    return interval > 1 ? `Every ${interval} months` : 'Monthly';
+  }
+  if (freq === 'YEARLY') {
+    return interval > 1 ? `Every ${interval} years` : 'Yearly';
+  }
+
+  // Fallback: return the raw string rather than nothing
+  return rrule;
+}
+
 // ─── Info row ────────────────────────────────────────────────────────────────
 // Matches the web's icon + value row layout. `icon` is an emoji standing in
 // for the SVG icons used on web — same information, same position.
@@ -404,10 +451,13 @@ export default function EventDetailsScreen({ route, navigation }) {
           {event.recurrence && (
             <InfoRow icon="🔁">
               <Text style={styles.infoValue}>
-                {event.recurrence_end_date
-                  ? t('events.repeats_until', { freq: event.recurrence, date: formatDate(event.recurrence_end_date) })
-                  : t('events.repeats', { freq: event.recurrence })}
+                {parseRecurrence(event.recurrence)}
               </Text>
+              {event.recurrence_end_date && (
+                <Text style={styles.infoTime}>
+                  {t('events.recurrence_end')}: {formatDate(event.recurrence_end_date)}
+                </Text>
+              )}
             </InfoRow>
           )}
 
