@@ -623,54 +623,44 @@ export default function HomeScreen({ navigation }) {
     fabPulse.setValue(1);
   }, [fabPulse]);
 
-  // Called when the final transcript is ready (also called by the 'end' event
-  // with an empty string when the engine stopped without producing a result).
-  // Guard against being called twice (isFinal result + end event) with a ref.
+  // Called when the final transcript arrives (or 'end' fires after stop()).
+  // NEVER opens EventForm — always creates in background.
   const hasNavigatedRef = useRef(false);
   const handleFinalTranscript = useCallback(async (text) => {
-    // Prevent double-fire if both 'result' isFinal and 'end' fire.
     if (hasNavigatedRef.current) return;
     hasNavigatedRef.current = true;
-    isRecordingRef.current  = false;  // mark done so a stale 'end' won't re-fire
+    isRecordingRef.current  = false;
 
     const trimmed = text.trim();
 
-    // No speech captured → fall back to opening the form so user isn't left stranded.
+    // Stop the FAB pulse and recording indicator
+    setIsRecording(false);
+    stopFabPulse();
+
+    // Nothing captured → let the user know and reset quietly
     if (!trimmed) {
-      setIsRecording(false);
       setVoiceStatus('idle');
       setVoiceTranscript('');
-      stopFabPulse();
       hasNavigatedRef.current = false;
-      navigation.navigate('EventForm', { prefill: {} });
+      showSuccessToast("Couldn't hear you — try again");
       return;
     }
 
-    setVoiceStatus('processing');
+    // Show "Creating…" pill while we work
+    setVoiceStatus('creating');
+    setVoiceTranscript('');
+
+    // Parse — if no title found use the full raw transcript as the title
     const parsed = parseVoiceInput(trimmed);
+    if (!parsed.title) parsed.title = trimmed;
 
-    // If parsing returned no title, fall back to the form pre-filled with whatever we have.
-    if (!parsed.title) {
-      setTimeout(() => {
-        setIsRecording(false);
-        setVoiceStatus('idle');
-        setVoiceTranscript('');
-        stopFabPulse();
-        hasNavigatedRef.current = false;
-        navigation.navigate('EventForm', { prefill: parsed });
-      }, 350);
-      return;
-    }
-
-    // ── Build the event payload ────────────────────────────────────────────
-    // Mirror what EventFormScreen sends for a new event.
+    // ── Build event payload ───────────────────────────────────────────────
     const pad = n => String(n).padStart(2, '0');
-    const toISOLocal = (d) =>
+    const toISOLocal = d =>
       `${d.getFullYear()}-${pad(d.getMonth()+1)}-${pad(d.getDate())}T${pad(d.getHours())}:${pad(d.getMinutes())}`;
-    const toDateOnly = (d) =>
+    const toDateOnly = d =>
       `${d.getFullYear()}-${pad(d.getMonth()+1)}-${pad(d.getDate())}`;
 
-    // Build start date from parsed date + time, defaulting to now + 1 h
     const startDate = (() => {
       const base = parsed.date ? new Date(`${parsed.date}T00:00:00`) : new Date();
       if (parsed.time) {
@@ -684,48 +674,37 @@ export default function HomeScreen({ navigation }) {
     })();
     const endDate = new Date(startDate);
     endDate.setHours(endDate.getHours() + 1);
-
     const isAllDay = !parsed.time && !parsed.date;
 
     const payload = {
-      title:       parsed.title,
-      description: '',
-      location:    parsed.location || '',
-      notes:       '',
-      video_call_link: '',
-      priority:    'medium',
-      category:    '',
-      color:       '#1a8fa8',
-      recurrence:  '',
-      is_all_day:  isAllDay,
-      is_private:  false,
-      start_date:  isAllDay ? toDateOnly(startDate) : toISOLocal(startDate),
-      end_date:    isAllDay ? toDateOnly(endDate)   : toISOLocal(endDate),
+      title:              parsed.title,
+      description:        '',
+      location:           parsed.location || '',
+      notes:              '',
+      video_call_link:    '',
+      priority:           'medium',
+      category:           '',
+      color:              '#1a8fa8',
+      recurrence:         '',
+      is_all_day:         isAllDay,
+      is_private:         false,
+      start_date:         isAllDay ? toDateOnly(startDate) : toISOLocal(startDate),
+      end_date:           isAllDay ? toDateOnly(endDate)   : toISOLocal(endDate),
       recurrence_end_date: null,
     };
 
     try {
       await API.post('/events/create', payload);
-
-      // Refresh the home screen list so the new event appears immediately.
-      fetchEvents();
-
-      setIsRecording(false);
+      fetchEvents();                        // refresh calendar in background
       setVoiceStatus('idle');
-      setVoiceTranscript('');
-      stopFabPulse();
       hasNavigatedRef.current = false;
-      showSuccessToast('Event created');
+      showSuccessToast(`✓ "${parsed.title}" created`);
     } catch (_err) {
-      // API failed → open the form pre-filled so the user can try manually.
-      setIsRecording(false);
       setVoiceStatus('idle');
-      setVoiceTranscript('');
-      stopFabPulse();
       hasNavigatedRef.current = false;
-      navigation.navigate('EventForm', { prefill: parsed });
+      showSuccessToast('Could not create event — try again');
     }
-  }, [navigation, stopFabPulse, fetchEvents, showSuccessToast]);
+  }, [stopFabPulse, fetchEvents, showSuccessToast]);
 
   // Long-press on FAB → start recording
   const handleFabLongPress = useCallback(async () => {
@@ -1219,12 +1198,14 @@ export default function HomeScreen({ navigation }) {
     </SafeAreaView>
 
       {/* ── Voice status pill — floats above the FAB while recording ── */}
-      {isRecording && (
+      {(isRecording || voiceStatus === 'creating') && (
         <View style={styles.voicePill}>
           <Animated.View style={[styles.voicePillDot, { opacity: fabPulse.interpolate({ inputRange: [1, 1.5], outputRange: [1, 0.3] }) }]} />
           <View>
             <Text style={styles.voicePillText}>
-              {voiceStatus === 'processing' ? 'Processing…' : 'Listening…'}
+              {voiceStatus === 'creating'    ? 'Creating…'
+               : voiceStatus === 'processing' ? 'Processing…'
+               : 'Listening…'}
             </Text>
             {voiceTranscript ? (
               <Text style={styles.voicePillTranscript} numberOfLines={2}>{voiceTranscript}</Text>
