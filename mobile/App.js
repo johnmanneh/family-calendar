@@ -1,3 +1,4 @@
+import './src/i18n'; // initialise i18next + device locale detection
 import React from 'react';
 import { NavigationContainer } from '@react-navigation/native';
 import { createNativeStackNavigator } from '@react-navigation/native-stack';
@@ -17,6 +18,9 @@ import TaskFormScreen from './src/screens/TaskFormScreen';
 import GroupsScreen from './src/screens/GroupsScreen';
 import DayViewScreen from './src/screens/DayViewScreen';
 import FamilyScreen from './src/screens/FamilyScreen';
+import NotificationsScreen from './src/screens/NotificationsScreen';
+import ChatScreen from './src/screens/ChatScreen';
+import LanguageScreen from './src/screens/LanguageScreen';
 
 const Stack = createNativeStackNavigator();
 
@@ -48,6 +52,9 @@ function AppNavigator() {
             <Stack.Screen name="Groups" component={GroupsScreen} />
             <Stack.Screen name="DayView" component={DayViewScreen} />
             <Stack.Screen name="Family" component={FamilyScreen} />
+            <Stack.Screen name="Notifications" component={NotificationsScreen} />
+            <Stack.Screen name="Chat" component={ChatScreen} />
+            <Stack.Screen name="Language" component={LanguageScreen} />
           </>
         ) : (
           // Not logged in — show Login

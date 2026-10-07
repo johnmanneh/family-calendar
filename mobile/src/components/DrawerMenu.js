@@ -17,7 +17,7 @@ import { SERVER_URL } from '../api/axios';
 
 const DRAWER_WIDTH = Dimensions.get('window').width * 0.75;
 
-export default function DrawerMenu({ visible, onClose, navigation, pendingCount = 0 }) {
+export default function DrawerMenu({ visible, onClose, navigation, pendingCount = 0, notifCount = 0 }) {
   const { user, logout } = useAuth();
   const { members } = useFamily();
 
@@ -138,6 +138,42 @@ export default function DrawerMenu({ visible, onClose, navigation, pendingCount 
               {pendingCount > 0 && (
                 <View style={styles.navBadgePill}>
                   <Text style={styles.navBadgePillText}>{pendingCount > 9 ? '9+' : pendingCount}</Text>
+                </View>
+              )}
+            </TouchableOpacity>
+
+            {/* Family Chat */}
+            <TouchableOpacity
+              style={styles.navItem}
+              onPress={() => {
+                onClose();
+                setTimeout(() => navigation.navigate('Chat'), 250);
+              }}
+            >
+              <Ionicons name="chatbubble-outline" size={20} color="#1d1d1f" />
+              <Text style={styles.navLabel}>Family Chat</Text>
+            </TouchableOpacity>
+
+            {/* Notifications inbox — badge shows unread count */}
+            <TouchableOpacity
+              style={styles.navItem}
+              onPress={() => {
+                onClose();
+                setTimeout(() => navigation.navigate('Notifications'), 250);
+              }}
+            >
+              <View style={styles.navIconWrap}>
+                <Ionicons name="albums-outline" size={20} color="#1d1d1f" />
+                {notifCount > 0 && (
+                  <View style={styles.navBadge}>
+                    <Text style={styles.navBadgeText}>{notifCount > 9 ? '9+' : notifCount}</Text>
+                  </View>
+                )}
+              </View>
+              <Text style={styles.navLabel}>Notifications</Text>
+              {notifCount > 0 && (
+                <View style={styles.navBadgePill}>
+                  <Text style={styles.navBadgePillText}>{notifCount > 9 ? '9+' : notifCount}</Text>
                 </View>
               )}
             </TouchableOpacity>

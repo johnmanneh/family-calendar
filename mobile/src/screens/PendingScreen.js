@@ -9,14 +9,15 @@ import {
   RefreshControl,
 } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
+import { useTranslation } from 'react-i18next';
 import API from '../api/axios';
 import { useSSE } from '../context/SSEContext';
-import styles from '../styles/PendingScreen.styles';
+import { useStyles } from '../styles/PendingScreen.styles';
 
 // ─── Helpers ────────────────────────────────────────────────────────────────
 
 function formatDate(dateStr) {
-  return new Date(dateStr).toLocaleDateString('en-GB', {
+  return new Date(dateStr).toLocaleDateString(undefined, {
     weekday: 'short', day: 'numeric', month: 'short',
   });
 }
@@ -25,6 +26,7 @@ function formatDate(dateStr) {
 // Thin left strip — same as the web .sidebar-pending-color
 
 function ColorStripe({ color }) {
+  const styles = useStyles();
   return <View style={[styles.stripe, { backgroundColor: color || '#1a8fa8' }]} />;
 }
 
@@ -32,6 +34,7 @@ function ColorStripe({ color }) {
 // ✓ accept  ✕ decline  ↩ counter — matches web button row
 
 function ActionButtons({ onAccept, onDecline, onCounter, loading }) {
+  const styles = useStyles();
   return (
     <View style={styles.actionBtns}>
       <TouchableOpacity
@@ -69,11 +72,13 @@ function ActionButtons({ onAccept, onDecline, onCounter, loading }) {
 // Shown when the user taps ↩ — matches the web's inline counter input
 
 function CounterInput({ value, onChange, onSend, onCancel, loading }) {
+  const { t } = useTranslation();
+  const styles = useStyles();
   return (
     <View style={styles.counterBox}>
       <TextInput
         style={styles.counterInput}
-        placeholder="I'll bring…"
+        placeholder={t('pending.counter_placeholder')}
         placeholderTextColor="#aaa"
         value={value}
         onChangeText={onChange}
@@ -87,10 +92,10 @@ function CounterInput({ value, onChange, onSend, onCancel, loading }) {
           onPress={onSend}
           disabled={!value.trim() || loading}
         >
-          <Text style={styles.counterSendText}>Send</Text>
+          <Text style={styles.counterSendText}>{t('common.send')}</Text>
         </TouchableOpacity>
         <TouchableOpacity style={styles.counterCancelBtn} onPress={onCancel}>
-          <Text style={styles.counterCancelText}>Cancel</Text>
+          <Text style={styles.counterCancelText}>{t('common.cancel')}</Text>
         </TouchableOpacity>
       </View>
     </View>
@@ -100,6 +105,8 @@ function CounterInput({ value, onChange, onSend, onCancel, loading }) {
 // ─── PendingScreen ───────────────────────────────────────────────────────────
 
 export default function PendingScreen({ navigation }) {
+  const { t } = useTranslation();
+  const styles = useStyles();
   const { taskTick } = useSSE();
 
   // ── Data ──────────────────────────────────────────────────────────────────
@@ -256,9 +263,9 @@ export default function PendingScreen({ navigation }) {
       {/* ── Header ── */}
       <View style={styles.header}>
         <TouchableOpacity onPress={() => navigation.goBack()} style={styles.backBtn}>
-          <Text style={styles.backText}>← Back</Text>
+          <Text style={styles.backText}>{t('common.back')}</Text>
         </TouchableOpacity>
-        <Text style={styles.headerTitle}>Pending</Text>
+        <Text style={styles.headerTitle}>{t('pending.title')}</Text>
       </View>
 
       {loading ? (
@@ -274,7 +281,7 @@ export default function PendingScreen({ navigation }) {
             // Empty state — matches web's "nothing pending" feel
             <View style={styles.emptyState}>
               <Text style={styles.emptyIcon}>🎉</Text>
-              <Text style={styles.emptyText}>Nothing pending</Text>
+              <Text style={styles.emptyText}>{t('pending.nothing_pending')}</Text>
             </View>
           ) : (
             <>
@@ -293,7 +300,7 @@ export default function PendingScreen({ navigation }) {
                         <Text style={styles.itemTitle}>{inv.title}</Text>
                         <Text style={styles.itemMeta}>{formatDate(inv.start_date)}</Text>
                         <Text style={styles.itemFrom}>
-                          from {inv.created_by_name} {inv.created_by_last_name}
+                          {t('pending.from', { name: `${inv.created_by_name} ${inv.created_by_last_name}` })}
                         </Text>
                       </View>
                       <ActionButtons
@@ -313,7 +320,7 @@ export default function PendingScreen({ navigation }) {
                           <View style={styles.item}>
                             <ColorStripe color={task.color} />
                             <View style={styles.itemInfo}>
-                              <Text style={styles.taskLabel}>TASK</Text>
+                              <Text style={styles.taskLabel}>{t('pending.task_label')}</Text>
                               <Text style={styles.itemTitle}>{task.title}</Text>
 
                               {task.status === 'countered' && task.counter_offer && (
@@ -332,7 +339,7 @@ export default function PendingScreen({ navigation }) {
 
                               {task.created_by_first_name && (
                                 <Text style={styles.itemFrom}>
-                                  from {task.created_by_first_name} {task.created_by_last_name}
+                                  {t('pending.from', { name: `${task.created_by_first_name} ${task.created_by_last_name}` })}
                                 </Text>
                               )}
 
@@ -432,10 +439,10 @@ export default function PendingScreen({ navigation }) {
                       {/* Orange stripe — matches web's #ff9f0a colour for notifications */}
                       <ColorStripe color="#ff9f0a" />
                       <View style={styles.itemInfo}>
-                        <Text style={styles.taskLabel}>TASK RESPONSE</Text>
+                        <Text style={styles.taskLabel}>{t('pending.task_response_label')}</Text>
                         <Text style={styles.itemTitle}>
                           {notif.assigned_first_name}{' '}
-                          {notif.status === 'declined' ? 'declined' : 'countered'}{' '}
+                          {notif.status === 'declined' ? t('pending.declined') : t('pending.countered')}{' '}
                           "{notif.title}"
                         </Text>
                         {notif.counter_offer && (
@@ -485,12 +492,12 @@ export default function PendingScreen({ navigation }) {
                       {/* Green stripe — accepted */}
                       <ColorStripe color="#34c759" />
                       <View style={styles.itemInfo}>
-                        <Text style={[styles.taskLabel, styles.acceptedLabel]}>ACCEPTED</Text>
+                        <Text style={[styles.taskLabel, styles.acceptedLabel]}>{t('pending.accepted_label')}</Text>
                         <Text style={styles.itemTitle}>{notif.title}</Text>
                         <Text style={styles.itemMeta}>{notif.event_title}</Text>
                         {notif.created_by_first_name && (
                           <Text style={styles.itemFrom}>
-                            {notif.created_by_first_name} {notif.created_by_last_name} accepted your counter
+                            {t('pending.accepted_counter', { name: `${notif.created_by_first_name} ${notif.created_by_last_name}` })}
                           </Text>
                         )}
                       </View>

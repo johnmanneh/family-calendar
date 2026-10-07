@@ -7,13 +7,14 @@ import {
   Image,
   Alert,
   Clipboard,
-  StyleSheet,
 } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { Ionicons } from '@expo/vector-icons';
+import { useTranslation } from 'react-i18next';
 import { useAuth } from '../context/AuthContext';
 import { useFamily } from '../context/FamilyContext';
 import API, { SERVER_URL } from '../api/axios';
+import { useStyles } from '../styles/FamilyScreen.styles';
 
 // ─── Helpers ─────────────────────────────────────────────────────────────────
 
@@ -26,6 +27,8 @@ function avatarUrl(path) {
 // ─── Member row ───────────────────────────────────────────────────────────────
 
 function MemberRow({ member, isMe, navigation }) {
+  const { t } = useTranslation();
+  const styles   = useStyles();
   const color    = member.color || '#1a8fa8';
   const photo    = avatarUrl(member.avatar_url);
   const initials = [member.first_name?.[0], member.last_name?.[0]]
@@ -60,7 +63,7 @@ function MemberRow({ member, isMe, navigation }) {
       {/* Role badge */}
       {member.role === 'admin' && (
         <View style={styles.ownerBadge}>
-          <Text style={styles.ownerBadgeText}>Owner</Text>
+          <Text style={styles.ownerBadgeText}>{t('common.owner')}</Text>
         </View>
       )}
 
@@ -72,6 +75,8 @@ function MemberRow({ member, isMe, navigation }) {
 // ─── FamilyScreen ─────────────────────────────────────────────────────────────
 
 export default function FamilyScreen({ navigation }) {
+  const { t } = useTranslation();
+  const styles = useStyles();
   const { user, logout } = useAuth();
   const { family, members, fetchFamily } = useFamily();
 
@@ -90,19 +95,19 @@ export default function FamilyScreen({ navigation }) {
   const handleLeave = () => {
     if (isOwner) {
       Alert.alert(
-        'Cannot Leave',
-        'You are the family owner. You cannot leave your own family.',
-        [{ text: 'OK' }]
+        t('family.cannot_leave_title'),
+        t('family.cannot_leave_message'),
+        [{ text: t('common.ok') }]
       );
       return;
     }
     Alert.alert(
-      'Leave Family',
-      `Leave ${family?.name}? You will lose access to all shared events and tasks.`,
+      t('family.leave_title'),
+      t('family.leave_confirm', { name: family?.name }),
       [
-        { text: 'Cancel', style: 'cancel' },
+        { text: t('common.cancel'), style: 'cancel' },
         {
-          text: 'Leave',
+          text: t('family.leave'),
           style: 'destructive',
           onPress: async () => {
             setLeaving(true);
@@ -110,7 +115,7 @@ export default function FamilyScreen({ navigation }) {
               await API.delete('/family/leave');
               await fetchFamily();
             } catch (err) {
-              Alert.alert('Error', err.response?.data?.message || 'Could not leave family');
+              Alert.alert(t('common.error'), err.response?.data?.message || t('family.could_not_leave'));
               setLeaving(false);
             }
           },
@@ -127,7 +132,7 @@ export default function FamilyScreen({ navigation }) {
         <TouchableOpacity style={styles.backBtn} onPress={() => navigation.goBack()}>
           <Ionicons name="chevron-back" size={24} color="#1d1d1f" />
         </TouchableOpacity>
-        <Text style={styles.headerTitle}>Family</Text>
+        <Text style={styles.headerTitle}>{t('family.title')}</Text>
         <View style={styles.headerSpacer} />
       </View>
 
@@ -136,10 +141,10 @@ export default function FamilyScreen({ navigation }) {
         {/* Family info card */}
         {family && (
           <>
-            <Text style={styles.sectionHeader}>Your Family</Text>
+            <Text style={styles.sectionHeader}>{t('family.your_family')}</Text>
             <View style={styles.card}>
               <Text style={styles.familyName}>{family.name}</Text>
-              <Text style={styles.inviteLabel}>Invite code — share so others can join</Text>
+              <Text style={styles.inviteLabel}>{t('family.invite_label')}</Text>
               <View style={styles.inviteRow}>
                 <Text style={styles.inviteCode}>{family.invite_code}</Text>
                 <TouchableOpacity style={styles.copyBtn} onPress={handleCopyCode}>
@@ -149,7 +154,7 @@ export default function FamilyScreen({ navigation }) {
                     color={codeCopied ? '#34c759' : '#1a8fa8'}
                   />
                   <Text style={[styles.copyBtnText, codeCopied && { color: '#34c759' }]}>
-                    {codeCopied ? 'Copied!' : 'Copy'}
+                    {codeCopied ? t('common.copied') : t('common.copy')}
                   </Text>
                 </TouchableOpacity>
               </View>
@@ -158,7 +163,7 @@ export default function FamilyScreen({ navigation }) {
         )}
 
         {/* Members */}
-        <Text style={styles.sectionHeader}>Members ({members.length})</Text>
+        <Text style={styles.sectionHeader}>{t('family.members_count', { count: members.length })}</Text>
         <View style={styles.card}>
           {members.map((m, i) => (
             <React.Fragment key={m.id}>
@@ -175,10 +180,10 @@ export default function FamilyScreen({ navigation }) {
         {/* Leave family — only shown for non-owners */}
         {!isOwner && family && (
           <>
-            <Text style={[styles.sectionHeader, { marginTop: 32 }]}>Danger zone</Text>
+            <Text style={[styles.sectionHeader, { marginTop: 32 }]}>{t('common.danger_zone')}</Text>
             <View style={styles.card}>
               <Text style={styles.leaveDescription}>
-                You will lose access to all shared events and tasks in {family.name}.
+                {t('family.leave_description', { name: family.name })}
               </Text>
               <TouchableOpacity
                 style={[styles.leaveBtn, leaving && { opacity: 0.5 }]}
@@ -186,7 +191,7 @@ export default function FamilyScreen({ navigation }) {
                 disabled={leaving}
               >
                 <Ionicons name="exit-outline" size={16} color="#ff3b30" />
-                <Text style={styles.leaveBtnText}>Leave family</Text>
+                <Text style={styles.leaveBtnText}>{t('family.leave_btn')}</Text>
               </TouchableOpacity>
             </View>
           </>
@@ -198,183 +203,3 @@ export default function FamilyScreen({ navigation }) {
   );
 }
 
-// ─── Styles ──────────────────────────────────────────────────────────────────
-
-const styles = StyleSheet.create({
-  container: {
-    flex: 1,
-    backgroundColor: '#f2f2f7',
-  },
-
-  // Header
-  header: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    justifyContent: 'space-between',
-    paddingHorizontal: 16,
-    paddingVertical: 10,
-    backgroundColor: '#fff',
-    borderBottomWidth: 1,
-    borderBottomColor: '#e5e5ea',
-  },
-  backBtn: {
-    padding: 4,
-    width: 40,
-  },
-  headerTitle: {
-    fontSize: 17,
-    fontWeight: '600',
-    color: '#1d1d1f',
-  },
-  headerSpacer: {
-    width: 40,
-  },
-
-  content: {
-    paddingHorizontal: 16,
-    paddingTop: 20,
-  },
-
-  sectionHeader: {
-    fontSize: 13,
-    fontWeight: '600',
-    color: '#888',
-    textTransform: 'uppercase',
-    letterSpacing: 0.5,
-    marginBottom: 8,
-  },
-
-  card: {
-    backgroundColor: '#fff',
-    borderRadius: 12,
-    padding: 16,
-    marginBottom: 16,
-    shadowColor: '#000',
-    shadowOpacity: 0.04,
-    shadowRadius: 4,
-    shadowOffset: { width: 0, height: 2 },
-    elevation: 1,
-  },
-
-  // Family info
-  familyName: {
-    fontSize: 20,
-    fontWeight: '700',
-    color: '#1d1d1f',
-    letterSpacing: -0.3,
-    marginBottom: 6,
-  },
-  inviteLabel: {
-    fontSize: 12,
-    color: '#aeaeb2',
-    marginBottom: 10,
-  },
-  inviteRow: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    backgroundColor: '#f5f5f7',
-    borderRadius: 10,
-    paddingVertical: 10,
-    paddingHorizontal: 14,
-    gap: 12,
-  },
-  inviteCode: {
-    flex: 1,
-    fontSize: 18,
-    fontWeight: '700',
-    color: '#1d1d1f',
-    letterSpacing: 2,
-  },
-  copyBtn: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    gap: 4,
-    paddingVertical: 6,
-    paddingHorizontal: 12,
-    backgroundColor: '#fff',
-    borderRadius: 8,
-    borderWidth: 1,
-    borderColor: '#e5e5ea',
-  },
-  copyBtnText: {
-    fontSize: 13,
-    fontWeight: '600',
-    color: '#1a8fa8',
-  },
-
-  // Member row
-  memberRow: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    paddingVertical: 8,
-    gap: 12,
-  },
-  memberAvatar: {
-    width: 44,
-    height: 44,
-    borderRadius: 22,
-    flexShrink: 0,
-  },
-  memberAvatarInitials: {
-    alignItems: 'center',
-    justifyContent: 'center',
-  },
-  memberAvatarText: {
-    color: '#fff',
-    fontSize: 16,
-    fontWeight: '700',
-  },
-  memberBody: {
-    flex: 1,
-  },
-  memberName: {
-    fontSize: 15,
-    fontWeight: '600',
-    color: '#1d1d1f',
-  },
-  memberEmail: {
-    fontSize: 12,
-    color: '#aeaeb2',
-    marginTop: 1,
-  },
-  ownerBadge: {
-    backgroundColor: '#e8f6f9',
-    paddingHorizontal: 8,
-    paddingVertical: 3,
-    borderRadius: 8,
-    marginRight: 4,
-  },
-  ownerBadgeText: {
-    fontSize: 11,
-    color: '#1a8fa8',
-    fontWeight: '600',
-  },
-  divider: {
-    height: 1,
-    backgroundColor: '#f2f2f7',
-    marginVertical: 2,
-  },
-
-  // Leave family
-  leaveDescription: {
-    fontSize: 13,
-    color: '#6e6e73',
-    marginBottom: 14,
-    lineHeight: 18,
-  },
-  leaveBtn: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    gap: 8,
-    borderWidth: 1,
-    borderColor: '#ff3b30',
-    borderRadius: 10,
-    padding: 12,
-    justifyContent: 'center',
-  },
-  leaveBtnText: {
-    color: '#ff3b30',
-    fontSize: 15,
-    fontWeight: '600',
-  },
-});

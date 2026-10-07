@@ -29,7 +29,9 @@
           "icon": "./assets/icon.png",
           "color": "#1a8fa8"
         }
-      ]
+      ],
+      "expo-localization",
+      "expo-speech-recognition"
     ]
   }
 }

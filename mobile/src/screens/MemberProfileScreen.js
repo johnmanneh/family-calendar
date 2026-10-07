@@ -19,7 +19,8 @@ import * as ImagePicker from 'expo-image-picker';
 import API, { SERVER_URL } from '../api/axios';
 import { useAuth } from '../context/AuthContext';
 import { useFamily } from '../context/FamilyContext';
-import styles from '../styles/MemberProfileScreen.styles';
+import { useStyles } from '../styles/MemberProfileScreen.styles';
+import { useTranslation } from 'react-i18next';
 
 // ─── Colour palette ───────────────────────────────────────────────────────────
 const MEMBER_COLORS = [
@@ -36,7 +37,7 @@ const MEMBER_COLORS = [
 
 function formatDate(dateStr) {
   if (!dateStr) return '';
-  return new Date(dateStr).toLocaleDateString('en-GB', { day: 'numeric', month: 'short', year: 'numeric' });
+  return new Date(dateStr).toLocaleDateString(undefined, { day: 'numeric', month: 'short', year: 'numeric' });
 }
 
 // Build the full URL for an avatar stored as a relative path like /uploads/avatars/...
@@ -51,6 +52,7 @@ function avatarUrl(path) {
 // `editable` adds a camera-icon overlay (own profile in settings tab).
 
 function Avatar({ member, size = 80, editable = false, onPress }) {
+  const styles   = useStyles();
   const color    = member?.color || '#1a8fa8';
   const initials = [member?.first_name?.[0], member?.last_name?.[0]]
     .filter(Boolean).join('').toUpperCase() || '?';
@@ -85,6 +87,7 @@ function Avatar({ member, size = 80, editable = false, onPress }) {
 // ─── Event row ───────────────────────────────────────────────────────────────
 
 function EventItem({ event, navigation }) {
+  const styles = useStyles();
   const color = event.color || '#1a8fa8';
   return (
     <TouchableOpacity
@@ -111,6 +114,7 @@ const STATUS_COLOR = {
 };
 
 function TaskItem({ task }) {
+  const styles = useStyles();
   const dot = STATUS_COLOR[task.status] || '#aeaeb2';
   return (
     <View style={styles.taskRow}>
@@ -128,7 +132,9 @@ function TaskItem({ task }) {
 
 // ─── Settings tab ────────────────────────────────────────────────────────────
 
-function SettingsTab({ member, user, family, fetchFamily, onAvatarChange }) {
+function SettingsTab({ member, user, family, fetchFamily, onAvatarChange, navigation }) {
+  const styles = useStyles();
+  const { t }  = useTranslation();
   const { logout } = useAuth();
 
   // ── Colour ───────────────────────────────────────────────────────────────
@@ -188,10 +194,10 @@ function SettingsTab({ member, user, family, fetchFamily, onAvatarChange }) {
     try {
       await API.put('/auth/profile', profileData);
       fetchFamily(); // refresh member list so name updates everywhere
-      setProfileSuccess('Saved');
+      setProfileSuccess(t('common.saved'));
       setTimeout(() => setProfileSuccess(''), 2000);
     } catch (err) {
-      setProfileError(err.response?.data?.message || 'Could not save');
+      setProfileError(err.response?.data?.message || t('profile.could_not_save'));
     } finally {
       setProfileSaving(false);
     }
@@ -202,11 +208,11 @@ function SettingsTab({ member, user, family, fetchFamily, onAvatarChange }) {
     let result;
     if (source === 'camera') {
       const perm = await ImagePicker.requestCameraPermissionsAsync();
-      if (!perm.granted) { Alert.alert('Permission needed', 'Allow camera access in Settings.'); return; }
+      if (!perm.granted) { Alert.alert(t('common.permission_needed'), t('profile.allow_camera')); return; }
       result = await ImagePicker.launchCameraAsync({ mediaTypes: ['images'], quality: 0.8 });
     } else {
       const perm = await ImagePicker.requestMediaLibraryPermissionsAsync();
-      if (!perm.granted) { Alert.alert('Permission needed', 'Allow photo library access in Settings.'); return; }
+      if (!perm.granted) { Alert.alert(t('common.permission_needed'), t('profile.allow_library')); return; }
       result = await ImagePicker.launchImageLibraryAsync({ mediaTypes: ['images'], quality: 0.8 });
     }
     if (result.canceled) return;
@@ -221,10 +227,10 @@ function SettingsTab({ member, user, family, fetchFamily, onAvatarChange }) {
       const res = await API.post('/auth/avatar', form, {
         headers: { 'Content-Type': 'multipart/form-data' },
       });
-      onAvatarChange(res.data.data.avatar_url);
+      onAvatarChange(res.data.avatar_url);
       fetchFamily();
     } catch (err) {
-      Alert.alert('Error', 'Could not upload photo');
+      Alert.alert(t('common.error'), t('profile.could_not_upload'));
     } finally {
       setAvatarUploading(false);
     }
@@ -233,17 +239,17 @@ function SettingsTab({ member, user, family, fetchFamily, onAvatarChange }) {
   const handleAvatarPress = () => {
     if (Platform.OS === 'ios') {
       ActionSheetIOS.showActionSheetWithOptions(
-        { options: ['Cancel', 'Take Photo', 'Choose from Library'], cancelButtonIndex: 0 },
+        { options: [t('common.cancel'), t('profile.take_photo'), t('profile.choose_library')], cancelButtonIndex: 0 },
         (idx) => {
           if (idx === 1) pickAndUpload('camera');
           if (idx === 2) pickAndUpload('library');
         }
       );
     } else {
-      Alert.alert('Change Photo', '', [
-        { text: 'Take Photo',           onPress: () => pickAndUpload('camera') },
-        { text: 'Choose from Library',  onPress: () => pickAndUpload('library') },
-        { text: 'Cancel', style: 'cancel' },
+      Alert.alert(t('profile.change_photo_title'), '', [
+        { text: t('profile.take_photo'),      onPress: () => pickAndUpload('camera') },
+        { text: t('profile.choose_library'),  onPress: () => pickAndUpload('library') },
+        { text: t('common.cancel'), style: 'cancel' },
       ]);
     }
   };
@@ -259,15 +265,15 @@ function SettingsTab({ member, user, family, fetchFamily, onAvatarChange }) {
   // ── Delete account ───────────────────────────────────────────────────────
   const handleDeleteAccount = () => {
     Alert.alert(
-      'Delete Account',
-      'This will permanently remove your account and all your data. This cannot be undone.',
+      t('profile.delete_account_title'),
+      t('profile.delete_account_confirm'),
       [
-        { text: 'Cancel', style: 'cancel' },
+        { text: t('common.cancel'), style: 'cancel' },
         {
-          text: 'Delete', style: 'destructive',
+          text: t('common.delete'), style: 'destructive',
           onPress: async () => {
             try { await API.delete('/auth/account'); logout(); }
-            catch (err) { Alert.alert('Error', err.response?.data?.message || 'Could not delete account'); }
+            catch (err) { Alert.alert(t('common.error'), err.response?.data?.message || t('profile.could_not_delete_account')); }
           },
         },
       ]
@@ -278,7 +284,7 @@ function SettingsTab({ member, user, family, fetchFamily, onAvatarChange }) {
     <ScrollView style={styles.scroll} contentContainerStyle={styles.scrollContent}>
 
       {/* ── Photo ── */}
-      <Text style={styles.settingsSectionHeader}>Photo</Text>
+      <Text style={styles.settingsSectionHeader}>{t('profile.photo')}</Text>
       <View style={[styles.settingsCard, { alignItems: 'center', paddingVertical: 20 }]}>
         {avatarUploading ? (
           <ActivityIndicator size="large" color="#1a8fa8" style={{ height: 80 }} />
@@ -286,24 +292,24 @@ function SettingsTab({ member, user, family, fetchFamily, onAvatarChange }) {
           <Avatar member={member} size={80} editable onPress={handleAvatarPress} />
         )}
         <TouchableOpacity onPress={handleAvatarPress} style={{ marginTop: 10 }}>
-          <Text style={{ color: '#1a8fa8', fontSize: 14, fontWeight: '500' }}>Change photo</Text>
+          <Text style={{ color: '#1a8fa8', fontSize: 14, fontWeight: '500' }}>{t('profile.change_photo')}</Text>
         </TouchableOpacity>
       </View>
 
       {/* ── Family ── */}
       {family && (
         <>
-          <Text style={styles.settingsSectionHeader}>Your Family</Text>
+          <Text style={styles.settingsSectionHeader}>{t('family.your_family')}</Text>
           <View style={styles.settingsCard}>
             <Text style={styles.familyName}>{family.name}</Text>
-            <Text style={styles.familyLabel}>Invite code — share this so others can join</Text>
+            <Text style={styles.familyLabel}>{t('profile.invite_label')}</Text>
             <View style={styles.inviteRow}>
               <Text style={styles.inviteCode}>{family.invite_code}</Text>
               <TouchableOpacity style={styles.copyBtn} onPress={handleCopyCode}>
                 <Ionicons name={codeCopied ? 'checkmark' : 'copy-outline'} size={16}
                   color={codeCopied ? '#34c759' : '#1a8fa8'} />
                 <Text style={[styles.copyBtnText, codeCopied && { color: '#34c759' }]}>
-                  {codeCopied ? 'Copied!' : 'Copy'}
+                  {codeCopied ? t('common.copied') : t('common.copy')}
                 </Text>
               </TouchableOpacity>
             </View>
@@ -312,7 +318,7 @@ function SettingsTab({ member, user, family, fetchFamily, onAvatarChange }) {
       )}
 
       {/* ── Colour picker ── */}
-      <Text style={styles.settingsSectionHeader}>Your colour</Text>
+      <Text style={styles.settingsSectionHeader}>{t('profile.your_colour')}</Text>
       <View style={styles.settingsCard}>
         <View style={styles.colorGrid}>
           {visibleColors.map(color => (
@@ -329,34 +335,48 @@ function SettingsTab({ member, user, family, fetchFamily, onAvatarChange }) {
         </View>
         <TouchableOpacity style={styles.colorToggleBtn} onPress={() => setColorExpanded(e => !e)}>
           <Text style={styles.colorToggleText}>
-            {colorExpanded ? 'Show less' : 'Show more colours'}
+            {colorExpanded ? t('profile.show_less') : t('profile.show_more')}
           </Text>
           <Ionicons name={colorExpanded ? 'chevron-up' : 'chevron-down'} size={14} color="#1a8fa8" />
         </TouchableOpacity>
-        {colorSaving && <Text style={styles.savingText}>Saving…</Text>}
+        {colorSaving && <Text style={styles.savingText}>{t('common.saving')}</Text>}
+      </View>
+
+      {/* ── App settings ── */}
+      <Text style={styles.settingsSectionHeader}>{t('profile.settings')}</Text>
+      <View style={styles.settingsCard}>
+        <TouchableOpacity
+          style={{ flexDirection: 'row', alignItems: 'center', paddingVertical: 4 }}
+          onPress={() => navigation.navigate('Language')}
+          activeOpacity={0.7}
+        >
+          <Ionicons name="language-outline" size={20} color="#1a8fa8" style={{ marginRight: 12 }} />
+          <Text style={{ flex: 1, fontSize: 15, color: '#1a8fa8', fontWeight: '500' }}>{t('settings.language')}</Text>
+          <Ionicons name="chevron-forward" size={16} color="#aeaeb2" />
+        </TouchableOpacity>
       </View>
 
       {/* ── Profile info ── */}
-      <Text style={styles.settingsSectionHeader}>About you</Text>
+      <Text style={styles.settingsSectionHeader}>{t('profile.about_you')}</Text>
       <View style={styles.settingsCard}>
         {profileLoading ? <ActivityIndicator color="#1a8fa8" /> : (
           <>
             <View style={styles.nameRow}>
               <View style={styles.nameField}>
-                <Text style={styles.inputLabel}>First name</Text>
+                <Text style={styles.inputLabel}>{t('profile.first_name')}</Text>
                 <TextInput
                   style={styles.settingsInput}
-                  placeholder="First name"
+                  placeholder={t('profile.first_name')}
                   placeholderTextColor="#aaa"
                   value={profileData.first_name}
                   onChangeText={v => setProfileData(p => ({ ...p, first_name: v }))}
                 />
               </View>
               <View style={styles.nameField}>
-                <Text style={styles.inputLabel}>Last name</Text>
+                <Text style={styles.inputLabel}>{t('profile.last_name')}</Text>
                 <TextInput
                   style={styles.settingsInput}
-                  placeholder="Last name"
+                  placeholder={t('profile.last_name')}
                   placeholderTextColor="#aaa"
                   value={profileData.last_name}
                   onChangeText={v => setProfileData(p => ({ ...p, last_name: v }))}
@@ -364,29 +384,29 @@ function SettingsTab({ member, user, family, fetchFamily, onAvatarChange }) {
               </View>
             </View>
 
-            <Text style={styles.inputLabel}>Age</Text>
+            <Text style={styles.inputLabel}>{t('profile.age')}</Text>
             <TextInput
               style={styles.settingsInput}
-              placeholder="Your age"
+              placeholder={t('profile.age_placeholder')}
               placeholderTextColor="#aaa"
               value={profileData.age}
               onChangeText={v => setProfileData(p => ({ ...p, age: v }))}
               keyboardType="numeric"
             />
 
-            <Text style={styles.inputLabel}>Occupation</Text>
+            <Text style={styles.inputLabel}>{t('profile.occupation')}</Text>
             <TextInput
               style={styles.settingsInput}
-              placeholder="What do you do?"
+              placeholder={t('profile.occupation_placeholder')}
               placeholderTextColor="#aaa"
               value={profileData.occupation}
               onChangeText={v => setProfileData(p => ({ ...p, occupation: v }))}
             />
 
-            <Text style={styles.inputLabel}>Address</Text>
+            <Text style={styles.inputLabel}>{t('profile.address')}</Text>
             <TextInput
               style={styles.settingsInput}
-              placeholder="Your address"
+              placeholder={t('profile.address_placeholder')}
               placeholderTextColor="#aaa"
               value={profileData.address}
               onChangeText={v => setProfileData(p => ({ ...p, address: v }))}
@@ -402,21 +422,19 @@ function SettingsTab({ member, user, family, fetchFamily, onAvatarChange }) {
             >
               {profileSaving
                 ? <ActivityIndicator color="#fff" size="small" />
-                : <Text style={styles.saveBtnText}>Save</Text>}
+                : <Text style={styles.saveBtnText}>{t('common.save')}</Text>}
             </TouchableOpacity>
           </>
         )}
       </View>
 
       {/* ── Danger zone ── */}
-      <Text style={[styles.settingsSectionHeader, { marginTop: 32 }]}>Danger zone</Text>
+      <Text style={[styles.settingsSectionHeader, { marginTop: 32 }]}>{t('common.danger_zone')}</Text>
       <View style={styles.settingsCard}>
-        <Text style={styles.dangerDescription}>
-          Permanently delete your account and all associated data. This cannot be undone.
-        </Text>
+        <Text style={styles.dangerDescription}>{t('profile.delete_account_description')}</Text>
         <TouchableOpacity style={styles.deleteBtn} onPress={handleDeleteAccount}>
           <Ionicons name="trash-outline" size={16} color="#ff3b30" />
-          <Text style={styles.deleteBtnText}>Delete my account</Text>
+          <Text style={styles.deleteBtnText}>{t('profile.delete_account_btn')}</Text>
         </TouchableOpacity>
       </View>
 
@@ -430,12 +448,14 @@ function SettingsTab({ member, user, family, fetchFamily, onAvatarChange }) {
 // Three options: inner / extended / outer — matches web's 3-way circle picker.
 
 const CIRCLE_OPTIONS = [
-  { value: 'inner',    label: 'Inner',    description: 'Sees all family events' },
-  { value: 'extended', label: 'Extended', description: 'Extended family access' },
-  { value: 'outer',    label: 'Outer',    description: 'Own events only' },
+  { value: 'inner',    labelKey: 'profile.inner',    descKey: 'profile.inner_desc' },
+  { value: 'extended', labelKey: 'profile.extended', descKey: 'profile.extended_desc' },
+  { value: 'outer',    labelKey: 'profile.outer',    descKey: 'profile.outer_desc' },
 ];
 
 function AdminCircleControl({ memberId, currentCircle, fetchFamily }) {
+  const { t } = useTranslation();
+  const styles = useStyles();
   const [saving, setSaving]   = useState(false);
   const [selected, setSelected] = useState(currentCircle || 'inner');
 
@@ -449,7 +469,7 @@ function AdminCircleControl({ memberId, currentCircle, fetchFamily }) {
       fetchFamily();
     } catch (err) {
       setSelected(prev); // rollback
-      Alert.alert('Error', err.response?.data?.message || 'Could not update circle');
+      Alert.alert(t('common.error'), err.response?.data?.message || t('profile.could_not_update_circle'));
     } finally {
       setSaving(false);
     }
@@ -457,7 +477,7 @@ function AdminCircleControl({ memberId, currentCircle, fetchFamily }) {
 
   return (
     <View style={{ marginTop: 32 }}>
-      <Text style={styles.sectionHeader}>Circle type</Text>
+      <Text style={styles.sectionHeader}>{t('profile.circle_type')}</Text>
       <View style={styles.settingsCard}>
         {CIRCLE_OPTIONS.map((opt, i) => (
           <TouchableOpacity
@@ -474,8 +494,8 @@ function AdminCircleControl({ memberId, currentCircle, fetchFamily }) {
               {selected === opt.value && <View style={styles.circleRadioDot} />}
             </View>
             <View style={{ flex: 1 }}>
-              <Text style={styles.circleLabel}>{opt.label}</Text>
-              <Text style={styles.circleDescription}>{opt.description}</Text>
+              <Text style={styles.circleLabel}>{t(opt.labelKey)}</Text>
+              <Text style={styles.circleDescription}>{t(opt.descKey)}</Text>
             </View>
             {saving && selected === opt.value && (
               <ActivityIndicator size="small" color="#1a8fa8" />
@@ -490,6 +510,8 @@ function AdminCircleControl({ memberId, currentCircle, fetchFamily }) {
 // ─── MemberProfileScreen ─────────────────────────────────────────────────────
 
 export default function MemberProfileScreen({ route, navigation }) {
+  const styles = useStyles();
+  const { t }  = useTranslation();
   const { memberId } = route.params;
   const { user } = useAuth();
   const { family, members, fetchFamily } = useFamily();
@@ -549,7 +571,7 @@ export default function MemberProfileScreen({ route, navigation }) {
         <TouchableOpacity style={styles.backBtn} onPress={() => navigation.goBack()}>
           <Ionicons name="chevron-back" size={24} color="#1d1d1f" />
         </TouchableOpacity>
-        <Text style={styles.headerTitle}>Profile</Text>
+        <Text style={styles.headerTitle}>{t('profile.title')}</Text>
         <View style={styles.headerSpacer} />
       </View>
 
@@ -567,14 +589,14 @@ export default function MemberProfileScreen({ route, navigation }) {
           style={[styles.tab, activeTab === 'personal' && styles.tabActive]}
           onPress={() => setActiveTab('personal')}
         >
-          <Text style={[styles.tabLabel, activeTab === 'personal' && styles.tabLabelActive]}>Personal</Text>
+          <Text style={[styles.tabLabel, activeTab === 'personal' && styles.tabLabelActive]}>{t('profile.personal')}</Text>
         </TouchableOpacity>
         {isOwnProfile && (
           <TouchableOpacity
             style={[styles.tab, activeTab === 'settings' && styles.tabActive]}
             onPress={() => setActiveTab('settings')}
           >
-            <Text style={[styles.tabLabel, activeTab === 'settings' && styles.tabLabelActive]}>Settings</Text>
+            <Text style={[styles.tabLabel, activeTab === 'settings' && styles.tabLabelActive]}>{t('profile.settings')}</Text>
           </TouchableOpacity>
         )}
       </View>
@@ -589,14 +611,14 @@ export default function MemberProfileScreen({ route, navigation }) {
             contentContainerStyle={styles.scrollContent}
             refreshControl={<RefreshControl refreshing={refreshing} onRefresh={onRefresh} tintColor="#1a8fa8" />}
           >
-            <Text style={styles.sectionHeader}>Events</Text>
+            <Text style={styles.sectionHeader}>{t('home.events')}</Text>
             {events.length === 0
-              ? <Text style={styles.emptyText}>No events</Text>
+              ? <Text style={styles.emptyText}>{t('common.no_events')}</Text>
               : events.map(ev => <EventItem key={ev.id} event={ev} navigation={navigation} />)
             }
-            <Text style={[styles.sectionHeader, { marginTop: 24 }]}>Tasks</Text>
+            <Text style={[styles.sectionHeader, { marginTop: 24 }]}>{t('home.tasks')}</Text>
             {tasks.length === 0
-              ? <Text style={styles.emptyText}>No tasks</Text>
+              ? <Text style={styles.emptyText}>{t('common.no_tasks')}</Text>
               : tasks.map(tk => <TaskItem key={tk.id} task={tk} />)
             }
 
@@ -619,6 +641,7 @@ export default function MemberProfileScreen({ route, navigation }) {
           family={family}
           fetchFamily={fetchFamily}
           onAvatarChange={setLocalAvatarUrl}
+          navigation={navigation}
         />
       )}
 

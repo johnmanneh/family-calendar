@@ -5,13 +5,14 @@ import { useAuth } from './AuthContext';
 import { BASE_URL } from '../api/axios';
 
 // ─── Context ─────────────────────────────────────────────────────────────────
-// Exposes two tick counters. Any screen can watch these with useEffect to know
+// Exposes tick counters. Any screen can watch these with useEffect to know
 // when to re-fetch — no custom event bus, no polling needed.
 //
-//   eventTick — increments on every event_update from the server
-//   taskTick  — increments on every task_update from the server
+//   eventTick   — increments on every event_update from the server
+//   taskTick    — increments on every task_update from the server
+//   lastChatMsg — the most recent chat_message payload (null until first message)
 
-const SSEContext = createContext({ eventTick: 0, taskTick: 0 });
+const SSEContext = createContext({ eventTick: 0, taskTick: 0, lastChatMsg: null });
 
 export const SSEProvider = ({ children }) => {
   const { token } = useAuth();
@@ -19,8 +20,9 @@ export const SSEProvider = ({ children }) => {
   const tokenRef   = useRef(token);  // always-current token for AppState handler
   const appState   = useRef(AppState.currentState);
 
-  const [eventTick, setEventTick] = useState(0);
-  const [taskTick,  setTaskTick]  = useState(0);
+  const [eventTick,   setEventTick]   = useState(0);
+  const [taskTick,    setTaskTick]    = useState(0);
+  const [lastChatMsg, setLastChatMsg] = useState(null);
 
   // Keep tokenRef in sync so the AppState callback always uses the latest token.
   useEffect(() => { tokenRef.current = token; }, [token]);
@@ -46,6 +48,13 @@ export const SSEProvider = ({ children }) => {
 
     es.addEventListener('task_update', () => {
       setTaskTick(t => t + 1);
+    });
+
+    es.addEventListener('chat_message', (e) => {
+      try {
+        const msg = JSON.parse(e.data);
+        setLastChatMsg(msg);
+      } catch { /* silent */ }
     });
 
     es.addEventListener('error', (e) => {
@@ -100,7 +109,7 @@ export const SSEProvider = ({ children }) => {
   }, []); // runs once — uses tokenRef so it always reads the latest token
 
   return (
-    <SSEContext.Provider value={{ eventTick, taskTick }}>
+    <SSEContext.Provider value={{ eventTick, taskTick, lastChatMsg }}>
       {children}
     </SSEContext.Provider>
   );

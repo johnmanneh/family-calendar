@@ -12,10 +12,11 @@ import {
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { Ionicons } from '@expo/vector-icons';
 import DateTimePicker from '@react-native-community/datetimepicker';
+import { useTranslation } from 'react-i18next';
 import API from '../api/axios';
 import { useAuth } from '../context/AuthContext';
 import { useFamily } from '../context/FamilyContext';
-import styles from '../styles/TaskFormScreen.styles';
+import { useStyles } from '../styles/TaskFormScreen.styles';
 
 const POSITION_OPTIONS = ['full', 'start', 'end'];
 
@@ -26,13 +27,15 @@ function toISOLocal(date) {
 }
 
 function formatDisplay(date) {
-  return date.toLocaleString('en-GB', {
+  return date.toLocaleString(undefined, {
     weekday: 'short', day: 'numeric', month: 'short',
     hour: '2-digit', minute: '2-digit',
   });
 }
 
 export default function TaskFormScreen({ route, navigation }) {
+  const { t } = useTranslation();
+  const styles = useStyles();
   const { user } = useAuth();
   const { members } = useFamily();
 
@@ -46,8 +49,8 @@ export default function TaskFormScreen({ route, navigation }) {
   const [error, setError]             = useState('');
 
   const handleSubmit = async () => {
-    if (!title.trim()) { setError('Title is required'); return; }
-    if (!assignedTo)   { setError('Please select who this task is for'); return; }
+    if (!title.trim()) { setError(t('tasks.title_required')); return; }
+    if (!assignedTo)   { setError(t('tasks.select_assignee')); return; }
     setError('');
     setLoading(true);
     try {
@@ -59,7 +62,7 @@ export default function TaskFormScreen({ route, navigation }) {
       });
       navigation.goBack();
     } catch (err) {
-      setError(err.response?.data?.message || 'Something went wrong');
+      setError(err.response?.data?.message || t('common.something_went_wrong'));
     } finally {
       setLoading(false);
     }
@@ -73,7 +76,7 @@ export default function TaskFormScreen({ route, navigation }) {
         <TouchableOpacity style={styles.backBtn} onPress={() => navigation.goBack()}>
           <Ionicons name="chevron-back" size={24} color="#1d1d1f" />
         </TouchableOpacity>
-        <Text style={styles.headerTitle}>New Task</Text>
+        <Text style={styles.headerTitle}>{t('tasks.new_task')}</Text>
         <TouchableOpacity
           style={[styles.saveHeaderBtn, loading && styles.saveHeaderBtnDisabled]}
           onPress={handleSubmit}
@@ -81,7 +84,7 @@ export default function TaskFormScreen({ route, navigation }) {
         >
           {loading
             ? <ActivityIndicator size="small" color="#1a8fa8" />
-            : <Text style={styles.saveHeaderBtnText}>Save</Text>
+            : <Text style={styles.saveHeaderBtnText}>{t('common.save')}</Text>
           }
         </TouchableOpacity>
       </View>
@@ -100,7 +103,7 @@ export default function TaskFormScreen({ route, navigation }) {
         {/* ── Title ── */}
         <TextInput
           style={styles.titleInput}
-          placeholder="What needs to be done?"
+          placeholder={t('tasks.title_placeholder')}
           placeholderTextColor="#aaa"
           value={title}
           onChangeText={setTitle}
@@ -109,7 +112,7 @@ export default function TaskFormScreen({ route, navigation }) {
 
         {/* ── Assign to ── */}
         <View style={styles.card}>
-          <Text style={styles.fieldLabel}>Assign to</Text>
+          <Text style={styles.fieldLabel}>{t('tasks.assign_to')}</Text>
           <View style={styles.attendeeRow}>
             {members.map(m => {
               const initials = [m.first_name?.[0], m.last_name?.[0]].filter(Boolean).join('').toUpperCase();
@@ -142,7 +145,7 @@ export default function TaskFormScreen({ route, navigation }) {
 
         {/* ── Position ── */}
         <View style={styles.card}>
-          <Text style={styles.fieldLabel}>Position</Text>
+          <Text style={styles.fieldLabel}>{t('tasks.position')}</Text>
           <View style={styles.segmentRow}>
             {POSITION_OPTIONS.map(p => (
               <TouchableOpacity
@@ -151,7 +154,7 @@ export default function TaskFormScreen({ route, navigation }) {
                 onPress={() => setPosition(p)}
               >
                 <Text style={[styles.segmentText, position === p && styles.segmentTextActive]}>
-                  {p.charAt(0).toUpperCase() + p.slice(1)}
+                  {t(`tasks.${p}`)}
                 </Text>
               </TouchableOpacity>
             ))}
@@ -161,13 +164,13 @@ export default function TaskFormScreen({ route, navigation }) {
         {/* ── Due date ── */}
         <View style={styles.card}>
           <View style={styles.dueDateHeader}>
-            <Text style={styles.fieldLabel}>Due date</Text>
+            <Text style={styles.fieldLabel}>{t('tasks.due_date')}</Text>
             <TouchableOpacity
               style={[styles.dueDateToggle, hasDueDate && styles.dueDateToggleActive]}
               onPress={() => { setHasDueDate(v => !v); setShowPicker(false); }}
             >
               <Text style={[styles.dueDateToggleText, hasDueDate && styles.dueDateToggleTextActive]}>
-                {hasDueDate ? 'Remove' : 'Add'}
+                {hasDueDate ? t('common.cancel') : t('common.ok')}
               </Text>
             </TouchableOpacity>
           </View>
@@ -205,7 +208,7 @@ export default function TaskFormScreen({ route, navigation }) {
         >
           {loading
             ? <ActivityIndicator color="#fff" />
-            : <Text style={styles.submitBtnText}>Add Task</Text>
+            : <Text style={styles.submitBtnText}>{t('tasks.new_task')}</Text>
           }
         </TouchableOpacity>
 

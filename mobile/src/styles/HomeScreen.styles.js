@@ -1,363 +1,158 @@
-import { StyleSheet } from 'react-native';
+import { StyleSheet, useColorScheme } from 'react-native';
+import { LIGHT, DARK } from '../theme';
 
-const styles = StyleSheet.create({
-  container: {
-    flex: 1,
-    backgroundColor: '#f2f2f7',
-  },
-  safeArea: {
-    flex: 1,
-  },
+const make = c => StyleSheet.create({
+  container: { flex: 1, backgroundColor: c.bg },
+  safeArea:  { flex: 1 },
 
-  // FAB — circular teal button, bottom right corner
   fab: {
-    position: 'absolute',
-    bottom: 32,
-    right: 24,
-    width: 56,
-    height: 56,
-    borderRadius: 28,
+    position: 'absolute', bottom: 32, right: 24,
+    width: 56, height: 56, borderRadius: 28,
     backgroundColor: '#1a8fa8',
-    alignItems: 'center',
-    justifyContent: 'center',
-    shadowColor: '#000',
-    shadowOpacity: 0.25,
-    shadowRadius: 8,
-    shadowOffset: { width: 0, height: 4 },
-    elevation: 8,
+    alignItems: 'center', justifyContent: 'center',
+    shadowColor: '#000', shadowOpacity: 0.25, shadowRadius: 8,
+    shadowOffset: { width: 0, height: 4 }, elevation: 8,
+  },
+  // Slightly smaller FAB used with the radial menu (48×48)
+  fabSmall: {
+    width: 48, height: 48, borderRadius: 24,
   },
 
-  // Header
   header: {
-    flexDirection: 'row',
-    alignItems: 'center',
+    flexDirection: 'row', alignItems: 'center',
     justifyContent: 'space-between',
-    paddingHorizontal: 16,
-    paddingVertical: 10,
-    backgroundColor: '#fff',
-    borderBottomWidth: 1,
-    borderBottomColor: '#e5e5ea',
+    paddingHorizontal: 16, paddingVertical: 10,
+    backgroundColor: c.surface,
+    borderBottomWidth: 1, borderBottomColor: c.border,
   },
-  // Title sits absolutely centred so left/right icon groups don't push it off
   headerTitle: {
-    position: 'absolute',
-    left: 0,
-    right: 0,
-    textAlign: 'center',
-    fontSize: 20,
-    fontWeight: '900',
-    color: '#1d1d1f',
-    letterSpacing: -1,
-    // pointerEvents none so taps pass through to buttons behind it
-    pointerEvents: 'none',
+    position: 'absolute', left: 0, right: 0,
+    textAlign: 'center', fontSize: 20, fontWeight: '900',
+    color: c.text, letterSpacing: -1, pointerEvents: 'none',
   },
-  hamburger: {
-    gap: 5,
-    justifyContent: 'center',
-    padding: 8,
-  },
-  hamburgerLine: {
-    width: 22,
-    height: 2.5,
-    borderRadius: 2,
-  },
-  headerRight: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    gap: 4,
-  },
-  iconBtn: {
-    position: 'relative',
-    padding: 8,
-  },
+  hamburger: { gap: 5, justifyContent: 'center', padding: 8 },
+  hamburgerLine: { width: 22, height: 2.5, borderRadius: 2 },
+  headerRight: { flexDirection: 'row', alignItems: 'center', gap: 4 },
+  iconBtn: { position: 'relative', padding: 8 },
   badge: {
-    position: 'absolute',
-    top: 4,
-    right: 4,
-    backgroundColor: '#ff3b30',
-    borderRadius: 8,
-    minWidth: 16,
-    height: 16,
-    alignItems: 'center',
-    justifyContent: 'center',
-    paddingHorizontal: 3,
+    position: 'absolute', top: 4, right: 4,
+    backgroundColor: '#ff3b30', borderRadius: 8,
+    minWidth: 16, height: 16,
+    alignItems: 'center', justifyContent: 'center', paddingHorizontal: 3,
   },
-  badgeText: {
-    color: '#fff',
-    fontSize: 9,
-    fontWeight: '700',
-  },
+  badgeText: { color: '#fff', fontSize: 9, fontWeight: '700' },
 
-  // Left edge swipe zone — 20px wide, sits above everything, invisible
   edgeZone: {
-    position: 'absolute',
-    left: 0,
-    top: 0,
-    bottom: 0,
-    width: 20,
-    zIndex: 999,
+    position: 'absolute', left: 0, top: 0, bottom: 0, width: 20, zIndex: 999,
   },
 
-  // Member bubbles row — outer View enforces height, ScrollView fills it
   membersRowWrapper: {
-    height: 76,
-    backgroundColor: '#fff',
-    borderBottomWidth: 1,
-    borderBottomColor: '#e5e5ea',
-    flexShrink: 0,
+    height: 76, backgroundColor: c.surface,
+    borderBottomWidth: 1, borderBottomColor: c.border, flexShrink: 0,
   },
-  membersRow: {
-    flex: 1,
-  },
-  membersContent: {
-    paddingHorizontal: 16,
-    paddingTop: 8,
-    paddingBottom: 8,
-  },
-  bubble: {
-    alignItems: 'center',
-    width: 46,
-    marginRight: 10,
-  },
-  // Outer container — sized to fit the halo (44px) and keep things centred
-  bubbleHaloWrap: {
-    width: 44,
-    height: 44,
-    alignItems: 'center',
-    justifyContent: 'center',
-  },
-  // The faded circle that peeks out behind the avatar when selected
-  bubbleHalo: {
-    position: 'absolute',
-    width: 44,
-    height: 44,
-    borderRadius: 22,
-  },
-  bubbleCircle: {
-    width: 36,
-    height: 36,
-    borderRadius: 18,
-    alignItems: 'center',
-    justifyContent: 'center',
-  },
-  bubbleInitials: {
-    color: '#fff',
-    fontWeight: '700',
-    fontSize: 12,
-  },
-  bubbleName: {
-    fontSize: 10,
-    color: '#555',
-    marginTop: 2,
-    maxWidth: 46,
-    textAlign: 'center',
-  },
-  bubbleRelationship: {
-    fontSize: 9,
-    color: '#aeaeb2',
-    maxWidth: 56,
-    textAlign: 'center',
-    marginTop: 1,
-  },
+  membersRow: { flex: 1 },
+  membersContent: { paddingHorizontal: 16, paddingTop: 8, paddingBottom: 8 },
+  bubble: { alignItems: 'center', width: 46, marginRight: 10 },
+  bubbleHaloWrap: { width: 44, height: 44, alignItems: 'center', justifyContent: 'center' },
+  bubbleHalo: { position: 'absolute', width: 44, height: 44, borderRadius: 22 },
+  bubbleCircle: { width: 36, height: 36, borderRadius: 18, alignItems: 'center', justifyContent: 'center' },
+  bubbleInitials: { color: '#fff', fontWeight: '700', fontSize: 12 },
+  bubbleName: { fontSize: 10, color: c.textSub, marginTop: 2, maxWidth: 46, textAlign: 'center' },
+  bubbleRelationship: { fontSize: 9, color: c.textMuted, maxWidth: 56, textAlign: 'center', marginTop: 1 },
 
-  // Events list
-  spinner: {
-    marginTop: 60,
-  },
-  listContent: {
-    paddingHorizontal: 16,
-    paddingBottom: 40,
-  },
-  // Day label at the very top of the list ("Today", "Tomorrow", date)
-  dayLabel: {
-    fontSize: 17,
-    fontWeight: '700',
-    color: '#1d1d1f',
-    marginTop: 16,
-    marginBottom: 4,
-  },
-
-  // Section headers within the list ("Events", "Tasks")
+  spinner: { marginTop: 60 },
+  listContent: { paddingHorizontal: 16, paddingBottom: 40 },
+  dayLabel: { fontSize: 17, fontWeight: '700', color: c.text, marginTop: 16, marginBottom: 4 },
   sectionHeader: {
-    fontSize: 12,
-    fontWeight: '600',
-    color: '#8e8e93',
-    textTransform: 'uppercase',
-    letterSpacing: 0.6,
-    marginTop: 16,
-    marginBottom: 6,
+    fontSize: 12, fontWeight: '600', color: c.icon,
+    textTransform: 'uppercase', letterSpacing: 0.6, marginTop: 16, marginBottom: 6,
   },
 
-  // Inline tasks listed under an event card
   inlineTasksList: {
-    borderLeftWidth: 3,
-    marginLeft: 4,
-    paddingVertical: 4,
-    paddingLeft: 10,
-    paddingRight: 10,
-    gap: 5,
-    backgroundColor: '#fafafa',
+    borderLeftWidth: 3, marginLeft: 4,
+    paddingVertical: 4, paddingLeft: 10, paddingRight: 10,
+    gap: 5, backgroundColor: c.surface2,
   },
-  inlineTaskRow: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    gap: 6,
-  },
-  inlineTaskTitle: {
-    flex: 1,
-    fontSize: 13,
-    color: '#1d1d1f',
-    fontWeight: '500',
-  },
-  inlineTaskAssignee: {
-    fontSize: 11,
-    color: '#8e8e93',
-  },
-  inlineTaskBadge: {
-    paddingHorizontal: 6,
-    paddingVertical: 2,
-    borderRadius: 8,
-  },
-  inlineTaskBadgeText: {
-    color: '#fff',
-    fontSize: 9,
-    fontWeight: '700',
-  },
+  inlineTaskRow: { flexDirection: 'row', alignItems: 'center', gap: 6 },
+  inlineTaskTitle: { flex: 1, fontSize: 13, color: c.text, fontWeight: '500' },
+  inlineTaskAssignee: { fontSize: 11, color: c.icon },
+  inlineTaskBadge: { paddingHorizontal: 6, paddingVertical: 2, borderRadius: 8 },
+  inlineTaskBadgeText: { color: '#fff', fontSize: 9, fontWeight: '700' },
 
-  // Task row extras
-  taskTitleRow: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    gap: 5,
-  },
-  taskIcon: {
-    flexShrink: 0,
-  },
-  // Swipe actions revealed when swiping left on a task row
-  swipeActions: {
-    flexDirection: 'row',
-    marginBottom: 8,
-  },
-  swipeAction: {
-    width: 76,
-    justifyContent: 'center',
-    alignItems: 'center',
-    gap: 4,
-  },
-  // iOS only — round the right edge of the last button to match the card
+  taskTitleRow: { flexDirection: 'row', alignItems: 'center', gap: 5 },
+  taskIcon: { flexShrink: 0 },
+
+  swipeActions: { flexDirection: 'row', marginBottom: 8 },
+  swipeAction: { width: 76, justifyContent: 'center', alignItems: 'center', gap: 4 },
   swipeActionFirst: {},
-  swipeActionLast: {
-    borderTopRightRadius: 10,
-    borderBottomRightRadius: 10,
-  },
-  swipeActionText: {
-    color: '#fff',
-    fontSize: 11,
-    fontWeight: '600',
-  },
+  swipeActionLast: { borderTopRightRadius: 10, borderBottomRightRadius: 10 },
+  swipeActionText: { color: '#fff', fontSize: 11, fontWeight: '600' },
   statusBadge: {
-    paddingHorizontal: 8,
-    paddingVertical: 3,
-    borderRadius: 10,
-    alignSelf: 'center',
-    marginRight: 12,
+    paddingHorizontal: 8, paddingVertical: 3, borderRadius: 10,
+    alignSelf: 'center', marginRight: 12,
   },
-  statusBadgeText: {
-    color: '#fff',
-    fontSize: 10,
-    fontWeight: '700',
-  },
-  // Outer wrapper — holds the event tap row + inline tasks below it
+  statusBadgeText: { color: '#fff', fontSize: 10, fontWeight: '700' },
+
   eventCard: {
-    backgroundColor: '#fff',
-    borderRadius: 10,
-    marginBottom: 8,
-    overflow: 'hidden',
-    shadowColor: '#000',
-    shadowOpacity: 0.04,
-    shadowRadius: 4,
-    shadowOffset: { width: 0, height: 2 },
-    elevation: 1,
+    backgroundColor: c.surface, borderRadius: 10, marginBottom: 8,
+    overflow: 'hidden', shadowColor: '#000', shadowOpacity: 0.04,
+    shadowRadius: 4, shadowOffset: { width: 0, height: 2 }, elevation: 1,
   },
-  eventRow: {
-    flexDirection: 'row',
-  },
-  eventStripe: {
-    width: 4,
-  },
-  eventBody: {
-    flex: 1,
-    padding: 12,
-  },
-  eventTitle: {
-    fontSize: 15,
-    fontWeight: '600',
-    color: '#111',
-    marginBottom: 2,
-  },
-  eventTime: {
-    fontSize: 13,
-    color: '#888',
-  },
-  emptyText: {
-    textAlign: 'center',
-    color: '#aaa',
-    marginTop: 60,
-    fontSize: 15,
-  },
+  eventRow: { flexDirection: 'row' },
+  eventStripe: { width: 4 },
+  eventBody: { flex: 1, padding: 12 },
+  eventTitle: { fontSize: 15, fontWeight: '600', color: c.text, marginBottom: 2 },
+  eventTime: { fontSize: 13, color: c.textSub },
+  emptyText: { textAlign: 'center', color: c.textMuted, marginTop: 60, fontSize: 15 },
 
-  // Arrival time row inside task card
-  arrivalRow: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    gap: 4,
-    marginTop: 4,
-  },
-  arrivalText: {
-    fontSize: 12,
-    color: '#1a8fa8',
-    fontWeight: '500',
-  },
-  arrivalPlaceholder: {
-    color: '#aeaeb2',
-    fontWeight: '400',
-  },
+  arrivalRow: { flexDirection: 'row', alignItems: 'center', gap: 4, marginTop: 4 },
+  arrivalText: { fontSize: 12, color: '#1a8fa8', fontWeight: '500' },
+  arrivalPlaceholder: { color: c.textMuted, fontWeight: '400' },
 
-  // Arrival time picker bottom sheet
-  pickerBackdrop: {
-    flex: 1,
-    justifyContent: 'flex-end',
-    backgroundColor: 'rgba(0,0,0,0.35)',
-  },
-  pickerSheet: {
-    backgroundColor: '#fff',
-    borderTopLeftRadius: 16,
-    borderTopRightRadius: 16,
-    paddingBottom: 34,
-  },
+  pickerBackdrop: { flex: 1, justifyContent: 'flex-end', backgroundColor: 'rgba(0,0,0,0.35)' },
+  pickerSheet: { backgroundColor: c.surface, borderTopLeftRadius: 16, borderTopRightRadius: 16, paddingBottom: 34 },
   pickerHeader: {
-    flexDirection: 'row',
-    justifyContent: 'space-between',
-    alignItems: 'center',
-    paddingHorizontal: 20,
-    paddingVertical: 14,
-    borderBottomWidth: 1,
-    borderBottomColor: '#f2f2f7',
+    flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center',
+    paddingHorizontal: 20, paddingVertical: 14,
+    borderBottomWidth: 1, borderBottomColor: c.separator,
   },
-  pickerTitle: {
-    fontSize: 16,
-    fontWeight: '600',
-    color: '#1d1d1f',
+  pickerTitle: { fontSize: 16, fontWeight: '600', color: c.text },
+  pickerCancel: { fontSize: 16, color: c.icon },
+  pickerDone: { fontSize: 16, fontWeight: '600', color: '#1a8fa8' },
+
+  offlineBanner: {
+    flexDirection: 'row', alignItems: 'center', gap: 6,
+    backgroundColor: '#636366', paddingVertical: 6, paddingHorizontal: 14,
   },
-  pickerCancel: {
-    fontSize: 16,
-    color: '#8e8e93',
+  offlineBannerText: { color: '#fff', fontSize: 12, fontWeight: '500' },
+
+  searchPanel: {
+    backgroundColor: c.surface,
+    borderBottomWidth: 1, borderBottomColor: c.border,
+    paddingHorizontal: 12, paddingVertical: 8, gap: 8, zIndex: 10,
   },
-  pickerDone: {
-    fontSize: 16,
-    fontWeight: '600',
-    color: '#1a8fa8',
+  searchInputWrap: {
+    flexDirection: 'row', alignItems: 'center',
+    backgroundColor: c.surface2, borderRadius: 10, paddingHorizontal: 10, height: 36,
   },
+  searchInputIcon: { marginRight: 6 },
+  searchInput: { flex: 1, fontSize: 14, color: c.text, paddingVertical: 0 },
+  searchClearBtn: { padding: 2, marginLeft: 4 },
+  chipsRow: { flexDirection: 'row', gap: 6, paddingVertical: 2 },
+  chip: {
+    paddingVertical: 4, paddingHorizontal: 10,
+    borderRadius: 20, borderWidth: 1,
+    borderColor: c.border, backgroundColor: c.surface2,
+  },
+  chipActive: { backgroundColor: '#1a8fa8', borderColor: '#1a8fa8' },
+  chipText: { fontSize: 12, color: c.textSub },
+  chipTextActive: { color: '#fff', fontWeight: '600' },
 });
 
-export default styles;
+const lightStyles = make(LIGHT);
+const darkStyles  = make(DARK);
+
+export function useStyles() {
+  return useColorScheme() === 'dark' ? darkStyles : lightStyles;
+}
+export default lightStyles;

@@ -1,19 +1,24 @@
 import React, { useState, useEffect, useCallback, useRef } from 'react';
+import { useTranslation } from 'react-i18next';
 import Swipeable from 'react-native-gesture-handler/Swipeable';
 import { GestureDetector, Gesture } from 'react-native-gesture-handler';
 import {
   View,
   Text,
+  TextInput,
   Animated,
   FlatList,
   ScrollView,
   TouchableOpacity,
+  Pressable,
   ActivityIndicator,
   RefreshControl,
   PanResponder,
   Alert,
   Platform,
   Modal,
+  StyleSheet,
+  Image,
 } from 'react-native';
 import DateTimePicker from '@react-native-community/datetimepicker';
 import { SafeAreaView } from 'react-native-safe-area-context';
@@ -22,19 +27,22 @@ import { LinearGradient } from 'expo-linear-gradient';
 import DrawerMenu from '../components/DrawerMenu';
 import WeekStrip from '../components/WeekStrip';
 import MonthCalendar from '../components/MonthCalendar';
-import styles from '../styles/HomeScreen.styles';
-import API from '../api/axios';
+import RadialMenu from '../components/RadialMenu';
+import VoiceCapture from '../components/VoiceCapture';
+import { useStyles } from '../styles/HomeScreen.styles';
+import API, { SERVER_URL } from '../api/axios';
 import { useAuth } from '../context/AuthContext';
 import { useFamily } from '../context/FamilyContext';
 import { useSSE } from '../context/SSEContext';
+import { saveCache, loadCache, savedAtLabel } from '../utils/cache';
 
 // ─── Helpers ────────────────────────────────────────────────────────────────
 
 // Formats a datetime string to "9:00 AM" — returns "All day" for all-day events
 function formatTime(event) {
-  if (event.is_all_day) return 'All day';
+  if (event.is_all_day) return null; // caller uses t('common.all_day')
   const d = new Date(event.start_date);
-  return d.toLocaleTimeString('en-US', { hour: 'numeric', minute: '2-digit' });
+  return d.toLocaleTimeString(undefined, { hour: 'numeric', minute: '2-digit' });
 }
 
 // Timezone-safe day match: reads the YYYY-MM-DD portion of the ISO string
@@ -55,6 +63,7 @@ function onSameDay(dateStr, selectedDate) {
 // Shows a coloured circle with the member's initials.
 // `selected` adds a teal ring so the user knows which filter is active.
 function MemberBubble({ member, selected, onPress, onLongPress }) {
+  const styles = useStyles();
   const fullName = member.name
     || [member.first_name, member.last_name].filter(Boolean).join(' ')
     || member.email
@@ -67,6 +76,9 @@ function MemberBubble({ member, selected, onPress, onLongPress }) {
     .slice(0, 2);
 
   const memberColor = member.color || '#1a8fa8';
+  const photoUri = member.avatar_url
+    ? (member.avatar_url.startsWith('http') ? member.avatar_url : `${SERVER_URL}${member.avatar_url}`)
+    : null;
 
   return (
     <TouchableOpacity
@@ -85,9 +97,13 @@ function MemberBubble({ member, selected, onPress, onLongPress }) {
             { backgroundColor: memberColor, opacity: 0.25 },
           ]} />
         )}
-        <View style={[styles.bubbleCircle, { backgroundColor: memberColor }]}>
-          <Text style={styles.bubbleInitials}>{initials}</Text>
-        </View>
+        {photoUri ? (
+          <Image source={{ uri: photoUri }} style={styles.bubbleCircle} />
+        ) : (
+          <View style={[styles.bubbleCircle, { backgroundColor: memberColor }]}>
+            <Text style={styles.bubbleInitials}>{initials}</Text>
+          </View>
+        )}
       </View>
 
       <Text style={[
@@ -108,8 +124,16 @@ function MemberBubble({ member, selected, onPress, onLongPress }) {
 // ─── Event row ───────────────────────────────────────────────────────────────
 // `eventTasks` are the tasks linked to this event — shown inline below it.
 
-function EventRow({ event, navigation, eventTasks }) {
+function EventRow({ event, navigation, eventTasks, showDate }) {
+  const { t } = useTranslation();
+  const styles = useStyles();
   const color = event.color || '#1a8fa8';
+
+  const dateLabel = showDate
+    ? new Date(event.start_date).toLocaleDateString(undefined, { weekday: 'short', day: 'numeric', month: 'short' })
+    : null;
+
+  const timeDisplay = formatTime(event) ?? t('common.all_day');
 
   return (
     <View style={styles.eventCard}>
@@ -122,7 +146,9 @@ function EventRow({ event, navigation, eventTasks }) {
         <View style={[styles.eventStripe, { backgroundColor: color }]} />
         <View style={styles.eventBody}>
           <Text style={styles.eventTitle} numberOfLines={1}>{event.title}</Text>
-          <Text style={styles.eventTime}>{formatTime(event)}</Text>
+          <Text style={styles.eventTime}>
+            {dateLabel ? `${dateLabel} · ` : ''}{timeDisplay}
+          </Text>
         </View>
       </TouchableOpacity>
 
@@ -137,7 +163,7 @@ function EventRow({ event, navigation, eventTasks }) {
                 <Text style={styles.inlineTaskAssignee}>{t.assigned_first_name}</Text>
               )}
               <View style={[styles.inlineTaskBadge, { backgroundColor: STATUS_COLOR[t.status] || '#aeaeb2' }]}>
-                <Text style={styles.inlineTaskBadgeText}>{STATUS_LABEL[t.status] || t.status}</Text>
+                <Text style={styles.inlineTaskBadgeText}>{STATUS_KEY[t.status] ? t(STATUS_KEY[t.status]) : t.status}</Text>
               </View>
             </View>
           ))}
@@ -150,9 +176,11 @@ function EventRow({ event, navigation, eventTasks }) {
 // ─── Task row ────────────────────────────────────────────────────────────────
 
 const STATUS_COLOR = { pending: '#ff9500', accepted: '#34c759', countered: '#ff3b30' };
-const STATUS_LABEL = { pending: 'Pending', accepted: 'Accepted', countered: 'Counter' };
+const STATUS_KEY   = { pending: 'common.pending', accepted: 'common.accepted', countered: 'home.counter' };
 
 function TaskRow({ task, navigation, onComplete, onDelete, onAccept, onSetArrivalTime, currentUserId }) {
+  const { t } = useTranslation();
+  const styles = useStyles();
   const color = task.color || task.assigned_color || '#1a8fa8';
   const badge = STATUS_COLOR[task.status] || '#aeaeb2';
   const badgeOpacity = useRef(new Animated.Value(1)).current;
@@ -174,15 +202,15 @@ function TaskRow({ task, navigation, onComplete, onDelete, onAccept, onSetArriva
     Number(task.created_by)  !== Number(currentUserId);
 
   const arrivalLabel = task.due_date
-    ? new Date(task.due_date).toLocaleTimeString('en-US', { hour: 'numeric', minute: '2-digit' })
-    : 'Set arrival time';
+    ? new Date(task.due_date).toLocaleTimeString(undefined, { hour: 'numeric', minute: '2-digit' })
+    : t('home.set_arrival_time');
 
   // Pending → Accept, anything else → Done
   const isPending = task.status === 'pending';
 
   const primaryColor  = isPending ? '#1a8fa8' : '#34c759';
   const primaryIcon   = isPending ? 'checkmark-done' : 'checkmark';
-  const primaryLabel  = isPending ? 'Accept' : 'Done';
+  const primaryLabel  = isPending ? t('common.accept') : t('common.done');
   const primaryAction = isPending ? () => onAccept(task.id) : () => onComplete(task.id);
 
   const renderRightActions = () => (
@@ -201,7 +229,7 @@ function TaskRow({ task, navigation, onComplete, onDelete, onAccept, onSetArriva
         activeOpacity={0.85}
       >
         <Ionicons name="trash" size={20} color="#fff" />
-        <Text style={styles.swipeActionText}>Delete</Text>
+        <Text style={styles.swipeActionText}>{t('common.delete')}</Text>
       </TouchableOpacity>
     </View>
   );
@@ -233,10 +261,10 @@ function TaskRow({ task, navigation, onComplete, onDelete, onAccept, onSetArriva
               <Text style={styles.eventTime}>📅 {task.event_title}</Text>
             ) : task.due_date ? (
               <Text style={styles.eventTime}>
-                Due {new Date(task.due_date.replace(/Z$/, '')).toLocaleDateString('en-GB', { day: 'numeric', month: 'short' })}
+                Due {new Date(task.due_date.replace(/Z$/, '')).toLocaleDateString(undefined, { day: 'numeric', month: 'short' })}
               </Text>
             ) : (
-              <Text style={styles.eventTime}>No due date</Text>
+              <Text style={styles.eventTime}>{t('home.no_due_date')}</Text>
             )}
             {/* Arrival time row — only for accepted tasks assigned to me by someone else */}
             {isMyAccepted && (
@@ -253,7 +281,7 @@ function TaskRow({ task, navigation, onComplete, onDelete, onAccept, onSetArriva
             )}
           </View>
           <Animated.View style={[styles.statusBadge, { backgroundColor: badge, opacity: badgeOpacity }]}>
-            <Text style={styles.statusBadgeText}>{STATUS_LABEL[task.status] || task.status}</Text>
+            <Text style={styles.statusBadgeText}>{STATUS_KEY[task.status] ? t(STATUS_KEY[task.status]) : task.status}</Text>
           </Animated.View>
         </TouchableOpacity>
       </Swipeable>
@@ -265,11 +293,11 @@ function TaskRow({ task, navigation, onComplete, onDelete, onAccept, onSetArriva
             {/* Header */}
             <View style={styles.pickerHeader}>
               <TouchableOpacity onPress={() => setShowPicker(false)}>
-                <Text style={styles.pickerCancel}>Cancel</Text>
+                <Text style={styles.pickerCancel}>{t('common.cancel')}</Text>
               </TouchableOpacity>
-              <Text style={styles.pickerTitle}>Arrival Time</Text>
+              <Text style={styles.pickerTitle}>{t('home.arrival_time_title')}</Text>
               <TouchableOpacity onPress={handlePickerDone}>
-                <Text style={styles.pickerDone}>Done</Text>
+                <Text style={styles.pickerDone}>{t('common.done')}</Text>
               </TouchableOpacity>
             </View>
             {/* iOS drum-roller time picker */}
@@ -288,12 +316,27 @@ function TaskRow({ task, navigation, onComplete, onDelete, onAccept, onSetArriva
   );
 }
 
+// ─── Categories ──────────────────────────────────────────────────────────────
+
+const CATEGORIES = [
+  { name: 'Family',  color: '#56e39f', icon: '🏠' },
+  { name: 'School',  color: '#4facfe', icon: '🏫' },
+  { name: 'Sports',  color: '#c8f400', icon: '⚽' },
+  { name: 'Health',  color: '#f48c06', icon: '🏥' },
+  { name: 'Travel',  color: '#9747ff', icon: '✈️' },
+  { name: 'Social',  color: '#ffd60a', icon: '🎉' },
+  { name: 'Faith',   color: '#1a8fa8', icon: '⛪' },
+  { name: 'Work',    color: '#6e6e73', icon: '💼' },
+];
+
 // ─── HomeScreen ──────────────────────────────────────────────────────────────
 
 export default function HomeScreen({ navigation }) {
+  const { t } = useTranslation();
+  const styles = useStyles();
   const { logout, user } = useAuth();
   const { members } = useFamily();
-  const { eventTick, taskTick } = useSSE();
+  const { eventTick, taskTick, lastChatMsg } = useSSE();
 
   // Put the logged-in user first, everyone else follows in original order
   const sortedMembers = user
@@ -309,7 +352,22 @@ export default function HomeScreen({ navigation }) {
   const [refreshing, setRefreshing] = useState(false);
   const [selectedMember, setSelectedMember] = useState(null);
   const [pendingCount, setPendingCount] = useState(0);
-  const [drawerOpen, setDrawerOpen] = useState(false);
+  const [notifUnread,  setNotifUnread]  = useState(0);
+  const [chatUnread,   setChatUnread]   = useState(0);
+  const [drawerOpen,    setDrawerOpen]    = useState(false);
+  const [isOffline,     setIsOffline]     = useState(false);
+  const [radialVisible, setRadialVisible] = useState(false);
+  const [voiceVisible,  setVoiceVisible]  = useState(false);
+
+  const closeSearch = useCallback(() => {
+    setSearchVisible(false);
+    setSearchQuery('');
+    setSelectedCategory('');
+  }, []);
+  const [cacheLabel, setCacheLabel] = useState(null);
+  const [searchVisible, setSearchVisible] = useState(false);
+  const [searchQuery,   setSearchQuery]   = useState('');
+  const [selectedCategory, setSelectedCategory] = useState('');
 
   // Selected day in the week strip — defaults to today
   const todayStart = new Date();
@@ -400,14 +458,40 @@ export default function HomeScreen({ navigation }) {
         API.get('/events'),
         API.get('/tasks/family'),
       ]);
-      setEvents(eventsRes.status === 'fulfilled' ? (eventsRes.value.data.events || []) : []);
-      setTasks(tasksRes.status === 'fulfilled'   ? (tasksRes.value.data.tasks   || []) : []);
+
+      const newEvents = eventsRes.status === 'fulfilled' ? (eventsRes.value.data.events || []) : [];
+      const newTasks  = tasksRes.status  === 'fulfilled' ? (tasksRes.value.data.tasks   || []) : [];
+
+      setEvents(newEvents);
+      setTasks(newTasks);
+      setIsOffline(false);
+      setCacheLabel(null);
+      saveCache(newEvents, newTasks); // persist for next offline load
     } catch (err) {
-      console.error('fetchEvents error:', err.message);
+      // No err.response means a network failure (no connection)
+      if (!err.response) {
+        const cached = await loadCache();
+        if (cached.events.length > 0 || cached.tasks.length > 0) {
+          setEvents(cached.events);
+          setTasks(cached.tasks);
+          setCacheLabel(savedAtLabel(cached.savedAt));
+        }
+        setIsOffline(true);
+      } else {
+        console.error('fetchEvents error:', err.message);
+      }
     } finally {
       setLoading(false);
       setRefreshing(false);
     }
+  }, []);
+
+  // ── Fetch notifications unread count ─────────────────────────────────────
+  const fetchNotifUnread = useCallback(async () => {
+    try {
+      const res = await API.get('/notifications');
+      setNotifUnread(res.data.data?.unread_count || 0);
+    } catch { /* silent */ }
   }, []);
 
   // ── Fetch pending count for the badge ────────────────────────────────────
@@ -428,27 +512,46 @@ export default function HomeScreen({ navigation }) {
     );
   }, []);
 
+  // Seed UI from cache immediately so the screen is never blank while fetching
+  useEffect(() => {
+    loadCache().then(cached => {
+      if (cached.events.length > 0 || cached.tasks.length > 0) {
+        setEvents(prev => prev.length === 0 ? cached.events : prev);
+        setTasks(prev  => prev.length  === 0 ? cached.tasks  : prev);
+      }
+    });
+  }, []);
+
   // Fetch on mount
   useEffect(() => {
     fetchEvents();
     fetchPendingCount();
-  }, [fetchEvents, fetchPendingCount]);
+    fetchNotifUnread();
+  }, [fetchEvents, fetchPendingCount, fetchNotifUnread]);
 
   // Re-fetch when this screen comes back into focus (returning from other screens)
   useEffect(() => {
     const unsubscribe = navigation.addListener('focus', () => {
       fetchEvents();
       fetchPendingCount();
+      fetchNotifUnread();
     });
     return unsubscribe;
-  }, [navigation, fetchEvents, fetchPendingCount]);
+  }, [navigation, fetchEvents, fetchPendingCount, fetchNotifUnread]);
 
   // SSE — live updates while the app is in the foreground.
   // eventTick increments whenever the server fires event_update.
   // taskTick  increments whenever the server fires task_update.
   // Skip the very first render (tick = 0) since mount already fetches.
-  useEffect(() => { if (eventTick > 0) fetchEvents(); },       [eventTick]);
-  useEffect(() => { if (taskTick  > 0) fetchPendingCount(); }, [taskTick]);
+  useEffect(() => { if (eventTick > 0) fetchEvents(); },                         [eventTick]);
+  useEffect(() => { if (taskTick  > 0) { fetchPendingCount(); fetchNotifUnread(); } }, [taskTick]);
+
+  // Increment chat badge for messages from other family members
+  useEffect(() => {
+    if (!lastChatMsg) return;
+    if (Number(lastChatMsg.user_id) === Number(user?.id)) return;
+    setChatUnread(prev => prev + 1);
+  }, [lastChatMsg]);
 
   // Switch to week view only when there's actual content to show.
   // Stay in month when there are no events and no tasks.
@@ -478,29 +581,54 @@ export default function HomeScreen({ navigation }) {
       )
     : events;
 
-  // Events for the selected day
-  const dayEvents = memberFiltered.filter(e => onSameDay(e.start_date, selectedDate));
+  const q = searchQuery.trim().toLowerCase();
+  const isSearchActive = q.length > 0 || selectedCategory !== '';
 
-  // Tasks filtered by member only
-  const memberFilteredTasks = selectedMember
-    ? tasks.filter(t => Number(t.assigned_to) === Number(selectedMember))
-    : tasks;
+  // When search or category is active → search ALL events across all dates.
+  // When inactive → only show events for the selected day (normal calendar mode).
+  const dayEvents = isSearchActive
+    ? memberFiltered
+        .filter(e => {
+          if (selectedCategory && e.category !== selectedCategory) return false;
+          if (q) {
+            const inTitle    = (e.title    || '').toLowerCase().includes(q);
+            const inLocation = (e.location || '').toLowerCase().includes(q);
+            const inNotes    = (e.notes    || '').toLowerCase().includes(q);
+            if (!inTitle && !inLocation && !inNotes) return false;
+          }
+          return true;
+        })
+        .sort((a, b) => new Date(a.start_date) - new Date(b.start_date))
+    : memberFiltered.filter(e => onSameDay(e.start_date, selectedDate));
+
+  // Tasks filtered by member; when search is active also filter by query + category
+  const memberFilteredTasks = (() => {
+    let list = selectedMember
+      ? tasks.filter(t => Number(t.assigned_to) === Number(selectedMember))
+      : tasks;
+    if (isSearchActive) {
+      if (selectedCategory) list = list.filter(t => t.category === selectedCategory);
+      if (q) list = list.filter(t => (t.title || '').toLowerCase().includes(q));
+    }
+    return list;
+  })();
 
   // Combined list:
   //   Events section  → each event card also shows its linked tasks inline
   //   Tasks section   → ALL tasks (event-linked + standalone) so they're always visible
   const listData = [
     ...(dayEvents.length > 0
-      ? [{ type: 'sectionHeader', title: 'Events', key: 'sh-events' }]
+      ? [{ type: 'sectionHeader', title: t('home.events'), key: 'sh-events' }]
       : []),
     ...dayEvents.map(e => ({
       type: 'event',
       data: e,
+      showDate: isSearchActive,  // pass flag so EventRow can show the date
       eventTasks: memberFilteredTasks.filter(t => Number(t.event_id) === Number(e.id)),
       key: `e-${e.id}`,
     })),
     ...(memberFilteredTasks.length > 0
-      ? [{ type: 'sectionHeader', title: 'Tasks', key: 'sh-tasks' }]
+      ? [{ type: 'sectionHeader', title: t('home.tasks'), key: 'sh-tasks' }]
       : []),
     ...memberFilteredTasks.map(t => ({ type: 'task', data: t, key: `t-${t.id}` })),
   ];
@@ -516,7 +644,7 @@ export default function HomeScreen({ navigation }) {
       await API.patch(`/tasks/${taskId}/complete`);
       setTasks(prev => prev.filter(t => t.id !== taskId));
     } catch {
-      Alert.alert('Error', 'Could not mark task complete');
+      Alert.alert(t('common.error'), t('tasks.could_not_complete'));
     }
   }, []);
 
@@ -526,7 +654,7 @@ export default function HomeScreen({ navigation }) {
       await API.delete(`/tasks/${taskId}`);
       setTasks(prev => prev.filter(t => t.id !== taskId));
     } catch {
-      Alert.alert('Error', 'Could not delete task');
+      Alert.alert(t('common.error'), t('tasks.could_not_delete'));
     }
   }, []);
 
@@ -539,7 +667,7 @@ export default function HomeScreen({ navigation }) {
         t.id === taskId ? { ...t, due_date: date.toISOString() } : t
       ));
     } catch {
-      Alert.alert('Error', 'Could not save arrival time');
+      Alert.alert(t('common.error'), t('tasks.could_not_save_arrival'));
     }
   }, []);
 
@@ -552,9 +680,9 @@ export default function HomeScreen({ navigation }) {
         t.id === taskId ? { ...t, status: 'accepted' } : t
       ));
     } catch (err) {
-      const msg = err.response?.data?.message || err.message || 'Could not accept task';
+      const msg = err.response?.data?.message || err.message || t('common.something_went_wrong');
       console.error('handleAcceptTask error:', msg);
-      Alert.alert('Error', msg);
+      Alert.alert(t('common.error'), msg);
     }
   }, []);
 
@@ -567,10 +695,10 @@ export default function HomeScreen({ navigation }) {
   yesterday.setDate(todayNow.getDate() - 1);
 
   function dayHeader(date) {
-    if (date.getTime() === todayNow.getTime())    return 'Today';
-    if (date.getTime() === tomorrow.getTime())    return 'Tomorrow';
-    if (date.getTime() === yesterday.getTime())   return 'Yesterday';
-    return date.toLocaleDateString('en-GB', { weekday: 'long', day: 'numeric', month: 'long' });
+    if (date.getTime() === todayNow.getTime())    return t('home.today');
+    if (date.getTime() === tomorrow.getTime())    return t('home.tomorrow');
+    if (date.getTime() === yesterday.getTime())   return t('home.yesterday');
+    return date.toLocaleDateString(undefined, { weekday: 'long', day: 'numeric', month: 'long' });
   }
 
   // ── Main render ───────────────────────────────────────────────────────────
@@ -578,7 +706,7 @@ export default function HomeScreen({ navigation }) {
   return (
     <View style={styles.container}><SafeAreaView style={styles.safeArea}>
 
-      <DrawerMenu visible={drawerOpen} onClose={() => setDrawerOpen(false)} navigation={navigation} pendingCount={pendingCount} />
+      <DrawerMenu visible={drawerOpen} onClose={() => setDrawerOpen(false)} navigation={navigation} pendingCount={pendingCount} notifCount={notifUnread} />
 
       {/* Left edge strip — 20px wide, full height, captures swipe-right */}
       <View style={styles.edgeZone} {...edgePan.panHandlers} />
@@ -598,34 +726,75 @@ export default function HomeScreen({ navigation }) {
         {/* Centre — WHEN title */}
         <Text style={styles.headerTitle}>WHEN</Text>
 
-        {/* Right — message + bell */}
+        {/* Right — search + chat + bell */}
         <View style={styles.headerRight}>
-          {/* Message icon — placeholder until DM feature is built */}
-          <TouchableOpacity style={styles.iconBtn}>
-            <Ionicons name="chatbubble-outline" size={22} color="#8e8e93" />
-          </TouchableOpacity>
-
-          {/* Bell — navigates to PendingScreen, red badge when items exist */}
+          {/* Search toggle */}
           <TouchableOpacity
             style={styles.iconBtn}
-            onPress={() => navigation.navigate('Pending')}
+            onPress={() => searchVisible ? closeSearch() : setSearchVisible(true)}
           >
             <Ionicons
-              name={pendingCount > 0 ? 'notifications' : 'notifications-outline'}
+              name={searchVisible ? 'search' : 'search-outline'}
               size={22}
-              color={pendingCount > 0 ? '#1a8fa8' : '#8e8e93'}
+              color={searchVisible ? '#1a8fa8' : '#8e8e93'}
             />
-            {pendingCount > 0 && (
+          </TouchableOpacity>
+
+          {/* Chat icon — family chat, badge shows unread messages */}
+          <TouchableOpacity
+            style={styles.iconBtn}
+            onPress={() => { setChatUnread(0); navigation.navigate('Chat'); }}
+          >
+            <Ionicons
+              name={chatUnread > 0 ? 'chatbubble' : 'chatbubble-outline'}
+              size={22}
+              color={chatUnread > 0 ? '#1a8fa8' : '#8e8e93'}
+            />
+            {chatUnread > 0 && (
               <View style={styles.badge}>
                 <Text style={styles.badgeText}>
-                  {pendingCount > 9 ? '9+' : pendingCount}
+                  {chatUnread > 9 ? '9+' : chatUnread}
                 </Text>
               </View>
             )}
           </TouchableOpacity>
+
+          {/* Bell — combined pending + unread notifications badge */}
+          {(() => {
+            const totalCount = pendingCount + notifUnread;
+            return (
+              <TouchableOpacity
+                style={styles.iconBtn}
+                onPress={() => navigation.navigate('Pending')}
+              >
+                <Ionicons
+                  name={totalCount > 0 ? 'notifications' : 'notifications-outline'}
+                  size={22}
+                  color={totalCount > 0 ? '#1a8fa8' : '#8e8e93'}
+                />
+                {totalCount > 0 && (
+                  <View style={styles.badge}>
+                    <Text style={styles.badgeText}>
+                      {totalCount > 9 ? '9+' : totalCount}
+                    </Text>
+                  </View>
+                )}
+              </TouchableOpacity>
+            );
+          })()}
         </View>
 
       </View>
+
+      {/* ── Offline banner ── */}
+      {isOffline && (
+        <View style={styles.offlineBanner}>
+          <Ionicons name="cloud-offline-outline" size={14} color="#fff" />
+          <Text style={styles.offlineBannerText}>
+            {t('home.offline')}{cacheLabel ? ` · ${t('home.last_updated')} ${cacheLabel}` : ` · ${t('home.showing_cached')}`}
+          </Text>
+        </View>
+      )}
 
       {/* ── Member bubbles — hidden when no members ── */}
       {sortedMembers.length > 0 && (
@@ -644,6 +813,67 @@ export default function HomeScreen({ navigation }) {
                 onPress={() => handleMemberPress(member.id)}
                 onLongPress={() => navigation.navigate('MemberProfile', { memberId: member.id })}
               />
+            ))}
+          </ScrollView>
+        </View>
+      )}
+
+      {/* ── Dismiss overlay — tapping anywhere outside search closes it ── */}
+      {searchVisible && (
+        <Pressable
+          style={StyleSheet.absoluteFillObject}
+          onPress={closeSearch}
+        />
+      )}
+
+      {/* ── Search panel — slides in below member bubbles ── */}
+      {searchVisible && (
+        <View style={styles.searchPanel}>
+          <View style={styles.searchInputWrap}>
+            <Ionicons name="search" size={15} color="#8e8e93" style={styles.searchInputIcon} />
+            <TextInput
+              style={styles.searchInput}
+              placeholder={t('home.search_placeholder')}
+              placeholderTextColor="#aeaeb2"
+              value={searchQuery}
+              onChangeText={setSearchQuery}
+              autoFocus
+              returnKeyType="search"
+            />
+            {searchQuery.length > 0 && (
+              <TouchableOpacity onPress={() => setSearchQuery('')} style={styles.searchClearBtn}>
+                <Ionicons name="close-circle" size={16} color="#aeaeb2" />
+              </TouchableOpacity>
+            )}
+          </View>
+
+          <ScrollView
+            horizontal
+            showsHorizontalScrollIndicator={false}
+            contentContainerStyle={styles.chipsRow}
+          >
+            <TouchableOpacity
+              style={[styles.chip, !selectedCategory && styles.chipActive]}
+              onPress={() => setSelectedCategory('')}
+            >
+              <Text style={[styles.chipText, !selectedCategory && styles.chipTextActive]}>{t('common.all')}</Text>
+            </TouchableOpacity>
+            {CATEGORIES.map(cat => (
+              <TouchableOpacity
+                key={cat.name}
+                style={[
+                  styles.chip,
+                  selectedCategory === cat.name && { backgroundColor: cat.color, borderColor: cat.color },
+                ]}
+                onPress={() => setSelectedCategory(selectedCategory === cat.name ? '' : cat.name)}
+              >
+                <Text style={[
+                  styles.chipText,
+                  selectedCategory === cat.name && styles.chipTextActive,
+                ]}>
+                  {cat.icon} {cat.name}
+                </Text>
+              </TouchableOpacity>
             ))}
           </ScrollView>
         </View>
@@ -694,7 +924,7 @@ export default function HomeScreen({ navigation }) {
               return <Text style={styles.sectionHeader}>{item.title}</Text>;
             }
             if (item.type === 'event') {
-              return <EventRow event={item.data} navigation={navigation} eventTasks={item.eventTasks} />;
+              return <EventRow event={item.data} navigation={navigation} eventTasks={item.eventTasks} showDate={item.showDate} />;
             }
             if (item.type === 'task') {
               return (
@@ -716,10 +946,17 @@ export default function HomeScreen({ navigation }) {
             <RefreshControl refreshing={refreshing} onRefresh={onRefresh} tintColor="#1a8fa8" />
           }
           ListHeaderComponent={
-            <Text style={styles.dayLabel}>{dayHeader(selectedDate)}</Text>
+            isSearchActive
+              ? <Text style={styles.dayLabel}>
+                  {t('home.result', { count: dayEvents.length })}
+                  {selectedCategory ? ` · ${selectedCategory}` : ''}
+                </Text>
+              : <Text style={styles.dayLabel}>{dayHeader(selectedDate)}</Text>
           }
           ListEmptyComponent={
-            <Text style={styles.emptyText}>No events or tasks</Text>
+            <Text style={styles.emptyText}>
+              {isSearchActive ? t('home.no_matching') : t('home.no_events_tasks')}
+            </Text>
           }
         />
         </Animated.View>
@@ -727,19 +964,30 @@ export default function HomeScreen({ navigation }) {
     </SafeAreaView>
 
       {/* ── FAB — floating + button, bottom right ── */}
-      <TouchableOpacity
-        style={styles.fab}
-        onPress={() =>
-          Alert.alert('Create', 'What would you like to add?', [
-            { text: 'New Event', onPress: () => navigation.navigate('EventForm') },
-            { text: 'New Task',  onPress: () => navigation.navigate('TaskForm') },
-            { text: 'Cancel', style: 'cancel' },
-          ])
-        }
-        activeOpacity={0.85}
+      {/* Press → opens radial pie menu. Long-press → opens voice capture. */}
+      <Pressable
+        style={({ pressed }) => [styles.fab, styles.fabSmall, pressed && { opacity: 0.8 }]}
+        onPress={() => setRadialVisible(true)}
+        onLongPress={() => setVoiceVisible(true)}
+        delayLongPress={400}
       >
-        <Ionicons name="add" size={28} color="#fff" />
-      </TouchableOpacity>
+        <Ionicons name="add" size={26} color="#fff" />
+      </Pressable>
+
+      {/* ── Radial pie menu ── */}
+      <RadialMenu
+        visible={radialVisible}
+        onClose={() => setRadialVisible(false)}
+        onNewEvent={() => navigation.navigate('EventForm')}
+        onNewTask={() => navigation.navigate('TaskForm')}
+      />
+
+      {/* ── Voice capture overlay ── */}
+      <VoiceCapture
+        visible={voiceVisible}
+        onClose={() => setVoiceVisible(false)}
+        navigation={navigation}
+      />
 
     </View>
   );

@@ -1,399 +1,133 @@
-import { StyleSheet } from 'react-native';
+import { StyleSheet, useColorScheme } from 'react-native';
+import { LIGHT, DARK } from '../theme';
 
-const styles = StyleSheet.create({
-
-  container: {
-    flex: 1,
-    backgroundColor: '#f2f2f7',
-  },
-
-  // ── Header ───────────────────────────────────────────────────────────────
+const make = c => StyleSheet.create({
+  container: { flex: 1, backgroundColor: c.bg },
   header: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    justifyContent: 'space-between',
-    paddingHorizontal: 16,
-    paddingVertical: 10,
-    backgroundColor: '#fff',
-    borderBottomWidth: 1,
-    borderBottomColor: '#e5e5ea',
+    flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between',
+    paddingHorizontal: 16, paddingVertical: 10,
+    backgroundColor: c.surface, borderBottomWidth: 1, borderBottomColor: c.border,
   },
-  backBtn: {
-    padding: 4,
-    width: 44,
-  },
-  headerTitle: {
-    fontSize: 17,
-    fontWeight: '600',
-    color: '#1d1d1f',
-  },
+  backBtn: { padding: 4, width: 44 },
+  headerTitle: { fontSize: 17, fontWeight: '600', color: c.text },
   saveHeaderBtn: {
-    paddingVertical: 6,
-    paddingHorizontal: 14,
-    backgroundColor: '#1a8fa8',
-    borderRadius: 20,
-    minWidth: 60,
-    alignItems: 'center',
+    paddingVertical: 6, paddingHorizontal: 14, backgroundColor: '#1a8fa8',
+    borderRadius: 20, minWidth: 60, alignItems: 'center',
   },
-  saveHeaderBtnDisabled: {
-    opacity: 0.6,
-  },
-  saveHeaderBtnText: {
-    color: '#fff',
-    fontWeight: '600',
-    fontSize: 14,
-  },
+  saveHeaderBtnDisabled: { opacity: 0.6 },
+  saveHeaderBtnText: { color: '#fff', fontWeight: '600', fontSize: 14 },
 
-  // ── Scroll ───────────────────────────────────────────────────────────────
-  scroll: {
-    flex: 1,
-  },
-  scrollContent: {
-    padding: 16,
-  },
+  scroll: { flex: 1 },
+  scrollContent: { padding: 16 },
 
-  // ── Error ────────────────────────────────────────────────────────────────
   errorBox: {
-    backgroundColor: 'rgba(255,59,48,0.08)',
-    borderRadius: 10,
-    padding: 12,
-    marginBottom: 12,
-    borderWidth: 1,
-    borderColor: 'rgba(255,59,48,0.2)',
+    backgroundColor: 'rgba(255,59,48,0.08)', borderRadius: 10, padding: 12,
+    marginBottom: 12, borderWidth: 1, borderColor: 'rgba(255,59,48,0.2)',
   },
-  errorText: {
-    color: '#ff3b30',
-    fontSize: 13,
-    textAlign: 'center',
-  },
+  errorText: { color: '#ff3b30', fontSize: 13, textAlign: 'center' },
 
-  // ── Title input ──────────────────────────────────────────────────────────
-  // Large, prominent — first thing the user sees
   titleInput: {
-    backgroundColor: '#fff',
-    borderRadius: 12,
-    padding: 16,
-    fontSize: 20,
-    fontWeight: '600',
-    color: '#1d1d1f',
-    marginBottom: 12,
-    shadowColor: '#000',
-    shadowOpacity: 0.04,
-    shadowRadius: 4,
-    shadowOffset: { width: 0, height: 2 },
-    elevation: 1,
+    backgroundColor: c.surface, borderRadius: 12, padding: 16,
+    fontSize: 20, fontWeight: '600', color: c.text, marginBottom: 12,
+    shadowColor: '#000', shadowOpacity: 0.04, shadowRadius: 4,
+    shadowOffset: { width: 0, height: 2 }, elevation: 1,
   },
 
-  // ── White card (groups related fields) ───────────────────────────────────
   card: {
-    backgroundColor: '#fff',
-    borderRadius: 12,
-    padding: 14,
-    marginBottom: 12,
-    shadowColor: '#000',
-    shadowOpacity: 0.04,
-    shadowRadius: 4,
-    shadowOffset: { width: 0, height: 2 },
-    elevation: 1,
+    backgroundColor: c.surface, borderRadius: 12, padding: 14, marginBottom: 12,
+    shadowColor: '#000', shadowOpacity: 0.04, shadowRadius: 4,
+    shadowOffset: { width: 0, height: 2 }, elevation: 1,
   },
-  cardDivider: {
-    height: 1,
-    backgroundColor: '#f2f2f7',
-    marginVertical: 10,
-  },
+  cardDivider: { height: 1, backgroundColor: c.separator, marginVertical: 10 },
 
-  // ── Toggle row ────────────────────────────────────────────────────────────
-  toggleRow: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    justifyContent: 'space-between',
-    paddingVertical: 6,
-  },
-  toggleLabel: {
-    fontSize: 15,
-    color: '#1d1d1f',
-    fontWeight: '500',
-  },
+  toggleRow: { flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between', paddingVertical: 6 },
+  toggleLabel: { fontSize: 15, color: c.text, fontWeight: '500' },
 
-  // ── Date picker row ───────────────────────────────────────────────────────
-  dateRow: {
-    paddingVertical: 4,
-  },
-  dateLabel: {
-    fontSize: 12,
-    fontWeight: '600',
-    color: '#888',
-    textTransform: 'uppercase',
-    letterSpacing: 0.5,
-    marginBottom: 6,
-  },
+  dateRow: { paddingVertical: 4 },
+  dateLabel: { fontSize: 12, fontWeight: '600', color: c.textSub, textTransform: 'uppercase', letterSpacing: 0.5, marginBottom: 6 },
   dateBtn: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    justifyContent: 'space-between',
-    backgroundColor: '#f5f5f7',
-    borderRadius: 10,
-    padding: 12,
+    flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between',
+    backgroundColor: c.surface2, borderRadius: 10, padding: 12,
   },
-  dateBtnText: {
-    fontSize: 15,
-    color: '#1d1d1f',
-    fontWeight: '500',
-  },
-  picker: {
-    marginTop: 8,
-  },
+  dateBtnText: { fontSize: 15, color: c.text, fontWeight: '500' },
+  picker: { marginTop: 8 },
 
-  // ── Field label ───────────────────────────────────────────────────────────
-  fieldLabel: {
-    fontSize: 12,
-    fontWeight: '600',
-    color: '#888',
-    textTransform: 'uppercase',
-    letterSpacing: 0.5,
-    marginBottom: 10,
-  },
+  fieldLabel: { fontSize: 12, fontWeight: '600', color: c.textSub, textTransform: 'uppercase', letterSpacing: 0.5, marginBottom: 10 },
 
-  // ── Segment control (repeat / priority) ──────────────────────────────────
-  segmentRow: {
-    flexDirection: 'row',
-    flexWrap: 'wrap',
-    gap: 6,
-  },
-  segment: {
-    paddingVertical: 6,
-    paddingHorizontal: 12,
-    borderRadius: 20,
-    backgroundColor: '#f2f2f7',
-  },
-  segmentFlex: {
-    flex: 1,
-    alignItems: 'center',
-  },
-  segmentActive: {
-    backgroundColor: '#1a8fa8',
-  },
-  segmentText: {
-    fontSize: 13,
-    color: '#555',
-    fontWeight: '500',
-  },
-  segmentTextActive: {
-    color: '#fff',
-    fontWeight: '600',
-  },
+  segmentRow: { flexDirection: 'row', flexWrap: 'wrap', gap: 6 },
+  segment: { paddingVertical: 6, paddingHorizontal: 12, borderRadius: 20, backgroundColor: c.surface2 },
+  segmentFlex: { flex: 1, alignItems: 'center' },
+  segmentActive: { backgroundColor: '#1a8fa8' },
+  segmentText: { fontSize: 13, color: c.textSub, fontWeight: '500' },
+  segmentTextActive: { color: '#fff', fontWeight: '600' },
 
-  // ── Category grid ─────────────────────────────────────────────────────────
-  categoryGrid: {
-    flexDirection: 'row',
-    flexWrap: 'wrap',
-    gap: 8,
-  },
+  categoryGrid: { flexDirection: 'row', flexWrap: 'wrap', gap: 8 },
   categoryChip: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    gap: 4,
-    paddingVertical: 6,
-    paddingHorizontal: 12,
-    borderRadius: 20,
-    backgroundColor: '#f2f2f7',
-    borderWidth: 1,
-    borderColor: 'transparent',
+    flexDirection: 'row', alignItems: 'center', gap: 4,
+    paddingVertical: 6, paddingHorizontal: 12, borderRadius: 20,
+    backgroundColor: c.surface2, borderWidth: 1, borderColor: 'transparent',
   },
-  categoryIcon: {
-    fontSize: 14,
-  },
-  categoryLabel: {
-    fontSize: 13,
-    color: '#555',
-    fontWeight: '500',
-  },
+  categoryIcon: { fontSize: 14 },
+  categoryLabel: { fontSize: 13, color: c.textSub, fontWeight: '500' },
 
-  // ── Attendees ─────────────────────────────────────────────────────────────
-  attendeeRow: {
-    flexDirection: 'row',
-    flexWrap: 'wrap',
-    gap: 12,
-  },
-  attendeeBubble: {
-    alignItems: 'center',
-    width: 52,
-  },
+  attendeeRow: { flexDirection: 'row', flexWrap: 'wrap', gap: 12 },
+  attendeeBubble: { alignItems: 'center', width: 52 },
   attendeeCircle: {
-    width: 44,
-    height: 44,
-    borderRadius: 22,
-    alignItems: 'center',
-    justifyContent: 'center',
-    borderWidth: 2,
-    borderColor: 'transparent',
+    width: 44, height: 44, borderRadius: 22,
+    alignItems: 'center', justifyContent: 'center',
+    borderWidth: 2, borderColor: 'transparent',
   },
   attendeeCircleSelected: {
-    borderColor: '#fff',
-    shadowColor: '#000',
-    shadowOpacity: 0.2,
-    shadowRadius: 4,
-    shadowOffset: { width: 0, height: 2 },
-    elevation: 4,
+    borderColor: '#fff', shadowColor: '#000', shadowOpacity: 0.2,
+    shadowRadius: 4, shadowOffset: { width: 0, height: 2 }, elevation: 4,
   },
-  attendeeInitials: {
-    color: '#fff',
-    fontWeight: '700',
-    fontSize: 14,
-  },
-  // Small tick badge on the bottom-right of selected attendee
+  attendeeInitials: { color: '#fff', fontWeight: '700', fontSize: 14 },
   attendeeTick: {
-    position: 'absolute',
-    bottom: -2,
-    right: -2,
-    backgroundColor: '#34c759',
-    borderRadius: 8,
-    width: 16,
-    height: 16,
-    alignItems: 'center',
-    justifyContent: 'center',
-    borderWidth: 1.5,
-    borderColor: '#fff',
+    position: 'absolute', bottom: -2, right: -2,
+    backgroundColor: '#34c759', borderRadius: 8, width: 16, height: 16,
+    alignItems: 'center', justifyContent: 'center',
+    borderWidth: 1.5, borderColor: '#fff',
   },
-  attendeeName: {
-    fontSize: 11,
-    color: '#555',
-    marginTop: 4,
-    maxWidth: 52,
-    textAlign: 'center',
-  },
+  attendeeName: { fontSize: 11, color: c.textSub, marginTop: 4, maxWidth: 52, textAlign: 'center' },
 
-  // ── Tasks ─────────────────────────────────────────────────────────────────
-  taskRow: {
-    borderTopWidth: 1,
-    borderTopColor: '#f2f2f7',
-    paddingTop: 10,
-    marginTop: 4,
-    marginBottom: 4,
-  },
+  taskRow: { borderTopWidth: 1, borderTopColor: c.separator, paddingTop: 10, marginTop: 4, marginBottom: 4 },
   taskTitleInput: {
-    backgroundColor: '#f5f5f7',
-    borderRadius: 8,
-    padding: 10,
-    fontSize: 14,
-    color: '#1d1d1f',
-    marginBottom: 8,
+    backgroundColor: c.surface2, borderRadius: 8, padding: 10,
+    fontSize: 14, color: c.text, marginBottom: 8,
   },
-  taskAssignRow: {
-    flexDirection: 'row',
-    marginBottom: 8,
-  },
-  taskPositionRow: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    gap: 6,
-  },
-  assignChip: {
-    paddingVertical: 4,
-    paddingHorizontal: 10,
-    borderRadius: 14,
-    backgroundColor: '#f2f2f7',
-    marginRight: 6,
-  },
-  assignChipActive: {
-    backgroundColor: '#1a8fa8',
-  },
-  assignChipText: {
-    fontSize: 12,
-    color: '#555',
-    fontWeight: '500',
-  },
-  assignChipTextActive: {
-    color: '#fff',
-    fontWeight: '600',
-  },
-  posChip: {
-    paddingVertical: 4,
-    paddingHorizontal: 10,
-    borderRadius: 14,
-    backgroundColor: '#f2f2f7',
-  },
-  posChipActive: {
-    backgroundColor: '#1a8fa8',
-  },
-  posChipText: {
-    fontSize: 12,
-    color: '#555',
-    fontWeight: '500',
-  },
-  posChipTextActive: {
-    color: '#fff',
-    fontWeight: '600',
-  },
-  taskRemoveBtn: {
-    marginLeft: 'auto',
-    padding: 2,
-  },
-  addTaskBtn: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    gap: 6,
-    marginTop: 10,
-    paddingVertical: 6,
-  },
-  addTaskText: {
-    fontSize: 14,
-    color: '#1a8fa8',
-    fontWeight: '600',
-  },
+  taskAssignRow: { flexDirection: 'row', marginBottom: 8 },
+  taskPositionRow: { flexDirection: 'row', alignItems: 'center', gap: 6 },
+  assignChip: { paddingVertical: 4, paddingHorizontal: 10, borderRadius: 14, backgroundColor: c.surface2, marginRight: 6 },
+  assignChipActive: { backgroundColor: '#1a8fa8' },
+  assignChipText: { fontSize: 12, color: c.textSub, fontWeight: '500' },
+  assignChipTextActive: { color: '#fff', fontWeight: '600' },
+  posChip: { paddingVertical: 4, paddingHorizontal: 10, borderRadius: 14, backgroundColor: c.surface2 },
+  posChipActive: { backgroundColor: '#1a8fa8' },
+  posChipText: { fontSize: 12, color: c.textSub, fontWeight: '500' },
+  posChipTextActive: { color: '#fff', fontWeight: '600' },
+  taskRemoveBtn: { marginLeft: 'auto', padding: 2 },
+  addTaskBtn: { flexDirection: 'row', alignItems: 'center', gap: 6, marginTop: 10, paddingVertical: 6 },
+  addTaskText: { fontSize: 14, color: '#1a8fa8', fontWeight: '600' },
 
-  // ── Text inputs ───────────────────────────────────────────────────────────
-  textInput: {
-    backgroundColor: '#f5f5f7',
-    borderRadius: 10,
-    padding: 12,
-    fontSize: 15,
-    color: '#1d1d1f',
-  },
-  textArea: {
-    minHeight: 80,
-    textAlignVertical: 'top',
-  },
+  textInput: { backgroundColor: c.surface2, borderRadius: 10, padding: 12, fontSize: 15, color: c.text },
+  textArea: { minHeight: 80, textAlignVertical: 'top' },
 
-  // ── Colour picker ─────────────────────────────────────────────────────────
-  colorRow: {
-    flexDirection: 'row',
-    gap: 10,
-    flexWrap: 'wrap',
-  },
-  colorDot: {
-    width: 32,
-    height: 32,
-    borderRadius: 16,
-    alignItems: 'center',
-    justifyContent: 'center',
-  },
+  colorRow: { flexDirection: 'row', gap: 10, flexWrap: 'wrap' },
+  colorDot: { width: 32, height: 32, borderRadius: 16, alignItems: 'center', justifyContent: 'center' },
   colorDotSelected: {
-    transform: [{ scale: 1.2 }],
-    shadowColor: '#000',
-    shadowOpacity: 0.2,
-    shadowRadius: 4,
-    shadowOffset: { width: 0, height: 2 },
-    elevation: 4,
+    transform: [{ scale: 1.2 }], shadowColor: '#000',
+    shadowOpacity: 0.2, shadowRadius: 4, shadowOffset: { width: 0, height: 2 }, elevation: 4,
   },
 
-  // ── Submit button ─────────────────────────────────────────────────────────
-  submitBtn: {
-    backgroundColor: '#1a8fa8',
-    borderRadius: 14,
-    padding: 16,
-    alignItems: 'center',
-    marginTop: 8,
-  },
-  submitBtnDisabled: {
-    opacity: 0.6,
-  },
-  submitBtnText: {
-    color: '#fff',
-    fontSize: 16,
-    fontWeight: '700',
-  },
-
+  submitBtn: { backgroundColor: '#1a8fa8', borderRadius: 14, padding: 16, alignItems: 'center', marginTop: 8 },
+  submitBtnDisabled: { opacity: 0.6 },
+  submitBtnText: { color: '#fff', fontSize: 16, fontWeight: '700' },
 });
 
-export default styles;
+const lightStyles = make(LIGHT);
+const darkStyles  = make(DARK);
+
+export function useStyles() {
+  return useColorScheme() === 'dark' ? darkStyles : lightStyles;
+}
+export default lightStyles;

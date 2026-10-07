@@ -5,12 +5,13 @@ import {
   ScrollView,
   TouchableOpacity,
   ActivityIndicator,
-  StyleSheet,
   Dimensions,
 } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { Ionicons } from '@expo/vector-icons';
+import { useTranslation } from 'react-i18next';
 import API from '../api/axios';
+import { useStyles } from '../styles/DayViewScreen.styles';
 
 // ─── Constants ───────────────────────────────────────────────────────────────
 
@@ -37,7 +38,7 @@ function formatHour(h) {
 }
 
 function dateLabel(date) {
-  return date.toLocaleDateString('en-GB', {
+  return date.toLocaleDateString(undefined, {
     weekday: 'long', day: 'numeric', month: 'long',
   });
 }
@@ -59,6 +60,8 @@ function eventGeometry(event) {
 // ─── DayViewScreen ───────────────────────────────────────────────────────────
 
 export default function DayViewScreen({ route, navigation }) {
+  const { t } = useTranslation();
+  const styles = useStyles();
   const { dateStr } = route.params;
   const date = new Date(dateStr);
   date.setHours(0, 0, 0, 0);
@@ -80,6 +83,12 @@ export default function DayViewScreen({ route, navigation }) {
   }, [dateStr]);
 
   useEffect(() => { fetchEvents(); }, [fetchEvents]);
+
+  // Re-fetch when returning from EventForm (after creating/editing an event)
+  useEffect(() => {
+    const unsubscribe = navigation.addListener('focus', fetchEvents);
+    return unsubscribe;
+  }, [navigation, fetchEvents]);
 
   // Scroll to current hour (or 8am) after load
   useEffect(() => {
@@ -116,7 +125,7 @@ export default function DayViewScreen({ route, navigation }) {
             {/* ── All-day strip ── */}
             {allDay.length > 0 && (
               <View style={styles.allDayRow}>
-                <Text style={styles.allDayLabel}>All day</Text>
+                <Text style={styles.allDayLabel}>{t('common.all_day')}</Text>
                 <View style={styles.allDayEvents}>
                   {allDay.map(ev => (
                     <TouchableOpacity
@@ -135,12 +144,22 @@ export default function DayViewScreen({ route, navigation }) {
             <ScrollView ref={scrollRef} showsVerticalScrollIndicator={false}>
               <View style={styles.grid}>
 
-                {/* Hour rows */}
+                {/* Hour rows — long-press a slot to create an event at that time */}
                 {HOURS.map(h => (
-                  <View key={h} style={styles.hourRow}>
+                  <TouchableOpacity
+                    key={h}
+                    style={styles.hourRow}
+                    activeOpacity={1}
+                    delayLongPress={400}
+                    onLongPress={() => {
+                      const d = new Date(date);
+                      d.setHours(h, 0, 0, 0);
+                      navigation.navigate('EventForm', { date: d.toISOString() });
+                    }}
+                  >
                     <Text style={styles.hourLabel}>{formatHour(h)}</Text>
                     <View style={styles.hourLine} />
-                  </View>
+                  </TouchableOpacity>
                 ))}
 
                 {/* Current time indicator */}
@@ -184,7 +203,7 @@ export default function DayViewScreen({ route, navigation }) {
 
                 {/* Empty state */}
                 {timed.length === 0 && allDay.length === 0 && (
-                  <Text style={styles.empty}>No events</Text>
+                  <Text style={styles.empty}>{t('dayview.no_events')}</Text>
                 )}
 
               </View>
@@ -197,110 +216,3 @@ export default function DayViewScreen({ route, navigation }) {
   );
 }
 
-// ─── Styles ───────────────────────────────────────────────────────────────────
-
-const styles = StyleSheet.create({
-  page: { flex: 1, backgroundColor: '#f2f2f7' },
-  safe: { flex: 1 },
-
-  header: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    justifyContent: 'space-between',
-    paddingHorizontal: 8,
-    paddingVertical: 10,
-    backgroundColor: '#fff',
-    borderBottomWidth: 1,
-    borderBottomColor: '#e5e5ea',
-  },
-  back:  { width: 40, alignItems: 'center' },
-  title: { fontSize: 16, fontWeight: '700', color: '#1d1d1f', flex: 1, textAlign: 'center' },
-
-  allDayRow: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    backgroundColor: '#fff',
-    borderBottomWidth: 1,
-    borderBottomColor: '#e5e5ea',
-    paddingHorizontal: 12,
-    paddingVertical: 8,
-    gap: 8,
-  },
-  allDayLabel:  { fontSize: 11, color: '#8e8e93', width: TIME_COL - 12 },
-  allDayEvents: { flex: 1, flexDirection: 'row', flexWrap: 'wrap', gap: 4 },
-  allDayChip: {
-    borderRadius: 6,
-    paddingHorizontal: 8,
-    paddingVertical: 3,
-  },
-  allDayChipText: { color: '#fff', fontSize: 12, fontWeight: '600' },
-
-  grid: {
-    position: 'relative',
-    backgroundColor: '#fff',
-    marginTop: 4,
-  },
-
-  hourRow: {
-    height: HOUR_HEIGHT,
-    flexDirection: 'row',
-    alignItems: 'flex-start',
-    paddingTop: 0,
-  },
-  hourLabel: {
-    width: TIME_COL,
-    fontSize: 11,
-    color: '#8e8e93',
-    textAlign: 'right',
-    paddingRight: 8,
-    marginTop: -6,
-  },
-  hourLine: {
-    flex: 1,
-    height: 1,
-    backgroundColor: '#e5e5ea',
-    marginTop: 0,
-  },
-
-  nowLine: {
-    position: 'absolute',
-    left: 0,
-    right: 0,
-    flexDirection: 'row',
-    alignItems: 'center',
-    zIndex: 10,
-  },
-  nowDot: {
-    width: 8,
-    height: 8,
-    borderRadius: 4,
-    backgroundColor: '#ff3b30',
-    marginLeft: TIME_COL - 4,
-  },
-  nowBar: {
-    flex: 1,
-    height: 1.5,
-    backgroundColor: '#ff3b30',
-  },
-
-  eventBlock: {
-    position: 'absolute',
-    borderLeftWidth: 3,
-    borderRadius: 4,
-    paddingHorizontal: 6,
-    paddingVertical: 4,
-    overflow: 'hidden',
-  },
-  eventTitle: { fontSize: 12, fontWeight: '700', lineHeight: 16 },
-  eventTime:  { fontSize: 10, fontWeight: '500', lineHeight: 14, marginTop: 1 },
-
-  empty: {
-    textAlign: 'center',
-    color: '#aeaeb2',
-    fontSize: 14,
-    marginTop: 80,
-    position: 'absolute',
-    left: 0,
-    right: 0,
-  },
-});

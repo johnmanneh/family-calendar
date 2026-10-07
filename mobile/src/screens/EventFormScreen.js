@@ -13,9 +13,10 @@ import {
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { Ionicons } from '@expo/vector-icons';
 import DateTimePicker from '@react-native-community/datetimepicker';
+import { useTranslation } from 'react-i18next';
 import API from '../api/axios';
 import { useFamily } from '../context/FamilyContext';
-import styles from '../styles/EventFormScreen.styles';
+import { useStyles } from '../styles/EventFormScreen.styles';
 
 // ─── Constants ────────────────────────────────────────────────────────────────
 
@@ -31,11 +32,11 @@ const CATEGORIES = [
 ];
 
 const RECURRENCE_OPTIONS = [
-  { label: 'Does not repeat', value: '' },
-  { label: 'Daily',           value: 'daily' },
-  { label: 'Weekly',          value: 'weekly' },
-  { label: 'Monthly',         value: 'monthly' },
-  { label: 'Yearly',          value: 'yearly' },
+  { labelKey: 'events.does_not_repeat', value: '' },
+  { labelKey: 'events.daily',           value: 'daily' },
+  { labelKey: 'events.weekly',          value: 'weekly' },
+  { labelKey: 'events.monthly',         value: 'monthly' },
+  { labelKey: 'events.yearly',          value: 'yearly' },
 ];
 
 const PRIORITY_OPTIONS = ['low', 'medium', 'high'];
@@ -72,9 +73,9 @@ function toDateOnly(date) {
 // Human-readable label shown on the date/time row buttons
 function formatDisplay(date, allDay) {
   if (allDay) {
-    return date.toLocaleDateString('en-GB', { weekday: 'short', day: 'numeric', month: 'short', year: 'numeric' });
+    return date.toLocaleDateString(undefined, { weekday: 'short', day: 'numeric', month: 'short', year: 'numeric' });
   }
-  return date.toLocaleString('en-GB', { weekday: 'short', day: 'numeric', month: 'short', hour: '2-digit', minute: '2-digit' });
+  return date.toLocaleString(undefined, { weekday: 'short', day: 'numeric', month: 'short', hour: '2-digit', minute: '2-digit' });
 }
 
 // ─── DatePicker row ───────────────────────────────────────────────────────────
@@ -82,6 +83,7 @@ function formatDisplay(date, allDay) {
 // We keep a piece of state for which picker is open (null / 'start' / 'end' / 'recurrenceEnd').
 
 function DateRow({ label, date, allDay, pickerKey, openPicker, setOpenPicker, onChange }) {
+  const styles = useStyles();
   const isOpen = openPicker === pickerKey;
 
   return (
@@ -115,18 +117,39 @@ function DateRow({ label, date, allDay, pickerKey, openPicker, setOpenPicker, on
 // ─── EventFormScreen ──────────────────────────────────────────────────────────
 
 export default function EventFormScreen({ route, navigation }) {
-  // event is passed when editing; undefined when creating
-  const { event } = route.params || {};
+  const { t } = useTranslation();
+  const styles = useStyles();
+  // event is passed when editing; date (ISO string) is passed from DayView for new events;
+  // prefill is passed from VoiceCapture with { title, date, time, location }
+  const { event, date: prefillDate, prefill } = route.params || {};
   const isEdit = !!event;
 
   const { members } = useFamily();
 
   // ── Form state ────────────────────────────────────────────────────────────
-  const start = isEdit ? new Date(event.start_date) : defaultStart();
+  // Priority order for start date: edit event → prefill.date+time → prefillDate → now
+  function buildStartFromPrefill() {
+    if (!prefill?.date) return prefillDate ? new Date(prefillDate) : defaultStart();
+    const d = new Date(prefill.date);            // YYYY-MM-DD → midnight local
+    if (prefill.time) {
+      const [h, m] = prefill.time.split(':').map(Number);
+      d.setHours(h, m, 0, 0);
+    } else {
+      // No time given — default to current hour
+      const now = new Date();
+      d.setHours(now.getHours(), 0, 0, 0);
+    }
+    return d;
+  }
+
+  const start = isEdit
+    ? new Date(event.start_date)
+    : buildStartFromPrefill();
+
   const [formData, setFormData] = useState({
-    title:                isEdit ? event.title           || '' : '',
+    title:                isEdit ? event.title           || '' : (prefill?.title    || ''),
     description:          isEdit ? event.description     || '' : '',
-    location:             isEdit ? event.location        || '' : '',
+    location:             isEdit ? event.location        || '' : (prefill?.location || ''),
     notes:                isEdit ? event.notes           || '' : '',
     video_call_link:      isEdit ? event.video_call_link || '' : '',
     priority:             isEdit ? event.priority        || 'medium' : 'medium',
@@ -188,7 +211,7 @@ export default function EventFormScreen({ route, navigation }) {
 
   const handleSubmit = async () => {
     if (!formData.title.trim()) {
-      setError('Title is required');
+      setError(t('events.title_required'));
       return;
     }
     setError('');
@@ -253,7 +276,7 @@ export default function EventFormScreen({ route, navigation }) {
 
       navigation.goBack();
     } catch (err) {
-      setError(err.response?.data?.message || 'Something went wrong');
+      setError(err.response?.data?.message || t('common.something_went_wrong'));
     } finally {
       setLoading(false);
     }
@@ -281,7 +304,7 @@ export default function EventFormScreen({ route, navigation }) {
         <TouchableOpacity style={styles.backBtn} onPress={() => navigation.goBack()}>
           <Ionicons name="chevron-back" size={24} color="#1d1d1f" />
         </TouchableOpacity>
-        <Text style={styles.headerTitle}>{isEdit ? 'Edit Event' : 'New Event'}</Text>
+        <Text style={styles.headerTitle}>{isEdit ? t('events.edit_event') : t('events.new_event')}</Text>
         {/* Save button on the right */}
         <TouchableOpacity
           style={[styles.saveHeaderBtn, loading && styles.saveHeaderBtnDisabled]}
@@ -290,7 +313,7 @@ export default function EventFormScreen({ route, navigation }) {
         >
           {loading
             ? <ActivityIndicator size="small" color="#1a8fa8" />
-            : <Text style={styles.saveHeaderBtnText}>Save</Text>
+            : <Text style={styles.saveHeaderBtnText}>{t('common.save')}</Text>
           }
         </TouchableOpacity>
       </View>
@@ -309,7 +332,7 @@ export default function EventFormScreen({ route, navigation }) {
         {/* ── Title ── */}
         <TextInput
           style={styles.titleInput}
-          placeholder="Event title"
+          placeholder={t('events.title_placeholder')}
           placeholderTextColor="#aaa"
           value={formData.title}
           onChangeText={v => set('title', v)}
@@ -319,7 +342,7 @@ export default function EventFormScreen({ route, navigation }) {
         {/* ── Toggles ── */}
         <View style={styles.card}>
           <View style={styles.toggleRow}>
-            <Text style={styles.toggleLabel}>All Day</Text>
+            <Text style={styles.toggleLabel}>{t('events.all_day')}</Text>
             <Switch
               value={formData.is_all_day}
               onValueChange={handleAllDayToggle}
@@ -328,7 +351,7 @@ export default function EventFormScreen({ route, navigation }) {
             />
           </View>
           <View style={[styles.toggleRow, { borderTopWidth: 1, borderTopColor: '#f2f2f7' }]}>
-            <Text style={styles.toggleLabel}>🔒 Private</Text>
+            <Text style={styles.toggleLabel}>🔒 {t('events.is_private')}</Text>
             <Switch
               value={formData.is_private}
               onValueChange={v => set('is_private', v)}
@@ -341,7 +364,7 @@ export default function EventFormScreen({ route, navigation }) {
         {/* ── Dates ── */}
         <View style={styles.card}>
           <DateRow
-            label="Start"
+            label={t('events.start')}
             date={startDate}
             allDay={formData.is_all_day}
             pickerKey="start"
@@ -351,7 +374,7 @@ export default function EventFormScreen({ route, navigation }) {
           />
           <View style={styles.cardDivider} />
           <DateRow
-            label="End"
+            label={t('events.end')}
             date={endDate}
             allDay={formData.is_all_day}
             pickerKey="end"
@@ -363,7 +386,7 @@ export default function EventFormScreen({ route, navigation }) {
 
         {/* ── Repeat ── */}
         <View style={styles.card}>
-          <Text style={styles.fieldLabel}>Repeat</Text>
+          <Text style={styles.fieldLabel}>{t('events.recurrence')}</Text>
           <View style={styles.segmentRow}>
             {RECURRENCE_OPTIONS.map(opt => (
               <TouchableOpacity
@@ -372,7 +395,7 @@ export default function EventFormScreen({ route, navigation }) {
                 onPress={() => set('recurrence', opt.value)}
               >
                 <Text style={[styles.segmentText, formData.recurrence === opt.value && styles.segmentTextActive]}>
-                  {opt.label}
+                  {t(opt.labelKey)}
                 </Text>
               </TouchableOpacity>
             ))}
@@ -382,7 +405,7 @@ export default function EventFormScreen({ route, navigation }) {
             <>
               <View style={styles.cardDivider} />
               <DateRow
-                label="Repeat Until"
+                label={t('events.recurrence_end')}
                 date={recurrenceEnd}
                 allDay={true}
                 pickerKey="recurrenceEnd"
@@ -396,7 +419,7 @@ export default function EventFormScreen({ route, navigation }) {
 
         {/* ── Category ── */}
         <View style={styles.card}>
-          <Text style={styles.fieldLabel}>Category</Text>
+          <Text style={styles.fieldLabel}>{t('events.category')}</Text>
           <View style={styles.categoryGrid}>
             {CATEGORIES.map(cat => (
               <TouchableOpacity
@@ -425,7 +448,7 @@ export default function EventFormScreen({ route, navigation }) {
 
         {/* ── Who's attending ── */}
         <View style={styles.card}>
-          <Text style={styles.fieldLabel}>Who's attending?</Text>
+          <Text style={styles.fieldLabel}>{t('events.attendees')}</Text>
           <View style={styles.attendeeRow}>
             {members.map(m => {
               const initials = [m.first_name?.[0], m.last_name?.[0]].filter(Boolean).join('').toUpperCase();
@@ -458,13 +481,13 @@ export default function EventFormScreen({ route, navigation }) {
 
         {/* ── Tasks ── */}
         <View style={styles.card}>
-          <Text style={styles.fieldLabel}>Tasks</Text>
+          <Text style={styles.fieldLabel}>{t('home.tasks')}</Text>
           {tasks.map((task, i) => (
             <View key={i} style={styles.taskRow}>
               {/* Task title input */}
               <TextInput
                 style={styles.taskTitleInput}
-                placeholder="Task title"
+                placeholder={t('tasks.title_placeholder')}
                 placeholderTextColor="#aaa"
                 value={task.title}
                 onChangeText={v => updateTask(i, 'title', v)}
@@ -477,7 +500,7 @@ export default function EventFormScreen({ route, navigation }) {
                   onPress={() => updateTask(i, 'assigned_to', '')}
                 >
                   <Text style={[styles.assignChipText, task.assigned_to === '' && styles.assignChipTextActive]}>
-                    Anyone
+                    {t('common.all')}
                   </Text>
                 </TouchableOpacity>
                 {members.map(m => (
@@ -502,7 +525,7 @@ export default function EventFormScreen({ route, navigation }) {
                     onPress={() => updateTask(i, 'position', pos)}
                   >
                     <Text style={[styles.posChipText, task.position === pos && styles.posChipTextActive]}>
-                      {pos}
+                      {t(`tasks.${pos}`)}
                     </Text>
                   </TouchableOpacity>
                 ))}
@@ -515,16 +538,16 @@ export default function EventFormScreen({ route, navigation }) {
 
           <TouchableOpacity style={styles.addTaskBtn} onPress={addTask}>
             <Ionicons name="add-circle-outline" size={18} color="#1a8fa8" />
-            <Text style={styles.addTaskText}>Add Task</Text>
+            <Text style={styles.addTaskText}>{t('tasks.new_task')}</Text>
           </TouchableOpacity>
         </View>
 
         {/* ── Location ── */}
         <View style={styles.card}>
-          <Text style={styles.fieldLabel}>Location</Text>
+          <Text style={styles.fieldLabel}>{t('events.location_placeholder')}</Text>
           <TextInput
             style={styles.textInput}
-            placeholder="Add location"
+            placeholder={t('events.location_placeholder')}
             placeholderTextColor="#aaa"
             value={formData.location}
             onChangeText={v => set('location', v)}
@@ -533,7 +556,7 @@ export default function EventFormScreen({ route, navigation }) {
 
         {/* ── Priority ── */}
         <View style={styles.card}>
-          <Text style={styles.fieldLabel}>Priority</Text>
+          <Text style={styles.fieldLabel}>{t('events.priority_label')}</Text>
           <View style={styles.segmentRow}>
             {PRIORITY_OPTIONS.map(p => (
               <TouchableOpacity
@@ -551,7 +574,7 @@ export default function EventFormScreen({ route, navigation }) {
 
         {/* ── Colour ── */}
         <View style={styles.card}>
-          <Text style={styles.fieldLabel}>Colour</Text>
+          <Text style={styles.fieldLabel}>{t('events.color')}</Text>
           <View style={styles.colorRow}>
             {CATEGORIES.map(cat => (
               <TouchableOpacity
@@ -573,10 +596,10 @@ export default function EventFormScreen({ route, navigation }) {
 
         {/* ── Notes ── */}
         <View style={styles.card}>
-          <Text style={styles.fieldLabel}>Notes</Text>
+          <Text style={styles.fieldLabel}>{t('events.notes_placeholder')}</Text>
           <TextInput
             style={[styles.textInput, styles.textArea]}
-            placeholder="Add notes"
+            placeholder={t('events.notes_placeholder')}
             placeholderTextColor="#aaa"
             value={formData.notes}
             onChangeText={v => set('notes', v)}
@@ -587,10 +610,10 @@ export default function EventFormScreen({ route, navigation }) {
 
         {/* ── Video Call Link ── */}
         <View style={styles.card}>
-          <Text style={styles.fieldLabel}>Video Call Link</Text>
+          <Text style={styles.fieldLabel}>{t('events.join_video_call')}</Text>
           <TextInput
             style={styles.textInput}
-            placeholder="https://meet.google.com/..."
+            placeholder={t('events.video_call_placeholder')}
             placeholderTextColor="#aaa"
             value={formData.video_call_link}
             onChangeText={v => set('video_call_link', v)}
@@ -607,7 +630,7 @@ export default function EventFormScreen({ route, navigation }) {
         >
           {loading
             ? <ActivityIndicator color="#fff" />
-            : <Text style={styles.submitBtnText}>{isEdit ? 'Update Event' : 'Add Event'}</Text>
+            : <Text style={styles.submitBtnText}>{isEdit ? t('events.update_event') : t('events.save_event')}</Text>
           }
         </TouchableOpacity>
 

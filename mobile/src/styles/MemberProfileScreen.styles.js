@@ -1,463 +1,177 @@
-import { StyleSheet } from 'react-native';
+import { StyleSheet, useColorScheme } from 'react-native';
+import { LIGHT, DARK } from '../theme';
 
-const styles = StyleSheet.create({
+const make = c => StyleSheet.create({
 
-  container: {
-    flex: 1,
-    backgroundColor: '#f2f2f7',
-  },
+  container: { flex: 1, backgroundColor: c.bg },
 
   // ── Header ───────────────────────────────────────────────────────────────
   header: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    justifyContent: 'space-between',
-    paddingHorizontal: 16,
-    paddingVertical: 10,
-    backgroundColor: '#fff',
-    borderBottomWidth: 1,
-    borderBottomColor: '#e5e5ea',
+    flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between',
+    paddingHorizontal: 16, paddingVertical: 10,
+    backgroundColor: c.surface, borderBottomWidth: 1, borderBottomColor: c.border,
   },
-  backBtn: {
-    padding: 4,
-    width: 40,
-  },
-  headerTitle: {
-    fontSize: 17,
-    fontWeight: '600',
-    color: '#1d1d1f',
-  },
-  // Mirrors backBtn width so the title stays centred
-  headerSpacer: {
-    width: 40,
-  },
+  backBtn: { padding: 4, width: 40 },
+  headerTitle: { fontSize: 17, fontWeight: '600', color: c.text },
+  headerSpacer: { width: 40 },
 
   // ── Profile card ─────────────────────────────────────────────────────────
   profileCard: {
-    alignItems: 'center',
-    backgroundColor: '#fff',
-    paddingVertical: 28,
-    paddingHorizontal: 24,
-    borderBottomWidth: 1,
-    borderBottomColor: '#e5e5ea',
+    alignItems: 'center', backgroundColor: c.surface,
+    paddingVertical: 28, paddingHorizontal: 24,
+    borderBottomWidth: 1, borderBottomColor: c.border,
   },
   avatar: {
-    width: 72,
-    height: 72,
-    borderRadius: 36,
-    alignItems: 'center',
-    justifyContent: 'center',
-    marginBottom: 12,
+    width: 72, height: 72, borderRadius: 36,
+    alignItems: 'center', justifyContent: 'center', marginBottom: 12,
   },
-  avatarText: {
-    color: '#fff',
-    fontSize: 26,
-    fontWeight: '700',
-  },
+  avatarText: { color: '#fff', fontSize: 26, fontWeight: '700' },
 
   // ── Avatar component ──────────────────────────────────────────────────────
-  // Outer touchable — size/radius set inline from `size` prop
-  avatarWrap: {
-    overflow: 'hidden',
-    marginBottom: 12,
-  },
-  // Full-size coloured circle that holds the initials text
-  avatarInitials: {
-    width: '100%',
-    height: '100%',
-    alignItems: 'center',
-    justifyContent: 'center',
-  },
-  // Small camera badge — bottom-right corner
+  avatarWrap: { overflow: 'hidden', marginBottom: 12 },
+  avatarInitials: { width: '100%', height: '100%', alignItems: 'center', justifyContent: 'center' },
   avatarEditBadge: {
-    position: 'absolute',
-    bottom: 2,
-    right: 2,
-    width: 24,
-    height: 24,
-    borderRadius: 12,
-    backgroundColor: '#1a8fa8',
-    alignItems: 'center',
-    justifyContent: 'center',
-    borderWidth: 2,
-    borderColor: '#fff',
+    position: 'absolute', bottom: 2, right: 2,
+    width: 24, height: 24, borderRadius: 12, backgroundColor: '#1a8fa8',
+    alignItems: 'center', justifyContent: 'center',
+    borderWidth: 2, borderColor: c.surface,
   },
-  memberName: {
-    fontSize: 20,
-    fontWeight: '700',
-    color: '#1d1d1f',
-    letterSpacing: -0.3,
-    marginBottom: 4,
-  },
-  memberRelationship: {
-    fontSize: 13,
-    color: '#1a8fa8',
-    fontWeight: '500',
-    marginBottom: 2,
-  },
-  memberEmail: {
-    fontSize: 13,
-    color: '#aeaeb2',
-  },
+  memberName: { fontSize: 20, fontWeight: '700', color: c.text, letterSpacing: -0.3, marginBottom: 4 },
+  memberRelationship: { fontSize: 13, color: '#1a8fa8', fontWeight: '500', marginBottom: 2 },
+  memberEmail: { fontSize: 13, color: c.textMuted },
 
   // ── Tab bar ──────────────────────────────────────────────────────────────
   tabBar: {
-    flexDirection: 'row',
-    backgroundColor: '#fff',
-    borderBottomWidth: 1,
-    borderBottomColor: '#e5e5ea',
+    flexDirection: 'row', backgroundColor: c.surface,
+    borderBottomWidth: 1, borderBottomColor: c.border,
   },
   tab: {
-    flex: 1,
-    paddingVertical: 12,
-    alignItems: 'center',
-    borderBottomWidth: 2,
-    borderBottomColor: 'transparent',
+    flex: 1, paddingVertical: 12, alignItems: 'center',
+    borderBottomWidth: 2, borderBottomColor: 'transparent',
   },
-  tabActive: {
-    borderBottomColor: '#1a8fa8',
-  },
-  tabLabel: {
-    fontSize: 14,
-    fontWeight: '500',
-    color: '#aeaeb2',
-  },
-  tabLabelActive: {
-    color: '#1a8fa8',
-    fontWeight: '600',
-  },
+  tabActive: { borderBottomColor: '#1a8fa8' },
+  tabLabel: { fontSize: 14, fontWeight: '500', color: c.textMuted },
+  tabLabelActive: { color: '#1a8fa8', fontWeight: '600' },
 
   // ── Scroll content ───────────────────────────────────────────────────────
-  scroll: {
-    flex: 1,
-  },
-  scrollContent: {
-    paddingHorizontal: 16,
-    paddingTop: 16,
-    paddingBottom: 40,
-  },
-  spinner: {
-    marginTop: 60,
-  },
+  scroll: { flex: 1 },
+  scrollContent: { paddingHorizontal: 16, paddingTop: 16, paddingBottom: 40 },
+  spinner: { marginTop: 60 },
 
   // ── Section header ───────────────────────────────────────────────────────
   sectionHeader: {
-    fontSize: 13,
-    fontWeight: '600',
-    color: '#888',
-    textTransform: 'uppercase',
-    letterSpacing: 0.5,
-    marginBottom: 8,
+    fontSize: 13, fontWeight: '600', color: c.textMuted,
+    textTransform: 'uppercase', letterSpacing: 0.5, marginBottom: 8,
   },
 
   // ── Event row ────────────────────────────────────────────────────────────
   eventRow: {
-    flexDirection: 'row',
-    backgroundColor: '#fff',
-    borderRadius: 10,
-    marginBottom: 8,
-    overflow: 'hidden',
-    shadowColor: '#000',
-    shadowOpacity: 0.04,
-    shadowRadius: 4,
-    shadowOffset: { width: 0, height: 2 },
-    elevation: 1,
+    flexDirection: 'row', backgroundColor: c.surface,
+    borderRadius: 10, marginBottom: 8, overflow: 'hidden',
+    shadowColor: '#000', shadowOpacity: 0.04, shadowRadius: 4,
+    shadowOffset: { width: 0, height: 2 }, elevation: 1,
   },
-  eventStripe: {
-    width: 4,
-  },
-  eventBody: {
-    flex: 1,
-    padding: 12,
-  },
-  eventTitle: {
-    fontSize: 15,
-    fontWeight: '600',
-    color: '#111',
-    marginBottom: 2,
-  },
-  eventMeta: {
-    fontSize: 13,
-    color: '#888',
-  },
+  eventStripe: { width: 4 },
+  eventBody: { flex: 1, padding: 12 },
+  eventTitle: { fontSize: 15, fontWeight: '600', color: c.text, marginBottom: 2 },
+  eventMeta: { fontSize: 13, color: c.textSub },
 
   // ── Task row ─────────────────────────────────────────────────────────────
   taskRow: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    backgroundColor: '#fff',
-    borderRadius: 10,
-    marginBottom: 8,
-    padding: 12,
-    shadowColor: '#000',
-    shadowOpacity: 0.04,
-    shadowRadius: 4,
-    shadowOffset: { width: 0, height: 2 },
-    elevation: 1,
+    flexDirection: 'row', alignItems: 'center', backgroundColor: c.surface,
+    borderRadius: 10, marginBottom: 8, padding: 12,
+    shadowColor: '#000', shadowOpacity: 0.04, shadowRadius: 4,
+    shadowOffset: { width: 0, height: 2 }, elevation: 1,
   },
-  taskDot: {
-    width: 10,
-    height: 10,
-    borderRadius: 5,
-    marginRight: 12,
-    flexShrink: 0,
-  },
-  taskBody: {
-    flex: 1,
-  },
-  taskTitle: {
-    fontSize: 15,
-    fontWeight: '600',
-    color: '#111',
-    marginBottom: 2,
-  },
-  taskMeta: {
-    fontSize: 12,
-    color: '#888',
-  },
-  taskStatus: {
-    fontSize: 11,
-    fontWeight: '600',
-    color: '#aeaeb2',
-    textTransform: 'capitalize',
-    marginLeft: 8,
-  },
+  taskDot: { width: 10, height: 10, borderRadius: 5, marginRight: 12, flexShrink: 0 },
+  taskBody: { flex: 1 },
+  taskTitle: { fontSize: 15, fontWeight: '600', color: c.text, marginBottom: 2 },
+  taskMeta: { fontSize: 12, color: c.textSub },
+  taskStatus: { fontSize: 11, fontWeight: '600', color: c.textMuted, textTransform: 'capitalize', marginLeft: 8 },
 
   // ── Empty / placeholder ──────────────────────────────────────────────────
-  emptyText: {
-    fontSize: 14,
-    color: '#aaa',
-    textAlign: 'center',
-    paddingVertical: 16,
-  },
+  emptyText: { fontSize: 14, color: c.textMuted, textAlign: 'center', paddingVertical: 16 },
 
   // ── Settings tab ─────────────────────────────────────────────────────────
   settingsSectionHeader: {
-    fontSize: 13,
-    fontWeight: '600',
-    color: '#888',
-    textTransform: 'uppercase',
-    letterSpacing: 0.5,
-    marginBottom: 8,
+    fontSize: 13, fontWeight: '600', color: c.textMuted,
+    textTransform: 'uppercase', letterSpacing: 0.5, marginBottom: 8,
   },
-
-  // White card grouping for each settings section
   settingsCard: {
-    backgroundColor: '#fff',
-    borderRadius: 12,
-    padding: 16,
-    marginBottom: 16,
-    shadowColor: '#000',
-    shadowOpacity: 0.04,
-    shadowRadius: 4,
-    shadowOffset: { width: 0, height: 2 },
-    elevation: 1,
+    backgroundColor: c.surface, borderRadius: 12, padding: 16, marginBottom: 16,
+    shadowColor: '#000', shadowOpacity: 0.04, shadowRadius: 4,
+    shadowOffset: { width: 0, height: 2 }, elevation: 1,
   },
 
   // ── Family invite code ────────────────────────────────────────────────────
-  familyName: {
-    fontSize: 17,
-    fontWeight: '700',
-    color: '#1d1d1f',
-    marginBottom: 6,
-  },
-  familyLabel: {
-    fontSize: 12,
-    color: '#aeaeb2',
-    marginBottom: 10,
-  },
+  familyName: { fontSize: 17, fontWeight: '700', color: c.text, marginBottom: 6 },
+  familyLabel: { fontSize: 12, color: c.textMuted, marginBottom: 10 },
   inviteRow: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    backgroundColor: '#f5f5f7',
-    borderRadius: 10,
-    paddingVertical: 10,
-    paddingHorizontal: 14,
-    gap: 12,
+    flexDirection: 'row', alignItems: 'center', backgroundColor: c.surface2,
+    borderRadius: 10, paddingVertical: 10, paddingHorizontal: 14, gap: 12,
   },
-  inviteCode: {
-    flex: 1,
-    fontSize: 18,
-    fontWeight: '700',
-    color: '#1d1d1f',
-    letterSpacing: 2,
-  },
+  inviteCode: { flex: 1, fontSize: 18, fontWeight: '700', color: c.text, letterSpacing: 2 },
   copyBtn: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    gap: 4,
-    paddingVertical: 6,
-    paddingHorizontal: 12,
-    backgroundColor: '#fff',
-    borderRadius: 8,
-    borderWidth: 1,
-    borderColor: '#e5e5ea',
+    flexDirection: 'row', alignItems: 'center', gap: 4,
+    paddingVertical: 6, paddingHorizontal: 12,
+    backgroundColor: c.surface, borderRadius: 8, borderWidth: 1, borderColor: c.border,
   },
-  copyBtnText: {
-    fontSize: 13,
-    fontWeight: '600',
-    color: '#1a8fa8',
-  },
+  copyBtnText: { fontSize: 13, fontWeight: '600', color: '#1a8fa8' },
 
   // ── Colour picker ─────────────────────────────────────────────────────────
-  // 7 swatches per row — flex wrap handles it
-  colorGrid: {
-    flexDirection: 'row',
-    flexWrap: 'wrap',
-    gap: 10,
-  },
-  colorSwatch: {
-    width: 36,
-    height: 36,
-    borderRadius: 18,
-    alignItems: 'center',
-    justifyContent: 'center',
-  },
-  // Scale up + white ring on selected swatch
+  colorGrid: { flexDirection: 'row', flexWrap: 'wrap', gap: 10 },
+  colorSwatch: { width: 36, height: 36, borderRadius: 18, alignItems: 'center', justifyContent: 'center' },
   colorSwatchSelected: {
-    transform: [{ scale: 1.15 }],
-    shadowColor: '#000',
-    shadowOpacity: 0.2,
-    shadowRadius: 4,
-    shadowOffset: { width: 0, height: 2 },
-    elevation: 4,
+    transform: [{ scale: 1.15 }], shadowColor: '#000',
+    shadowOpacity: 0.2, shadowRadius: 4, shadowOffset: { width: 0, height: 2 }, elevation: 4,
   },
   colorToggleBtn: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    justifyContent: 'center',
-    gap: 4,
-    marginTop: 10,
-    paddingTop: 8,
-    borderTopWidth: 1,
-    borderTopColor: '#f2f2f7',
+    flexDirection: 'row', alignItems: 'center', justifyContent: 'center', gap: 4,
+    marginTop: 10, paddingTop: 8, borderTopWidth: 1, borderTopColor: c.separator,
   },
-  colorToggleText: {
-    fontSize: 13,
-    color: '#1a8fa8',
-    fontWeight: '500',
-  },
-  savingText: {
-    marginTop: 10,
-    fontSize: 12,
-    color: '#aeaeb2',
-    textAlign: 'center',
-  },
+  colorToggleText: { fontSize: 13, color: '#1a8fa8', fontWeight: '500' },
+  savingText: { marginTop: 10, fontSize: 12, color: c.textMuted, textAlign: 'center' },
 
   // ── Profile info form ──────────────────────────────────────────────────────
-  // First + last name side by side
-  nameRow: {
-    flexDirection: 'row',
-    gap: 10,
-    marginBottom: 4,
-  },
-  nameField: {
-    flex: 1,
-  },
-  inputLabel: {
-    fontSize: 13,
-    fontWeight: '500',
-    color: '#1d1d1f',
-    marginBottom: 6,
-    marginTop: 4,
-  },
+  nameRow: { flexDirection: 'row', gap: 10, marginBottom: 4 },
+  nameField: { flex: 1 },
+  inputLabel: { fontSize: 13, fontWeight: '500', color: c.text, marginBottom: 6, marginTop: 4 },
   settingsInput: {
-    backgroundColor: '#f5f5f7',
-    borderRadius: 10,
-    padding: 12,
-    fontSize: 15,
-    color: '#1d1d1f',
-    marginBottom: 12,
+    backgroundColor: c.surface2, borderRadius: 10, padding: 12,
+    fontSize: 15, color: c.text, marginBottom: 12,
   },
-  errorText: {
-    color: '#ff3b30',
-    fontSize: 13,
-    marginBottom: 8,
-  },
-  successText: {
-    color: '#34c759',
-    fontSize: 13,
-    marginBottom: 8,
-  },
-  saveBtn: {
-    backgroundColor: '#1a8fa8',
-    borderRadius: 10,
-    padding: 14,
-    alignItems: 'center',
-    marginTop: 4,
-  },
-  saveBtnDisabled: {
-    opacity: 0.6,
-  },
-  saveBtnText: {
-    color: '#fff',
-    fontSize: 15,
-    fontWeight: '600',
-  },
+  errorText: { color: '#ff3b30', fontSize: 13, marginBottom: 8 },
+  successText: { color: '#34c759', fontSize: 13, marginBottom: 8 },
+  saveBtn: { backgroundColor: '#1a8fa8', borderRadius: 10, padding: 14, alignItems: 'center', marginTop: 4 },
+  saveBtnDisabled: { opacity: 0.6 },
+  saveBtnText: { color: '#fff', fontSize: 15, fontWeight: '600' },
 
   // ── Admin circle control ──────────────────────────────────────────────────
-  circleRow: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    paddingVertical: 12,
-    gap: 12,
-  },
-  circleRowBorder: {
-    borderBottomWidth: 1,
-    borderBottomColor: '#f2f2f7',
-  },
-  circleRowSelected: {
-    // subtle tint so the selected row is easy to spot
-  },
+  circleRow: { flexDirection: 'row', alignItems: 'center', paddingVertical: 12, gap: 12 },
+  circleRowBorder: { borderBottomWidth: 1, borderBottomColor: c.separator },
+  circleRowSelected: {},
   circleRadio: {
-    width: 20,
-    height: 20,
-    borderRadius: 10,
-    borderWidth: 2,
-    borderColor: '#1a8fa8',
-    alignItems: 'center',
-    justifyContent: 'center',
+    width: 20, height: 20, borderRadius: 10, borderWidth: 2,
+    borderColor: '#1a8fa8', alignItems: 'center', justifyContent: 'center',
   },
-  circleRadioDot: {
-    width: 10,
-    height: 10,
-    borderRadius: 5,
-    backgroundColor: '#1a8fa8',
-  },
-  circleLabel: {
-    fontSize: 15,
-    fontWeight: '600',
-    color: '#1d1d1f',
-    marginBottom: 1,
-  },
-  circleDescription: {
-    fontSize: 12,
-    color: '#8e8e93',
-  },
+  circleRadioDot: { width: 10, height: 10, borderRadius: 5, backgroundColor: '#1a8fa8' },
+  circleLabel: { fontSize: 15, fontWeight: '600', color: c.text, marginBottom: 1 },
+  circleDescription: { fontSize: 12, color: c.icon },
 
   // ── Danger zone ───────────────────────────────────────────────────────────
-  dangerDescription: {
-    fontSize: 13,
-    color: '#6e6e73',
-    marginBottom: 14,
-    lineHeight: 18,
-  },
+  dangerDescription: { fontSize: 13, color: c.textSub, marginBottom: 14, lineHeight: 18 },
   deleteBtn: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    gap: 8,
-    borderWidth: 1,
-    borderColor: '#ff3b30',
-    borderRadius: 10,
-    padding: 12,
-    justifyContent: 'center',
+    flexDirection: 'row', alignItems: 'center', gap: 8,
+    borderWidth: 1, borderColor: '#ff3b30', borderRadius: 10, padding: 12, justifyContent: 'center',
   },
-  deleteBtnText: {
-    color: '#ff3b30',
-    fontSize: 15,
-    fontWeight: '600',
-  },
+  deleteBtnText: { color: '#ff3b30', fontSize: 15, fontWeight: '600' },
 
 });
 
-export default styles;
+const lightStyles = make(LIGHT);
+const darkStyles  = make(DARK);
+
+export function useStyles() {
+  return useColorScheme() === 'dark' ? darkStyles : lightStyles;
+}
+export default lightStyles;

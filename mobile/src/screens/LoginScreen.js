@@ -9,15 +9,18 @@ import {
   ActivityIndicator,
   ScrollView,
 } from 'react-native';
+import { useTranslation } from 'react-i18next';
 import API from '../api/axios';
 import WhenLogo from '../components/WhenLogo';
 import { useAuth } from '../context/AuthContext';
-import styles from '../styles/LoginScreen.styles';
+import { useStyles } from '../styles/LoginScreen.styles';
 
 
 // ─── LoginScreen ─────────────────────────────────────────────────────────────
 
 export default function LoginScreen() {
+  const { t } = useTranslation();
+  const styles = useStyles();
   const { login } = useAuth();
 
   const [mode, setMode] = useState('login'); // 'login' | 'register'
@@ -45,7 +48,7 @@ export default function LoginScreen() {
       const res = await API.post('/auth/login', { email, password });
       await login(res.data.user, res.data.token);
     } catch (err) {
-      setError(err.response?.data?.message || 'Something went wrong');
+      setError(err.response?.data?.message || t('common.something_went_wrong'));
     } finally {
       setLoading(false);
     }
@@ -53,8 +56,8 @@ export default function LoginScreen() {
 
   const handleRegister = async () => {
     setError('');
-    if (!firstName.trim()) { setError('First name is required'); return; }
-    if (!lastName.trim())  { setError('Last name is required');  return; }
+    if (!firstName.trim()) { setError(t('auth.first_name_required')); return; }
+    if (!lastName.trim())  { setError(t('auth.last_name_required'));  return; }
     setLoading(true);
     try {
       const res = await API.post('/auth/register', {
@@ -65,7 +68,7 @@ export default function LoginScreen() {
       });
       await login(res.data.user, res.data.token);
     } catch (err) {
-      setError(err.response?.data?.message || 'Something went wrong');
+      setError(err.response?.data?.message || t('common.something_went_wrong'));
     } finally {
       setLoading(false);
     }
@@ -89,12 +92,12 @@ export default function LoginScreen() {
           </View>
 
           <Text style={styles.heading}>
-            {isLogin ? 'Welcome back' : 'Create your account'}
+            {isLogin ? t('auth.welcome_back') : t('auth.create_account_heading')}
           </Text>
           <Text style={styles.subtitle}>
             {isLogin
-              ? 'Sign in to your family calendar'
-              : 'New to When? Let\'s get you set up'}
+              ? t('auth.sign_in_subtitle')
+              : t('auth.register_subtitle')}
           </Text>
 
           {/* ── Error box ── */}
@@ -108,10 +111,10 @@ export default function LoginScreen() {
           {!isLogin && (
             <View style={styles.nameRow}>
               <View style={styles.nameField}>
-                <Text style={styles.label}>First name</Text>
+                <Text style={styles.label}>{t('auth.first_name')}</Text>
                 <TextInput
                   style={styles.input}
-                  placeholder="John"
+                  placeholder={t('auth.placeholder_first')}
                   placeholderTextColor="#aaa"
                   value={firstName}
                   onChangeText={setFirstName}
@@ -119,10 +122,10 @@ export default function LoginScreen() {
                 />
               </View>
               <View style={styles.nameField}>
-                <Text style={styles.label}>Last name</Text>
+                <Text style={styles.label}>{t('auth.last_name')}</Text>
                 <TextInput
                   style={styles.input}
-                  placeholder="Smith"
+                  placeholder={t('auth.placeholder_last')}
                   placeholderTextColor="#aaa"
                   value={lastName}
                   onChangeText={setLastName}
@@ -133,10 +136,10 @@ export default function LoginScreen() {
           )}
 
           {/* ── Email ── */}
-          <Text style={styles.label}>Email address</Text>
+          <Text style={styles.label}>{t('auth.email')}</Text>
           <TextInput
             style={styles.input}
-            placeholder="you@example.com"
+            placeholder={t('auth.placeholder_email')}
             placeholderTextColor="#aaa"
             value={email}
             onChangeText={setEmail}
@@ -145,7 +148,7 @@ export default function LoginScreen() {
           />
 
           {/* ── Password ── */}
-          <Text style={styles.label}>Password</Text>
+          <Text style={styles.label}>{t('auth.password')}</Text>
           <TextInput
             style={styles.input}
             placeholder="••••••••"
@@ -163,20 +166,20 @@ export default function LoginScreen() {
           >
             {loading
               ? <ActivityIndicator color="#fff" />
-              : <Text style={styles.buttonText}>{isLogin ? 'Sign In' : 'Create Account'}</Text>
+              : <Text style={styles.buttonText}>{isLogin ? t('auth.sign_in') : t('auth.create_account')}</Text>
             }
           </TouchableOpacity>
 
           {/* ── Switch mode link ── */}
           {isLogin ? (
             <TouchableOpacity style={styles.switchRow} onPress={() => switchMode('register')}>
-              <Text style={styles.switchText}>New to When? </Text>
-              <Text style={styles.switchLink}>Create Account</Text>
+              <Text style={styles.switchText}>{t('auth.new_to_when')}</Text>
+              <Text style={styles.switchLink}>{t('auth.create_account')}</Text>
             </TouchableOpacity>
           ) : (
             <TouchableOpacity style={styles.switchRow} onPress={() => switchMode('login')}>
-              <Text style={styles.switchText}>Already have an account? </Text>
-              <Text style={styles.switchLink}>Sign In</Text>
+              <Text style={styles.switchText}>{t('auth.already_have_account')}</Text>
+              <Text style={styles.switchLink}>{t('auth.sign_in')}</Text>
             </TouchableOpacity>
           )}
 

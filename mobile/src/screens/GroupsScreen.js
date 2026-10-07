@@ -13,14 +13,15 @@ import {
 } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { Ionicons } from '@expo/vector-icons';
+import { useTranslation } from 'react-i18next';
 import API from '../api/axios';
-import styles from '../styles/GroupsScreen.styles';
+import { useStyles } from '../styles/GroupsScreen.styles';
 
 // ─── Helpers ─────────────────────────────────────────────────────────────────
 
 function formatDate(dateStr) {
   if (!dateStr) return '';
-  return new Date(dateStr).toLocaleDateString('en-GB', {
+  return new Date(dateStr).toLocaleDateString(undefined, {
     weekday: 'short', day: 'numeric', month: 'short',
   });
 }
@@ -28,6 +29,8 @@ function formatDate(dateStr) {
 // ─── Group detail view ────────────────────────────────────────────────────────
 
 function GroupDetail({ group, onBack, navigation }) {
+  const { t } = useTranslation();
+  const styles = useStyles();
   const [events, setEvents]   = useState([]);
   const [loading, setLoading] = useState(true);
   const [copied, setCopied]   = useState(false);
@@ -50,7 +53,7 @@ function GroupDetail({ group, onBack, navigation }) {
       {/* Back to group list */}
       <TouchableOpacity style={styles.backRow} onPress={onBack}>
         <Ionicons name="chevron-back" size={18} color="#1a8fa8" />
-        <Text style={styles.backRowText}>All Groups</Text>
+        <Text style={styles.backRowText}>{t('groups.all_groups')}</Text>
       </TouchableOpacity>
 
       {/* Group hero */}
@@ -61,32 +64,32 @@ function GroupDetail({ group, onBack, navigation }) {
         <View style={{ flex: 1 }}>
           <Text style={styles.groupHeroName}>{group.name}</Text>
           <Text style={styles.groupHeroMeta}>
-            {group.member_count} member{group.member_count !== '1' ? 's' : ''}
-            {group.role === 'admin' ? '  ·  admin' : ''}
+            {t('groups.members_count', { count: Number(group.member_count) })}
+            {group.role === 'admin' ? `  ·  ${t('groups.admin')}` : ''}
           </Text>
         </View>
       </View>
 
       {/* Invite code */}
       <View style={styles.inviteCard}>
-        <Text style={styles.inviteLabel}>Invite code</Text>
+        <Text style={styles.inviteLabel}>{t('groups.invite_label')}</Text>
         <View style={styles.inviteRow}>
           <Text style={styles.inviteCode}>{group.invite_code}</Text>
           <TouchableOpacity style={styles.copyBtn} onPress={handleCopy}>
             <Ionicons name={copied ? 'checkmark' : 'copy-outline'} size={15} color={copied ? '#34c759' : '#1a8fa8'} />
             <Text style={[styles.copyBtnText, copied && { color: '#34c759' }]}>
-              {copied ? 'Copied!' : 'Copy'}
+              {copied ? t('common.copied') : t('common.copy')}
             </Text>
           </TouchableOpacity>
         </View>
       </View>
 
       {/* Shared events */}
-      <Text style={styles.sectionHeader}>Shared Events</Text>
+      <Text style={styles.sectionHeader}>{t('home.events')}</Text>
       {loading ? (
         <ActivityIndicator color="#1a8fa8" style={{ marginTop: 20 }} />
       ) : events.length === 0 ? (
-        <Text style={styles.emptyText}>No events shared with this group yet.</Text>
+        <Text style={styles.emptyText}>{t('groups.no_events')}</Text>
       ) : (
         <ScrollView contentContainerStyle={{ paddingBottom: 40 }}>
           {events.map(ev => (
@@ -115,6 +118,8 @@ function GroupDetail({ group, onBack, navigation }) {
 // ─── GroupsScreen ─────────────────────────────────────────────────────────────
 
 export default function GroupsScreen({ navigation }) {
+  const { t } = useTranslation();
+  const styles = useStyles();
   const [groups, setGroups]           = useState([]);
   const [loading, setLoading]         = useState(true);
   const [refreshing, setRefreshing]   = useState(false);
@@ -153,7 +158,7 @@ export default function GroupsScreen({ navigation }) {
       setShowCreate(false);
       fetchGroups();
     } catch (err) {
-      Alert.alert('Error', err.response?.data?.message || 'Could not create group');
+      Alert.alert(t('common.error'), err.response?.data?.message || t('groups.could_not_create'));
     } finally {
       setCreateLoading(false);
     }
@@ -168,7 +173,7 @@ export default function GroupsScreen({ navigation }) {
       setShowJoin(false);
       fetchGroups();
     } catch (err) {
-      Alert.alert('Error', err.response?.data?.message || 'Invalid invite code');
+      Alert.alert(t('common.error'), err.response?.data?.message || t('groups.could_not_join'));
     } finally {
       setJoinLoading(false);
     }
@@ -184,7 +189,7 @@ export default function GroupsScreen({ navigation }) {
         <TouchableOpacity style={styles.backBtn} onPress={() => navigation.goBack()}>
           <Ionicons name="chevron-back" size={24} color="#1d1d1f" />
         </TouchableOpacity>
-        <Text style={styles.headerTitle}>Groups</Text>
+        <Text style={styles.headerTitle}>{t('groups.title')}</Text>
         <View style={styles.headerActions}>
           <TouchableOpacity style={styles.headerIconBtn} onPress={() => { setShowJoin(true); setShowCreate(false); }}>
             <Ionicons name="enter-outline" size={22} color="#1a8fa8" />
@@ -200,7 +205,7 @@ export default function GroupsScreen({ navigation }) {
         <View style={styles.inlineForm}>
           <TextInput
             style={styles.inlineInput}
-            placeholder="Group name"
+            placeholder={t('groups.group_name_placeholder')}
             placeholderTextColor="#aaa"
             value={createName}
             onChangeText={setCreateName}
@@ -213,7 +218,7 @@ export default function GroupsScreen({ navigation }) {
           >
             {createLoading
               ? <ActivityIndicator size="small" color="#fff" />
-              : <Text style={styles.inlineBtnText}>Create</Text>
+              : <Text style={styles.inlineBtnText}>{t('groups.create')}</Text>
             }
           </TouchableOpacity>
           <TouchableOpacity style={styles.inlineCancelBtn} onPress={() => setShowCreate(false)}>
@@ -227,7 +232,7 @@ export default function GroupsScreen({ navigation }) {
         <View style={styles.inlineForm}>
           <TextInput
             style={styles.inlineInput}
-            placeholder="Enter invite code"
+            placeholder={t('groups.invite_code_placeholder')}
             placeholderTextColor="#aaa"
             value={joinCode}
             onChangeText={setJoinCode}
@@ -241,7 +246,7 @@ export default function GroupsScreen({ navigation }) {
           >
             {joinLoading
               ? <ActivityIndicator size="small" color="#fff" />
-              : <Text style={styles.inlineBtnText}>Join</Text>
+              : <Text style={styles.inlineBtnText}>{t('groups.join')}</Text>
             }
           </TouchableOpacity>
           <TouchableOpacity style={styles.inlineCancelBtn} onPress={() => setShowJoin(false)}>
@@ -270,8 +275,8 @@ export default function GroupsScreen({ navigation }) {
           ListEmptyComponent={
             <View style={styles.emptyState}>
               <Ionicons name="people-outline" size={48} color="#ddd" />
-              <Text style={styles.emptyTitle}>No groups yet</Text>
-              <Text style={styles.emptyText}>Create a group or join one with an invite code.</Text>
+              <Text style={styles.emptyTitle}>{t('groups.empty')}</Text>
+              <Text style={styles.emptyText}>{t('groups.empty_hint')}</Text>
             </View>
           }
           renderItem={({ item }) => (
@@ -286,8 +291,8 @@ export default function GroupsScreen({ navigation }) {
               <View style={styles.groupInfo}>
                 <Text style={styles.groupName}>{item.name}</Text>
                 <Text style={styles.groupMeta}>
-                  {item.member_count} member{item.member_count !== '1' ? 's' : ''}
-                  {item.role === 'admin' ? '  ·  admin' : ''}
+                  {t('groups.members_count', { count: Number(item.member_count) })}
+                  {item.role === 'admin' ? `  ·  ${t('groups.admin')}` : ''}
                 </Text>
               </View>
               <Ionicons name="chevron-forward" size={18} color="#c7c7cc" />

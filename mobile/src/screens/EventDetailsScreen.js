@@ -11,20 +11,22 @@ import {
 } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { Ionicons } from '@expo/vector-icons';
+import * as Calendar from 'expo-calendar';
+import { useTranslation } from 'react-i18next';
 import API from '../api/axios';
 import { useAuth } from '../context/AuthContext';
-import styles from '../styles/EventDetailsScreen.styles';
+import { useStyles } from '../styles/EventDetailsScreen.styles';
 
 // ─── Helpers ────────────────────────────────────────────────────────────────
 
 function formatDate(dateStr) {
-  return new Date(dateStr).toLocaleDateString('en-GB', {
+  return new Date(dateStr).toLocaleDateString(undefined, {
     weekday: 'long', day: 'numeric', month: 'long', year: 'numeric',
   });
 }
 
 function formatTime(dateStr) {
-  return new Date(dateStr).toLocaleTimeString('en-US', {
+  return new Date(dateStr).toLocaleTimeString(undefined, {
     hour: 'numeric', minute: '2-digit',
   });
 }
@@ -34,6 +36,7 @@ function formatTime(dateStr) {
 // for the SVG icons used on web — same information, same position.
 
 function InfoRow({ icon, children }) {
+  const styles = useStyles();
   return (
     <View style={styles.infoRow}>
       <Text style={styles.infoIcon}>{icon}</Text>
@@ -52,6 +55,7 @@ const BADGE = {
 };
 
 function StatusBadge({ status }) {
+  const styles = useStyles();
   const s = BADGE[status];
   if (!s) return null;
   return (
@@ -66,6 +70,7 @@ function StatusBadge({ status }) {
 // ─── Attendee avatar ─────────────────────────────────────────────────────────
 
 function AttendeeAvatar({ attendee }) {
+  const styles   = useStyles();
   const initials = [attendee.first_name?.[0], attendee.last_name?.[0]]
     .filter(Boolean).join('').toUpperCase() || '?';
   const color = attendee.color || '#1a8fa8';
@@ -93,6 +98,8 @@ function AttendeeAvatar({ attendee }) {
 // `currentUserId` restricts the add button to the creator or assignee.
 
 function TaskRow({ task, eventId, onRefresh, currentUserId }) {
+  const { t } = useTranslation();
+  const styles = useStyles();
   const [showInput, setShowInput]   = useState(false);
   const [subTaskText, setSubTaskText] = useState('');
   const [adding, setAdding]         = useState(false);
@@ -116,7 +123,7 @@ function TaskRow({ task, eventId, onRefresh, currentUserId }) {
       setShowInput(false);
       onRefresh();
     } catch (err) {
-      Alert.alert('Error', err.response?.data?.message || 'Could not add subtask');
+      Alert.alert(t('common.error'), err.response?.data?.message || t('events.could_not_add_subtask'));
     } finally {
       setAdding(false);
     }
@@ -149,7 +156,7 @@ function TaskRow({ task, eventId, onRefresh, currentUserId }) {
 
         {/* Declined message */}
         {task.status === 'declined' && (
-          <Text style={styles.declinedText}>{task.first_name} declined this task</Text>
+          <Text style={styles.declinedText}>{t('events.declined_task', { name: task.first_name })}</Text>
         )}
 
         {/* Meta: name · role · arrival time */}
@@ -157,8 +164,8 @@ function TaskRow({ task, eventId, onRefresh, currentUserId }) {
           {task.first_name} · {task.position}
           {task.status === 'accepted' && (
             task.due_date
-              ? ` · arrival ${new Date(task.due_date).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}`
-              : ' · arrival not set'
+              ? ` · ${t('events.arrival', { time: new Date(task.due_date).toLocaleTimeString(undefined, { hour: '2-digit', minute: '2-digit' }) })}`
+              : ` · ${t('events.arrival_not_set')}`
           )}
         </Text>
 
@@ -177,7 +184,7 @@ function TaskRow({ task, eventId, onRefresh, currentUserId }) {
             <View style={styles.subTaskInputRow}>
               <TextInput
                 style={styles.subTaskInput}
-                placeholder="Add a subtask…"
+                placeholder={t('events.add_subtask_placeholder')}
                 placeholderTextColor="#aaa"
                 value={subTaskText}
                 onChangeText={setSubTaskText}
@@ -208,7 +215,7 @@ function TaskRow({ task, eventId, onRefresh, currentUserId }) {
               onPress={() => setShowInput(true)}
             >
               <Ionicons name="add" size={13} color="#1a8fa8" />
-              <Text style={styles.addSubTaskText}>Add subtask</Text>
+              <Text style={styles.addSubTaskText}>{t('events.add_subtask')}</Text>
             </TouchableOpacity>
           )
         )}
@@ -220,6 +227,8 @@ function TaskRow({ task, eventId, onRefresh, currentUserId }) {
 // ─── EventDetailsScreen ──────────────────────────────────────────────────────
 
 export default function EventDetailsScreen({ route, navigation }) {
+  const { t } = useTranslation();
+  const styles = useStyles();
   const { eventId } = route.params;
   const { user } = useAuth();
 
@@ -232,7 +241,7 @@ export default function EventDetailsScreen({ route, navigation }) {
       const res = await API.get(`/events/${eventId}`);
       setEvent(res.data.event || res.data);
     } catch {
-      setError('Could not load event.');
+      setError(t('events.could_not_load'));
     } finally {
       setLoading(false);
     }
@@ -242,24 +251,58 @@ export default function EventDetailsScreen({ route, navigation }) {
 
   const handleDelete = () => {
     Alert.alert(
-      'Delete Event',
-      `Are you sure you want to delete "${event?.title}"?`,
+      t('events.delete_title'),
+      t('events.delete_confirm', { title: event?.title }),
       [
-        { text: 'Cancel', style: 'cancel' },
+        { text: t('common.cancel'), style: 'cancel' },
         {
-          text: 'Delete',
+          text: t('common.delete'),
           style: 'destructive',
           onPress: async () => {
             try {
               await API.delete(`/events/${eventId}`);
               navigation.goBack();
             } catch (err) {
-              Alert.alert('Error', err.response?.data?.message || 'Could not delete event');
+              Alert.alert(t('common.error'), err.response?.data?.message || t('events.could_not_delete'));
             }
           },
         },
       ]
     );
+  };
+
+  const handleExportToCalendar = async () => {
+    try {
+      const { status } = await Calendar.requestCalendarPermissionsAsync();
+      if (status !== 'granted') {
+        Alert.alert(t('common.permission_needed'), t('events.calendar_permission'));
+        return;
+      }
+
+      // Find a writable calendar — prefer the device default
+      const calendars = await Calendar.getCalendarsAsync(Calendar.EntityTypes.EVENT);
+      const target =
+        calendars.find(c => c.isPrimary && c.allowsModifications) ||
+        calendars.find(c => c.allowsModifications);
+
+      if (!target) {
+        Alert.alert(t('events.no_calendar'), t('events.no_calendar_detail'));
+        return;
+      }
+
+      await Calendar.createEventAsync(target.id, {
+        title:       event.title,
+        startDate:   new Date(event.start_date),
+        endDate:     event.end_date ? new Date(event.end_date) : new Date(event.start_date),
+        allDay:      !!event.is_all_day,
+        location:    event.location || undefined,
+        notes:       event.notes    || undefined,
+      });
+
+      Alert.alert(t('events.added_to_calendar'), t('events.added_to_calendar_detail', { title: event.title }));
+    } catch (err) {
+      Alert.alert(t('common.error'), t('events.could_not_add_to_calendar'));
+    }
   };
 
   // Re-fetch when returning from EventFormScreen so edits show immediately
@@ -280,9 +323,9 @@ export default function EventDetailsScreen({ route, navigation }) {
     return (
       <SafeAreaView style={styles.container}>
         <TouchableOpacity style={styles.backBtn} onPress={() => navigation.goBack()}>
-          <Text style={styles.backText}>← Back</Text>
+          <Text style={styles.backText}>{t('common.back')}</Text>
         </TouchableOpacity>
-        <Text style={styles.errorText}>{error || 'Event not found.'}</Text>
+        <Text style={styles.errorText}>{error || t('events.not_found')}</Text>
       </SafeAreaView>
     );
   }
@@ -292,7 +335,7 @@ export default function EventDetailsScreen({ route, navigation }) {
   const tasks = event.tasks || [];
 
   const timeStr = event.is_all_day
-    ? 'All day'
+    ? t('common.all_day')
     : `${formatTime(event.start_date)} → ${event.end_date ? formatTime(event.end_date) : ''}`;
 
   return (
@@ -301,7 +344,7 @@ export default function EventDetailsScreen({ route, navigation }) {
       {/* ── Back button ── */}
       <View style={styles.header}>
         <TouchableOpacity onPress={() => navigation.goBack()} style={styles.backBtn}>
-          <Text style={styles.backText}>← Back</Text>
+          <Text style={styles.backText}>{t('common.back')}</Text>
         </TouchableOpacity>
       </View>
 
@@ -333,7 +376,7 @@ export default function EventDetailsScreen({ route, navigation }) {
 
           {event.updated_by_name && (
             <InfoRow icon="✏️">
-              <Text style={styles.infoValue}>Updated by {event.updated_by_name}</Text>
+              <Text style={styles.infoValue}>{t('events.updated_by', { name: event.updated_by_name })}</Text>
             </InfoRow>
           )}
 
@@ -358,6 +401,16 @@ export default function EventDetailsScreen({ route, navigation }) {
             <Text style={styles.infoTime}>{timeStr}</Text>
           </InfoRow>
 
+          {event.recurrence && (
+            <InfoRow icon="🔁">
+              <Text style={styles.infoValue}>
+                {event.recurrence_end_date
+                  ? t('events.repeats_until', { freq: event.recurrence, date: formatDate(event.recurrence_end_date) })
+                  : t('events.repeats', { freq: event.recurrence })}
+              </Text>
+            </InfoRow>
+          )}
+
           {event.location && (
             <InfoRow icon="📍">
               <Text style={styles.infoValue}>{event.location}</Text>
@@ -367,14 +420,14 @@ export default function EventDetailsScreen({ route, navigation }) {
           {event.video_call_link && (
             <InfoRow icon="📹">
               <TouchableOpacity onPress={() => Linking.openURL(event.video_call_link)}>
-                <Text style={styles.infoLink}>Join Video Call</Text>
+                <Text style={styles.infoLink}>{t('events.join_video_call')}</Text>
               </TouchableOpacity>
             </InfoRow>
           )}
 
           {event.priority && (
             <InfoRow icon="⚡">
-              <Text style={styles.infoValue}>{event.priority} Priority</Text>
+              <Text style={styles.infoValue}>{t('events.priority', { level: event.priority })}</Text>
             </InfoRow>
           )}
 
@@ -386,16 +439,19 @@ export default function EventDetailsScreen({ route, navigation }) {
 
         </View>
 
-        {/* ── Actions — Edit + Delete, same as web ── */}
+        {/* ── Actions — Edit + Export + Delete ── */}
         <View style={styles.actions}>
           <TouchableOpacity
             style={styles.editBtn}
             onPress={() => navigation.navigate('EventForm', { event })}
           >
-            <Text style={styles.editBtnText}>Edit</Text>
+            <Text style={styles.editBtnText}>{t('common.edit')}</Text>
+          </TouchableOpacity>
+          <TouchableOpacity style={styles.exportBtn} onPress={handleExportToCalendar}>
+            <Text style={styles.exportBtnText}>{t('events.add_to_calendar')}</Text>
           </TouchableOpacity>
           <TouchableOpacity style={styles.deleteBtn} onPress={handleDelete}>
-            <Text style={styles.deleteBtnText}>Delete</Text>
+            <Text style={styles.deleteBtnText}>{t('common.delete')}</Text>
           </TouchableOpacity>
         </View>
 
