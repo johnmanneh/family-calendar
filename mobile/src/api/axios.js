@@ -1,7 +1,7 @@
 import axios from 'axios';
 import storage from '../utils/storage';
 
-export const SERVER_URL = 'http://192.168.1.73:8000';
+export const SERVER_URL = 'https://family-calendar-production-33b3.up.railway.app';
 export const BASE_URL   = `${SERVER_URL}/api`;
 
 const API = axios.create({

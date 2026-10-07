@@ -11,7 +11,7 @@
 | Layer | Service | URL |
 |-------|---------|-----|
 | Frontend (React web) | Vercel | its4us.app |
-| Backend (Node/Express) | Railway | its4us-api.up.railway.app (generated) |
+| Backend (Node/Express) | Railway | family-calendar-production-33b3.up.railway.app |
 | Database (PostgreSQL) | Railway | managed, internal |
 | Mobile (iOS/Android) | App Store / Play Store | via EAS Build |
 
@@ -105,8 +105,7 @@ GRANT USAGE, SELECT ON ALL SEQUENCES IN SCHEMA public TO family_admin;
 2. **New Project** → Import `johnmanneh/family-calendar`
 3. Set **Root Directory** to `web`
 4. Add environment variable:
-   - `REACT_APP_API_URL` = `https://your-backend.up.railway.app/api`
-   (get this URL from Railway after backend is deployed)
+   - `REACT_APP_API_URL` = `https://family-calendar-production-33b3.up.railway.app/api`
 5. Click **Deploy**
 
 ### Connect its4us.app Domain
@@ -123,7 +122,7 @@ GRANT USAGE, SELECT ON ALL SEQUENCES IN SCHEMA public TO family_admin;
 
 | Variable | Value |
 |----------|-------|
-| `REACT_APP_API_URL` | `https://your-backend.up.railway.app/api` |
+| `REACT_APP_API_URL` | `https://family-calendar-production-33b3.up.railway.app/api` |
 
 ---
 
