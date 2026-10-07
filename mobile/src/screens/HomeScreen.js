@@ -40,14 +40,17 @@ import { saveCache, loadCache, savedAtLabel } from '../utils/cache';
 // Falls back gracefully in Expo Go where the native module isn't linked.
 let ExpoSpeechRecognitionModule = null;
 let useSpeechRecognitionEvent   = null;
+// STT only works on native iOS/Android — not on web or bare Expo Go
 let STT_AVAILABLE = false;
-try {
-  const stt = require('expo-speech-recognition');
-  ExpoSpeechRecognitionModule = stt.ExpoSpeechRecognitionModule;
-  useSpeechRecognitionEvent   = stt.useSpeechRecognitionEvent;
-  STT_AVAILABLE = true;
-} catch (_) {
-  STT_AVAILABLE = false;
+if (Platform.OS !== 'web') {
+  try {
+    const stt = require('expo-speech-recognition');
+    ExpoSpeechRecognitionModule = stt.ExpoSpeechRecognitionModule;
+    useSpeechRecognitionEvent   = stt.useSpeechRecognitionEvent;
+    STT_AVAILABLE = true;
+  } catch (_) {
+    STT_AVAILABLE = false;
+  }
 }
 // No-op hook so we can call useSpeechRecognitionEvent unconditionally
 // in HomeScreen regardless of whether STT is available.

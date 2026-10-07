@@ -1,8 +1,14 @@
 /**
  * RadialMenu.js
  *
- * Spider-Man PS5 gadget-wheel — 3 pie slices fan upward + leftward from the FAB.
- * Selected slice glows bright; others dim to 30% — just like the PS5 reference.
+ * Spider-Man PS5 gadget-wheel using the WHEN app's season design language.
+ *   🍂  New Event  — Autumn leaf,  #f48c06 orange
+ *   🌸  New Task   — Spring flower, #f857a6 pink
+ *   ❄️  Cancel     — Winter ice,   #4facfe blue
+ *   ☀️  Centre     — Summer sun  (the crescent origin all slices emerge from)
+ *
+ * Labels are rotated along each slice's radial axis so they read
+ * "inside" their own sector — not horizontal across the whole page.
  *
  * Props:  visible, onClose, onNewEvent, onNewTask
  */
@@ -15,84 +21,78 @@ import {
   Pressable,
   Animated,
   StyleSheet,
-  Dimensions,
 } from 'react-native';
 import Svg, { Path, Circle } from 'react-native-svg';
-import { Ionicons } from '@expo/vector-icons';
 import styles from '../styles/RadialMenu.styles';
 
 // ── FAB constants (must match HomeScreen.styles.js) ──────────────────────────
-const FAB_RIGHT  = 24;   // px from screen right edge
-const FAB_BOTTOM = 32;   // px from screen bottom edge
-const FAB_SIZE   = 48;   // diameter (fabSmall)
+const FAB_RIGHT  = 24;
+const FAB_BOTTOM = 32;
+const FAB_SIZE   = 48;
 
 // ── Pie geometry ─────────────────────────────────────────────────────────────
-const OUTER_R  = 155;    // outer radius
-const INNER_R  =  58;    // inner donut hole
-const GAP_DEG  =   2;    // degrees clipped from each side of every slice (visual gap)
+const OUTER_R = 158;
+const INNER_R =  56;
+const GAP_DEG =   2.5;   // visual breathing room on each side of a slice
 
-// ── Fan layout ────────────────────────────────────────────────────────────────
-// Fan sweeps from 181° (left) → 283° (almost straight up).
-// Three equal 32° sectors separated by visual gaps.
-//   Sector 0  Event   181°-212°  midpoint 196.5°  → upper-left
-//   Sector 1  Task    215°-246°  midpoint 230.5°  → diag up-left
-//   Sector 2  Cancel  249°-280°  midpoint 264.5°  → nearly straight up
+// ── Sector definitions — WHEN season design language ─────────────────────────
+// Fan: 181° (pointing left) → 280° (pointing nearly straight up).
+// Three 32°-wide sectors with visual 5° gaps between them.
+//   Event   181°–212°  mid 196.5°  → upper-left   🍂
+//   Task    215°–246°  mid 230.5°  → diagonal      🌸
+//   Cancel  249°–280°  mid 264.5°  → nearly up     ❄️
 const SECTORS = [
   {
     id:          'event',
     label:       'New Event',
-    icon:        'calendar-outline',
-    color:       '#1a8fa8',
-    colorBright: '#3dd6f5',
+    emoji:       '🍂',
+    color:       'rgba(244,140,6,0.85)',    // autumn orange
+    colorBright: '#f4a830',
     startAngle:  181,
     endAngle:    212,
   },
   {
     id:          'task',
     label:       'New Task',
-    icon:        'checkmark-circle-outline',
-    color:       '#9b30d9',
-    colorBright: '#d07cf9',
+    emoji:       '🌸',
+    color:       'rgba(248,87,166,0.85)',   // spring pink
+    colorBright: '#ff8fd1',
     startAngle:  215,
     endAngle:    246,
   },
   {
     id:          'cancel',
     label:       'Cancel',
-    icon:        'close-circle-outline',
-    color:       '#3a3a3c',
-    colorBright: '#636366',
+    emoji:       '❄️',
+    color:       'rgba(79,172,254,0.85)',   // winter blue
+    colorBright: '#7fcfff',
     startAngle:  249,
     endAngle:    280,
   },
 ];
 
 // ── Container geometry ────────────────────────────────────────────────────────
-// The container's bottom-right corner sits at the FAB centre.
-// All sector geometry is drawn relative to (CX, CY) = bottom-right of container.
-// Fan only goes leftward/upward so nothing clips off-screen.
-const CONTAINER_W = OUTER_R + 20;   // 175 — just enough past the leftmost sector
-const CONTAINER_H = OUTER_R + 20;   // 175 — just enough past the topmost sector
-const CX = CONTAINER_W;             // FAB centre inside SVG coords
+// Bottom-right corner of this container = FAB centre.
+// Sectors only fan leftward + upward, so nothing clips off-screen.
+const CONTAINER_W = OUTER_R + 22;
+const CONTAINER_H = OUTER_R + 22;
+const CX = CONTAINER_W;   // FAB centre in SVG coords
 const CY = CONTAINER_H;
 
-// ── SVG helpers ───────────────────────────────────────────────────────────────
+// ── Helpers ───────────────────────────────────────────────────────────────────
 function toRad(deg) { return (deg * Math.PI) / 180; }
 
-/** Donut sector path, with GAP_DEG visual breathing room on each edge. */
 function sectorPath(startAngle, endAngle) {
   const s  = startAngle + GAP_DEG;
   const e  = endAngle   - GAP_DEG;
-  const sr = toRad(s);
-  const er = toRad(e);
-  const ox1 = CX + OUTER_R * Math.cos(sr);
-  const oy1 = CY + OUTER_R * Math.sin(sr);
-  const ox2 = CX + OUTER_R * Math.cos(er);
-  const oy2 = CY + OUTER_R * Math.sin(er);
-  const ix2 = CX + INNER_R * Math.cos(er);
-  const iy2 = CY + INNER_R * Math.sin(er);
-  const ix1 = CX + INNER_R * Math.cos(sr);
-  const iy1 = CY + INNER_R * Math.sin(sr);
+  const ox1 = CX + OUTER_R * Math.cos(toRad(s));
+  const oy1 = CY + OUTER_R * Math.sin(toRad(s));
+  const ox2 = CX + OUTER_R * Math.cos(toRad(e));
+  const oy2 = CY + OUTER_R * Math.sin(toRad(e));
+  const ix2 = CX + INNER_R * Math.cos(toRad(e));
+  const iy2 = CY + INNER_R * Math.sin(toRad(e));
+  const ix1 = CX + INNER_R * Math.cos(toRad(s));
+  const iy1 = CY + INNER_R * Math.sin(toRad(s));
   const large = (e - s) > 180 ? 1 : 0;
   return (
     `M ${ox1} ${oy1} ` +
@@ -102,13 +102,15 @@ function sectorPath(startAngle, endAngle) {
   );
 }
 
-/** Position of the icon/label centre inside the slice. */
-function iconPos(sector) {
+/** Screen-space centre of a sector (icon + label anchor point). */
+function sliceCentre(sector) {
   const mid = (sector.startAngle + sector.endAngle) / 2;
-  const r   = (INNER_R + OUTER_R) / 2;            // halfway between rings
+  const r   = (INNER_R + OUTER_R) / 2;
   return {
-    x: CX + r * Math.cos(toRad(mid)),
-    y: CY + r * Math.sin(toRad(mid)),
+    x:   CX + r * Math.cos(toRad(mid)),
+    y:   CY + r * Math.sin(toRad(mid)),
+    mid,                          // mid-angle (degrees)
+    rot: mid - 270,               // rotation so content reads radially outward
   };
 }
 
@@ -117,7 +119,7 @@ function iconPos(sector) {
 export default function RadialMenu({ visible, onClose, onNewEvent, onNewTask }) {
   const scaleAnim   = useRef(new Animated.Value(0)).current;
   const opacityAnim = useRef(new Animated.Value(0)).current;
-  const [hovered, setHovered] = useState(null);   // currently highlighted sector id
+  const [hovered, setHovered] = useState(null);
 
   useEffect(() => {
     if (visible) {
@@ -128,12 +130,12 @@ export default function RadialMenu({ visible, onClose, onNewEvent, onNewTask }) 
           toValue: 1, friction: 6, tension: 140, useNativeDriver: true,
         }),
         Animated.timing(opacityAnim, {
-          toValue: 1, duration: 130, useNativeDriver: true,
+          toValue: 1, duration: 120, useNativeDriver: true,
         }),
       ]).start();
     } else {
       Animated.timing(scaleAnim, {
-        toValue: 0, duration: 90, useNativeDriver: true,
+        toValue: 0, duration: 80, useNativeDriver: true,
       }).start();
       opacityAnim.setValue(0);
       setHovered(null);
@@ -148,21 +150,16 @@ export default function RadialMenu({ visible, onClose, onNewEvent, onNewTask }) 
     }, 100);
   };
 
-  // ── Scale from the FAB centre (= container bottom-right corner).
-  // React Native has no transformOrigin, so we shift → scale → shift back.
-  // The shift moves the scale origin from the container centre to its
-  // bottom-right corner (where CX,CY lives = FAB centre).
-  const halfW = CONTAINER_W / 2;
-  const halfH = CONTAINER_H / 2;
-  const shiftX = CONTAINER_W - halfW;   // = halfW  — distance from centre to right edge
-  const shiftY = CONTAINER_H - halfH;   // = halfH
-
+  // Scale from container's bottom-right corner (= FAB centre).
+  // React Native has no transformOrigin — use translate → scale → un-translate.
+  const hw = CONTAINER_W / 2;
+  const hh = CONTAINER_H / 2;
   const transform = [
-    { translateX:  shiftX },
-    { translateY:  shiftY },
+    { translateX:  hw },
+    { translateY:  hh },
     { scale: scaleAnim },
-    { translateX: -shiftX },
-    { translateY: -shiftY },
+    { translateX: -hw },
+    { translateY: -hh },
   ];
 
   return (
@@ -173,7 +170,7 @@ export default function RadialMenu({ visible, onClose, onNewEvent, onNewTask }) 
       statusBarTranslucent
       onRequestClose={onClose}
     >
-      {/* Dark backdrop — tap anywhere outside to close */}
+      {/* Backdrop */}
       <Pressable style={StyleSheet.absoluteFillObject} onPress={onClose}>
         <Animated.View
           style={[styles.backdrop, { opacity: opacityAnim }]}
@@ -181,56 +178,50 @@ export default function RadialMenu({ visible, onClose, onNewEvent, onNewTask }) 
         />
       </Pressable>
 
-      {/* ── Pie wheel — anchored to FAB bottom-right corner ── */}
+      {/* Pie wheel — bottom-right corner anchored at FAB centre */}
       <Animated.View
         style={[styles.wheel, { transform, opacity: opacityAnim }]}
         pointerEvents="box-none"
       >
-        {/* SVG layer — all slice geometry */}
+        {/* SVG — slice shapes */}
         <Svg
           width={CONTAINER_W}
           height={CONTAINER_H}
           style={StyleSheet.absoluteFillObject}
           pointerEvents="none"
         >
-          {/* Pie slices */}
           {SECTORS.map(sector => {
-            const isHovered = hovered === sector.id;
-            const otherHovered = hovered !== null && !isHovered;
+            const active = hovered === sector.id;
+            const dim    = hovered !== null && !active;
             return (
               <Path
                 key={sector.id}
                 d={sectorPath(sector.startAngle, sector.endAngle)}
-                fill={isHovered ? sector.colorBright : sector.color}
-                opacity={otherHovered ? 0.28 : isHovered ? 1.0 : 0.88}
+                fill={active ? sector.colorBright : sector.color}
+                opacity={dim ? 0.22 : active ? 1.0 : 0.9}
               />
             );
           })}
 
-          {/* Centre donut cap — sits over the pie origin (FAB centre) */}
+          {/* Dark centre cap (the "sun hub") */}
+          <Circle cx={CX} cy={CY} r={INNER_R - 1} fill="#111" opacity={0.88} />
+          {/* Warm glow ring — matches the ☀️ sun theme */}
           <Circle
-            cx={CX}
-            cy={CY}
-            r={INNER_R - 2}
-            fill="#1c1c1e"
-            opacity={0.9}
-          />
-          {/* Glow ring around centre cap */}
-          <Circle
-            cx={CX}
-            cy={CY}
-            r={INNER_R - 2}
-            fill="none"
-            stroke="rgba(255,255,255,0.12)"
-            strokeWidth={2}
+            cx={CX} cy={CY} r={INNER_R - 1}
+            fill="none" stroke="rgba(247,183,49,0.35)" strokeWidth={3}
           />
         </Svg>
 
-        {/* Pressable hit areas centred on each slice's midpoint */}
+        {/* ☀️ Sun emoji — the crescent origin where all slices radiate from */}
+        <View style={styles.sunHub} pointerEvents="none">
+          <Text style={styles.sunEmoji}>☀️</Text>
+        </View>
+
+        {/* Pressable hit zones — one per slice */}
         {SECTORS.map(sector => {
-          const pos = iconPos(sector);
-          const isHovered = hovered === sector.id;
-          const HIT = 78;   // tap zone size
+          const { x, y, rot } = sliceCentre(sector);
+          const active = hovered === sector.id;
+          const HIT    = 80;
 
           return (
             <Pressable
@@ -238,28 +229,19 @@ export default function RadialMenu({ visible, onClose, onNewEvent, onNewTask }) 
               onPressIn={() => setHovered(sector.id)}
               onPressOut={() => setHovered(null)}
               onPress={() => handlePress(sector)}
-              style={[
-                styles.hit,
-                {
-                  left: pos.x - HIT / 2,
-                  top:  pos.y - HIT / 2,
-                  width:  HIT,
-                  height: HIT,
-                },
-              ]}
+              style={[styles.hit, { left: x - HIT / 2, top: y - HIT / 2, width: HIT, height: HIT }]}
             >
-              <View style={styles.sliceContent}>
-                <Ionicons
-                  name={sector.icon}
-                  size={isHovered ? 27 : 23}
-                  color={isHovered ? '#ffffff' : 'rgba(255,255,255,0.82)'}
-                  style={styles.sliceIcon}
-                />
+              {/*
+                Rotate the entire content block so the emoji + label
+                read along the sector's radial axis, not flat across the page.
+                rot = midAngle - 270  →  0° when sector points straight up.
+              */}
+              <View style={[styles.sliceContent, { transform: [{ rotate: `${rot}deg` }] }]}>
+                <Text style={[styles.emoji, active && styles.emojiActive]}>
+                  {sector.emoji}
+                </Text>
                 <Text
-                  style={[
-                    styles.sliceLabel,
-                    isHovered && styles.sliceLabelActive,
-                  ]}
+                  style={[styles.label, active && styles.labelActive]}
                   numberOfLines={2}
                 >
                   {sector.label}
@@ -272,4 +254,3 @@ export default function RadialMenu({ visible, onClose, onNewEvent, onNewTask }) 
     </Modal>
   );
 }
-
