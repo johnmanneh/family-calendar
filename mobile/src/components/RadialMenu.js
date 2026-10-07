@@ -54,18 +54,18 @@ const SECTORS = [
   {
     id:          'task',
     label:       'New Task',
-    emoji:       '🌸',
-    color:       'rgba(248,87,166,0.85)',   // spring pink
-    colorBright: '#ff8fd1',
+    emoji:       '❄️',                     // winter ice → task
+    color:       'rgba(79,172,254,0.85)',   // winter blue
+    colorBright: '#7fcfff',
     startAngle:  215,
     endAngle:    246,
   },
   {
     id:          'cancel',
     label:       'Cancel',
-    emoji:       '❄️',
-    color:       'rgba(79,172,254,0.85)',   // winter blue
-    colorBright: '#7fcfff',
+    emoji:       '🌸',                     // spring flower → cancel
+    color:       'rgba(248,87,166,0.85)',   // spring pink
+    colorBright: '#ff8fd1',
     startAngle:  249,
     endAngle:    280,
   },
@@ -203,12 +203,10 @@ export default function RadialMenu({ visible, onClose, onNewEvent, onNewTask }) 
             );
           })}
 
-          {/* Dark centre cap (the "sun hub") */}
-          <Circle cx={CX} cy={CY} r={INNER_R - 1} fill="#111" opacity={0.88} />
-          {/* Warm glow ring — matches the ☀️ sun theme */}
+          {/* Warm glow ring only — no dark fill so the FAB shows through */}
           <Circle
-            cx={CX} cy={CY} r={INNER_R - 1}
-            fill="none" stroke="rgba(247,183,49,0.35)" strokeWidth={3}
+            cx={CX} cy={CY} r={INNER_R + 4}
+            fill="none" stroke="rgba(247,183,49,0.4)" strokeWidth={4}
           />
         </Svg>
 

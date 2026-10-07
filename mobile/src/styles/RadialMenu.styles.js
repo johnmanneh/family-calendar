@@ -24,24 +24,25 @@ const styles = StyleSheet.create({
     height:   CONTAINER_H,
   },
 
-  // ☀️ sun hub — centred on FAB position (= container bottom-right corner)
+  // ☀️ sun hub — centred on FAB position (= container bottom-right corner).
+  // Sized larger than INNER_R so it visually bridges the gap between the FAB
+  // button and the inner edge of the pie slices — no gray dead zone.
   sunHub: {
     position:        'absolute',
-    right:           -(INNER_R - 2),     // centre the circle on the right edge
-    bottom:          -(INNER_R - 2),     // centre on the bottom edge
-    width:           (INNER_R - 2) * 2,
-    height:          (INNER_R - 2) * 2,
-    borderRadius:    INNER_R - 2,
+    right:           -(INNER_R + 8),     // centre the circle on the container's right edge
+    bottom:          -(INNER_R + 8),     // centre on the container's bottom edge
+    width:           (INNER_R + 8) * 2,
+    height:          (INNER_R + 8) * 2,
+    borderRadius:    INNER_R + 8,
     alignItems:      'center',
     justifyContent:  'center',
   },
 
   sunEmoji: {
-    fontSize: 28,
-    // subtle shadow so ☀️ pops off the dark circle
-    textShadowColor:  'rgba(0,0,0,0.5)',
-    textShadowRadius:  4,
-    textShadowOffset:  { width: 0, height: 1 },
+    fontSize: 44,   // big enough to fill the inner donut and spill onto the FAB
+    textShadowColor:  'rgba(0,0,0,0.35)',
+    textShadowRadius:  6,
+    textShadowOffset:  { width: 0, height: 2 },
   },
 
   // Tap zone — positioned absolutely at the slice centre
