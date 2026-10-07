@@ -657,13 +657,50 @@ export default function HomeScreen({ navigation }) {
     const parsed = parseVoiceInput(trimmed);
     if (!parsed.title) parsed.title = trimmed;
 
-    // ── Build event payload ───────────────────────────────────────────────
+    // ── Shared date helpers ───────────────────────────────────────────────
     const pad = n => String(n).padStart(2, '0');
     const toISOLocal = d =>
       `${d.getFullYear()}-${pad(d.getMonth()+1)}-${pad(d.getDate())}T${pad(d.getHours())}:${pad(d.getMinutes())}`;
     const toDateOnly = d =>
       `${d.getFullYear()}-${pad(d.getMonth()+1)}-${pad(d.getDate())}`;
 
+    // ── Task intent ───────────────────────────────────────────────────────
+    if (parsed.intent === 'task') {
+      // Try to match assigneeName against family members
+      let assignedTo = user.id; // default: self
+      if (parsed.assigneeName) {
+        const nameLower = parsed.assigneeName.toLowerCase();
+        const match = members.find(
+          m => m.first_name?.toLowerCase() === nameLower ||
+               m.last_name?.toLowerCase()  === nameLower
+        );
+        if (match) assignedTo = match.id;
+      }
+
+      const dueDate = parsed.date
+        ? new Date(`${parsed.date}T${parsed.time || '09:00'}:00`)
+        : null;
+
+      try {
+        await API.post('/tasks/standalone', {
+          title:       parsed.title,
+          assigned_to: assignedTo,
+          due_date:    dueDate ? toISOLocal(dueDate) : null,
+          position:    'full',
+        });
+        setVoiceStatus('idle');
+        hasNavigatedRef.current = false;
+        const toastName = parsed.assigneeName || 'You';
+        showSuccessToast(`✓ Task "${parsed.title}" → ${toastName}`);
+      } catch (_err) {
+        setVoiceStatus('idle');
+        hasNavigatedRef.current = false;
+        showSuccessToast('Could not create task — try again');
+      }
+      return;
+    }
+
+    // ── Event intent (default) ────────────────────────────────────────────
     const startDate = (() => {
       const base = parsed.date ? new Date(`${parsed.date}T00:00:00`) : new Date();
       if (parsed.time) {
@@ -680,26 +717,26 @@ export default function HomeScreen({ navigation }) {
     const isAllDay = !parsed.time && !parsed.date;
 
     const payload = {
-      title:              parsed.title,
-      description:        '',
-      location:           parsed.location || '',
-      notes:              '',
-      video_call_link:    '',
-      priority:           'medium',
-      category:           '',
-      color:              '#1a8fa8',
-      recurrence:         '',
-      is_all_day:         isAllDay,
-      is_private:         false,
-      start_date:         isAllDay ? toDateOnly(startDate) : toISOLocal(startDate),
-      end_date:           isAllDay ? toDateOnly(endDate)   : toISOLocal(endDate),
+      title:               parsed.title,
+      description:         '',
+      location:            parsed.location || '',
+      notes:               '',
+      video_call_link:     '',
+      priority:            'medium',
+      category:            '',
+      color:               '#1a8fa8',
+      recurrence:          parsed.recurrence || '',
+      is_all_day:          isAllDay,
+      is_private:          false,
+      start_date:          isAllDay ? toDateOnly(startDate) : toISOLocal(startDate),
+      end_date:            isAllDay ? toDateOnly(endDate)   : toISOLocal(endDate),
       recurrence_end_date: null,
     };
 
     try {
       await API.post('/events/create', payload);
-      setSelectedDate(startDate);           // jump calendar to the event's date
-      fetchEvents();                        // refresh calendar in background
+      setSelectedDate(startDate);
+      fetchEvents();
       setVoiceStatus('idle');
       hasNavigatedRef.current = false;
       showSuccessToast(`✓ "${parsed.title}" created`);
@@ -708,7 +745,7 @@ export default function HomeScreen({ navigation }) {
       hasNavigatedRef.current = false;
       showSuccessToast('Could not create event — try again');
     }
-  }, [stopFabPulse, fetchEvents, showSuccessToast]);
+  }, [stopFabPulse, fetchEvents, showSuccessToast, members, user]);
 
   // Long-press on FAB → start recording
   const handleFabLongPress = useCallback(async () => {
