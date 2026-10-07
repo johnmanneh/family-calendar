@@ -28,11 +28,11 @@ const FAB_BOTTOM = 32;
 const FAB_SIZE   = 48;
 
 // ── Pie geometry ─────────────────────────────────────────────────────────────
-const OUTER_R  = 162;
+const OUTER_R  = 118;             // moderate length — not too long
 const SUN_R    = FAB_SIZE / 2;   // 24 — same radius as FAB
 const INNER_R  = SUN_R;          // slices start exactly at the sun edge — no gap
-const EMOJI_R  =  80;   // inner zone — emoji anchor
-const LABEL_R  = 128;   // outer zone — label anchor (always visible)
+const EMOJI_R  =  58;   // inner zone — emoji anchor
+const LABEL_R  =  95;   // outer zone — label anchor (always visible)
 const GAP_DEG  =   2.5;
 
 // Two sectors only — sun is the cancel
@@ -60,9 +60,9 @@ const SECTORS = [
 // ── Container: FAB centre lives at (CX_IN, CY_IN) inside the container ───────
 // Left/above FAB: need OUTER_R + padding for slices
 // Right/below FAB: need SUN_R + padding for sun overhang
-const PAD   = 30;                     // extra padding so labels aren't clipped
-const CX_IN = OUTER_R + PAD;         // 192
-const CY_IN = OUTER_R + PAD;         // 192
+const PAD   = 24;                     // padding so labels aren't clipped
+const CX_IN = OUTER_R + PAD;         // 142
+const CY_IN = OUTER_R + PAD;         // 142
 const C_W   = CX_IN + SUN_R + PAD;   // right side: sun overhang + padding
 const C_H   = CY_IN + SUN_R + PAD;   // bottom: sun overhang + padding
 
