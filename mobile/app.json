@@ -13,7 +13,7 @@
         "NSMicrophoneUsageDescription": "Allow $(PRODUCT_NAME) to use the microphone.",
         "ITSAppUsesNonExemptEncryption": false
       },
-      "bundleIdentifier": "com.songsanchaun.when"
+      "bundleIdentifier": "com.songsanchaun.whenapp"
     },
     "android": {
       "adaptiveIcon": {
@@ -25,7 +25,7 @@
       "permissions": [
         "android.permission.RECORD_AUDIO"
       ],
-      "package": "com.songsanchaun.when"
+      "package": "com.songsanchaun.whenapp"
     },
     "web": {
       "favicon": "./assets/favicon.png"
