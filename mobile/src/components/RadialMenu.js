@@ -30,7 +30,7 @@ const FAB_SIZE   = 48;
 // ── Pie geometry ─────────────────────────────────────────────────────────────
 const OUTER_R  = 162;
 const INNER_R  =  58;
-const SUN_R    =  72;   // larger than INNER_R → covers FAB + fills inner gap
+const SUN_R    =  FAB_SIZE / 2;   // same radius as the FAB button (24px)
 const EMOJI_R  =  94;   // inner zone — emoji anchor
 const LABEL_R  = 135;   // outer zone — label anchor (always visible)
 const GAP_DEG  =   2.5;
@@ -152,9 +152,6 @@ export default function RadialMenu({ visible, onClose, onNewEvent, onNewTask }) 
               />
             );
           })}
-          {/* Golden ring at inner edge */}
-          <Circle cx={CX_IN} cy={CY_IN} r={INNER_R + 2}
-            fill="none" stroke="rgba(255,210,60,0.6)" strokeWidth={3} />
         </Svg>
 
         {/* ☀️ Sun hub — covers FAB button + inner donut gap. Tap = cancel. */}
@@ -215,22 +212,11 @@ const s = StyleSheet.create({
   },
   sunHub: {
     position:        'absolute',
-    backgroundColor: 'rgba(28,18,4,0.82)',
     alignItems:      'center',
     justifyContent:  'center',
-    borderWidth:     3,
-    borderColor:     'rgba(255,210,60,0.65)',
-    shadowColor:     '#f7b731',
-    shadowOpacity:   0.6,
-    shadowRadius:    12,
-    shadowOffset:    { width: 0, height: 0 },
-    elevation:       10,
   },
   sunEmoji: {
-    fontSize:         56,
-    textShadowColor:  'rgba(255,210,50,0.7)',
-    textShadowRadius:  10,
-    textShadowOffset:  { width: 0, height: 0 },
+    fontSize: 30,
   },
   hit: {
     position:       'absolute',
