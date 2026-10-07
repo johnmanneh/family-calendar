@@ -212,11 +212,12 @@ const s = StyleSheet.create({
   },
   sunHub: {
     position:        'absolute',
+    backgroundColor: '#1c1c1e',   // solid fill — hides the teal FAB underneath
     alignItems:      'center',
     justifyContent:  'center',
   },
   sunEmoji: {
-    fontSize: 30,
+    fontSize: 26,
   },
   hit: {
     position:       'absolute',
