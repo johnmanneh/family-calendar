@@ -2,10 +2,11 @@
  * RadialMenu.js
  *
  * Spider-Man PS5 gadget-wheel style radial pie menu.
- * Opens as an animated circular overlay with three pie slices:
- *   • New Event  (top-left,  teal)
- *   • New Task   (top-right, purple)
- *   • Cancel     (bottom,    gray)
+ * Anchored to the FAB button (bottom-right), fans upward and leftward.
+ * Three 60° pie slices expand from the FAB position:
+ *   • New Event  (upper-left,  teal)
+ *   • New Task   (straight up, purple)
+ *   • Cancel     (upper-right, gray)
  *
  * Props:
  *   visible    — bool
@@ -22,26 +23,33 @@ import {
   Pressable,
   Animated,
   StyleSheet,
-  Dimensions,
 } from 'react-native';
 import Svg, { Path } from 'react-native-svg';
 import { Ionicons } from '@expo/vector-icons';
 
-const { width: SW, height: SH } = Dimensions.get('window');
+// ── FAB geometry (must match HomeScreen.styles.js) ───────────────────────────
+const FAB_RIGHT  = 24;   // distance from screen right edge
+const FAB_BOTTOM = 32;   // distance from screen bottom edge
+const FAB_SIZE   = 48;   // FAB diameter (fabSmall)
 
-// ── Geometry constants ───────────────────────────────────────────────────────
-const CX         = SW / 2;   // centre X of SVG
-const CY         = SH / 2;   // centre Y of SVG
-const INNER_R    = 62;        // inner donut radius (dead zone)
-const OUTER_R    = 148;       // outer edge of pie slices
-const GAP        = 5;         // gap in degrees between slices
+// ── Wheel geometry ────────────────────────────────────────────────────────────
+const OUTER_R = 145;     // outer radius of pie slices
+const INNER_R =  52;     // inner donut hole radius
+const GAP     =   5;     // gap in degrees between slices
+
+// Container is sized so its bottom-right corner sits exactly on the FAB centre.
+// The SVG origin (cx, cy) is at that corner.
+const CONTAINER_W = OUTER_R + 24;   // extra 24 px on left so labels aren't clipped
+const CONTAINER_H = OUTER_R + 24;   // extra 24 px on top  for same reason
+const CX = CONTAINER_W;             // SVG origin X = FAB centre (right edge)
+const CY = CONTAINER_H;             // SVG origin Y = FAB centre (bottom edge)
 
 // ── Sector definitions ───────────────────────────────────────────────────────
-// Angles are in standard SVG/Math convention (0° = right, clockwise positive).
-// We arrange the three 120° slices so:
-//   Sector 0 (New Event):  270° – 30°  → top-left arc
-//   Sector 1 (New Task):    30° – 150° → top-right arc
-//   Sector 2 (Cancel):     150° – 270° → bottom arc
+// The fan spans 195° → 345° (a 150° arc) pointing upper-left to upper-right.
+// Three 50° sectors with 5° gaps between them.
+//   195°–245°  New Event  → upper-left
+//   250°–300°  New Task   → straight up
+//   305°–345°  Cancel     → upper-right
 const SECTORS = [
   {
     id:         'event',
@@ -49,8 +57,8 @@ const SECTORS = [
     icon:       'calendar-outline',
     color:      '#1a8fa8',
     colorBright:'#22b5d0',
-    startAngle: 270,
-    endAngle:   390,   // = 30° mod 360, but keep > startAngle for arc math
+    startAngle: 195,
+    endAngle:   245,
   },
   {
     id:         'task',
@@ -58,8 +66,8 @@ const SECTORS = [
     icon:       'checkmark-circle-outline',
     color:      '#af52de',
     colorBright:'#ce7df9',
-    startAngle: 30,
-    endAngle:   150,
+    startAngle: 250,
+    endAngle:   300,
   },
   {
     id:         'cancel',
@@ -67,8 +75,8 @@ const SECTORS = [
     icon:       'close-circle-outline',
     color:      '#48484a',
     colorBright:'#636366',
-    startAngle: 150,
-    endAngle:   270,
+    startAngle: 305,
+    endAngle:   355,
   },
 ];
 
@@ -76,7 +84,6 @@ const SECTORS = [
 function toRad(deg) { return (deg * Math.PI) / 180; }
 
 function sectorPath(cx, cy, innerR, outerR, startAngle, endAngle) {
-  // Add gap padding
   const s = startAngle + GAP;
   const e = endAngle   - GAP;
   const x1 = cx + outerR * Math.cos(toRad(s));
@@ -91,43 +98,36 @@ function sectorPath(cx, cy, innerR, outerR, startAngle, endAngle) {
   return `M ${x1} ${y1} A ${outerR} ${outerR} 0 ${largeArc} 1 ${x2} ${y2} L ${x3} ${y3} A ${innerR} ${innerR} 0 ${largeArc} 0 ${x4} ${y4} Z`;
 }
 
-// ── Icon position helper ─────────────────────────────────────────────────────
-function iconPosition(sector) {
-  const midAngle = (sector.startAngle + sector.endAngle) / 2;
-  const iconR    = (INNER_R + OUTER_R) / 2;
+// ── Icon midpoint helper ─────────────────────────────────────────────────────
+function iconPos(sector) {
+  const mid = (sector.startAngle + sector.endAngle) / 2;
+  const r   = (INNER_R + OUTER_R) / 2;
   return {
-    x: CX + iconR * Math.cos(toRad(midAngle)),
-    y: CY + iconR * Math.sin(toRad(midAngle)),
+    x: CX + r * Math.cos(toRad(mid)),
+    y: CY + r * Math.sin(toRad(mid)),
   };
 }
 
-// ── RadialMenu ───────────────────────────────────────────────────────────────
+// ── Component ─────────────────────────────────────────────────────────────────
 
 export default function RadialMenu({ visible, onClose, onNewEvent, onNewTask }) {
-  const scaleAnim = useRef(new Animated.Value(0)).current;
+  const scaleAnim   = useRef(new Animated.Value(0)).current;
   const opacityAnim = useRef(new Animated.Value(0)).current;
-  const [pressed, setPressed] = useState(null);   // which sector is highlighted
+  const [pressed, setPressed] = useState(null);
 
-  // Spring open when visible changes to true
   useEffect(() => {
     if (visible) {
       scaleAnim.setValue(0);
       opacityAnim.setValue(0);
       Animated.parallel([
         Animated.spring(scaleAnim, {
-          toValue: 1,
-          friction: 6,
-          tension: 120,
-          useNativeDriver: true,
+          toValue: 1, friction: 6, tension: 130, useNativeDriver: true,
         }),
         Animated.timing(opacityAnim, {
-          toValue: 1,
-          duration: 160,
-          useNativeDriver: true,
+          toValue: 1, duration: 140, useNativeDriver: true,
         }),
       ]).start();
     } else {
-      // Snap closed immediately (close is always triggered by an action)
       scaleAnim.setValue(0);
       opacityAnim.setValue(0);
       setPressed(null);
@@ -136,14 +136,22 @@ export default function RadialMenu({ visible, onClose, onNewEvent, onNewTask }) 
 
   const handlePress = (sector) => {
     setPressed(sector.id);
-    // Small delay so the highlight is visible before the modal closes
     setTimeout(() => {
       onClose();
-      if (sector.id === 'event')  { onNewEvent(); }
-      if (sector.id === 'task')   { onNewTask();  }
-      if (sector.id === 'cancel') { /* just close */ }
-    }, 120);
+      if (sector.id === 'event')  onNewEvent();
+      if (sector.id === 'task')   onNewTask();
+    }, 110);
   };
+
+  // Scale origin is at the FAB centre = bottom-right corner of the container.
+  // React Native has no transformOrigin, so use the translate→scale→untranslate trick.
+  const anchorTransform = [
+    { translateX:  CONTAINER_W / 2 },
+    { translateY:  CONTAINER_H / 2 },
+    { scale: scaleAnim },
+    { translateX: -CONTAINER_W / 2 },
+    { translateY: -CONTAINER_H / 2 },
+  ];
 
   return (
     <Modal
@@ -153,7 +161,7 @@ export default function RadialMenu({ visible, onClose, onNewEvent, onNewTask }) 
       statusBarTranslucent
       onRequestClose={onClose}
     >
-      {/* Backdrop — tapping outside also closes */}
+      {/* Dim backdrop — tap outside to close */}
       <Pressable style={StyleSheet.absoluteFillObject} onPress={onClose}>
         <Animated.View
           style={[styles.backdrop, { opacity: opacityAnim }]}
@@ -161,21 +169,18 @@ export default function RadialMenu({ visible, onClose, onNewEvent, onNewTask }) 
         />
       </Pressable>
 
-      {/* Animated pie wheel */}
+      {/* Wheel container anchored to FAB position */}
       <Animated.View
         style={[
           styles.wheelContainer,
-          {
-            transform: [{ scale: scaleAnim }],
-            opacity: opacityAnim,
-          },
+          { transform: anchorTransform, opacity: opacityAnim },
         ]}
         pointerEvents="box-none"
       >
         {/* SVG pie slices */}
         <Svg
-          width={SW}
-          height={SH}
+          width={CONTAINER_W}
+          height={CONTAINER_H}
           style={StyleSheet.absoluteFillObject}
           pointerEvents="none"
         >
@@ -184,64 +189,55 @@ export default function RadialMenu({ visible, onClose, onNewEvent, onNewTask }) 
               key={sector.id}
               d={sectorPath(CX, CY, INNER_R, OUTER_R, sector.startAngle, sector.endAngle)}
               fill={pressed === sector.id ? sector.colorBright : sector.color}
-              opacity={0.93}
+              opacity={0.95}
             />
           ))}
         </Svg>
 
-        {/* Pressable hit areas + icons/labels — absolutely positioned Views */}
+        {/* Pressable hit areas */}
         {SECTORS.map(sector => {
-          const pos = iconPosition(sector);
-          // Tap zone is a generous square centred on the icon position
+          const p = iconPos(sector);
           return (
             <Pressable
               key={sector.id}
               onPress={() => handlePress(sector)}
               onPressIn={() => setPressed(sector.id)}
               onPressOut={() => setPressed(null)}
-              style={[
-                styles.sectorHit,
-                {
-                  left:  pos.x - 44,
-                  top:   pos.y - 44,
-                },
-              ]}
+              style={[styles.sectorHit, { left: p.x - 40, top: p.y - 40 }]}
             >
-              {/* Icon + label stacked vertically */}
               <View style={styles.sectorContent}>
-                <Ionicons
-                  name={sector.icon}
-                  size={26}
-                  color="#fff"
-                  style={styles.sectorIcon}
-                />
-                <Text style={styles.sectorLabel}>{sector.label}</Text>
+                <Ionicons name={sector.icon} size={24} color="#fff" style={styles.icon} />
+                <Text style={styles.label}>{sector.label}</Text>
               </View>
             </Pressable>
           );
         })}
-
-        {/* Centre dot — the small circle between the slices */}
-        <View style={styles.centreDot} pointerEvents="none" />
       </Animated.View>
     </Modal>
   );
 }
 
-// ── Styles ───────────────────────────────────────────────────────────────────
+// ── Styles ────────────────────────────────────────────────────────────────────
 
 const styles = StyleSheet.create({
   backdrop: {
     ...StyleSheet.absoluteFillObject,
-    backgroundColor: 'rgba(0,0,0,0.62)',
+    backgroundColor: 'rgba(0,0,0,0.55)',
   },
+
+  // Bottom-right corner of this container = FAB centre
   wheelContainer: {
-    ...StyleSheet.absoluteFillObject,
+    position: 'absolute',
+    right:    FAB_RIGHT  + FAB_SIZE / 2,   // right edge of container at FAB centre X
+    bottom:   FAB_BOTTOM + FAB_SIZE / 2,   // bottom edge at FAB centre Y
+    width:    CONTAINER_W,
+    height:   CONTAINER_H,
   },
+
   sectorHit: {
     position:       'absolute',
-    width:          88,
-    height:         88,
+    width:          80,
+    height:         80,
     alignItems:     'center',
     justifyContent: 'center',
   },
@@ -249,33 +245,21 @@ const styles = StyleSheet.create({
     alignItems:     'center',
     justifyContent: 'center',
   },
-  sectorIcon: {
-    marginBottom: 4,
-    // Subtle drop shadow on iOS
-    shadowColor:  '#000',
-    shadowOpacity: 0.35,
-    shadowRadius:  4,
-    shadowOffset:  { width: 0, height: 2 },
+  icon: {
+    marginBottom: 3,
+    shadowColor: '#000',
+    shadowOpacity: 0.4,
+    shadowRadius: 4,
+    shadowOffset: { width: 0, height: 2 },
   },
-  sectorLabel: {
-    color:      '#fff',
-    fontSize:   12,
-    fontWeight: '600',
-    letterSpacing: 0.2,
-    textAlign:  'center',
-    textShadowColor:  'rgba(0,0,0,0.5)',
+  label: {
+    color:           '#fff',
+    fontSize:        11,
+    fontWeight:      '700',
+    letterSpacing:   0.2,
+    textAlign:       'center',
+    textShadowColor: 'rgba(0,0,0,0.6)',
     textShadowRadius:  3,
     textShadowOffset:  { width: 0, height: 1 },
-  },
-  centreDot: {
-    position:        'absolute',
-    left:            CX - 18,
-    top:             CY - 18,
-    width:           36,
-    height:          36,
-    borderRadius:    18,
-    backgroundColor: '#1c1c1e',
-    borderWidth:     2,
-    borderColor:     'rgba(255,255,255,0.15)',
   },
 });
