@@ -393,15 +393,35 @@ export default function HomeScreen({ navigation }) {
   // without needing to be listed in hook deps.
   const handleFinalTranscriptRef = useRef(null);
 
+  // Refs so the 'end' event callback always reads fresh values without
+  // stale closures — state setters alone are not enough here because
+  // the 'end' callback is registered once and never re-registered.
+  const isRecordingRef    = useRef(false);
+  const lastTranscriptRef = useRef('');
+
   // ── STT event listeners (called unconditionally — hooks rule) ─────────────
   // useSTTEvent is a no-op when expo-speech-recognition isn't available.
   useSTTEvent('result', (e) => {
     const best = e.results?.[0]?.transcript ?? '';
     setVoiceTranscript(best);
+    // Store every non-empty partial so 'end' can use it if isFinal never fires.
+    if (best) lastTranscriptRef.current = best;
     if (e.isFinal && handleFinalTranscriptRef.current) {
       handleFinalTranscriptRef.current(best);
     }
   });
+
+  // 'end' fires after stop() on both iOS and Android, even when the engine
+  // never emits a 'result' with isFinal=true.  Use it as the guaranteed
+  // trigger so the user always reaches EventForm.
+  useSTTEvent('end', () => {
+    if (isRecordingRef.current) {
+      // Use whatever partial transcript we captured; empty string is fine —
+      // handleFinalTranscript will open EventForm with a blank prefill.
+      handleFinalTranscriptRef.current?.(lastTranscriptRef.current);
+    }
+  });
+
   useSTTEvent('error', (e) => {
     console.warn('SpeechRecognition error:', e.error);
     setIsRecording(false);
@@ -565,12 +585,15 @@ export default function HomeScreen({ navigation }) {
 
   // ── Voice capture helpers ─────────────────────────────────────────────────
 
-  // Keep the stable ref up to date after each render so STT callbacks
-  // always invoke the latest version of handleFinalTranscript.
-  // (This effect runs synchronously after render, before the next event.)
+  // Keep the stable refs up to date after each render so STT callbacks
+  // always read the latest values without stale closures.
+  // (These effects run synchronously after render, before the next event.)
   useEffect(() => {
     handleFinalTranscriptRef.current = handleFinalTranscript;
   });
+  useEffect(() => {
+    isRecordingRef.current = isRecording;
+  }, [isRecording]);
 
   // Animate the FAB pulse ring on/off
   const startFabPulse = useCallback(() => {
@@ -589,30 +612,37 @@ export default function HomeScreen({ navigation }) {
     fabPulse.setValue(1);
   }, [fabPulse]);
 
-  // Called when the final transcript is ready
+  // Called when the final transcript is ready (also called by the 'end' event
+  // with an empty string when the engine stopped without producing a result).
+  // Guard against being called twice (isFinal result + end event) with a ref.
+  const hasNavigatedRef = useRef(false);
   const handleFinalTranscript = useCallback((text) => {
-    if (!text.trim()) {
-      setIsRecording(false);
-      setVoiceStatus('idle');
-      setVoiceTranscript('');
-      stopFabPulse();
-      return;
-    }
-    setVoiceStatus('processing');
-    const parsed = parseVoiceInput(text);
+    // Prevent double-navigation if both 'result' isFinal and 'end' fire.
+    if (hasNavigatedRef.current) return;
+    hasNavigatedRef.current = true;
+    isRecordingRef.current  = false;  // mark done so a stale 'end' won't re-fire
+
+    const trimmed = text.trim();
+    setVoiceStatus(trimmed ? 'processing' : 'idle');
+    const parsed = trimmed ? parseVoiceInput(trimmed) : {};
+
     setTimeout(() => {
       setIsRecording(false);
       setVoiceStatus('idle');
       setVoiceTranscript('');
       stopFabPulse();
+      hasNavigatedRef.current = false;  // reset for next session
+      // Navigate even when transcript is empty — user still gets the form.
       navigation.navigate('EventForm', { prefill: parsed });
-    }, 350);
+    }, trimmed ? 350 : 0);
   }, [navigation, stopFabPulse]);
 
   // Long-press on FAB → start recording
   const handleFabLongPress = useCallback(async () => {
     if (isRecording) return;
     setIsRecording(true);
+    isRecordingRef.current  = true;   // update ref immediately (state is async)
+    lastTranscriptRef.current = '';   // clear leftovers from any previous session
     setVoiceStatus('listening');
     setVoiceTranscript('');
     startFabPulse();
@@ -637,7 +667,8 @@ export default function HomeScreen({ navigation }) {
     if (!isRecording) return;
     if (STT_AVAILABLE) {
       try { ExpoSpeechRecognitionModule.stop(); } catch (_) {}
-      // STT 'result' event will fire handleFinalTranscript when ready
+      // The STT 'end' event is the guaranteed trigger for handleFinalTranscript
+      // (works on both iOS and Android, even when isFinal is never set).
     } else {
       // No STT — nothing to parse, just reset
       handleFinalTranscript('');
