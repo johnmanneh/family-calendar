@@ -28,11 +28,11 @@ const FAB_BOTTOM = 32;
 const FAB_SIZE   = 48;
 
 // ── Pie geometry ─────────────────────────────────────────────────────────────
-const OUTER_R  = 118;             // moderate length — not too long
+const OUTER_R  = 138;             // slightly wider slices
 const SUN_R    = FAB_SIZE / 2;   // 24 — same radius as FAB
 const INNER_R  = SUN_R;          // slices start exactly at the sun edge — no gap
-const EMOJI_R  =  58;   // inner zone — emoji anchor
-const LABEL_R  =  95;   // outer zone — label anchor (always visible)
+const EMOJI_R  =  68;   // inner zone — emoji anchor
+const LABEL_R  = 112;   // outer zone — label anchor (always visible)
 const GAP_DEG  =   2.5;
 
 // Two sectors only — sun is the cancel
@@ -60,9 +60,9 @@ const SECTORS = [
 // ── Container: FAB centre lives at (CX_IN, CY_IN) inside the container ───────
 // Left/above FAB: need OUTER_R + padding for slices
 // Right/below FAB: need SUN_R + padding for sun overhang
-const PAD   = 24;                     // padding so labels aren't clipped
-const CX_IN = OUTER_R + PAD;         // 142
-const CY_IN = OUTER_R + PAD;         // 142
+const PAD   = 26;                     // padding so labels aren't clipped
+const CX_IN = OUTER_R + PAD;         // 164
+const CY_IN = OUTER_R + PAD;         // 164
 const C_W   = CX_IN + SUN_R + PAD;   // right side: sun overhang + padding
 const C_H   = CY_IN + SUN_R + PAD;   // bottom: sun overhang + padding
 
@@ -162,18 +162,19 @@ export default function RadialMenu({ visible, onClose, onNewEvent, onNewTask }) 
           <Text style={s.sunEmoji}>☀️</Text>
         </Pressable>
 
-        {/* Slice content: emoji (inner) + label (outer, always visible) */}
+        {/* Slice content: emoji (inner) + label (outer).
+            Rendered as direct children of Animated.View so absolute
+            positioning is relative to the container — not a 0×0 wrapper. */}
         {SECTORS.map(sec => {
           const active = hovered === sec.id;
           const dim    = hovered !== null && !active;
           const ep     = radialPt(sec, EMOJI_R);
           const lp     = radialPt(sec, LABEL_R);
-          const EH     = 58;
-          const LW     = 88, LH = 44;
+          const EH = 58, LW = 92, LH = 46;
 
           return (
-            <View key={sec.id} pointerEvents="box-none">
-              {/* Emoji */}
+            <React.Fragment key={sec.id}>
+              {/* Emoji hit zone */}
               <Pressable
                 onPressIn={() => setHovered(sec.id)}
                 onPressOut={() => setHovered(null)}
@@ -193,7 +194,7 @@ export default function RadialMenu({ visible, onClose, onNewEvent, onNewTask }) 
                   {sec.label}
                 </Text>
               </View>
-            </View>
+            </React.Fragment>
           );
         })}
       </Animated.View>
