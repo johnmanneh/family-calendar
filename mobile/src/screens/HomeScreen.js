@@ -662,18 +662,20 @@ export default function HomeScreen({ navigation }) {
     // fallback path via handleFabRelease → handleFinalTranscript('').
   }, [isRecording, startFabPulse, stopFabPulse]);
 
-  // PressOut on FAB → stop recording
+  // PressOut on FAB → stop recording.
+  // Use isRecordingRef (not state) — state update from onLongPress is async
+  // and may not have committed by the time onPressOut fires.
   const handleFabRelease = useCallback(() => {
-    if (!isRecording) return;
+    if (!isRecordingRef.current) return;
     if (STT_AVAILABLE) {
       try { ExpoSpeechRecognitionModule.stop(); } catch (_) {}
       // The STT 'end' event is the guaranteed trigger for handleFinalTranscript
       // (works on both iOS and Android, even when isFinal is never set).
     } else {
-      // No STT — nothing to parse, just reset
+      // No STT — navigate to blank form
       handleFinalTranscript('');
     }
-  }, [isRecording, handleFinalTranscript]);
+  }, [handleFinalTranscript]);
 
   // Seed UI from cache immediately so the screen is never blank while fetching
   useEffect(() => {
