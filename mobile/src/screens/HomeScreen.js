@@ -389,6 +389,17 @@ export default function HomeScreen({ navigation }) {
   const fabPulse = useRef(new Animated.Value(1)).current;
   const pulseLoop = useRef(null);
 
+  // ── Success toast — shown after a voice-created event ───────────────────
+  // null = hidden, string = message to show
+  const [successToast, setSuccessToast] = useState(null);
+  const successTimerRef = useRef(null);
+
+  const showSuccessToast = useCallback((msg) => {
+    if (successTimerRef.current) clearTimeout(successTimerRef.current);
+    setSuccessToast(msg);
+    successTimerRef.current = setTimeout(() => setSuccessToast(null), 2500);
+  }, []);
+
   // Stable ref so STT event callbacks always read the latest handler
   // without needing to be listed in hook deps.
   const handleFinalTranscriptRef = useRef(null);
@@ -616,26 +627,105 @@ export default function HomeScreen({ navigation }) {
   // with an empty string when the engine stopped without producing a result).
   // Guard against being called twice (isFinal result + end event) with a ref.
   const hasNavigatedRef = useRef(false);
-  const handleFinalTranscript = useCallback((text) => {
-    // Prevent double-navigation if both 'result' isFinal and 'end' fire.
+  const handleFinalTranscript = useCallback(async (text) => {
+    // Prevent double-fire if both 'result' isFinal and 'end' fire.
     if (hasNavigatedRef.current) return;
     hasNavigatedRef.current = true;
     isRecordingRef.current  = false;  // mark done so a stale 'end' won't re-fire
 
     const trimmed = text.trim();
-    setVoiceStatus(trimmed ? 'processing' : 'idle');
-    const parsed = trimmed ? parseVoiceInput(trimmed) : {};
 
-    setTimeout(() => {
+    // No speech captured → fall back to opening the form so user isn't left stranded.
+    if (!trimmed) {
       setIsRecording(false);
       setVoiceStatus('idle');
       setVoiceTranscript('');
       stopFabPulse();
-      hasNavigatedRef.current = false;  // reset for next session
-      // Navigate even when transcript is empty — user still gets the form.
+      hasNavigatedRef.current = false;
+      navigation.navigate('EventForm', { prefill: {} });
+      return;
+    }
+
+    setVoiceStatus('processing');
+    const parsed = parseVoiceInput(trimmed);
+
+    // If parsing returned no title, fall back to the form pre-filled with whatever we have.
+    if (!parsed.title) {
+      setTimeout(() => {
+        setIsRecording(false);
+        setVoiceStatus('idle');
+        setVoiceTranscript('');
+        stopFabPulse();
+        hasNavigatedRef.current = false;
+        navigation.navigate('EventForm', { prefill: parsed });
+      }, 350);
+      return;
+    }
+
+    // ── Build the event payload ────────────────────────────────────────────
+    // Mirror what EventFormScreen sends for a new event.
+    const pad = n => String(n).padStart(2, '0');
+    const toISOLocal = (d) =>
+      `${d.getFullYear()}-${pad(d.getMonth()+1)}-${pad(d.getDate())}T${pad(d.getHours())}:${pad(d.getMinutes())}`;
+    const toDateOnly = (d) =>
+      `${d.getFullYear()}-${pad(d.getMonth()+1)}-${pad(d.getDate())}`;
+
+    // Build start date from parsed date + time, defaulting to now + 1 h
+    const startDate = (() => {
+      const base = parsed.date ? new Date(`${parsed.date}T00:00:00`) : new Date();
+      if (parsed.time) {
+        const [h, m] = parsed.time.split(':').map(Number);
+        base.setHours(h, m, 0, 0);
+      } else {
+        const now = new Date();
+        base.setHours(now.getHours() + 1, 0, 0, 0);
+      }
+      return base;
+    })();
+    const endDate = new Date(startDate);
+    endDate.setHours(endDate.getHours() + 1);
+
+    const isAllDay = !parsed.time && !parsed.date;
+
+    const payload = {
+      title:       parsed.title,
+      description: '',
+      location:    parsed.location || '',
+      notes:       '',
+      video_call_link: '',
+      priority:    'medium',
+      category:    '',
+      color:       '#1a8fa8',
+      recurrence:  '',
+      is_all_day:  isAllDay,
+      is_private:  false,
+      start_date:  isAllDay ? toDateOnly(startDate) : toISOLocal(startDate),
+      end_date:    isAllDay ? toDateOnly(endDate)   : toISOLocal(endDate),
+      recurrence_end_date: null,
+    };
+
+    try {
+      await API.post('/events/create', payload);
+
+      // Refresh the home screen list so the new event appears immediately.
+      fetchEvents();
+
+      setIsRecording(false);
+      setVoiceStatus('idle');
+      setVoiceTranscript('');
+      stopFabPulse();
+      hasNavigatedRef.current = false;
+      showSuccessToast('Event created');
+    } catch (_err) {
+      // API failed → open the form pre-filled so the user can try manually.
+      setIsRecording(false);
+      setVoiceStatus('idle');
+      setVoiceTranscript('');
+      stopFabPulse();
+      hasNavigatedRef.current = false;
       navigation.navigate('EventForm', { prefill: parsed });
-    }, trimmed ? 350 : 0);
-  }, [navigation, stopFabPulse]);
+    }
+  }, [navigation, stopFabPulse, fetchEvents, showSuccessToast]);
 
   // Long-press on FAB → start recording
   const handleFabLongPress = useCallback(async () => {
@@ -1140,6 +1230,14 @@ export default function HomeScreen({ navigation }) {
               <Text style={styles.voicePillTranscript} numberOfLines={2}>{voiceTranscript}</Text>
             ) : null}
           </View>
+        </View>
+      )}
+
+      {/* ── Success toast — brief green pill above FAB after voice create ── */}
+      {successToast && (
+        <View style={styles.successPill}>
+          <Ionicons name="checkmark-circle" size={16} color="#fff" />
+          <Text style={styles.successPillText}>{successToast}</Text>
         </View>
       )}
 

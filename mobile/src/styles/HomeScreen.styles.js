@@ -148,6 +148,25 @@ const make = c => StyleSheet.create({
     maxWidth: 200,
   },
 
+  // ── Success toast pill — floats above FAB after a voice-created event ───────
+  successPill: {
+    position: 'absolute',
+    bottom: 96,           // same vertical anchor as voicePill
+    right: 16,
+    backgroundColor: 'rgba(52,199,89,0.93)',  // green, matches iOS system green
+    borderRadius: 20,
+    paddingHorizontal: 16,
+    paddingVertical: 9,
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 7,
+    shadowColor: '#000', shadowOpacity: 0.20, shadowRadius: 8,
+    shadowOffset: { width: 0, height: 3 }, elevation: 8,
+  },
+  successPillText: {
+    color: '#fff', fontSize: 14, fontWeight: '600', letterSpacing: 0.2,
+  },
+
   offlineBanner: {
     flexDirection: 'row', alignItems: 'center', gap: 6,
     backgroundColor: '#636366', paddingVertical: 6, paddingHorizontal: 14,
