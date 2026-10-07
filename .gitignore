@@ -2,6 +2,11 @@
 docs/ARCHITECTURE.md
 CLAUDE.md
 
+# Environment variables — never commit credentials
+.env
+.env.local
+.env.production
+
 # Claude Code internal files
 .claude/
 
