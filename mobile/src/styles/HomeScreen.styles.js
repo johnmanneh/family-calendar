@@ -120,6 +120,34 @@ const make = c => StyleSheet.create({
   pickerCancel: { fontSize: 16, color: c.icon },
   pickerDone: { fontSize: 16, fontWeight: '600', color: '#1a8fa8' },
 
+  // ── Voice pill bubble — floats just above the FAB while recording ──────────
+  voicePill: {
+    position: 'absolute',
+    bottom: 96,           // sits above the FAB (FAB bottom=32, height=48 → 32+48+16=96)
+    right: 16,
+    backgroundColor: 'rgba(26,143,168,0.93)',
+    borderRadius: 20,
+    paddingHorizontal: 16,
+    paddingVertical: 8,
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 8,
+    // shadow
+    shadowColor: '#000', shadowOpacity: 0.22, shadowRadius: 8,
+    shadowOffset: { width: 0, height: 3 }, elevation: 8,
+  },
+  voicePillDot: {
+    width: 8, height: 8, borderRadius: 4,
+    backgroundColor: '#fff',
+  },
+  voicePillText: {
+    color: '#fff', fontSize: 14, fontWeight: '600', letterSpacing: 0.2,
+  },
+  voicePillTranscript: {
+    color: 'rgba(255,255,255,0.82)', fontSize: 12, marginTop: 2,
+    maxWidth: 200,
+  },
+
   offlineBanner: {
     flexDirection: 'row', alignItems: 'center', gap: 6,
     backgroundColor: '#636366', paddingVertical: 6, paddingHorizontal: 14,

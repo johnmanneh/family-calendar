@@ -28,13 +28,30 @@ import DrawerMenu from '../components/DrawerMenu';
 import WeekStrip from '../components/WeekStrip';
 import MonthCalendar from '../components/MonthCalendar';
 import RadialMenu from '../components/RadialMenu';
-import VoiceCapture from '../components/VoiceCapture';
 import { useStyles } from '../styles/HomeScreen.styles';
+import parseVoiceInput from '../utils/parseVoiceInput';
 import API, { SERVER_URL } from '../api/axios';
 import { useAuth } from '../context/AuthContext';
 import { useFamily } from '../context/FamilyContext';
 import { useSSE } from '../context/SSEContext';
 import { saveCache, loadCache, savedAtLabel } from '../utils/cache';
+
+// ── Try to load expo-speech-recognition ─────────────────────────────────────
+// Falls back gracefully in Expo Go where the native module isn't linked.
+let ExpoSpeechRecognitionModule = null;
+let useSpeechRecognitionEvent   = null;
+let STT_AVAILABLE = false;
+try {
+  const stt = require('expo-speech-recognition');
+  ExpoSpeechRecognitionModule = stt.ExpoSpeechRecognitionModule;
+  useSpeechRecognitionEvent   = stt.useSpeechRecognitionEvent;
+  STT_AVAILABLE = true;
+} catch (_) {
+  STT_AVAILABLE = false;
+}
+// No-op hook so we can call useSpeechRecognitionEvent unconditionally
+// in HomeScreen regardless of whether STT is available.
+const useSTTEvent = useSpeechRecognitionEvent || (() => {});
 
 // ─── Helpers ────────────────────────────────────────────────────────────────
 
@@ -356,8 +373,39 @@ export default function HomeScreen({ navigation }) {
   const [chatUnread,   setChatUnread]   = useState(0);
   const [drawerOpen,    setDrawerOpen]    = useState(false);
   const [isOffline,     setIsOffline]     = useState(false);
-  const [radialVisible, setRadialVisible] = useState(false);
-  const [voiceVisible,  setVoiceVisible]  = useState(false);
+  const [radialVisible,  setRadialVisible]  = useState(false);
+
+  // ── Inline voice capture state ───────────────────────────────────────────
+  // isRecording: true while the user is holding the FAB
+  // voiceStatus: 'idle' | 'listening' | 'processing'
+  // voiceTranscript: live partial transcript shown in the pill
+  // fabPulse: animated scale value for the FAB glow ring while recording
+  const [isRecording,      setIsRecording]      = useState(false);
+  const [voiceStatus,      setVoiceStatus]      = useState('idle');
+  const [voiceTranscript,  setVoiceTranscript]  = useState('');
+  const fabPulse = useRef(new Animated.Value(1)).current;
+  const pulseLoop = useRef(null);
+
+  // Stable ref so STT event callbacks always read the latest handler
+  // without needing to be listed in hook deps.
+  const handleFinalTranscriptRef = useRef(null);
+
+  // ── STT event listeners (called unconditionally — hooks rule) ─────────────
+  // useSTTEvent is a no-op when expo-speech-recognition isn't available.
+  useSTTEvent('result', (e) => {
+    const best = e.results?.[0]?.transcript ?? '';
+    setVoiceTranscript(best);
+    if (e.isFinal && handleFinalTranscriptRef.current) {
+      handleFinalTranscriptRef.current(best);
+    }
+  });
+  useSTTEvent('error', (e) => {
+    console.warn('SpeechRecognition error:', e.error);
+    setIsRecording(false);
+    setVoiceStatus('idle');
+    setVoiceTranscript('');
+    if (pulseLoop.current) { pulseLoop.current.stop(); fabPulse.setValue(1); }
+  });
 
   const closeSearch = useCallback(() => {
     setSearchVisible(false);
@@ -511,6 +559,87 @@ export default function HomeScreen({ navigation }) {
       get(assigneeNotifs,  'notifications')
     );
   }, []);
+
+  // ── Voice capture helpers ─────────────────────────────────────────────────
+
+  // Keep the stable ref up to date after each render so STT callbacks
+  // always invoke the latest version of handleFinalTranscript.
+  // (This effect runs synchronously after render, before the next event.)
+  useEffect(() => {
+    handleFinalTranscriptRef.current = handleFinalTranscript;
+  });
+
+  // Animate the FAB pulse ring on/off
+  const startFabPulse = useCallback(() => {
+    fabPulse.setValue(1);
+    pulseLoop.current = Animated.loop(
+      Animated.sequence([
+        Animated.timing(fabPulse, { toValue: 1.5, duration: 600, useNativeDriver: true }),
+        Animated.timing(fabPulse, { toValue: 1,   duration: 600, useNativeDriver: true }),
+      ])
+    );
+    pulseLoop.current.start();
+  }, [fabPulse]);
+
+  const stopFabPulse = useCallback(() => {
+    pulseLoop.current?.stop();
+    fabPulse.setValue(1);
+  }, [fabPulse]);
+
+  // Called when the final transcript is ready
+  const handleFinalTranscript = useCallback((text) => {
+    if (!text.trim()) {
+      setIsRecording(false);
+      setVoiceStatus('idle');
+      setVoiceTranscript('');
+      stopFabPulse();
+      return;
+    }
+    setVoiceStatus('processing');
+    const parsed = parseVoiceInput(text);
+    setTimeout(() => {
+      setIsRecording(false);
+      setVoiceStatus('idle');
+      setVoiceTranscript('');
+      stopFabPulse();
+      navigation.navigate('EventForm', { prefill: parsed });
+    }, 350);
+  }, [navigation, stopFabPulse]);
+
+  // Long-press on FAB → start recording
+  const handleFabLongPress = useCallback(async () => {
+    if (isRecording) return;
+    setIsRecording(true);
+    setVoiceStatus('listening');
+    setVoiceTranscript('');
+    startFabPulse();
+
+    if (STT_AVAILABLE) {
+      try {
+        await ExpoSpeechRecognitionModule.requestPermissionsAsync();
+        ExpoSpeechRecognitionModule.start({ lang: 'en-US', interimResults: true });
+      } catch (err) {
+        console.warn('Could not start speech recognition:', err);
+        setIsRecording(false);
+        setVoiceStatus('idle');
+        stopFabPulse();
+      }
+    }
+    // In Expo Go (no STT): pill shows "Listening…" and releasing triggers the
+    // fallback path via handleFabRelease → handleFinalTranscript('').
+  }, [isRecording, startFabPulse, stopFabPulse]);
+
+  // PressOut on FAB → stop recording
+  const handleFabRelease = useCallback(() => {
+    if (!isRecording) return;
+    if (STT_AVAILABLE) {
+      try { ExpoSpeechRecognitionModule.stop(); } catch (_) {}
+      // STT 'result' event will fire handleFinalTranscript when ready
+    } else {
+      // No STT — nothing to parse, just reset
+      handleFinalTranscript('');
+    }
+  }, [isRecording, handleFinalTranscript]);
 
   // Seed UI from cache immediately so the screen is never blank while fetching
   useEffect(() => {
@@ -963,16 +1092,49 @@ export default function HomeScreen({ navigation }) {
       )}
     </SafeAreaView>
 
-      {/* ── FAB — floating + button, bottom right ── */}
-      {/* Press → opens radial pie menu. Long-press → opens voice capture. */}
-      <Pressable
-        style={({ pressed }) => [styles.fab, styles.fabSmall, pressed && { opacity: 0.8 }]}
-        onPress={() => setRadialVisible(true)}
-        onLongPress={() => setVoiceVisible(true)}
-        delayLongPress={400}
+      {/* ── Voice status pill — floats above the FAB while recording ── */}
+      {isRecording && (
+        <View style={styles.voicePill}>
+          <Animated.View style={[styles.voicePillDot, { opacity: fabPulse.interpolate({ inputRange: [1, 1.5], outputRange: [1, 0.3] }) }]} />
+          <View>
+            <Text style={styles.voicePillText}>
+              {voiceStatus === 'processing' ? 'Processing…' : 'Listening…'}
+            </Text>
+            {voiceTranscript ? (
+              <Text style={styles.voicePillTranscript} numberOfLines={2}>{voiceTranscript}</Text>
+            ) : null}
+          </View>
+        </View>
+      )}
+
+      {/* ── FAB — floating action button, bottom right ── */}
+      {/* Short press → opens radial pie menu.            */}
+      {/* Long press (hold) → FAB becomes mic, records.   */}
+      {/* Lift finger (pressOut) → stops recording.       */}
+      <View style={[styles.fab, styles.fabSmall, { alignItems: 'center', justifyContent: 'center' }]}
+        pointerEvents="box-none"
       >
-        <Ionicons name="add" size={26} color="#fff" />
-      </Pressable>
+        {/* Pulse ring — expands outward while recording */}
+        {isRecording && (
+          <Animated.View
+            style={{
+              position: 'absolute',
+              width: 48, height: 48, borderRadius: 24,
+              backgroundColor: 'rgba(26,143,168,0.35)',
+              transform: [{ scale: fabPulse }],
+            }}
+          />
+        )}
+        <Pressable
+          style={{ width: 48, height: 48, borderRadius: 24, backgroundColor: isRecording ? '#0e6d82' : '#1a8fa8', alignItems: 'center', justifyContent: 'center' }}
+          onPress={() => { if (!isRecording) setRadialVisible(true); }}
+          onLongPress={handleFabLongPress}
+          onPressOut={handleFabRelease}
+          delayLongPress={400}
+        >
+          <Ionicons name={isRecording ? 'mic' : 'add'} size={26} color="#fff" />
+        </Pressable>
+      </View>
 
       {/* ── Radial pie menu ── */}
       <RadialMenu
@@ -980,13 +1142,6 @@ export default function HomeScreen({ navigation }) {
         onClose={() => setRadialVisible(false)}
         onNewEvent={() => navigation.navigate('EventForm')}
         onNewTask={() => navigation.navigate('TaskForm')}
-      />
-
-      {/* ── Voice capture overlay ── */}
-      <VoiceCapture
-        visible={voiceVisible}
-        onClose={() => setVoiceVisible(false)}
-        navigation={navigation}
       />
 
     </View>
