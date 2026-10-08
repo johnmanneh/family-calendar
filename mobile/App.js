@@ -59,10 +59,11 @@ function AppNavigator() {
             <Stack.Screen name="Language" component={LanguageScreen} />
           </>
         ) : (
-          // Not logged in — show Login, Forgot Password, Reset Password
-          <Stack.Screen name="Login" component={LoginScreen} />
-          <Stack.Screen name="ForgotPassword" component={ForgotPasswordScreen} />
-          <Stack.Screen name="ResetPassword" component={ResetPasswordScreen} />
+          <>
+            <Stack.Screen name="Login" component={LoginScreen} />
+            <Stack.Screen name="ForgotPassword" component={ForgotPasswordScreen} />
+            <Stack.Screen name="ResetPassword" component={ResetPasswordScreen} />
+          </>
         )}
       </Stack.Navigator>
     </NavigationContainer>
