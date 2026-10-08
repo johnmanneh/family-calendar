@@ -91,6 +91,17 @@
   border-radius: 10px;
 }
 
+.login-forgot {
+  display: block;
+  text-align: center;
+  margin-top: 12px;
+  font-size: 13px;
+  color: #1a8fa8;
+  text-decoration: none;
+}
+
+.login-forgot:hover { text-decoration: underline; }
+
 .login-tag {
   text-align: center;
   margin-top: 10px;

@@ -44,6 +44,7 @@
     "create_account": "Konto erstellen",
     "new_to_when": "Neu bei When? ",
     "already_have_account": "Bereits ein Konto? ",
+    "forgot_password": "Passwort vergessen?",
     "first_name_required": "Vorname ist erforderlich",
     "last_name_required": "Nachname ist erforderlich",
     "placeholder_first": "Max",

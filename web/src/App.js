@@ -7,6 +7,8 @@ import Dashboard from './pages/dashboard/Dashboard';
 import MemberProfile from './pages/member/MemberProfile';
 import GroupPage from './pages/group/GroupPage';
 import PrivateRoute from './components/common/PrivateRoute';
+import ForgotPassword from './pages/forgot-password/ForgotPassword';
+import ResetPassword from './pages/reset-password/ResetPassword';
 import './App.css';
 
 
@@ -18,6 +20,8 @@ function App() {
           <Route path="/" element={<Login />} />
           <Route path="/login" element={<Login />} />
           <Route path="/register" element={<Register />} />
+          <Route path="/forgot-password" element={<ForgotPassword />} />
+          <Route path="/reset-password" element={<ResetPassword />} />
           <Route path="/dashboard" element={<PrivateRoute><Dashboard /></PrivateRoute>} />
           <Route path="/profile/:userId" element={<PrivateRoute><MemberProfile /></PrivateRoute>} />
           <Route path="/group/:groupId" element={<PrivateRoute><GroupPage /></PrivateRoute>} />

@@ -44,6 +44,7 @@
     "create_account": "Create Account",
     "new_to_when": "New to When? ",
     "already_have_account": "Already have an account? ",
+    "forgot_password": "Forgot password?",
     "first_name_required": "First name is required",
     "last_name_required": "Last name is required",
     "placeholder_first": "John",

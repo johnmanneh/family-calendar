@@ -1,5 +1,5 @@
 import React, { useState } from "react";
-import { useNavigate, Navigate } from "react-router-dom";
+import { useNavigate, Navigate, Link } from "react-router-dom";
 import { useAuth } from "../../context/AuthContext";
 import API from "../../api/axios";
 import Input from "../../components/common/Input/Input";
@@ -163,6 +163,8 @@ const Login = () => {
           />
           <Button type="submit" text="Sign In" loading={loading} />
         </form>
+
+        <Link to="/forgot-password" className="login-forgot">Forgot password?</Link>
 
         <p className="login-tag">Exclusively for your family ♥</p>
         <div className="login-divider">

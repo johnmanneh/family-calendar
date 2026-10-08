@@ -170,6 +170,13 @@ export default function LoginScreen() {
             }
           </TouchableOpacity>
 
+          {/* ── Forgot password ── */}
+          {isLogin && (
+            <TouchableOpacity style={styles.switchRow} onPress={() => navigation.navigate('ForgotPassword')}>
+              <Text style={styles.switchLink}>{t('auth.forgot_password')}</Text>
+            </TouchableOpacity>
+          )}
+
           {/* ── Switch mode link ── */}
           {isLogin ? (
             <TouchableOpacity style={styles.switchRow} onPress={() => switchMode('register')}>

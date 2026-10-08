@@ -21,6 +21,8 @@ import FamilyScreen from './src/screens/FamilyScreen';
 import NotificationsScreen from './src/screens/NotificationsScreen';
 import ChatScreen from './src/screens/ChatScreen';
 import LanguageScreen from './src/screens/LanguageScreen';
+import ForgotPasswordScreen from './src/screens/ForgotPasswordScreen';
+import ResetPasswordScreen from './src/screens/ResetPasswordScreen';
 
 const Stack = createNativeStackNavigator();
 
@@ -57,8 +59,10 @@ function AppNavigator() {
             <Stack.Screen name="Language" component={LanguageScreen} />
           </>
         ) : (
-          // Not logged in — show Login
+          // Not logged in — show Login, Forgot Password, Reset Password
           <Stack.Screen name="Login" component={LoginScreen} />
+          <Stack.Screen name="ForgotPassword" component={ForgotPasswordScreen} />
+          <Stack.Screen name="ResetPassword" component={ResetPasswordScreen} />
         )}
       </Stack.Navigator>
     </NavigationContainer>
