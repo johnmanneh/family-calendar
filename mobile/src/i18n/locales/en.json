@@ -125,6 +125,7 @@
   },
   "tasks": {
     "new_task": "New Task",
+    "edit_task": "Edit Task",
     "title_required": "Title is required",
     "select_assignee": "Please select who this task is for",
     "title_placeholder": "Task title",

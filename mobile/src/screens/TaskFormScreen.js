@@ -39,14 +39,24 @@ export default function TaskFormScreen({ route, navigation }) {
   const { user } = useAuth();
   const { members } = useFamily();
 
-  const [title, setTitle]             = useState('');
-  const [assignedTo, setAssignedTo]   = useState(String(user?.id || ''));
-  const [position, setPosition]       = useState('full');
-  const [hasDueDate, setHasDueDate]   = useState(false);
-  const [dueDate, setDueDate]         = useState(new Date());
-  const [showPicker, setShowPicker]   = useState(false);
-  const [loading, setLoading]         = useState(false);
-  const [error, setError]             = useState('');
+  // If a task is passed in route.params, we are in edit mode
+  const existingTask = route.params?.task || null;
+  const isEditing = !!existingTask;
+
+  const initialDueDate = existingTask?.due_date
+    ? new Date(existingTask.due_date)
+    : new Date();
+
+  const [title, setTitle]           = useState(existingTask?.title || '');
+  const [assignedTo, setAssignedTo] = useState(
+    existingTask?.assigned_to ? String(existingTask.assigned_to) : String(user?.id || '')
+  );
+  const [position, setPosition]     = useState(existingTask?.position || 'full');
+  const [hasDueDate, setHasDueDate] = useState(!!existingTask?.due_date);
+  const [dueDate, setDueDate]       = useState(initialDueDate);
+  const [showPicker, setShowPicker] = useState(false);
+  const [loading, setLoading]       = useState(false);
+  const [error, setError]           = useState('');
 
   const handleSubmit = async () => {
     if (!title.trim()) { setError(t('tasks.title_required')); return; }
@@ -54,12 +64,21 @@ export default function TaskFormScreen({ route, navigation }) {
     setError('');
     setLoading(true);
     try {
-      await API.post('/tasks/standalone', {
-        title: title.trim(),
-        assigned_to: assignedTo,
-        position,
-        due_date: hasDueDate ? toISOLocal(dueDate) : null,
-      });
+      if (isEditing) {
+        await API.patch(`/tasks/${existingTask.id}`, {
+          title: title.trim(),
+          assigned_to: assignedTo,
+          position,
+          due_date: hasDueDate ? toISOLocal(dueDate) : null,
+        });
+      } else {
+        await API.post('/tasks/standalone', {
+          title: title.trim(),
+          assigned_to: assignedTo,
+          position,
+          due_date: hasDueDate ? toISOLocal(dueDate) : null,
+        });
+      }
       navigation.goBack();
     } catch (err) {
       setError(err.response?.data?.message || t('common.something_went_wrong'));
@@ -76,7 +95,9 @@ export default function TaskFormScreen({ route, navigation }) {
         <TouchableOpacity style={styles.backBtn} onPress={() => navigation.goBack()}>
           <Ionicons name="chevron-back" size={24} color="#1d1d1f" />
         </TouchableOpacity>
-        <Text style={styles.headerTitle}>{t('tasks.new_task')}</Text>
+        <Text style={styles.headerTitle}>
+          {isEditing ? t('tasks.edit_task') : t('tasks.new_task')}
+        </Text>
         <TouchableOpacity
           style={[styles.saveHeaderBtn, loading && styles.saveHeaderBtnDisabled]}
           onPress={handleSubmit}
@@ -107,7 +128,7 @@ export default function TaskFormScreen({ route, navigation }) {
           placeholderTextColor="#aaa"
           value={title}
           onChangeText={setTitle}
-          autoFocus
+          autoFocus={!isEditing}
         />
 
         {/* ── Assign to ── */}
@@ -208,7 +229,9 @@ export default function TaskFormScreen({ route, navigation }) {
         >
           {loading
             ? <ActivityIndicator color="#fff" />
-            : <Text style={styles.submitBtnText}>{t('tasks.new_task')}</Text>
+            : <Text style={styles.submitBtnText}>
+                {isEditing ? t('tasks.edit_task') : t('tasks.new_task')}
+              </Text>
           }
         </TouchableOpacity>
 

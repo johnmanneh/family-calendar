@@ -10,6 +10,7 @@ const acknowledgeTaskResponse = require('../controllers/tasks/acknowledgeTaskRes
 const getAssigneeNotifications = require('../controllers/tasks/getAssigneeNotifications');
 const acknowledgeAssigneeNotification = require('../controllers/tasks/acknowledgeAssigneeNotification');
 const updateTaskDueDate = require('../controllers/tasks/updateTaskDueDate');
+const updateTask = require('../controllers/tasks/updateTask');
 const getFamilyTasks = require('../controllers/tasks/getFamilyTasks');
 const deleteTask = require('../controllers/tasks/deleteTask');
 
@@ -24,5 +25,6 @@ router.patch('/:taskId/respond', verifyToken, respondToTask);
 router.patch('/:taskId/acknowledge', verifyToken, acknowledgeTaskResponse);
 router.patch('/:taskId/assignee-acknowledge', verifyToken, acknowledgeAssigneeNotification);
 router.patch('/:taskId/due-date', verifyToken, updateTaskDueDate);
+router.patch('/:taskId', verifyToken, updateTask);
 
 module.exports = router;

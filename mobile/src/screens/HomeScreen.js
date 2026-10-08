@@ -257,6 +257,8 @@ function TaskRow({ task, navigation, onComplete, onDelete, onAccept, onSetArriva
   const handleRowPress = () => {
     if (task.event_id) {
       navigation.navigate('EventDetails', { eventId: task.event_id });
+    } else {
+      navigation.navigate('TaskForm', { task });
     }
   };
 

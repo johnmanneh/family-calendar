@@ -125,6 +125,7 @@
   },
   "tasks": {
     "new_task": "Neue Aufgabe",
+    "edit_task": "Aufgabe bearbeiten",
     "title_required": "Titel ist erforderlich",
     "select_assignee": "Bitte wähle aus, für wen diese Aufgabe ist",
     "title_placeholder": "Aufgabentitel",
