@@ -31,7 +31,7 @@ const resetPassword = async (req, res) => {
 
     await pool.query(
       `UPDATE users
-       SET password_hash        = $1,
+       SET password             = $1,
            reset_token          = NULL,
            reset_token_expires  = NULL
        WHERE id = $2`,
