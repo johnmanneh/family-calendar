@@ -7,10 +7,12 @@ const getFamily = async (req, res) => {
   try {
     // Get family the user belongs to
     const family = await pool.query(
-      `SELECT f.id, f.name, f.invite_code 
+      `SELECT f.id, f.name, f.invite_code
        FROM families f
        JOIN family_members fm ON f.id = fm.family_id
-       WHERE fm.user_id = $1`,
+       WHERE fm.user_id = $1
+       ORDER BY (SELECT COUNT(*) FROM family_members WHERE family_id = f.id) DESC
+       LIMIT 1`,
       [userId]
     );
 

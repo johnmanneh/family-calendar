@@ -58,6 +58,48 @@ export default function TaskFormScreen({ route, navigation }) {
   const [loading, setLoading]       = useState(false);
   const [error, setError]           = useState('');
 
+  // Determine which button set to show at the bottom
+  const isPendingForMe = isEditing
+    && existingTask.status === 'pending'
+    && Number(existingTask.assigned_to) === Number(user?.id);
+
+  const isOngoingForMe = isEditing
+    && existingTask.status === 'accepted'
+    && Number(existingTask.assigned_to) === Number(user?.id);
+
+  const handleAccept = async () => {
+    setLoading(true);
+    try {
+      await API.patch(`/tasks/${existingTask.id}/respond`, { response: 'accepted' });
+      navigation.goBack();
+    } catch (err) {
+      setError(err.response?.data?.message || t('common.something_went_wrong'));
+      setLoading(false);
+    }
+  };
+
+  const handleDecline = async () => {
+    setLoading(true);
+    try {
+      await API.patch(`/tasks/${existingTask.id}/respond`, { response: 'declined' });
+      navigation.goBack();
+    } catch (err) {
+      setError(err.response?.data?.message || t('common.something_went_wrong'));
+      setLoading(false);
+    }
+  };
+
+  const handleDone = async () => {
+    setLoading(true);
+    try {
+      await API.patch(`/tasks/${existingTask.id}/complete`);
+      navigation.goBack();
+    } catch (err) {
+      setError(err.response?.data?.message || t('common.something_went_wrong'));
+      setLoading(false);
+    }
+  };
+
   const handleSubmit = async () => {
     if (!title.trim()) { setError(t('tasks.title_required')); return; }
     if (!assignedTo)   { setError(t('tasks.select_assignee')); return; }
@@ -93,21 +135,27 @@ export default function TaskFormScreen({ route, navigation }) {
       {/* ── Header ── */}
       <View style={styles.header}>
         <TouchableOpacity style={styles.backBtn} onPress={() => navigation.goBack()}>
-          <Ionicons name="chevron-back" size={24} color="#1d1d1f" />
+          <Ionicons name="chevron-back" size={22} color="#1a8fa8" />
+          <Text style={styles.backBtnText}>Back</Text>
         </TouchableOpacity>
         <Text style={styles.headerTitle}>
           {isEditing ? t('tasks.edit_task') : t('tasks.new_task')}
         </Text>
-        <TouchableOpacity
-          style={[styles.saveHeaderBtn, loading && styles.saveHeaderBtnDisabled]}
-          onPress={handleSubmit}
-          disabled={loading}
-        >
-          {loading
-            ? <ActivityIndicator size="small" color="#1a8fa8" />
-            : <Text style={styles.saveHeaderBtnText}>{t('common.save')}</Text>
-          }
-        </TouchableOpacity>
+        {/* New task: no header Save — the bottom Add button saves it */}
+        {isEditing && !isOngoingForMe ? (
+          <TouchableOpacity
+            style={[styles.saveHeaderBtn, loading && styles.saveHeaderBtnDisabled]}
+            onPress={handleSubmit}
+            disabled={loading}
+          >
+            {loading
+              ? <ActivityIndicator size="small" color="#1a8fa8" />
+              : <Text style={styles.saveHeaderBtnText}>{t('common.save')}</Text>
+            }
+          </TouchableOpacity>
+        ) : (
+          <View style={{ width: 60 }} />
+        )}
       </View>
 
       <ScrollView
@@ -202,7 +250,6 @@ export default function TaskFormScreen({ route, navigation }) {
                 style={styles.dateBtn}
                 onPress={() => {
                   if (Platform.OS === 'android') {
-                    // Android: open date picker first, then time picker
                     DateTimePickerAndroid.open({
                       value: dueDate,
                       mode: 'date',
@@ -238,19 +285,57 @@ export default function TaskFormScreen({ route, navigation }) {
           )}
         </View>
 
-        {/* ── Submit ── */}
-        <TouchableOpacity
-          style={[styles.submitBtn, loading && styles.submitBtnDisabled]}
-          onPress={handleSubmit}
-          disabled={loading}
-        >
-          {loading
-            ? <ActivityIndicator color="#fff" />
-            : <Text style={styles.submitBtnText}>
-                {isEditing ? t('tasks.edit_task') : t('tasks.new_task')}
-              </Text>
-          }
-        </TouchableOpacity>
+        {/* ── Bottom buttons ── */}
+        {isOngoingForMe ? (
+          // Ongoing: Done on the right only
+          <View style={[styles.actionRow, { justifyContent: 'flex-end' }]}>
+            <TouchableOpacity
+              style={[styles.actionBtn, styles.actionBtnAccept, loading && styles.actionBtnDisabled]}
+              onPress={handleDone}
+              disabled={loading}
+            >
+              {loading
+                ? <ActivityIndicator size="small" color="#fff" />
+                : <Text style={styles.actionBtnText}>Done</Text>
+              }
+            </TouchableOpacity>
+          </View>
+        ) : !isEditing ? (
+          // New task: a single Add button on the right
+          <View style={[styles.actionRow, { justifyContent: 'flex-end' }]}>
+            <TouchableOpacity
+              style={[styles.actionBtn, styles.actionBtnAccept, loading && styles.actionBtnDisabled]}
+              onPress={handleSubmit}
+              disabled={loading}
+            >
+              {loading
+                ? <ActivityIndicator size="small" color="#fff" />
+                : <Text style={styles.actionBtnText}>{t('common.add')}</Text>
+              }
+            </TouchableOpacity>
+          </View>
+        ) : (
+          // Editing an existing task: Decline (left) + Accept (right)
+          <View style={[styles.actionRow, { justifyContent: 'space-between' }]}>
+            <TouchableOpacity
+              style={[styles.actionBtn, styles.actionBtnDecline, loading && styles.actionBtnDisabled]}
+              onPress={isPendingForMe ? handleDecline : () => navigation.goBack()}
+              disabled={loading}
+            >
+              <Text style={styles.actionBtnText}>Decline</Text>
+            </TouchableOpacity>
+            <TouchableOpacity
+              style={[styles.actionBtn, styles.actionBtnAccept, loading && styles.actionBtnDisabled]}
+              onPress={isPendingForMe ? handleAccept : handleSubmit}
+              disabled={loading}
+            >
+              {loading
+                ? <ActivityIndicator size="small" color="#fff" />
+                : <Text style={styles.actionBtnText}>Accept</Text>
+              }
+            </TouchableOpacity>
+          </View>
+        )}
 
         <View style={{ height: 40 }} />
       </ScrollView>

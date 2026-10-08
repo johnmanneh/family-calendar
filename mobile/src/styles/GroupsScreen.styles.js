@@ -93,6 +93,28 @@ const make = c => StyleSheet.create({
     textTransform: 'uppercase', letterSpacing: 0.5, paddingHorizontal: 16, marginBottom: 10,
   },
 
+  // Member rows inside group detail
+  membersCard: {
+    backgroundColor: c.surface, marginHorizontal: 16, borderRadius: 12, paddingHorizontal: 14,
+    marginBottom: 4,
+    shadowColor: '#000', shadowOpacity: 0.04, shadowRadius: 4,
+    shadowOffset: { width: 0, height: 2 }, elevation: 1,
+  },
+  memberRow: { flexDirection: 'row', alignItems: 'center', paddingVertical: 10, gap: 12 },
+  memberAvatar: {
+    width: 40, height: 40, borderRadius: 20,
+    alignItems: 'center', justifyContent: 'center', flexShrink: 0,
+  },
+  memberAvatarText: { color: '#fff', fontSize: 15, fontWeight: '700' },
+  memberName: { fontSize: 15, fontWeight: '600', color: c.text },
+  memberEmail: { fontSize: 12, color: c.textMuted, marginTop: 1 },
+  adminBadge: {
+    backgroundColor: 'rgba(26,143,168,0.12)', paddingHorizontal: 8,
+    paddingVertical: 3, borderRadius: 8,
+  },
+  adminBadgeText: { fontSize: 11, color: '#1a8fa8', fontWeight: '600' },
+  divider: { height: 1, backgroundColor: c.separator, marginVertical: 1 },
+
   // Event rows inside group detail
   eventRow: {
     flexDirection: 'row', backgroundColor: c.surface,

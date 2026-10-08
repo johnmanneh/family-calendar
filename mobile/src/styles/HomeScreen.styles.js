@@ -22,13 +22,20 @@ const make = c => StyleSheet.create({
     flexDirection: 'row', alignItems: 'center',
     justifyContent: 'space-between',
     paddingHorizontal: 16, paddingVertical: 10,
-    backgroundColor: c.surface,
-    borderBottomWidth: 1, borderBottomColor: c.border,
+    // background + border now come from topCard (one-piece header)
   },
   headerTitle: {
     position: 'absolute', left: 0, right: 0,
     textAlign: 'center', fontSize: 20, fontWeight: '900',
     color: c.text, letterSpacing: -1, pointerEvents: 'none',
+  },
+  // Full-header overlay that centres the title but never receives touches
+  headerTitleWrap: {
+    position: 'absolute', left: 0, right: 0, top: 0, bottom: 0,
+    alignItems: 'center', justifyContent: 'center',
+  },
+  headerTitleText: {
+    fontSize: 20, fontWeight: '900', color: c.text, letterSpacing: -1,
   },
   hamburger: { gap: 5, justifyContent: 'center', padding: 8 },
   hamburgerLine: { width: 22, height: 2.5, borderRadius: 2 },
@@ -42,13 +49,20 @@ const make = c => StyleSheet.create({
   },
   badgeText: { color: '#fff', fontSize: 9, fontWeight: '700' },
 
+  // One big rounded card holding header, member bubbles, search and the
+  // calendar — sits close to the screen edges like a chat input box.
+  topCard: {
+    marginHorizontal: 8, marginTop: 4, marginBottom: 4,
+    backgroundColor: c.surface, borderRadius: 24, overflow: 'hidden',
+    shadowColor: '#000', shadowOpacity: 0.06, shadowRadius: 8,
+    shadowOffset: { width: 0, height: 2 }, elevation: 2,
+  },
   edgeZone: {
     position: 'absolute', left: 0, top: 0, bottom: 0, width: 20, zIndex: 999,
   },
 
   membersRowWrapper: {
-    height: 76, backgroundColor: c.surface,
-    borderBottomWidth: 1, borderBottomColor: c.border, flexShrink: 0,
+    height: 76, flexShrink: 0,   // background comes from topCard
   },
   membersRow: { flex: 1 },
   membersContent: { paddingHorizontal: 16, paddingTop: 8, paddingBottom: 8 },
@@ -61,7 +75,9 @@ const make = c => StyleSheet.create({
   bubbleRelationship: { fontSize: 9, color: c.textMuted, maxWidth: 56, textAlign: 'center', marginTop: 1 },
 
   spinner: { marginTop: 60 },
-  listContent: { paddingHorizontal: 16, paddingBottom: 40 },
+  // Bottom padding is set by TreadmillList (FAB_LINE + ROLL_ZONE) so the
+  // last row can always scroll up past the FAB to full size.
+  listContent: { paddingHorizontal: 16 },
   dayLabel: { fontSize: 17, fontWeight: '700', color: c.text, marginTop: 16, marginBottom: 4 },
   sectionHeader: {
     fontSize: 12, fontWeight: '600', color: c.icon,
@@ -174,8 +190,6 @@ const make = c => StyleSheet.create({
   offlineBannerText: { color: '#fff', fontSize: 12, fontWeight: '500' },
 
   searchPanel: {
-    backgroundColor: c.surface,
-    borderBottomWidth: 1, borderBottomColor: c.border,
     paddingHorizontal: 12, paddingVertical: 8, gap: 8, zIndex: 10,
   },
   searchInputWrap: {

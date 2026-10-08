@@ -13,7 +13,7 @@ const joinFamily = async (req, res) => {
     // Find family by invite code
     const family = await pool.query(
       'SELECT * FROM families WHERE invite_code = $1',
-      [invite_code]
+      [invite_code.toUpperCase()]
     );
 
     if (family.rows.length === 0) {

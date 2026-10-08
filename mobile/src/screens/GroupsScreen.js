@@ -28,18 +28,46 @@ function formatDate(dateStr) {
 
 // ─── Group detail view ────────────────────────────────────────────────────────
 
+function MemberItem({ member, styles }) {
+  const color    = member.color || '#1a8fa8';
+  const initials = [member.first_name?.[0], member.last_name?.[0]]
+    .filter(Boolean).join('').toUpperCase() || '?';
+  const name = [member.first_name, member.last_name].filter(Boolean).join(' ') || member.email;
+
+  return (
+    <View style={styles.memberRow}>
+      <View style={[styles.memberAvatar, { backgroundColor: color }]}>
+        <Text style={styles.memberAvatarText}>{initials}</Text>
+      </View>
+      <View style={{ flex: 1 }}>
+        <Text style={styles.memberName}>{name}</Text>
+        {member.email ? <Text style={styles.memberEmail} numberOfLines={1}>{member.email}</Text> : null}
+      </View>
+      {member.role === 'admin' && (
+        <View style={styles.adminBadge}>
+          <Text style={styles.adminBadgeText}>Admin</Text>
+        </View>
+      )}
+    </View>
+  );
+}
+
 function GroupDetail({ group, onBack, navigation }) {
   const { t } = useTranslation();
   const styles = useStyles();
-  const [events, setEvents]   = useState([]);
+  const [events,  setEvents]  = useState([]);
+  const [members, setMembers] = useState([]);
   const [loading, setLoading] = useState(true);
-  const [copied, setCopied]   = useState(false);
+  const [copied,  setCopied]  = useState(false);
 
   React.useEffect(() => {
-    API.get(`/groups/${group.id}/events`)
-      .then(res => setEvents(res.data.events || []))
-      .catch(() => {})
-      .finally(() => setLoading(false));
+    Promise.all([
+      API.get(`/groups/${group.id}/events`),
+      API.get(`/groups/${group.id}/members`),
+    ]).then(([evRes, memRes]) => {
+      setEvents(evRes.data.events || []);
+      setMembers(memRes.data.members || []);
+    }).catch(() => {}).finally(() => setLoading(false));
   }, [group.id]);
 
   const handleCopy = () => {
@@ -84,11 +112,24 @@ function GroupDetail({ group, onBack, navigation }) {
         </View>
       </View>
 
-      {/* Shared events */}
-      <Text style={styles.sectionHeader}>{t('home.events')}</Text>
+      {/* Members */}
+      <Text style={styles.sectionHeader}>{t('family.members_count', { count: members.length })}</Text>
       {loading ? (
-        <ActivityIndicator color="#1a8fa8" style={{ marginTop: 20 }} />
-      ) : events.length === 0 ? (
+        <ActivityIndicator color="#1a8fa8" style={{ marginTop: 12 }} />
+      ) : (
+        <View style={styles.membersCard}>
+          {members.map((m, i) => (
+            <React.Fragment key={m.id}>
+              <MemberItem member={m} styles={styles} />
+              {i < members.length - 1 && <View style={styles.divider} />}
+            </React.Fragment>
+          ))}
+        </View>
+      )}
+
+      {/* Shared events */}
+      <Text style={[styles.sectionHeader, { marginTop: 16 }]}>{t('home.events')}</Text>
+      {loading ? null : events.length === 0 ? (
         <Text style={styles.emptyText}>{t('groups.no_events')}</Text>
       ) : (
         <ScrollView contentContainerStyle={{ paddingBottom: 40 }}>

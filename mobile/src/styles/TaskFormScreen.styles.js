@@ -10,7 +10,8 @@ const make = c => StyleSheet.create({
     paddingHorizontal: 16, paddingVertical: 10,
     backgroundColor: c.surface, borderBottomWidth: 1, borderBottomColor: c.border,
   },
-  backBtn: { padding: 4, width: 44 },
+  backBtn: { flexDirection: 'row', alignItems: 'center', padding: 4, minWidth: 60 },
+  backBtnText: { color: '#1a8fa8', fontSize: 16, fontWeight: '500' },
   headerTitle: { fontSize: 17, fontWeight: '600', color: c.text },
   saveHeaderBtn: {
     paddingVertical: 6, paddingHorizontal: 14, backgroundColor: '#1a8fa8',
@@ -87,9 +88,24 @@ const make = c => StyleSheet.create({
   },
   dateBtnText: { fontSize: 15, color: c.text, fontWeight: '500' },
 
-  submitBtn: { backgroundColor: '#1a8fa8', borderRadius: 14, padding: 16, alignItems: 'center', marginTop: 8 },
-  submitBtnDisabled: { opacity: 0.6 },
-  submitBtnText: { color: '#fff', fontSize: 16, fontWeight: '700' },
+  // ── Decline / Accept buttons ──
+  actionRow: {
+    flexDirection: 'row',
+    marginTop: 8,
+    justifyContent: 'flex-end',
+  },
+  actionBtn: {
+    paddingVertical: 6,
+    paddingHorizontal: 20,
+    borderRadius: 20,
+    alignItems: 'center',
+    justifyContent: 'center',
+    minWidth: 80,
+  },
+  actionBtnAccept:  { backgroundColor: '#1a8fa8' },
+  actionBtnDecline: { backgroundColor: '#ff3b30' },
+  actionBtnDisabled: { opacity: 0.6 },
+  actionBtnText: { color: '#fff', fontWeight: '600', fontSize: 14 },
 
 });
 

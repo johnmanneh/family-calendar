@@ -28,9 +28,11 @@ import DrawerMenu from '../components/DrawerMenu';
 import WeekStrip from '../components/WeekStrip';
 import MonthCalendar from '../components/MonthCalendar';
 import RadialMenu from '../components/RadialMenu';
+import TreadmillList from '../components/TreadmillList';
 import { useStyles } from '../styles/HomeScreen.styles';
 import parseVoiceInput from '../utils/parseVoiceInput';
 import API, { SERVER_URL } from '../api/axios';
+import { useFocusEffect } from '@react-navigation/native';
 import { useAuth } from '../context/AuthContext';
 import { useFamily } from '../context/FamilyContext';
 import { useSSE } from '../context/SSEContext';
@@ -196,7 +198,7 @@ function EventRow({ event, navigation, eventTasks, showDate }) {
 // ─── Task row ────────────────────────────────────────────────────────────────
 
 const STATUS_COLOR = { pending: '#ff9500', accepted: '#34c759', countered: '#ff3b30' };
-const STATUS_KEY   = { pending: 'common.pending', accepted: 'common.accepted', countered: 'home.counter' };
+const STATUS_KEY   = { pending: 'common.pending', accepted: 'home.ongoing', countered: 'home.counter' };
 
 function TaskRow({ task, navigation, onComplete, onDelete, onAccept, onSetArrivalTime, currentUserId }) {
   const { t } = useTranslation();
@@ -275,7 +277,7 @@ function TaskRow({ task, navigation, onComplete, onDelete, onAccept, onSetArriva
         onSwipeableWillOpen={() => Animated.timing(badgeOpacity, { toValue: 0, duration: 150, useNativeDriver: true }).start()}
         onSwipeableWillClose={() => Animated.timing(badgeOpacity, { toValue: 1, duration: 200, useNativeDriver: true }).start()}
       >
-        <TouchableOpacity style={styles.eventRow} onPress={handleRowPress} activeOpacity={0.75}>
+        <TouchableOpacity style={[styles.eventCard, styles.eventRow]} onPress={handleRowPress} activeOpacity={0.75}>
           <View style={[styles.eventStripe, { backgroundColor: color }]} />
           <View style={styles.eventBody}>
             <Text style={styles.eventTitle} numberOfLines={1}>{task.title}</Text>
@@ -855,8 +857,11 @@ export default function HomeScreen({ navigation }) {
   // eventTick increments whenever the server fires event_update.
   // taskTick  increments whenever the server fires task_update.
   // Skip the very first render (tick = 0) since mount already fetches.
-  useEffect(() => { if (eventTick > 0) fetchEvents(); },                         [eventTick]);
-  useEffect(() => { if (taskTick  > 0) { fetchPendingCount(); fetchNotifUnread(); } }, [taskTick]);
+  useEffect(() => { if (eventTick > 0) fetchEvents(); },                                    [eventTick]);
+  useEffect(() => { if (taskTick  > 0) { fetchEvents(); fetchPendingCount(); fetchNotifUnread(); } }, [taskTick]);
+
+  // Re-fetch tasks when returning from TaskFormScreen or any other screen
+  useFocusEffect(useCallback(() => { fetchEvents(); fetchPendingCount(); }, [fetchEvents, fetchPendingCount]));
 
   // Increment chat badge for messages from other family members
   useEffect(() => {
@@ -1016,12 +1021,23 @@ export default function HomeScreen({ navigation }) {
   // ── Main render ───────────────────────────────────────────────────────────
 
   return (
-    <View style={styles.container}><SafeAreaView style={styles.safeArea}>
+    <View style={styles.container}><SafeAreaView style={styles.safeArea} edges={['top', 'left', 'right']}>
 
       <DrawerMenu visible={drawerOpen} onClose={() => setDrawerOpen(false)} navigation={navigation} pendingCount={pendingCount} notifCount={notifUnread} />
 
       {/* Left edge strip — 20px wide, full height, captures swipe-right */}
       <View style={styles.edgeZone} {...edgePan.panHandlers} />
+
+      {/* ── Dismiss overlay — tapping anywhere outside search closes it ── */}
+      {searchVisible && (
+        <Pressable
+          style={StyleSheet.absoluteFillObject}
+          onPress={closeSearch}
+        />
+      )}
+
+      {/* ── Top card: header + members + search + calendar as ONE piece ── */}
+      <View style={styles.topCard}>
 
       {/* ── Header ── */}
       <View style={styles.header}>
@@ -1035,8 +1051,13 @@ export default function HomeScreen({ navigation }) {
           </View>
         </TouchableOpacity>
 
-        {/* Centre — WHEN title */}
-        <Text style={styles.headerTitle}>WHEN</Text>
+        {/* Centre — WHEN title. Wrapped in a pointerEvents="none" View: on
+            Android the full-width title text was sitting on top of the
+            hamburger and swallowing its taps (style.pointerEvents on Text
+            isn't honoured there). */}
+        <View style={styles.headerTitleWrap} pointerEvents="none">
+          <Text style={styles.headerTitleText}>WHEN</Text>
+        </View>
 
         {/* Right — search + chat + bell */}
         <View style={styles.headerRight}>
@@ -1130,14 +1151,6 @@ export default function HomeScreen({ navigation }) {
         </View>
       )}
 
-      {/* ── Dismiss overlay — tapping anywhere outside search closes it ── */}
-      {searchVisible && (
-        <Pressable
-          style={StyleSheet.absoluteFillObject}
-          onPress={closeSearch}
-        />
-      )}
-
       {/* ── Search panel — slides in below member bubbles ── */}
       {searchVisible && (
         <View style={styles.searchPanel}>
@@ -1222,13 +1235,16 @@ export default function HomeScreen({ navigation }) {
           </GestureDetector>
         </>
       )}
+      </View>
+      {/* ── end top card ── */}
 
       {/* ── Day events list ── */}
       {loading ? (
         <ActivityIndicator size="large" color="#1a8fa8" style={styles.spinner} />
       ) : (
         <Animated.View style={{ flex: 1, opacity: listAlpha, transform: [{ translateY: listTranslateY }] }}>
-        <FlatList
+        <TreadmillList
+          bottomInset={insets.bottom}
           data={listData}
           keyExtractor={(item) => item.key}
           renderItem={({ item }) => {

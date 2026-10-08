@@ -7,7 +7,10 @@ const getEvents = async (req, res) => {
   try {
     // Get user's family and circle_type
     const familyMember = await pool.query(
-      'SELECT family_id, circle_type FROM family_members WHERE user_id = $1',
+      `SELECT fm.family_id, fm.circle_type FROM family_members fm
+       WHERE fm.user_id = $1
+       ORDER BY (SELECT COUNT(*) FROM family_members WHERE family_id = fm.family_id) DESC
+       LIMIT 1`,
       [userId]
     );
 
