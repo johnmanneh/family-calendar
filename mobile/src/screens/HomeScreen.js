@@ -577,7 +577,7 @@ export default function HomeScreen({ navigation }) {
   const fetchNotifUnread = useCallback(async () => {
     try {
       const res = await API.get('/notifications');
-      setNotifUnread(res.data.data?.unread_count || 0);
+      setNotifUnread(res.data.unread_count || 0);
     } catch { /* silent */ }
   }, []);
 
@@ -1062,7 +1062,7 @@ export default function HomeScreen({ navigation }) {
             return (
               <TouchableOpacity
                 style={styles.iconBtn}
-                onPress={() => navigation.navigate('Pending')}
+                onPress={() => navigation.navigate('Notifications')}
               >
                 <Ionicons
                   name={totalCount > 0 ? 'notifications' : 'notifications-outline'}

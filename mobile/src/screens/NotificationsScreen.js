@@ -84,9 +84,8 @@ export default function NotificationsScreen({ navigation }) {
   const load = useCallback(async () => {
     try {
       const res = await API.get('/notifications');
-      const data = res.data.data || {};
-      setNotifications(data.notifications || []);
-      setUnreadCount(data.unread_count   || 0);
+      setNotifications(res.data.notifications || []);
+      setUnreadCount(res.data.unread_count   || 0);
     } catch {
       setNotifications([]);
       setUnreadCount(0);
