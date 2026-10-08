@@ -12,7 +12,7 @@ const updateTask = async (req, res) => {
   try {
     // Verify the task exists and the user is the creator
     const taskRes = await pool.query(
-      `SELECT id, created_by, family_id FROM tasks WHERE id = $1`,
+      `SELECT id, created_by FROM tasks WHERE id = $1`,
       [taskId]
     );
     if (taskRes.rowCount === 0) return errorResponse(res, 404, 'Task not found');
