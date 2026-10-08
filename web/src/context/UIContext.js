@@ -35,6 +35,9 @@ export const UIProvider = ({ children }) => {
   const [taskNotifications, setTaskNotifications] = useState([]);
   const [assigneeNotifications, setAssigneeNotifications] = useState([]);
   //
+  const [searchQuery, setSearchQuery]         = useState('');
+  const [selectedCategory, setSelectedCategory] = useState('');
+  //
   //
   const openNewEvent = (date = "") => {
     setIsEditMode(false);
@@ -159,6 +162,10 @@ export const UIProvider = ({ children }) => {
         setTaskNotifications,
         assigneeNotifications,
         setAssigneeNotifications,
+        searchQuery,
+        setSearchQuery,
+        selectedCategory,
+        setSelectedCategory,
       }}
     >
       {children}

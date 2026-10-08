@@ -1,5 +1,6 @@
 const pool = require('../../../config/db');
 const { successResponse, errorResponse } = require('../../../utils/response/responseHandlers');
+const insertNotification = require('../../../utils/insertNotification');
 
 const addAttendee = async (req, res) => {
   const { id } = req.params; // event_id
@@ -22,6 +23,29 @@ const addAttendee = async (req, res) => {
        RETURNING *`,
       [id, user_id, status]
     );
+
+    // Notify the new attendee (skip if they're the creator — they added themselves)
+    if (!isCreator) {
+      const eventDetail = await pool.query(
+        `SELECT e.title, u.first_name, u.last_name
+         FROM events e
+         JOIN users u ON u.id = e.created_by
+         WHERE e.id = $1`,
+        [id]
+      );
+      if (eventDetail.rows.length > 0) {
+        const { title, first_name, last_name } = eventDetail.rows[0];
+        const creatorName = [first_name, last_name].filter(Boolean).join(' ') || 'Someone';
+        insertNotification(
+          user_id,
+          'event_invited',
+          'Event invitation',
+          `${creatorName} invited you to: ${title}`,
+          { eventId: Number(id) }
+        );
+      }
+    }
+
     return successResponse(res, 201, 'Attendee added successfully', {
       attendee: result.rows[0]
     });

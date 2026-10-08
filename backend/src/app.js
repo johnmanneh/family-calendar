@@ -9,7 +9,8 @@ const familyRoutes = require('./routes/family');
 const taskRoutes = require('./routes/tasks');
 const groupRoutes = require('./routes/groups');
 const streamRoutes = require('./routes/stream');
-
+const notificationRoutes = require('./routes/notifications');
+const chatRoutes         = require('./routes/chat');
 
 const app = express();
 
@@ -27,6 +28,8 @@ app.use('/api/family', familyRoutes);
 app.use('/api/tasks', taskRoutes);
 app.use('/api/groups', groupRoutes);
 app.use('/api/stream', streamRoutes);
+app.use('/api/notifications', notificationRoutes);
+app.use('/api/chat',          chatRoutes);
 
 
 // Health check

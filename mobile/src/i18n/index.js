@@ -104,6 +104,8 @@ AsyncStorage.getItem(LANGUAGE_KEY).then(saved => {
     applyRTL(saved);
     i18n.changeLanguage(saved);
   }
+}).catch(() => {
+  // Native AsyncStorage not available (Expo Go) — use device locale, no crash
 });
 
 // ─── Public helper ────────────────────────────────────────────────────────────
@@ -114,7 +116,11 @@ AsyncStorage.getItem(LANGUAGE_KEY).then(saved => {
  */
 export async function setAppLanguage(code) {
   if (!SUPPORTED_CODES.includes(code)) return;
-  await AsyncStorage.setItem(LANGUAGE_KEY, code);
+  try {
+    await AsyncStorage.setItem(LANGUAGE_KEY, code);
+  } catch (_) {
+    // Native AsyncStorage not available (Expo Go) — language change still applies in memory
+  }
   applyRTL(code);
   await i18n.changeLanguage(code);
 }

@@ -491,3 +491,30 @@
     background: none;
     box-shadow: none;
   }
+
+@media (prefers-color-scheme: dark) {
+  .member-page { background: #000; }
+  .member-header { background: #1c1c1e; border-bottom-color: #3a3a3c; }
+  .member-hero-info h1 { color: #fff; }
+  .member-hero-info p { color: #636366; }
+  .member-tab { color: #636366; }
+  .member-card { background: #1c1c1e; border-color: #3a3a3c; }
+  .member-card-title { color: #fff; }
+  .member-event { border-bottom-color: #2c2c2e; }
+  .member-event-title { color: #fff; }
+  .member-event-date { color: #aeaeb2; }
+  .member-task { border-bottom-color: #2c2c2e; }
+  .member-task-title { color: #fff; }
+  .member-task-event { color: #aeaeb2; }
+  .member-task-position { background: #2c2c2e; color: #aeaeb2; }
+  .member-settings-field label { color: #636366; }
+  .member-settings-field input { background: #2c2c2e; color: #fff; }
+  .member-settings-field input:focus { background: #3a3a3c; }
+  .member-circle-option { background: #2c2c2e; border-color: #3a3a3c; color: #aeaeb2; }
+  .member-circle-option.active { background: rgba(26,143,168,0.15); }
+  .member-photo-pick { background: #2c2c2e; border-color: #3a3a3c; color: #fff; }
+  .member-photo-pick:hover { background: #3a3a3c; }
+  .member-card--danger { background: rgba(255,59,48,0.04); border-color: rgba(255,59,48,0.2); }
+  .member-skeleton { background: linear-gradient(90deg, #2c2c2e 25%, #3a3a3c 50%, #2c2c2e 75%); background-size: 200% 100%; }
+  .member-color-dot.selected { border-color: #fff; }
+}

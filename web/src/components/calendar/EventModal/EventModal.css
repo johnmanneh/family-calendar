@@ -373,3 +373,32 @@
   .modal-toggle-switch input:checked + .modal-toggle-slider::before {
     transform: translateX(18px);
   }
+
+@media (prefers-color-scheme: dark) {
+  .modal-container { background: #1c1c1e; }
+  .modal-header { background: #1c1c1e; }
+  .modal-header h2 { color: #fff; }
+  .modal-close { background: #2c2c2e; color: #aeaeb2; }
+  .modal-close:hover { background: #3a3a3c; color: #fff; }
+  .modal-field label { color: #aeaeb2; }
+  .modal-field input,
+  .modal-field select,
+  .modal-field textarea {
+    background: #2c2c2e; color: #fff; border-color: transparent;
+  }
+  .modal-field input:focus,
+  .modal-field select:focus,
+  .modal-field textarea:focus { background: #3a3a3c; }
+  .modal-submit { background: transparent; color: #aeaeb2; border-color: #3a3a3c; }
+  .modal-submit:hover { background: #2c2c2e; color: #fff; border-color: #3a3a3c; }
+  .modal-attendee:hover { background: rgba(255,255,255,0.06); }
+  .modal-attendee-name { color: #aeaeb2; }
+  .modal-task-input { background: #2c2c2e; color: #fff; }
+  .modal-task-input:focus { background: #3a3a3c; }
+  .modal-task-select { background: #2c2c2e; color: #fff; }
+  .modal-task-add { border-color: #3a3a3c; color: #636366; }
+  .modal-toggle-item { background: #2c2c2e; }
+  .modal-toggle-label { color: #fff; }
+  .modal-toggle-slider { background: #3a3a3c; }
+  .modal-color-dot.selected { border-color: #fff; }
+}

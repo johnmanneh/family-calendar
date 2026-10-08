@@ -29,3 +29,7 @@
   background: #ffffff;
   box-shadow: 0 0 0 4px rgba(26,143,168,0.1);
 }
+
+@media (prefers-color-scheme: dark) {
+  .form-group input:focus { background: #3a3a3c; }
+}

@@ -7,6 +7,7 @@ import listPlugin from "@fullcalendar/list";
 import rrulePlugin from "@fullcalendar/rrule";
 import { useEvents } from "../../../context/EventContext";
 import { useUI } from "../../../context/UIContext";
+import CalendarToolbar from "./CalendarToolbar";
 import "./CalendarView.css";
 
 // Map recurrence value + start_date to an rrule string
@@ -39,24 +40,34 @@ const buildRRule = (recurrence, start_date, recurrence_end_date) => {
 };
 
 const CalendarView = () => {
-  const { openNewEvent, openEditEvent, selectedMember } = useUI();
+  const { openNewEvent, openEditEvent, selectedMember, searchQuery, selectedCategory } = useUI();
   const { events, fetchEvents, selectEvent } = useEvents();
 
   useEffect(() => {
     fetchEvents();
   }, []);
 
-  const visibleEvents = selectedMember
+  const memberFiltered = selectedMember
     ? events.filter(event => {
         const isCreator = Number(event.created_by) === Number(selectedMember.id);
         const isAttendee = (event.attendees || []).some(
           a => Number(a.id) === Number(selectedMember.id)
         );
-        // Busy blocks: show if James created it (created_by is preserved in mask)
-        // so the filter still works even for private events
         return isCreator || isAttendee;
       })
     : events;
+
+  const q = searchQuery.trim().toLowerCase();
+  const visibleEvents = memberFiltered.filter(event => {
+    if (selectedCategory && event.category !== selectedCategory) return false;
+    if (q) {
+      const inTitle    = (event.title    || '').toLowerCase().includes(q);
+      const inLocation = (event.location || '').toLowerCase().includes(q);
+      const inNotes    = (event.notes    || '').toLowerCase().includes(q);
+      if (!inTitle && !inLocation && !inNotes) return false;
+    }
+    return true;
+  });
 
   const calendarEvents = visibleEvents.map(event => {
     const rrule = buildRRule(event.recurrence, event.start_date, event.recurrence_end_date);
@@ -190,6 +201,7 @@ const CalendarView = () => {
 
   return (
     <div className="calendar-view">
+      <CalendarToolbar />
       <FullCalendar
         plugins={[dayGridPlugin, timeGridPlugin, listPlugin, interactionPlugin, rrulePlugin]}
         eventSources={[{ events: calendarEvents }]}

@@ -6,6 +6,8 @@ import SidebarFamily from "./SidebarFamily";
 import SidebarMembers from "./SidebarMembers";
 import SidebarGroups from "./SidebarGroups";
 import SidebarPending from "./SidebarPending";
+import SidebarNotifications from "./SidebarNotifications";
+import SidebarChat from "./SidebarChat";
 import { useUI } from "../../../context/UIContext";
 
 import "./Sidebar.css";
@@ -35,6 +37,10 @@ const Sidebar = () => {
         </>
       )}
       <SidebarGroups />
+      <div className="sidebar-divider" />
+      <SidebarNotifications />
+      <div className="sidebar-divider" />
+      <SidebarChat />
       <div className="sidebar-divider" />
       <div className="sidebar-bottom">
         <button className="sidebar-logout" onClick={handleLogout}>

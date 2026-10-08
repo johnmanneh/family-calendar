@@ -2,6 +2,7 @@ const pool = require('../../config/db');
 const { successResponse, errorResponse } = require('../../utils/response/responseHandlers');
 const { broadcast } = require('../../utils/sseClients');
 const sendPush = require('../../utils/sendPush');
+const insertNotification = require('../../utils/insertNotification');
 
 const addTask = async (req, res) => {
   const { id } = req.params; // event_id
@@ -52,6 +53,13 @@ const addTask = async (req, res) => {
           { type: 'task', taskId: result.rows[0].id }
         );
       }
+      insertNotification(
+        assigned_to,
+        'task_assigned',
+        'New task assigned',
+        `${creatorName}: ${title}`,
+        { taskId: result.rows[0].id }
+      );
     }
 
     return successResponse(res, 201, 'Task added successfully', {

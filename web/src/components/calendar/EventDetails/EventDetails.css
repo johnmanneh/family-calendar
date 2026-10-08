@@ -431,3 +431,28 @@
 .event-details-divider {
   display: none;
 }
+
+@media (prefers-color-scheme: dark) {
+  .event-details-panel { background: #1c1c1e; border-left-color: #3a3a3c; }
+  .event-details-header { background: #1c1c1e; }
+  .event-details-title { color: #fff; }
+  .event-details-icon svg { color: #636366; }
+  .event-details-value { color: #fff; }
+  .event-details-time { color: #aeaeb2; }
+  .event-details-attendee-name { color: #aeaeb2; }
+  .event-details-task-title { color: #fff; }
+  .event-details-task-badge.pending { background: rgba(133,100,4,0.25); color: #ffd60a; }
+  .event-details-task-badge.declined { background: rgba(255,59,48,0.15); }
+  .event-details-task-badge.countered { background: rgba(0,122,255,0.15); }
+  .event-details-task-negotiation-bubble { background: rgba(0,122,255,0.12); border-color: rgba(0,122,255,0.25); }
+  .event-details-task-negotiation-text { color: #fff; }
+  .event-details-task-attr-value { color: #fff; }
+  .event-details-subtask span { color: #8e8e93; }
+  .event-details-subtask-add input { color: #aeaeb2; border-bottom-color: #3a3a3c; }
+  .event-details-subtask-add input:focus { color: #fff; }
+  .event-details-subtask-add input::placeholder { color: #3a3a3c; }
+  .event-action-btn.edit { background: #2c2c2e; color: #fff; }
+  .event-action-btn.edit:hover { background: #3a3a3c; }
+  .event-action-btn.delete { background: #2c2c2e; }
+  .event-action-btn.delete:hover { background: rgba(255,59,48,0.12); }
+}

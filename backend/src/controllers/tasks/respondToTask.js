@@ -2,6 +2,7 @@ const pool = require('../../config/db');
 const { successResponse, errorResponse } = require('../../utils/response/responseHandlers');
 const { broadcast } = require('../../utils/sseClients');
 const sendPush = require('../../utils/sendPush');
+const insertNotification = require('../../utils/insertNotification');
 
 const respondToTask = async (req, res) => {
   const userId = req.user.id;
@@ -119,19 +120,23 @@ const respondToTask = async (req, res) => {
       );
       const token = recipientRes.rows[0]?.push_token;
       if (token) {
-        let pushTitle, pushBody;
+        let pushTitle, pushBody, notifType;
         if (response === 'accepted') {
           pushTitle = 'Task accepted';
           pushBody  = `${actorName} accepted: ${taskTitle}`;
+          notifType = 'task_accepted';
         } else if (response === 'declined') {
           pushTitle = 'Task declined';
           pushBody  = `${actorName} declined: ${taskTitle}`;
+          notifType = 'task_declined';
         } else if (response === 'countered') {
           pushTitle = 'Counter offer';
           pushBody  = `${actorName}: ${counter_offer?.trim()}`;
+          notifType = isAssignee ? 'task_countered' : 'counter_accepted';
         }
         if (pushTitle) {
           sendPush(token, pushTitle, pushBody, { type: 'task', taskId });
+          insertNotification(recipientId, notifType, pushTitle, pushBody, { taskId: Number(taskId) });
         }
       }
     }

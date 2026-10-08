@@ -42,3 +42,9 @@
     box-shadow: 0 4px 12px rgba(248, 87, 166, 0.25) !important;
     transform: translateY(-1px) !important;
   }
+
+@media (prefers-color-scheme: dark) {
+  .btn-primary { color: #aeaeb2; border-color: #3a3a3c; }
+  .btn-primary:hover { background: #2c2c2e; color: #fff; border-color: #3a3a3c; }
+  .btn-danger:hover { background: #2c2c2e !important; color: #aeaeb2 !important; }
+}
