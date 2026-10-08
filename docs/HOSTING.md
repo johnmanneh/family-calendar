@@ -93,36 +93,42 @@ GRANT USAGE, SELECT ON ALL SEQUENCES IN SCHEMA public TO family_admin;
 ## 3. Frontend — Vercel
 
 **Service:** Vercel.com  
-**Account:** osmanjohnmanneh@gmail.com (pending — old account deletion in progress, retry after 48hrs from Oct 7 2026)  
+**Account:** mannelkuch@icloud.com (signed up Oct 8 2026 — GitHub connection failed, used email instead)  
+**Team/Workspace:** when5  
+**Project Name:** family-calendar  
+**Live URL:** https://its4us.app  
+**Vercel URL:** https://family-calendar-ruby.vercel.app  
+**Project ID:** prj_OEraYAIaa6drTCnvI8wERI3xbnk3  
 **Repo:** github.com/johnmanneh/family-calendar  
 **Root Directory:** `web`  
 **Build Command:** `npm run build` (auto-detected)  
 **Output Directory:** `build` (auto-detected)
 
-### Setup Steps (one-time)
+### Setup Steps (completed Oct 8 2026)
 
-1. Go to **vercel.com** → Sign up with GitHub
+1. Signed up at vercel.com with `mannelkuch@icloud.com`
 2. **New Project** → Import `johnmanneh/family-calendar`
 3. Set **Root Directory** to `web`
-4. Add environment variable:
-   - `REACT_APP_API_URL` = `https://family-calendar-production-33b3.up.railway.app/api`
-5. Click **Deploy**
+4. Added environment variables (see below)
+5. Deployed successfully
 
-### Connect its4us.app Domain
+### Connect its4us.app Domain (completed)
 
-1. Vercel project → **Settings** → **Domains**
-2. Add `its4us.app`
-3. Vercel gives you two DNS records (A record + CNAME)
-4. Go to **Namecheap** → **Manage** → **Advanced DNS**
-5. Add the records Vercel provides
-6. Wait 10–30 minutes for DNS to propagate
-7. Vercel will show a green checkmark when live
+DNS records added in Namecheap → Advanced DNS:
+
+| Type | Host | Value |
+|------|------|-------|
+| A Record | `@` | `216.198.79.1` |
+| CNAME Record | `www` | `76abdbb8ea22ce70.vercel-dns-017.com.` |
+
+Both `its4us.app` and `www.its4us.app` → Valid Configuration ✓
 
 ### Environment Variables (set in Vercel dashboard)
 
 | Variable | Value |
 |----------|-------|
 | `REACT_APP_API_URL` | `https://family-calendar-production-33b3.up.railway.app/api` |
+| `CI` | `false` |
 
 ---
 
