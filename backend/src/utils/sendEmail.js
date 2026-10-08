@@ -10,7 +10,7 @@ const { Resend } = require('resend');
 async function sendEmail(to, subject, html) {
   const resend = new Resend(process.env.RESEND_API_KEY);
   await resend.emails.send({
-    from: 'When App <onboarding@resend.dev>',
+    from: 'When App <noreply@its4us.app>',
     to,
     subject,
     html,
