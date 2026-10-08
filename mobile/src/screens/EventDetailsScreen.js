@@ -8,6 +8,8 @@ import {
   TextInput,
   Linking,
   Alert,
+  Modal,
+  FlatList,
 } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { Ionicons } from '@expo/vector-icons';
@@ -15,6 +17,7 @@ import * as Calendar from 'expo-calendar';
 import { useTranslation } from 'react-i18next';
 import API from '../api/axios';
 import { useAuth } from '../context/AuthContext';
+import { useFamily } from '../context/FamilyContext';
 import { useStyles } from '../styles/EventDetailsScreen.styles';
 
 // ─── Helpers ────────────────────────────────────────────────────────────────
@@ -278,10 +281,13 @@ export default function EventDetailsScreen({ route, navigation }) {
   const styles = useStyles();
   const { eventId } = route.params;
   const { user } = useAuth();
+  const { members } = useFamily();
 
   const [event, setEvent] = useState(null);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState('');
+  // Controls whether the "add attendee" member-picker sheet is visible
+  const [showAddModal, setShowAddModal] = useState(false);
 
   const fetchEvent = useCallback(async () => {
     try {
@@ -433,15 +439,144 @@ export default function EventDetailsScreen({ route, navigation }) {
             </InfoRow>
           )}
 
-          {attendees.length > 0 && (
+          {/* ── Attendees ── */}
+          {/* Always render the row for creators so the "+" button is reachable
+              even when the event has no attendees yet.  Non-creators only see
+              this row when there are attendees to show. */}
+          {(attendees.length > 0 || Number(event.created_by) === Number(user?.id)) && (
             <InfoRow icon="👥">
               <View style={styles.attendeesRow}>
-                {attendees.map(a => (
-                  <AttendeeAvatar key={a.id || a.user_id} attendee={a} />
-                ))}
+
+                {/* Existing attendees — long-press to remove (creator only) */}
+                {attendees.map(a => {
+                  const isCreator = Number(event.created_by) === Number(user?.id);
+                  const attendeeId = a.user_id || a.id;
+
+                  if (!isCreator) {
+                    // Non-creators see avatars without any interaction
+                    return <AttendeeAvatar key={attendeeId} attendee={a} />;
+                  }
+
+                  // Creators get a long-press handler that confirms removal
+                  return (
+                    <TouchableOpacity
+                      key={attendeeId}
+                      onLongPress={() => {
+                        const name = `${a.first_name || ''} ${a.last_name || ''}`.trim() || 'this person';
+                        Alert.alert(
+                          `Remove ${name}?`,
+                          'They will no longer be listed as an attendee.',
+                          [
+                            { text: t('common.cancel'), style: 'cancel' },
+                            {
+                              text: 'Remove',
+                              style: 'destructive',
+                              onPress: async () => {
+                                try {
+                                  await API.delete(`/events/${eventId}/attendees/${attendeeId}`);
+                                  fetchEvent();
+                                } catch (err) {
+                                  Alert.alert(t('common.error'), err.response?.data?.message || 'Could not remove attendee.');
+                                }
+                              },
+                            },
+                          ]
+                        );
+                      }}
+                      delayLongPress={400}
+                    >
+                      <AttendeeAvatar attendee={a} />
+                    </TouchableOpacity>
+                  );
+                })}
+
+                {/* "+" bubble — only the creator sees this */}
+                {Number(event.created_by) === Number(user?.id) && (
+                  <TouchableOpacity
+                    style={styles.addAttendeeBubble}
+                    onPress={() => setShowAddModal(true)}
+                    accessibilityLabel="Add attendee"
+                  >
+                    <Text style={styles.addAttendeeBubbleText}>+</Text>
+                  </TouchableOpacity>
+                )}
               </View>
             </InfoRow>
           )}
+
+          {/* ── Add-attendee picker modal ── */}
+          {/* Only mounts when the creator taps "+". Shows family members who
+              are not already attending. Tapping a row calls the API and
+              refreshes the event so the new avatar appears immediately. */}
+          <Modal
+            visible={showAddModal}
+            transparent
+            animationType="slide"
+            onRequestClose={() => setShowAddModal(false)}
+          >
+            <View style={styles.modalOverlay}>
+              <View style={styles.modalSheet}>
+                <Text style={styles.modalTitle}>Add Attendee</Text>
+
+                {/* Build list: family members not already in attendees[] */}
+                {(() => {
+                  const attendeeIds = new Set(
+                    attendees.map(a => Number(a.user_id || a.id))
+                  );
+                  const available = (members || []).filter(
+                    m => !attendeeIds.has(Number(m.id))
+                  );
+
+                  if (available.length === 0) {
+                    return (
+                      <Text style={styles.modalEmptyText}>
+                        All family members are already attending.
+                      </Text>
+                    );
+                  }
+
+                  return (
+                    <FlatList
+                      data={available}
+                      keyExtractor={m => String(m.id)}
+                      renderItem={({ item: m }) => {
+                        const initials = [m.first_name?.[0], m.last_name?.[0]]
+                          .filter(Boolean).join('').toUpperCase() || '?';
+                        return (
+                          <TouchableOpacity
+                            style={styles.memberPickerRow}
+                            onPress={async () => {
+                              try {
+                                await API.post(`/events/${eventId}/attendees`, { user_id: m.id });
+                                setShowAddModal(false);
+                                fetchEvent();
+                              } catch (err) {
+                                Alert.alert(t('common.error'), err.response?.data?.message || 'Could not add attendee.');
+                              }
+                            }}
+                          >
+                            <View style={[styles.memberPickerCircle, { backgroundColor: m.color || '#1a8fa8' }]}>
+                              <Text style={styles.memberPickerInitials}>{initials}</Text>
+                            </View>
+                            <Text style={styles.memberPickerName}>
+                              {m.first_name} {m.last_name}
+                            </Text>
+                          </TouchableOpacity>
+                        );
+                      }}
+                    />
+                  );
+                })()}
+
+                <TouchableOpacity
+                  style={styles.modalCloseBtn}
+                  onPress={() => setShowAddModal(false)}
+                >
+                  <Text style={styles.modalCloseBtnText}>{t('common.cancel')}</Text>
+                </TouchableOpacity>
+              </View>
+            </View>
+          </Modal>
 
           <InfoRow icon="📅">
             <Text style={styles.infoValue}>{formatDate(event.start_date)}</Text>

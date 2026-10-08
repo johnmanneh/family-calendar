@@ -98,6 +98,54 @@ const make = c => StyleSheet.create({
   },
   subTaskAddBtn: { width: 28, height: 28, borderRadius: 14, backgroundColor: '#1a8fa8', alignItems: 'center', justifyContent: 'center' },
   subTaskCancelBtn: { width: 28, height: 28, borderRadius: 14, backgroundColor: c.surface2, alignItems: 'center', justifyContent: 'center' },
+
+  // ── Attendee add bubble ────────────────────────────────────────────────────
+  // Small "+" circle shown after the existing avatars — taps open the picker
+  addAttendeeBubble: {
+    width: 34, height: 34, borderRadius: 17,
+    backgroundColor: c.surface2,
+    borderWidth: 1, borderColor: c.border,
+    alignItems: 'center', justifyContent: 'center',
+  },
+  addAttendeeBubbleText: { fontSize: 18, color: '#1a8fa8', lineHeight: 20 },
+
+  // ── Member picker modal ────────────────────────────────────────────────────
+  // Semi-transparent backdrop covers the whole screen
+  modalOverlay: {
+    flex: 1, backgroundColor: 'rgba(0,0,0,0.45)',
+    justifyContent: 'flex-end',
+  },
+  // Sheet slides up from the bottom
+  modalSheet: {
+    backgroundColor: c.surface,
+    borderTopLeftRadius: 18, borderTopRightRadius: 18,
+    paddingHorizontal: 20, paddingTop: 16, paddingBottom: 32,
+    maxHeight: '60%',
+  },
+  modalTitle: { fontSize: 16, fontWeight: '700', color: c.text, marginBottom: 14 },
+  modalEmptyText: { fontSize: 14, color: c.textSub, textAlign: 'center', marginVertical: 20 },
+
+  // Each selectable family member row inside the picker
+  memberPickerRow: {
+    flexDirection: 'row', alignItems: 'center', gap: 12,
+    paddingVertical: 10,
+    borderBottomWidth: 1, borderBottomColor: c.border,
+  },
+  memberPickerCircle: {
+    width: 36, height: 36, borderRadius: 18,
+    alignItems: 'center', justifyContent: 'center',
+  },
+  memberPickerInitials: { fontSize: 12, fontWeight: '700', color: '#fff' },
+  memberPickerName: { fontSize: 14, color: c.text, fontWeight: '500' },
+
+  // Close / cancel button at the bottom of the sheet
+  modalCloseBtn: {
+    marginTop: 14,
+    backgroundColor: c.surface2,
+    borderRadius: 12, padding: 13,
+    alignItems: 'center',
+  },
+  modalCloseBtnText: { fontSize: 14, fontWeight: '600', color: c.textSub },
 });
 
 const lightStyles = make(LIGHT);
