@@ -20,7 +20,7 @@ import {
   StyleSheet,
   Image,
 } from 'react-native';
-import DateTimePicker from '@react-native-community/datetimepicker';
+import DateTimePicker, { DateTimePickerAndroid } from '@react-native-community/datetimepicker';
 import { SafeAreaView, useSafeAreaInsets } from 'react-native-safe-area-context';
 import { Ionicons } from '@expo/vector-icons';
 import { LinearGradient } from 'expo-linear-gradient';
@@ -292,7 +292,22 @@ function TaskRow({ task, navigation, onComplete, onDelete, onAccept, onSetArriva
             {isMyAccepted && (
               <TouchableOpacity
                 style={styles.arrivalRow}
-                onPress={() => setShowPicker(true)}
+                onPress={() => {
+                  if (Platform.OS === 'android') {
+                    DateTimePickerAndroid.open({
+                      value: pickerTime,
+                      mode: 'time',
+                      onChange: (_, selected) => {
+                        if (selected) {
+                          setPickerTime(selected);
+                          onSetArrivalTime(task.id, selected);
+                        }
+                      },
+                    });
+                  } else {
+                    setShowPicker(true);
+                  }
+                }}
                 activeOpacity={0.7}
               >
                 <Ionicons name="time-outline" size={12} color="#1a8fa8" />
@@ -308,32 +323,32 @@ function TaskRow({ task, navigation, onComplete, onDelete, onAccept, onSetArriva
         </TouchableOpacity>
       </Swipeable>
 
-      {/* ── Arrival time picker modal ── */}
-      <Modal visible={showPicker} transparent animationType="slide">
-        <View style={styles.pickerBackdrop}>
-          <View style={styles.pickerSheet}>
-            {/* Header */}
-            <View style={styles.pickerHeader}>
-              <TouchableOpacity onPress={() => setShowPicker(false)}>
-                <Text style={styles.pickerCancel}>{t('common.cancel')}</Text>
-              </TouchableOpacity>
-              <Text style={styles.pickerTitle}>{t('home.arrival_time_title')}</Text>
-              <TouchableOpacity onPress={handlePickerDone}>
-                <Text style={styles.pickerDone}>{t('common.done')}</Text>
-              </TouchableOpacity>
+      {/* ── Arrival time picker modal — iOS only (Android uses imperative API) ── */}
+      {Platform.OS === 'ios' && (
+        <Modal visible={showPicker} transparent animationType="slide">
+          <View style={styles.pickerBackdrop}>
+            <View style={styles.pickerSheet}>
+              <View style={styles.pickerHeader}>
+                <TouchableOpacity onPress={() => setShowPicker(false)}>
+                  <Text style={styles.pickerCancel}>{t('common.cancel')}</Text>
+                </TouchableOpacity>
+                <Text style={styles.pickerTitle}>{t('home.arrival_time_title')}</Text>
+                <TouchableOpacity onPress={handlePickerDone}>
+                  <Text style={styles.pickerDone}>{t('common.done')}</Text>
+                </TouchableOpacity>
+              </View>
+              <DateTimePicker
+                value={pickerTime}
+                mode="time"
+                display="spinner"
+                onChange={(_, date) => { if (date) setPickerTime(date); }}
+                style={{ width: '100%' }}
+                textColor="#1d1d1f"
+              />
             </View>
-            {/* iOS drum-roller time picker */}
-            <DateTimePicker
-              value={pickerTime}
-              mode="time"
-              display="spinner"
-              onChange={(_, date) => { if (date) setPickerTime(date); }}
-              style={{ width: '100%' }}
-              textColor="#1d1d1f"
-            />
           </View>
-        </View>
-      </Modal>
+        </Modal>
+      )}
     </>
   );
 }

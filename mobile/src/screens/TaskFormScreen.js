@@ -11,7 +11,7 @@ import {
 } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { Ionicons } from '@expo/vector-icons';
-import DateTimePicker from '@react-native-community/datetimepicker';
+import DateTimePicker, { DateTimePickerAndroid } from '@react-native-community/datetimepicker';
 import { useTranslation } from 'react-i18next';
 import API from '../api/axios';
 import { useAuth } from '../context/AuthContext';
@@ -200,20 +200,37 @@ export default function TaskFormScreen({ route, navigation }) {
             <>
               <TouchableOpacity
                 style={styles.dateBtn}
-                onPress={() => setShowPicker(v => !v)}
+                onPress={() => {
+                  if (Platform.OS === 'android') {
+                    // Android: open date picker first, then time picker
+                    DateTimePickerAndroid.open({
+                      value: dueDate,
+                      mode: 'date',
+                      onChange: (_, selectedDate) => {
+                        if (!selectedDate) return;
+                        DateTimePickerAndroid.open({
+                          value: selectedDate,
+                          mode: 'time',
+                          onChange: (__, selectedTime) => {
+                            if (selectedTime) setDueDate(selectedTime);
+                          },
+                        });
+                      },
+                    });
+                  } else {
+                    setShowPicker(v => !v);
+                  }
+                }}
               >
                 <Text style={styles.dateBtnText}>{formatDisplay(dueDate)}</Text>
                 <Ionicons name="chevron-down" size={14} color="#888" />
               </TouchableOpacity>
-              {showPicker && (
+              {showPicker && Platform.OS === 'ios' && (
                 <DateTimePicker
                   value={dueDate}
                   mode="datetime"
-                  display={Platform.OS === 'ios' ? 'inline' : 'default'}
-                  onChange={(_, selected) => {
-                    if (Platform.OS === 'android') setShowPicker(false);
-                    if (selected) setDueDate(selected);
-                  }}
+                  display="inline"
+                  onChange={(_, selected) => { if (selected) setDueDate(selected); }}
                   style={{ marginTop: 8 }}
                 />
               )}
