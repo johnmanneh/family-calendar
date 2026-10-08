@@ -10,6 +10,7 @@ import {
   ScrollView,
 } from 'react-native';
 import { useTranslation } from 'react-i18next';
+import { useNavigation } from '@react-navigation/native';
 import API from '../api/axios';
 import WhenLogo from '../components/WhenLogo';
 import { useAuth } from '../context/AuthContext';
@@ -22,6 +23,7 @@ export default function LoginScreen() {
   const { t } = useTranslation();
   const styles = useStyles();
   const { login } = useAuth();
+  const navigation = useNavigation();
 
   const [mode, setMode] = useState('login'); // 'login' | 'register'
 
