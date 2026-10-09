@@ -1,4 +1,4 @@
-import React, { useState, useCallback, useEffect } from 'react';
+import React, { useState, useCallback } from 'react';
 import { useFocusEffect } from '@react-navigation/native';
 import {
   View,
@@ -16,7 +16,6 @@ import { SafeAreaView } from 'react-native-safe-area-context';
 import { Ionicons } from '@expo/vector-icons';
 import { useTranslation } from 'react-i18next';
 import API from '../api/axios';
-import { useFocusEffect } from '@react-navigation/native';
 import { useStyles } from '../styles/GroupsScreen.styles';
 
 // ─── Helpers ─────────────────────────────────────────────────────────────────
