@@ -74,10 +74,36 @@ function GroupDetail({ group, onBack, navigation }) {
 
   useFocusEffect(useCallback(() => { fetchGroupData(); }, [fetchGroupData]));
 
+  const [deleting, setDeleting] = useState(false);
+
   const handleCopy = () => {
     Clipboard.setString(group.invite_code || '');
     setCopied(true);
     setTimeout(() => setCopied(false), 2000);
+  };
+
+  const handleDelete = () => {
+    Alert.alert(
+      t('groups.delete_group_title'),
+      t('groups.delete_group_confirm', { name: group.name }),
+      [
+        { text: t('common.cancel'), style: 'cancel' },
+        {
+          text: t('common.delete'),
+          style: 'destructive',
+          onPress: async () => {
+            setDeleting(true);
+            try {
+              await API.delete(`/groups/${group.id}`);
+              onBack();
+            } catch (err) {
+              Alert.alert(t('common.error'), err.response?.data?.message || t('groups.could_not_delete'));
+              setDeleting(false);
+            }
+          },
+        },
+      ]
+    );
   };
 
   return (
@@ -155,6 +181,21 @@ function GroupDetail({ group, onBack, navigation }) {
             </TouchableOpacity>
           ))}
         </ScrollView>
+      )}
+
+      {/* Delete group — admin only */}
+      {group.role === 'admin' && (
+        <View style={{ paddingHorizontal: 16, marginTop: 24, marginBottom: 32 }}>
+          <Text style={styles.sectionHeader}>{t('common.danger_zone')}</Text>
+          <TouchableOpacity
+            style={[styles.deleteBtn, deleting && { opacity: 0.5 }]}
+            onPress={handleDelete}
+            disabled={deleting}
+          >
+            <Ionicons name="trash-outline" size={16} color="#ff3b30" />
+            <Text style={styles.deleteBtnText}>{t('common.delete')}</Text>
+          </TouchableOpacity>
+        </View>
       )}
     </View>
   );

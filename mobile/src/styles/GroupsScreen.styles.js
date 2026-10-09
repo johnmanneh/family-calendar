@@ -116,6 +116,14 @@ const make = c => StyleSheet.create({
   adminBadgeText: { fontSize: 11, color: '#1a8fa8', fontWeight: '600' },
   divider: { height: 1, backgroundColor: c.separator, marginVertical: 1 },
 
+  // Delete group button
+  deleteBtn: {
+    flexDirection: 'row', alignItems: 'center', gap: 8,
+    borderWidth: 1, borderColor: '#ff3b30', borderRadius: 10,
+    padding: 12, justifyContent: 'center',
+  },
+  deleteBtnText: { color: '#ff3b30', fontSize: 15, fontWeight: '600' },
+
   // Event rows inside group detail
   eventRow: {
     flexDirection: 'row', backgroundColor: c.surface,
