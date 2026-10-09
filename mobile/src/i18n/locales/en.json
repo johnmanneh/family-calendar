@@ -74,7 +74,9 @@
     "showing_cached": "showing cached data",
     "search_placeholder": "Search events and tasks…",
     "counter": "Counter",
-    "ongoing": "Ongoing"
+    "ongoing": "Ongoing",
+    "filter_all": "All",
+    "filter_family": "Family"
   },
   "events": {
     "new_event": "New Event",
@@ -124,7 +126,9 @@
     "save_event": "Save Event",
     "update_event": "Update Event",
     "start": "Start",
-    "end": "End"
+    "end": "End",
+    "share_with_groups": "Share with groups",
+    "could_not_share": "Event saved, but sharing with a group failed"
   },
   "tasks": {
     "new_task": "New Task",
@@ -183,7 +187,8 @@
     "leave_confirm": "Leave {{name}}? You will lose access to all shared events and tasks.",
     "leave_btn": "Leave family",
     "leave": "Leave",
-    "could_not_leave": "Could not leave family"
+    "could_not_leave": "Could not leave family",
+    "join_with_code": "Join with code"
   },
   "profile": {
     "title": "Profile",
@@ -254,5 +259,16 @@
     "language": "Language",
     "language_subtitle": "Choose your preferred language",
     "device_default": "Device default"
+  },
+  "join": {
+    "title": "Join with code",
+    "label": "Enter the invite code you got for a family or a group",
+    "button": "Join",
+    "enter_code": "Please enter an invite code",
+    "switch_title": "Switch family?",
+    "leave_and_join": "Leave & join",
+    "joined_family": "You are now in {{name}}",
+    "joined_group": "You joined the group {{name}}",
+    "stay_connected_hint": "Tip: to stay connected with your old family, create a group together."
   }
 }

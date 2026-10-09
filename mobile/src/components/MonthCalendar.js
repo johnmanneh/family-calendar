@@ -1,8 +1,10 @@
 import React, { useState } from 'react';
-import { View, Text, TouchableOpacity, Dimensions } from 'react-native';
+import { View, Text, TouchableOpacity, Dimensions, useColorScheme } from 'react-native';
+import { LIGHT, DARK } from '../theme';
 
 const SCREEN_WIDTH = Dimensions.get('window').width;
-const CELL = Math.floor(SCREEN_WIDTH / 7);
+// Lives inside HomeScreen's topCard (marginHorizontal: 8)
+const CELL = Math.floor((SCREEN_WIDTH - 16) / 7);
 const DAY_LETTERS = ['M', 'T', 'W', 'T', 'F', 'S', 'S'];
 
 // Timezone-safe day match
@@ -14,6 +16,7 @@ function onSameDay(dateStr, day) {
 }
 
 export default function MonthCalendar({ events = [], selectedDate, onSelectDate, onLongPressDate }) {
+  const s = useColorScheme() === 'dark' ? darkS : lightS;
   const today = new Date();
   today.setHours(0, 0, 0, 0);
 
@@ -112,11 +115,10 @@ export default function MonthCalendar({ events = [], selectedDate, onSelectDate,
   );
 }
 
-const s = {
+// Theme-aware: c = LIGHT or DARK palette
+const makeS = c => ({
   container: {
-    backgroundColor: '#fff',
-    borderBottomWidth: 1,
-    borderBottomColor: '#e5e5ea',
+    // transparent — background/rounding come from HomeScreen's topCard
     paddingBottom: 8,
   },
   header: {
@@ -129,18 +131,21 @@ const s = {
   },
   arrow: { padding: 8 },
   arrowText: { fontSize: 24, color: '#1a8fa8', fontWeight: '300', lineHeight: 26 },
-  monthLabel: { fontSize: 16, fontWeight: '700', color: '#1d1d1f', letterSpacing: -0.3 },
+  monthLabel: { fontSize: 16, fontWeight: '700', color: c.text, letterSpacing: -0.3 },
   letterRow: { flexDirection: 'row', paddingBottom: 4 },
   grid: { flexDirection: 'row', flexWrap: 'wrap' },
   cell: { width: CELL, alignItems: 'center', paddingVertical: 2 },
-  letter: { fontSize: 11, fontWeight: '600', color: '#aeaeb2' },
+  letter: { fontSize: 11, fontWeight: '600', color: c.textMuted },
   circle: { width: 30, height: 30, borderRadius: 15, alignItems: 'center', justifyContent: 'center' },
   circleSel:   { backgroundColor: '#1a8fa8' },
   circleToday: { backgroundColor: 'rgba(26,143,168,0.12)' },
-  num:       { fontSize: 13, fontWeight: '500', color: '#1d1d1f' },
-  numFaded:  { color: '#c7c7cc' },
+  num:       { fontSize: 13, fontWeight: '500', color: c.text },
+  numFaded:  { color: c.textMuted },
   numSel:    { color: '#fff', fontWeight: '700' },
   numToday:  { color: '#1a8fa8', fontWeight: '700' },
   dots: { flexDirection: 'row', gap: 2, height: 6, marginTop: 1 },
   dot:  { width: 4, height: 4, borderRadius: 2 },
-};
+});
+
+const lightS = makeS(LIGHT);
+const darkS  = makeS(DARK);

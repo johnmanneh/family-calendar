@@ -16,6 +16,7 @@ import DateTimePicker from '@react-native-community/datetimepicker';
 import { useTranslation } from 'react-i18next';
 import API from '../api/axios';
 import { useFamily } from '../context/FamilyContext';
+import { useAuth } from '../context/AuthContext';
 import { useStyles } from '../styles/EventFormScreen.styles';
 
 // ─── Constants ────────────────────────────────────────────────────────────────
@@ -125,6 +126,7 @@ export default function EventFormScreen({ route, navigation }) {
   const isEdit = !!event;
 
   const { members } = useFamily();
+  const { user } = useAuth();
 
   // ── Form state ────────────────────────────────────────────────────────────
   // Priority order for start date: edit event → prefill.date+time → prefillDate → now
@@ -190,6 +192,44 @@ export default function EventFormScreen({ route, navigation }) {
     }
   };
 
+  // ── Share with groups ─────────────────────────────────────────────────────
+  // The event stays in the family calendar; ticking a group shares the SAME event
+  // with that group (no copy), e.g. "Big Family" so grandma sees it too.
+  // Only the event's creator may share it (the server enforces this as well).
+  const [myGroups, setMyGroups] = useState([]);
+  const initialGroupIds = isEdit ? (event.group_ids || []).map(Number) : [];
+  const [selectedGroups, setSelectedGroups] = useState(initialGroupIds);
+  const canShare = !isEdit || Number(event.created_by) === Number(user?.id);
+
+  useEffect(() => {
+    API.get('/groups')
+      .then(res => setMyGroups(res.data.groups || []))
+      .catch(() => setMyGroups([]));
+  }, []);
+
+  const toggleGroup = (id) => {
+    const numId = Number(id);
+    setSelectedGroups(prev =>
+      prev.includes(numId) ? prev.filter(g => g !== numId) : [...prev, numId]
+    );
+  };
+
+  // Share/unshare after the event itself is saved. A failure here shouldn't lose the event.
+  const syncGroups = async (eventId) => {
+    if (!canShare) return;
+    const toAdd    = selectedGroups.filter(id => !initialGroupIds.includes(id));
+    const toRemove = initialGroupIds.filter(id => !selectedGroups.includes(id));
+    if (toAdd.length === 0 && toRemove.length === 0) return;
+    try {
+      await Promise.all([
+        ...toAdd.map(id    => API.post(`/groups/events/${eventId}/share`, { group_id: id })),
+        ...toRemove.map(id => API.delete(`/groups/events/${eventId}/share/${id}`)),
+      ]);
+    } catch {
+      Alert.alert(t('common.error'), t('events.could_not_share'));
+    }
+  };
+
   // ── Tasks ─────────────────────────────────────────────────────────────────
   const [tasks, setTasks] = useState(
     isEdit && event.tasks
@@ -251,10 +291,14 @@ export default function EventFormScreen({ route, navigation }) {
             }))
           );
         }
+
+        await syncGroups(event.id);
       } else {
         // ── Create event ──────────────────────────────────────────────────
         const res = await API.post('/events/create', eventPayload);
         const newId = res.data.event.id;
+
+        await syncGroups(newId);
 
         // Add attendees one-by-one
         if (selectedAttendees.length > 0) {
@@ -478,6 +522,28 @@ export default function EventFormScreen({ route, navigation }) {
             })}
           </View>
         </View>
+
+        {/* ── Share with groups ── */}
+        {canShare && myGroups.length > 0 && (
+          <View style={styles.card}>
+            <Text style={styles.fieldLabel}>{t('events.share_with_groups')}</Text>
+            <View style={styles.categoryGrid}>
+              {myGroups.map(g => {
+                const on = selectedGroups.includes(Number(g.id));
+                return (
+                  <TouchableOpacity
+                    key={g.id}
+                    style={[styles.categoryChip, on && { backgroundColor: '#1a8fa8', borderColor: '#1a8fa8' }]}
+                    onPress={() => toggleGroup(g.id)}
+                  >
+                    <Ionicons name={on ? 'checkmark-circle' : 'people-outline'} size={15} color={on ? '#fff' : '#8e8e93'} />
+                    <Text style={[styles.categoryLabel, on && { color: '#fff' }]}>{g.name}</Text>
+                  </TouchableOpacity>
+                );
+              })}
+            </View>
+          </View>
+        )}
 
         {/* ── Tasks ── */}
         <View style={styles.card}>

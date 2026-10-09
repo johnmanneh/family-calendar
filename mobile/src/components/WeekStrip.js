@@ -5,10 +5,15 @@ import {
   TouchableOpacity,
   PanResponder,
   Dimensions,
+  useColorScheme,
 } from 'react-native';
+import { LIGHT, DARK } from '../theme';
 
 const SCREEN_WIDTH = Dimensions.get('window').width;
-const DAY_WIDTH    = Math.floor(SCREEN_WIDTH / 7);
+// The strip lives inside HomeScreen's topCard (marginHorizontal: 8),
+// so the seven columns share the card's width.
+const CARD_MARGIN  = 8;
+const DAY_WIDTH    = Math.floor((SCREEN_WIDTH - CARD_MARGIN * 2) / 7);
 const MAX_CHIPS    = 3; // max event chips shown per day before "+N more"
 const DAY_LETTERS  = ['Sun', 'Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat'];
 
@@ -84,6 +89,7 @@ function monthLabel(weekStart) {
 // ─── WeekStrip ────────────────────────────────────────────────────────────────
 
 export default function WeekStrip({ events, selectedDate, onSelectDate, onLongPressDate }) {
+  const styles = useColorScheme() === 'dark' ? darkStyles : lightStyles;
   const today = new Date();
   today.setHours(0, 0, 0, 0);
 
@@ -208,11 +214,10 @@ export default function WeekStrip({ events, selectedDate, onSelectDate, onLongPr
 
 // ─── Styles ───────────────────────────────────────────────────────────────────
 
-const styles = {
+// Theme-aware: c = LIGHT or DARK palette from ../theme
+const makeStyles = c => ({
+  // Transparent — the background/rounding comes from HomeScreen's topCard
   container: {
-    backgroundColor: '#fff',
-    borderBottomWidth: 1,
-    borderBottomColor: '#e5e5ea',
     paddingBottom: 8,
   },
 
@@ -237,7 +242,7 @@ const styles = {
   monthLabel: {
     fontSize: 14,
     fontWeight: '600',
-    color: '#1d1d1f',
+    color: c.text,
     letterSpacing: -0.2,
   },
 
@@ -255,7 +260,7 @@ const styles = {
   dayLetter: {
     fontSize: 11,
     fontWeight: '500',
-    color: '#aeaeb2',
+    color: c.textMuted,
     marginBottom: 4,
   },
   dayLetterToday: {
@@ -281,7 +286,7 @@ const styles = {
   dateNum: {
     fontSize: 13,
     fontWeight: '500',
-    color: '#1d1d1f',
+    color: c.text,
   },
   dateNumSelected: {
     color: '#fff',
@@ -314,7 +319,7 @@ const styles = {
   chipTitle: {
     fontSize: 10,
     fontWeight: '700',
-    color: '#1d1d1f',
+    color: c.text,
     lineHeight: 13,
   },
   chipTime: {
@@ -329,4 +334,7 @@ const styles = {
     textAlign: 'center',
     marginTop: 1,
   },
-};
+});
+
+const lightStyles = makeStyles(LIGHT);
+const darkStyles  = makeStyles(DARK);

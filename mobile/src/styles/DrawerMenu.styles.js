@@ -6,13 +6,6 @@ const DRAWER_WIDTH = Dimensions.get('window').width * 0.75;
 
 const make = c => StyleSheet.create({
 
-  root: { flex: 1 },
-
-  backdrop: {
-    ...StyleSheet.absoluteFillObject,
-    backgroundColor: 'rgba(0,0,0,0.35)',
-  },
-
   // Floating panel — same card language as the home screen's top card
   drawer: {
     position: 'absolute',

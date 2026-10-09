@@ -24,7 +24,7 @@ import DateTimePicker, { DateTimePickerAndroid } from '@react-native-community/d
 import { SafeAreaView, useSafeAreaInsets } from 'react-native-safe-area-context';
 import { Ionicons } from '@expo/vector-icons';
 import { LinearGradient } from 'expo-linear-gradient';
-import DrawerMenu from '../components/DrawerMenu';
+import DrawerMenu, { useDrawerController, homeRollStyle } from '../components/DrawerMenu';
 import WeekStrip from '../components/WeekStrip';
 import MonthCalendar from '../components/MonthCalendar';
 import RadialMenu from '../components/RadialMenu';
@@ -391,10 +391,14 @@ export default function HomeScreen({ navigation }) {
   const [loading, setLoading] = useState(true);
   const [refreshing, setRefreshing] = useState(false);
   const [selectedMember, setSelectedMember] = useState(null);
+  // Scope chips: 'all' | 'family' | <groupId>. Only shown when the user is in a group.
+  const [myGroups, setMyGroups] = useState([]);
+  const [scope, setScope] = useState('all');
   const [pendingCount, setPendingCount] = useState(0);
   const [notifUnread,  setNotifUnread]  = useState(0);
   const [chatUnread,   setChatUnread]   = useState(0);
-  const [drawerOpen,    setDrawerOpen]    = useState(false);
+  // Drawer lives under this screen; opening it rolls this screen away (see DrawerMenu)
+  const drawer = useDrawerController();
   const [isOffline,     setIsOffline]     = useState(false);
   const [radialVisible,  setRadialVisible]  = useState(false);
 
@@ -543,25 +547,25 @@ export default function HomeScreen({ navigation }) {
     });
 
   // ── Edge swipe to open drawer ─────────────────────────────────────────────
-  // A dedicated 20px strip on the left edge captures the gesture so it never
-  // conflicts with the member bubbles ScrollView or the event FlatList.
-  const edgePan = useRef(
-    PanResponder.create({
-      onStartShouldSetPanResponder: () => true,   // claim the touch immediately
-      onPanResponderMove: (_, g) => {
-        if (g.dx > 30) setDrawerOpen(true);
-      },
-    })
-  ).current;
+  // A dedicated 20px strip on the left edge pulls the drawer out from under
+  // the screen (drawer.edgePan follows the finger).
 
   // ── Fetch events + tasks together ────────────────────────────────────────
   // Use allSettled so a 404 (new user with no family) doesn't crash the other request.
   const fetchEvents = useCallback(async () => {
     try {
-      const [eventsRes, tasksRes] = await Promise.allSettled([
+      const [eventsRes, tasksRes, groupsRes] = await Promise.allSettled([
         API.get('/events'),
         API.get('/tasks/family'),
+        API.get('/groups'),
       ]);
+
+      if (groupsRes.status === 'fulfilled') {
+        const g = groupsRes.value.data.groups || [];
+        setMyGroups(g);
+        // The selected group may have been left/deleted since — fall back to All
+        setScope(prev => (typeof prev === 'number' && !g.some(x => Number(x.id) === prev) ? 'all' : prev));
+      }
 
       const newEvents = eventsRes.status === 'fulfilled' ? (eventsRes.value.data.events || []) : [];
       const newTasks  = tasksRes.status  === 'fulfilled' ? (tasksRes.value.data.tasks   || []) : [];
@@ -890,13 +894,19 @@ export default function HomeScreen({ navigation }) {
 
   // ── Filter ───────────────────────────────────────────────────────────────
 
+  // Scope first: All (family + groups) · Family only · one group
+  const scopeFiltered =
+    scope === 'all'    ? events :
+    scope === 'family' ? events.filter(e => !e.from_group) :
+    events.filter(e => (e.group_ids || []).map(Number).includes(Number(scope)));
+
   const memberFiltered = selectedMember
-    ? events.filter(
+    ? scopeFiltered.filter(
         (e) =>
           Number(e.created_by) === Number(selectedMember) ||
           (e.attendees && e.attendees.some((a) => Number(a.user_id) === Number(selectedMember)))
       )
-    : events;
+    : scopeFiltered;
 
   const q = searchQuery.trim().toLowerCase();
   const isSearchActive = q.length > 0 || selectedCategory !== '';
@@ -923,6 +933,11 @@ export default function HomeScreen({ navigation }) {
     let list = selectedMember
       ? tasks.filter(t => Number(t.assigned_to) === Number(selectedMember))
       : tasks;
+    // A group view only shows tasks that belong to that group's events
+    if (typeof scope === 'number') {
+      const ids = new Set(scopeFiltered.map(e => Number(e.id)));
+      list = list.filter(t => t.event_id && ids.has(Number(t.event_id)));
+    }
     if (isSearchActive) {
       if (selectedCategory) list = list.filter(t => t.category === selectedCategory);
       if (q) list = list.filter(t => (t.title || '').toLowerCase().includes(q));
@@ -1021,12 +1036,15 @@ export default function HomeScreen({ navigation }) {
   // ── Main render ───────────────────────────────────────────────────────────
 
   return (
-    <View style={styles.container}><SafeAreaView style={styles.safeArea} edges={['top', 'left', 'right']}>
+    <View style={styles.container}>
 
-      <DrawerMenu visible={drawerOpen} onClose={() => setDrawerOpen(false)} navigation={navigation} pendingCount={pendingCount} notifCount={notifUnread} />
+      {/* ── Home layer — stays put and fades back while the drawer is open ── */}
+      <Animated.View style={[styles.stage, homeRollStyle(drawer.progress)]}>
+      <View style={styles.stageInner}>
+      <SafeAreaView style={styles.safeArea} edges={['top', 'left', 'right']}>
 
       {/* Left edge strip — 20px wide, full height, captures swipe-right */}
-      <View style={styles.edgeZone} {...edgePan.panHandlers} />
+      <View style={styles.edgeZone} {...drawer.edgePan.panHandlers} />
 
       {/* ── Dismiss overlay — tapping anywhere outside search closes it ── */}
       {searchVisible && (
@@ -1043,7 +1061,7 @@ export default function HomeScreen({ navigation }) {
       <View style={styles.header}>
 
         {/* Left — gradient hamburger */}
-        <TouchableOpacity style={styles.iconBtn} onPress={() => setDrawerOpen(true)}>
+        <TouchableOpacity style={styles.iconBtn} onPress={drawer.open}>
           <View style={styles.hamburger}>
             <LinearGradient colors={['#56e39f','#4facfe','#f857a6','#f48c06']} start={{x:0,y:0}} end={{x:1,y:0}} style={styles.hamburgerLine} />
             <LinearGradient colors={['#56e39f','#4facfe','#f857a6','#f48c06']} start={{x:0,y:0}} end={{x:1,y:0}} style={styles.hamburgerLine} />
@@ -1149,6 +1167,38 @@ export default function HomeScreen({ navigation }) {
             ))}
           </ScrollView>
         </View>
+      )}
+
+      {/* ── Scope chips: All · Family · <groups> — only for people in a group ── */}
+      {myGroups.length > 0 && (
+        <ScrollView
+          horizontal
+          showsHorizontalScrollIndicator={false}
+          style={styles.scopeRow}
+          contentContainerStyle={styles.scopeContent}
+        >
+          {[
+            { key: 'all',    label: t('home.filter_all') },
+            { key: 'family', label: t('home.filter_family') },
+            ...myGroups.map(g => ({ key: Number(g.id), label: g.name, isGroup: true })),
+          ].map(chip => {
+            const active = scope === chip.key;
+            return (
+              <TouchableOpacity
+                key={String(chip.key)}
+                style={[styles.scopeChip, active && styles.scopeChipActive]}
+                onPress={() => setScope(chip.key)}
+              >
+                {chip.isGroup && (
+                  <Ionicons name="people" size={12} color={active ? '#fff' : '#8e8e93'} style={{ marginRight: 4 }} />
+                )}
+                <Text style={[styles.scopeChipText, active && styles.scopeChipTextActive]} numberOfLines={1}>
+                  {chip.label}
+                </Text>
+              </TouchableOpacity>
+            );
+          })}
+        </ScrollView>
       )}
 
       {/* ── Search panel — slides in below member bubbles ── */}
@@ -1352,6 +1402,19 @@ export default function HomeScreen({ navigation }) {
           <Ionicons name={isRecording ? 'mic' : 'add'} size={26} color="#fff" />
         </Pressable>
       </View>
+
+      {/* While the drawer is out: tap the faded home screen to close it */}
+      {drawer.active && (
+        <Animated.View
+          style={[StyleSheet.absoluteFill, styles.stageDim, { opacity: drawer.progress.interpolate({ inputRange: [0, 1], outputRange: [0, 1], extrapolate: 'clamp' }) }]}
+          {...drawer.closePan.panHandlers}
+        />
+      )}
+      </View>
+      </Animated.View>
+
+      {/* Drawer rolls in OVER the faded home screen */}
+      <DrawerMenu controller={drawer} navigation={navigation} pendingCount={pendingCount} notifCount={notifUnread} />
 
       {/* ── Radial pie menu ── */}
       <RadialMenu

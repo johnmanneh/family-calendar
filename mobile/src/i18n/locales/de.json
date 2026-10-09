@@ -74,7 +74,9 @@
     "showing_cached": "gespeicherte Daten",
     "search_placeholder": "Termine und Aufgaben suchen…",
     "counter": "Gegenangebot",
-    "ongoing": "In Bearbeitung"
+    "ongoing": "In Bearbeitung",
+    "filter_all": "Alle",
+    "filter_family": "Familie"
   },
   "events": {
     "new_event": "Neuer Termin",
@@ -124,7 +126,9 @@
     "save_event": "Termin speichern",
     "update_event": "Termin aktualisieren",
     "start": "Beginn",
-    "end": "Ende"
+    "end": "Ende",
+    "share_with_groups": "Mit Gruppen teilen",
+    "could_not_share": "Termin gespeichert, aber Teilen mit einer Gruppe fehlgeschlagen"
   },
   "tasks": {
     "new_task": "Neue Aufgabe",
@@ -183,7 +187,8 @@
     "leave_confirm": "{{name}} verlassen? Du verlierst den Zugang zu allen gemeinsamen Terminen und Aufgaben.",
     "leave_btn": "Familie verlassen",
     "leave": "Verlassen",
-    "could_not_leave": "Familie konnte nicht verlassen werden"
+    "could_not_leave": "Familie konnte nicht verlassen werden",
+    "join_with_code": "Mit Code beitreten"
   },
   "profile": {
     "title": "Profil",
@@ -254,5 +259,16 @@
     "language": "Sprache",
     "language_subtitle": "Wähle deine bevorzugte Sprache",
     "device_default": "Gerätestandard"
+  },
+  "join": {
+    "title": "Mit Code beitreten",
+    "label": "Gib den Einladungscode für eine Familie oder Gruppe ein",
+    "button": "Beitreten",
+    "enter_code": "Bitte gib einen Einladungscode ein",
+    "switch_title": "Familie wechseln?",
+    "leave_and_join": "Verlassen & beitreten",
+    "joined_family": "Du bist jetzt in {{name}}",
+    "joined_group": "Du bist der Gruppe {{name}} beigetreten",
+    "stay_connected_hint": "Tipp: Um mit deiner alten Familie verbunden zu bleiben, erstellt gemeinsam eine Gruppe."
   }
 }

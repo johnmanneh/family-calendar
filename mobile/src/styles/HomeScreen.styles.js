@@ -6,6 +6,11 @@ const make = c => StyleSheet.create({
   container: { flex: 1, backgroundColor: c.bg },
   safeArea:  { flex: 1 },
 
+  // Home layer — fades back (opacity) while the drawer is open
+  stage: { flex: 1 },
+  stageInner: { flex: 1, backgroundColor: c.bg },
+  stageDim: { backgroundColor: 'rgba(0,0,0,0.06)' },
+
   fab: {
     position: 'absolute', bottom: 32, right: 24,
     width: 56, height: 56, borderRadius: 28,
@@ -66,6 +71,18 @@ const make = c => StyleSheet.create({
     height: 76, flexShrink: 0,   // background comes from topCard
   },
   membersRow: { flex: 1 },
+
+  // Scope chips (All · Family · groups) under the member bubbles
+  scopeRow: { flexGrow: 0, flexShrink: 0 },
+  scopeContent: { paddingHorizontal: 16, paddingBottom: 8, gap: 6 },
+  scopeChip: {
+    flexDirection: 'row', alignItems: 'center',
+    paddingVertical: 5, paddingHorizontal: 12, borderRadius: 14,
+    backgroundColor: c.surface2,
+  },
+  scopeChipActive: { backgroundColor: '#1a8fa8' },
+  scopeChipText: { fontSize: 12, fontWeight: '600', color: c.textSub, maxWidth: 140 },
+  scopeChipTextActive: { color: '#fff' },
   membersContent: { paddingHorizontal: 16, paddingTop: 8, paddingBottom: 8 },
   bubble: { alignItems: 'center', width: 46, marginRight: 10 },
   bubbleHaloWrap: { width: 44, height: 44, alignItems: 'center', justifyContent: 'center' },

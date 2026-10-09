@@ -3,12 +3,13 @@ import {
   View,
   Text,
   TouchableOpacity,
-  Modal,
   Animated,
   PanResponder,
   Image,
   ScrollView,
   Easing,
+  BackHandler,
+  StyleSheet,
 } from 'react-native';
 import { Ionicons } from '@expo/vector-icons';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
@@ -44,7 +45,97 @@ function RollRow({ progress, children }) {
   );
 }
 
-export default function DrawerMenu({ visible, onClose, navigation, pendingCount = 0, notifCount = 0 }) {
+// ── Drawer controller ────────────────────────────────────────────────────────
+// The drawer lives UNDER the home screen. Opening it rolls the home screen
+// (calendar + list) away to the right, like a treadmill going round its drum,
+// and the drawer comes up from underneath. `progress` (0 closed → 1 open) drives
+// both layers, and it follows your finger while you drag.
+const clamp01 = v => Math.max(0, Math.min(1, v));
+const DRUM_TILT = 60;   // degrees the drawer is turned away before it rolls in
+
+export function useDrawerController() {
+  const progress = useRef(new Animated.Value(0)).current;
+  const [isOpen, setIsOpen] = useState(false);
+  const [active, setActive] = useState(false);     // drawer layer visible (open or moving)
+  const activeRef = useRef(false);
+
+  const activate = (on) => {
+    if (activeRef.current !== on) { activeRef.current = on; setActive(on); }
+  };
+
+  const animate = (to) => {
+    if (to === 1) {
+      activate(true);
+      Animated.spring(progress, { toValue: 1, useNativeDriver: true, tension: 90, friction: 15 }).start();
+    } else {
+      Animated.timing(progress, { toValue: 0, duration: 260, easing: Easing.inOut(Easing.cubic), useNativeDriver: true })
+        .start(({ finished }) => { if (finished) activate(false); });
+    }
+  };
+
+  const open  = () => { setIsOpen(true);  animate(1); };
+  const close = () => { setIsOpen(false); animate(0); };
+
+  // Swipe right from the left edge → pull the drawer out from under the screen
+  const edgePan = useRef(PanResponder.create({
+    onStartShouldSetPanResponder: () => true,
+    onPanResponderMove: (_, g) => {
+      activate(true);
+      progress.setValue(clamp01(g.dx / DRAWER_WIDTH));
+    },
+    onPanResponderRelease: (_, g) => {
+      if (g.dx > DRAWER_WIDTH * 0.3 || g.vx > 0.5) open(); else close();
+    },
+    onPanResponderTerminate: () => close(),
+  })).current;
+
+  // On the faded home screen: tap → close, drag left → roll the drawer away
+  const closePan = useRef(PanResponder.create({
+    onStartShouldSetPanResponder: () => true,
+    onMoveShouldSetPanResponder: (_, g) => Math.abs(g.dx) > 6,
+    onPanResponderMove: (_, g) => {
+      if (g.dx < 0) progress.setValue(clamp01(1 + g.dx / DRAWER_WIDTH));
+    },
+    onPanResponderRelease: (_, g) => {
+      if (Math.abs(g.dx) < 6 && Math.abs(g.dy) < 6) return close();          // tap
+      if (g.dx < -DRAWER_WIDTH * 0.3 || g.vx < -0.5) close(); else open();
+    },
+    onPanResponderTerminate: () => open(),
+  })).current;
+
+  // On the drawer panel itself: only a clear left swipe (rows stay tappable)
+  const panelPan = useRef(PanResponder.create({
+    onMoveShouldSetPanResponder: (_, g) => g.dx < -8 && Math.abs(g.dx) > Math.abs(g.dy),
+    onPanResponderMove: (_, g) => progress.setValue(clamp01(1 + g.dx / DRAWER_WIDTH)),
+    onPanResponderRelease: (_, g) => {
+      if (g.dx < -DRAWER_WIDTH * 0.3 || g.vx < -0.5) close(); else open();
+    },
+    onPanResponderTerminate: () => open(),
+  })).current;
+
+  // Android back button closes the drawer first
+  useEffect(() => {
+    if (!isOpen) return;
+    const sub = BackHandler.addEventListener('hardwareBackPress', () => { close(); return true; });
+    return () => sub.remove();
+  }, [isOpen]);
+
+  return { progress, isOpen, active, open, close, edgePan, closePan, panelPan };
+}
+
+/**
+ * Style for the home screen layer: it stays where it is and simply fades back
+ * while the drawer rolls in over it — still visible, just quieter.
+ */
+export function homeRollStyle(progress) {
+  return {
+    opacity: progress.interpolate({ inputRange: [0, 1], outputRange: [1, HOME_FADE], extrapolate: 'clamp' }),
+  };
+}
+const HOME_FADE = 0.35;   // how visible the home screen stays behind the open drawer
+
+export default function DrawerMenu({ controller, navigation, pendingCount = 0, notifCount = 0 }) {
+  const { progress: open, isOpen: visible, active, close: onClose, panelPan } = controller;
   const styles      = useStyles();
   const colorScheme = useColorScheme();
   const toggleTheme = useToggleTheme();
@@ -109,64 +200,30 @@ export default function DrawerMenu({ visible, onClose, navigation, pendingCount 
   const blockCount = 1 + sections.length + 1;
   const rolls = useRef(Array.from({ length: 8 }, () => new Animated.Value(0))).current;
 
-  // ── Panel animation: the whole drawer rolls in like a drum ─────────────────
-  // `open` goes 0 → 1. The panel is hinged on its left edge and turns toward
-  // you (rotateY) while it slides in — the treadmill roll, but sideways.
-  // While you drag it closed, `open` follows your finger, so it rolls back.
-  const DRUM_TILT = 70;                    // degrees when fully closed
-  const open = useRef(new Animated.Value(0)).current;
-  const [mounted, setMounted] = useState(visible);   // keep Modal up during close
-
-  const animateTo = (to, done) => {
-    if (to === 1) {
-      Animated.spring(open, { toValue: 1, useNativeDriver: true, tension: 120, friction: 16 }).start(done);
-    } else {
-      Animated.timing(open, { toValue: 0, duration: 220, easing: Easing.in(Easing.cubic), useNativeDriver: true }).start(done);
-    }
-  };
-
+  // ── Rows roll up one after another each time the drawer opens ─────────────
   useEffect(() => {
-    if (visible) {
-      setMounted(true);
-      rolls.forEach(r => r.setValue(0));
-      open.setValue(0);
-      animateTo(1);
-      // Rows roll in one after another, just behind the panel
-      Animated.sequence([
-        Animated.delay(90),
-        Animated.stagger(55, rolls.slice(0, blockCount).map(r =>
-          Animated.timing(r, { toValue: 1, duration: 340, easing: Easing.out(Easing.cubic), useNativeDriver: true })
-        )),
-      ]).start();
-    } else if (mounted) {
-      animateTo(0, () => setMounted(false));
-    }
+    if (!visible) return;
+    rolls.forEach(r => r.setValue(0));
+    Animated.sequence([
+      Animated.delay(80),
+      Animated.stagger(55, rolls.slice(0, blockCount).map(r =>
+        Animated.timing(r, { toValue: 1, duration: 340, easing: Easing.out(Easing.cubic), useNativeDriver: true })
+      )),
+    ]).start();
   }, [visible]);
 
+  // ── The drawer rolls in OVER the home screen ─────────────────────────────
+  // Hinged on its left edge, it turns toward you (rotateY) while it slides in
+  // from off-screen — the treadmill roll, sideways. Follows the finger on drag.
   const panelStyle = {
-    opacity: open.interpolate({ inputRange: [0, 0.25, 1], outputRange: [0, 1, 1] }),
+    opacity: open.interpolate({ inputRange: [0, 0.2, 1], outputRange: [0, 1, 1], extrapolate: 'clamp' }),
     transform: [
       { perspective: 900 },
-      { translateX: open.interpolate({ inputRange: [0, 1], outputRange: [-DRAWER_WIDTH * 0.45, 0] }) },
+      { translateX: open.interpolate({ inputRange: [0, 1], outputRange: [-DRAWER_WIDTH * 0.6, 0] }) },
       { rotateY: open.interpolate({ inputRange: [0, 1], outputRange: [`${DRUM_TILT * TILT_DIR}deg`, '0deg'] }) },
       { scale: open.interpolate({ inputRange: [0, 1], outputRange: [0.92, 1] }) },
     ],
   };
-
-  // ── Drag left to roll it closed ──────────────────────────────────────────
-  const closePan = useRef(
-    PanResponder.create({
-      onMoveShouldSetPanResponder: (_, g) => g.dx < -8 && Math.abs(g.dx) > Math.abs(g.dy),
-      onPanResponderMove: (_, g) => {
-        open.setValue(Math.max(0, Math.min(1, 1 + g.dx / DRAWER_WIDTH)));
-      },
-      onPanResponderRelease: (_, g) => {
-        if (g.dx < -DRAWER_WIDTH * 0.3 || g.vx < -0.5) onClose();
-        else animateTo(1);
-      },
-      onPanResponderTerminate: () => animateTo(1),
-    })
-  ).current;
 
   const renderRow = (row, last) => (
     <TouchableOpacity
@@ -190,29 +247,17 @@ export default function DrawerMenu({ visible, onClose, navigation, pendingCount 
   );
 
   return (
-    <Modal
-      visible={mounted}
-      transparent
-      animationType="none"
-      statusBarTranslucent
-      navigationBarTranslucent
-      onRequestClose={onClose}
+    <View
+      style={StyleSheet.absoluteFill}
+      pointerEvents={active ? 'box-none' : 'none'}
     >
-      <View style={styles.root}>
-
-        {/* Dimmed background — tap anywhere outside the panel to close */}
-        <Animated.View style={[styles.backdrop, { opacity: open.interpolate({ inputRange: [0, 1], outputRange: [0, 1], extrapolate: 'clamp' }) }]}>
-          <TouchableOpacity style={{ flex: 1 }} onPress={onClose} activeOpacity={1} />
-        </Animated.View>
-
-        {/* ── Floating panel — same card language as the home top card ── */}
         <Animated.View
           style={[
             styles.drawer,
             { top: insets.top + 4, bottom: insets.bottom + 8 },
             panelStyle,
           ]}
-          {...closePan.panHandlers}
+          {...panelPan.panHandlers}
         >
           <ScrollView
             style={styles.scroll}
@@ -274,8 +319,6 @@ export default function DrawerMenu({ visible, onClose, navigation, pendingCount 
             </RollRow>
           </ScrollView>
         </Animated.View>
-
-      </View>
-    </Modal>
+    </View>
   );
 }

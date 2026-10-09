@@ -19,7 +19,6 @@ import {
   Animated,
   StyleSheet,
   Dimensions,
-  Platform,
 } from 'react-native';
 import Svg, { Path, Circle } from 'react-native-svg';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
@@ -92,14 +91,13 @@ export default function RadialMenu({ visible, fabCenter, onClose, onNewEvent, on
   const insets = useSafeAreaInsets();
   const { width: SW, height: SH } = Dimensions.get('window');
 
-  // measure() returns coords from the screen top on edge-to-edge Android, but
-  // the Modal (no statusBarTranslucent) starts below the status bar. Subtract
-  // insets.top to close that gap. On non-edge-to-edge insets.top = 0 → no-op.
-  // iOS is unaffected (Platform check keeps it at 0).
-  const topOffset = Platform.OS === 'android' ? insets.top : 0;
-
+  // measure() returns coords from the top of the physical screen. The Modal is
+  // made translucent below (status + nav bar), so it also starts at the screen
+  // top on every Android device — no inset correction needed. Previously we
+  // subtracted insets.top, which pushed the sun above the FAB on devices where
+  // the Modal already drew edge-to-edge.
   const fabCX = fabCenter?.x ?? SW - FAB_RIGHT  - FAB_SIZE / 2;
-  const fabCY = (fabCenter?.y ?? SH - FAB_BOTTOM - FAB_SIZE / 2) - topOffset;
+  const fabCY = fabCenter?.y ?? SH - FAB_BOTTOM - FAB_SIZE / 2 - insets.bottom;
 
   const scaleAnim   = useRef(new Animated.Value(0)).current;
   const opacityAnim = useRef(new Animated.Value(0)).current;
@@ -137,7 +135,14 @@ export default function RadialMenu({ visible, fabCenter, onClose, onNewEvent, on
   ];
 
   return (
-    <Modal visible={visible} transparent animationType="none" onRequestClose={onClose}>
+    <Modal
+      visible={visible}
+      transparent
+      animationType="none"
+      statusBarTranslucent
+      navigationBarTranslucent
+      onRequestClose={onClose}
+    >
 
       {/* Dim backdrop */}
       <Pressable style={StyleSheet.absoluteFillObject} onPress={onClose}>

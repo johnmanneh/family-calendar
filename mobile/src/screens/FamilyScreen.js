@@ -183,7 +183,7 @@ export default function FamilyScreen({ navigation }) {
           onPress={() => navigation.navigate('JoinFamily')}
         >
           <Ionicons name="person-add-outline" size={18} color="#1a8fa8" />
-          <Text style={styles.joinFamilyBtnText}>Join a Family</Text>
+          <Text style={styles.joinFamilyBtnText}>{t('family.join_with_code')}</Text>
         </TouchableOpacity>
 
         {/* Leave family — only shown for non-owners */}

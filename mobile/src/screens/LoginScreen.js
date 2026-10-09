@@ -5,7 +5,6 @@ import {
   TextInput,
   TouchableOpacity,
   KeyboardAvoidingView,
-  Platform,
   ActivityIndicator,
   ScrollView,
 } from 'react-native';
@@ -79,9 +78,12 @@ export default function LoginScreen() {
   const isLogin = mode === 'login';
 
   return (
+    // 'padding' on both platforms: the app runs edge-to-edge on Android, so the
+    // window no longer shrinks for the keyboard by itself. Padding shrinks the
+    // ScrollView instead, and it keeps the focused field visible above the keys.
     <KeyboardAvoidingView
       style={styles.page}
-      behavior={Platform.OS === 'ios' ? 'padding' : undefined}
+      behavior="padding"
     >
       <ScrollView
         contentContainerStyle={styles.scroll}
