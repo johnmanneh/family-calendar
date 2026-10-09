@@ -129,7 +129,8 @@
     "end": "Ende",
     "share_with_groups": "Mit Gruppen teilen",
     "could_not_share": "Termin gespeichert, aber Teilen mit einer Gruppe fehlgeschlagen",
-    "invited_by": "{{name}} hat dich eingeladen – zum Kalender hinzufügen?"
+    "invited_by": "{{name}} hat dich eingeladen",
+    "add_to_your_calendar": "Zu deinem Kalender hinzufügen?"
   },
   "tasks": {
     "new_task": "Neue Aufgabe",

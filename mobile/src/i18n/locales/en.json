@@ -129,7 +129,8 @@
     "end": "End",
     "share_with_groups": "Share with groups",
     "could_not_share": "Event saved, but sharing with a group failed",
-    "invited_by": "{{name}} invited you — add it to your calendar?"
+    "invited_by": "{{name}} invited you",
+    "add_to_your_calendar": "Add it to your calendar?"
   },
   "tasks": {
     "new_task": "New Task",

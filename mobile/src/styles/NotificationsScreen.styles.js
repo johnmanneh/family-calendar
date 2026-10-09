@@ -29,7 +29,10 @@ const make = c => StyleSheet.create({
   },
   rowUnread: { backgroundColor: 'rgba(26,143,168,0.06)' },
   rowRead: { backgroundColor: c.surface },
-  rowIcon: { fontSize: 22, lineHeight: 28, flexShrink: 0 },
+  rowIconCircle: {
+    width: 34, height: 34, borderRadius: 17,
+    alignItems: 'center', justifyContent: 'center', flexShrink: 0,
+  },
   rowBody: { flex: 1, gap: 3 },
   rowTitle: { fontSize: 14, fontWeight: '700', color: c.text },
   rowTitleRead: { fontWeight: '500', color: c.textSub },

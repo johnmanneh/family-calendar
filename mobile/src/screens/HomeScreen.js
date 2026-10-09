@@ -282,7 +282,10 @@ function TaskRow({ task, navigation, onComplete, onDelete, onAccept, onSetArriva
           <View style={styles.eventBody}>
             <Text style={styles.eventTitle} numberOfLines={1}>{task.title}</Text>
             {task.event_title ? (
-              <Text style={styles.eventTime}>📅 {task.event_title}</Text>
+              <View style={{ flexDirection: 'row', alignItems: 'center', gap: 4 }}>
+                <Ionicons name="calendar-outline" size={13} color="#8e8e93" />
+                <Text style={styles.eventTime}>{task.event_title}</Text>
+              </View>
             ) : task.due_date ? (
               <Text style={styles.eventTime}>
                 Due {new Date(task.due_date.replace(/Z$/, '')).toLocaleDateString(undefined, { day: 'numeric', month: 'short' })}

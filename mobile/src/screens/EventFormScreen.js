@@ -395,7 +395,10 @@ export default function EventFormScreen({ route, navigation }) {
             />
           </View>
           <View style={[styles.toggleRow, { borderTopWidth: 1, borderTopColor: '#f2f2f7' }]}>
-            <Text style={styles.toggleLabel}>🔒 {t('events.is_private')}</Text>
+            <View style={{ flexDirection: 'row', alignItems: 'center', gap: 6, flex: 1 }}>
+              <Ionicons name="lock-closed-outline" size={18} color="#8e8e93" />
+              <Text style={styles.toggleLabel}>{t('events.is_private')}</Text>
+            </View>
             <Switch
               value={formData.is_private}
               onValueChange={v => set('is_private', v)}

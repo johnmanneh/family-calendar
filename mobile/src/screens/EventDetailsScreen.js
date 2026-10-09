@@ -11,7 +11,7 @@ import {
   Modal,
   FlatList,
 } from 'react-native';
-import { SafeAreaView } from 'react-native-safe-area-context';
+import { SafeAreaView, useSafeAreaInsets } from 'react-native-safe-area-context';
 import { Ionicons } from '@expo/vector-icons';
 import * as Calendar from 'expo-calendar';
 import { useTranslation } from 'react-i18next';
@@ -85,11 +85,22 @@ function parseRecurrence(rrule) {
 // Matches the web's icon + value row layout. `icon` is an emoji standing in
 // for the SVG icons used on web — same information, same position.
 
-function InfoRow({ icon, children }) {
+// Icons: one standard set (Ionicons outline), same size and soft grey everywhere.
+// `color` is only passed when the colour means something (e.g. priority).
+const priorityColor = (p) => {
+  const v = String(p || '').toLowerCase();
+  if (v === 'high')   return '#ff3b30';
+  if (v === 'medium') return '#f48c06';
+  return '#8e8e93';
+};
+
+function InfoRow({ icon, color = '#8e8e93', children }) {
   const styles = useStyles();
   return (
     <View style={styles.infoRow}>
-      <Text style={styles.infoIcon}>{icon}</Text>
+      <View style={styles.infoIconWrap}>
+        <Ionicons name={icon} size={20} color={color} />
+      </View>
       <View style={styles.infoContent}>{children}</View>
     </View>
   );
@@ -282,6 +293,7 @@ export default function EventDetailsScreen({ route, navigation }) {
   const { eventId } = route.params;
   const { user } = useAuth();
   const { members } = useFamily();
+  const insets = useSafeAreaInsets();
 
   const [event, setEvent] = useState(null);
   const [loading, setLoading] = useState(true);
@@ -412,6 +424,90 @@ export default function EventDetailsScreen({ route, navigation }) {
     ? t('common.all_day')
     : `${formatTime(event.start_date)} → ${event.end_date ? formatTime(event.end_date) : ''}`;
 
+  // ── Invitation view ──────────────────────────────────────────────────────
+  // Not accepted yet → one card with everything about the event, and only the
+  // two actions that matter: Decline / Accept. No Edit, Export or Delete.
+  if (isInvitePending) {
+    return (
+      <View style={styles.container}>
+        <ScrollView contentContainerStyle={styles.scrollContent} bounces={false}>
+          {/* One card from the top edge down: header + event + answer.
+              Square top (it IS the header), rounded floating bottom. */}
+          <View style={[styles.inviteCard, { paddingTop: insets.top + 8 }]}>
+
+            <TouchableOpacity onPress={() => navigation.goBack()} style={styles.inviteBack}>
+              <Text style={styles.backText}>{t('common.back')}</Text>
+            </TouchableOpacity>
+
+            {/* Who invited you */}
+            <View style={styles.inviteFromRow}>
+              <Ionicons name="mail-unread-outline" size={15} color="#f48c06" />
+              <Text style={styles.inviteFromText}>
+                {t('events.invited_by', { name: event.created_by_name || '' })}
+              </Text>
+            </View>
+
+            {/* Title with the event colour */}
+            <View style={styles.inviteTitleRow}>
+              <View style={[styles.titleStripe, { backgroundColor: color }]} />
+              <Text style={styles.inviteTitle}>{event.title}</Text>
+            </View>
+
+            {/* Details */}
+            <View style={styles.inviteDetails}>
+              <InfoRow icon="calendar-outline">
+                <Text style={styles.infoValue}>{formatDate(event.start_date)}</Text>
+                <Text style={styles.infoTime}>{timeStr}</Text>
+              </InfoRow>
+              {event.location && (
+                <InfoRow icon="location-outline">
+                  <Text style={styles.infoValue}>{event.location}</Text>
+                </InfoRow>
+              )}
+              {attendees.length > 0 && (
+                <InfoRow icon="people-outline">
+                  <View style={styles.attendeesRow}>
+                    {attendees.map(a => <AttendeeAvatar key={a.user_id || a.id} attendee={a} />)}
+                  </View>
+                </InfoRow>
+              )}
+              {event.priority && (
+                <InfoRow icon="flag-outline" color={priorityColor(event.priority)}>
+                  <Text style={styles.infoValue}>{t('events.priority', { level: event.priority })}</Text>
+                </InfoRow>
+              )}
+              {event.notes && (
+                <InfoRow icon="document-text-outline">
+                  <Text style={styles.infoValue}>{event.notes}</Text>
+                </InfoRow>
+              )}
+            </View>
+
+            {/* Answer */}
+            <View style={styles.inviteDivider} />
+            <Text style={styles.inviteQuestion}>{t('events.add_to_your_calendar')}</Text>
+            <View style={styles.inviteActions}>
+              <TouchableOpacity
+                style={[styles.inviteBtn, styles.inviteBtnDecline, responding && { opacity: 0.5 }]}
+                onPress={() => respondToInvite('denied')}
+                disabled={responding}
+              >
+                <Text style={styles.inviteBtnDeclineText}>{t('common.decline')}</Text>
+              </TouchableOpacity>
+              <TouchableOpacity
+                style={[styles.inviteBtn, styles.inviteBtnAccept, responding && { opacity: 0.5 }]}
+                onPress={() => respondToInvite('accepted')}
+                disabled={responding}
+              >
+                <Text style={styles.inviteBtnAcceptText}>{t('common.accept')}</Text>
+              </TouchableOpacity>
+            </View>
+          </View>
+        </ScrollView>
+      </View>
+    );
+  }
+
   return (
     <SafeAreaView style={styles.container}>
 
@@ -429,31 +525,6 @@ export default function EventDetailsScreen({ route, navigation }) {
           <View style={[styles.titleStripe, { backgroundColor: color }]} />
           <Text style={styles.titleText}>{event.title}</Text>
         </View>
-
-        {/* ── Pending invitation — accept to add it to your calendar ── */}
-        {isInvitePending && (
-          <View style={styles.inviteBanner}>
-            <Text style={styles.inviteBannerText}>
-              {t('events.invited_by', { name: event.created_by_name || '' })}
-            </Text>
-            <View style={styles.inviteBannerActions}>
-              <TouchableOpacity
-                style={[styles.inviteBtn, styles.inviteBtnDecline, responding && { opacity: 0.5 }]}
-                onPress={() => respondToInvite('denied')}
-                disabled={responding}
-              >
-                <Text style={styles.inviteBtnDeclineText}>{t('common.decline')}</Text>
-              </TouchableOpacity>
-              <TouchableOpacity
-                style={[styles.inviteBtn, styles.inviteBtnAccept, responding && { opacity: 0.5 }]}
-                onPress={() => respondToInvite('accepted')}
-                disabled={responding}
-              >
-                <Text style={styles.inviteBtnAcceptText}>{t('common.accept')}</Text>
-              </TouchableOpacity>
-            </View>
-          </View>
-        )}
 
         {/* ── Tasks card — shown above info, same order as web ── */}
         {tasks.length > 0 && (
@@ -474,13 +545,13 @@ export default function EventDetailsScreen({ route, navigation }) {
         <View style={styles.card}>
 
           {event.updated_by_name && (
-            <InfoRow icon="✏️">
+            <InfoRow icon="create-outline">
               <Text style={styles.infoValue}>{t('events.updated_by', { name: event.updated_by_name })}</Text>
             </InfoRow>
           )}
 
           {event.category && (
-            <InfoRow icon="🏷️">
+            <InfoRow icon="pricetag-outline">
               <Text style={styles.infoValue}>{event.category}</Text>
             </InfoRow>
           )}
@@ -490,7 +561,7 @@ export default function EventDetailsScreen({ route, navigation }) {
               even when the event has no attendees yet.  Non-creators only see
               this row when there are attendees to show. */}
           {(attendees.length > 0 || Number(event.created_by) === Number(user?.id)) && (
-            <InfoRow icon="👥">
+            <InfoRow icon="people-outline">
               <View style={styles.attendeesRow}>
 
                 {/* Existing attendees — long-press to remove (creator only) */}
@@ -624,13 +695,13 @@ export default function EventDetailsScreen({ route, navigation }) {
             </View>
           </Modal>
 
-          <InfoRow icon="📅">
+          <InfoRow icon="calendar-outline">
             <Text style={styles.infoValue}>{formatDate(event.start_date)}</Text>
             <Text style={styles.infoTime}>{timeStr}</Text>
           </InfoRow>
 
           {event.recurrence && (
-            <InfoRow icon="🔁">
+            <InfoRow icon="repeat-outline">
               <Text style={styles.infoValue}>
                 {parseRecurrence(event.recurrence)}
               </Text>
@@ -643,13 +714,13 @@ export default function EventDetailsScreen({ route, navigation }) {
           )}
 
           {event.location && (
-            <InfoRow icon="📍">
+            <InfoRow icon="location-outline">
               <Text style={styles.infoValue}>{event.location}</Text>
             </InfoRow>
           )}
 
           {event.video_call_link && (
-            <InfoRow icon="📹">
+            <InfoRow icon="videocam-outline">
               <TouchableOpacity onPress={() => Linking.openURL(event.video_call_link)}>
                 <Text style={styles.infoLink}>{t('events.join_video_call')}</Text>
               </TouchableOpacity>
@@ -657,13 +728,13 @@ export default function EventDetailsScreen({ route, navigation }) {
           )}
 
           {event.priority && (
-            <InfoRow icon="⚡">
+            <InfoRow icon="flag-outline" color={priorityColor(event.priority)}>
               <Text style={styles.infoValue}>{t('events.priority', { level: event.priority })}</Text>
             </InfoRow>
           )}
 
           {event.notes && (
-            <InfoRow icon="📝">
+            <InfoRow icon="document-text-outline">
               <Text style={styles.infoValue}>{event.notes}</Text>
             </InfoRow>
           )}

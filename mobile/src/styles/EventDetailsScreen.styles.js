@@ -28,14 +28,24 @@ const make = c => StyleSheet.create({
 
   card: { backgroundColor: c.surface, marginHorizontal: 0, marginBottom: 12 },
 
-  // Pending invitation banner (accept / decline)
-  inviteBanner: {
-    backgroundColor: c.surface, marginBottom: 12, padding: 16, gap: 12,
-    borderLeftWidth: 4, borderLeftColor: '#f48c06',
+  // Pending invitation — one card, same feel as the event cards in the home list
+  inviteCard: {
+    backgroundColor: c.surface,
+    borderBottomLeftRadius: 28, borderBottomRightRadius: 28,
+    paddingBottom: 18,
+    shadowColor: '#000', shadowOpacity: 0.08, shadowRadius: 14,
+    shadowOffset: { width: 0, height: 6 }, elevation: 4,
   },
-  inviteBannerText: { fontSize: 15, fontWeight: '600', color: c.text },
-  inviteBannerActions: { flexDirection: 'row', gap: 10 },
-  inviteBtn: { flex: 1, borderRadius: 10, paddingVertical: 11, alignItems: 'center' },
+  inviteBack: { alignSelf: 'flex-start', paddingHorizontal: 20, paddingVertical: 8, marginBottom: 8 },
+  inviteTitleRow: { flexDirection: 'row', alignItems: 'flex-start', gap: 12, paddingHorizontal: 20, marginTop: 6, marginBottom: 8 },
+  inviteFromRow: { flexDirection: 'row', alignItems: 'center', gap: 6, paddingHorizontal: 20 },
+  inviteFromText: { fontSize: 13, fontWeight: '600', color: '#f48c06' },
+  inviteTitle: { flex: 1, fontSize: 22, fontWeight: '700', color: c.text, letterSpacing: -0.4, lineHeight: 28 },
+  inviteDetails: { marginBottom: 4 },
+  inviteDivider: { height: StyleSheet.hairlineWidth, backgroundColor: c.border, marginHorizontal: 20, marginVertical: 8 },
+  inviteQuestion: { fontSize: 14, color: c.textSub, paddingHorizontal: 20, marginTop: 4, marginBottom: 12 },
+  inviteActions: { flexDirection: 'row', gap: 10, paddingHorizontal: 16 },
+  inviteBtn: { flex: 1, borderRadius: 12, paddingVertical: 13, alignItems: 'center' },
   inviteBtnDecline: { borderWidth: 1, borderColor: '#ff3b30' },
   inviteBtnDeclineText: { color: '#ff3b30', fontSize: 15, fontWeight: '600' },
   inviteBtnAccept: { backgroundColor: '#1a8fa8' },
@@ -45,7 +55,7 @@ const make = c => StyleSheet.create({
     flexDirection: 'row', alignItems: 'center', gap: 14,
     paddingVertical: 10, paddingHorizontal: 20,
   },
-  infoIcon: { fontSize: 15, width: 20, textAlign: 'center' },
+  infoIconWrap: { width: 24, alignItems: 'center' },
   infoContent: { flex: 1 },
   infoValue: {
     fontSize: 14, color: c.text, fontWeight: '500',

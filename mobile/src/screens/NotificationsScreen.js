@@ -17,12 +17,12 @@ import { useStyles } from '../styles/NotificationsScreen.styles';
 // Mirrors TYPE_CONFIG in the web SidebarNotifications component.
 
 const TYPE_CONFIG = {
-  task_assigned:    { icon: '📋', color: '#f48c06' },
-  task_accepted:    { icon: '✅', color: '#34c759' },
-  task_declined:    { icon: '❌', color: '#ff3b30' },
-  task_countered:   { icon: '↩️', color: '#007aff' },
-  counter_accepted: { icon: '🤝', color: '#34c759' },
-  event_invited:    { icon: '📅', color: '#1a8fa8' },
+  task_assigned:    { icon: 'clipboard-outline',        color: '#f48c06' },
+  task_accepted:    { icon: 'checkmark-circle-outline', color: '#34c759' },
+  task_declined:    { icon: 'close-circle-outline',     color: '#ff3b30' },
+  task_countered:   { icon: 'return-up-back-outline',   color: '#007aff' },
+  counter_accepted: { icon: 'thumbs-up-outline',        color: '#34c759' },
+  event_invited:    { icon: 'calendar-outline',         color: '#1a8fa8' },
 };
 
 // ─── Time ago helper ─────────────────────────────────────────────────────────
@@ -44,7 +44,7 @@ function timeAgoKey(dateStr) {
 function NotifRow({ item, onMarkRead, onOpen }) {
   const { t } = useTranslation();
   const styles = useStyles();
-  const cfg = TYPE_CONFIG[item.type] || { icon: '🔔', color: '#8e8e93' };
+  const cfg = TYPE_CONFIG[item.type] || { icon: 'notifications-outline', color: '#8e8e93' };
   const ago = timeAgoKey(item.created_at);
   const timeStr = ago.key ? t(ago.key, ago.count != null ? { count: ago.count } : undefined) : ago.date;
 
@@ -57,7 +57,10 @@ function NotifRow({ item, onMarkRead, onOpen }) {
       }}
       activeOpacity={0.75}
     >
-      <Text style={styles.rowIcon}>{cfg.icon}</Text>
+      {/* Same outline icon set as the rest of the app, in a soft tinted circle */}
+      <View style={[styles.rowIconCircle, { backgroundColor: cfg.color + '1f' }]}>
+        <Ionicons name={cfg.icon} size={18} color={cfg.color} />
+      </View>
 
       <View style={styles.rowBody}>
         <Text style={[styles.rowTitle, item.is_read && styles.rowTitleRead]} numberOfLines={1}>
