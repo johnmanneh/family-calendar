@@ -1,4 +1,5 @@
-import React, { useState, useCallback } from 'react';
+import React, { useState, useCallback, useEffect } from 'react';
+import { useFocusEffect } from '@react-navigation/native';
 import {
   View,
   Text,
@@ -15,6 +16,7 @@ import { SafeAreaView } from 'react-native-safe-area-context';
 import { Ionicons } from '@expo/vector-icons';
 import { useTranslation } from 'react-i18next';
 import API from '../api/axios';
+import { useFocusEffect } from '@react-navigation/native';
 import { useStyles } from '../styles/GroupsScreen.styles';
 
 // ─── Helpers ─────────────────────────────────────────────────────────────────
@@ -60,7 +62,8 @@ function GroupDetail({ group, onBack, navigation }) {
   const [loading, setLoading] = useState(true);
   const [copied,  setCopied]  = useState(false);
 
-  React.useEffect(() => {
+  const fetchGroupData = useCallback(() => {
+    setLoading(true);
     Promise.all([
       API.get(`/groups/${group.id}/events`),
       API.get(`/groups/${group.id}/members`),
@@ -69,6 +72,8 @@ function GroupDetail({ group, onBack, navigation }) {
       setMembers(memRes.data.members || []);
     }).catch(() => {}).finally(() => setLoading(false));
   }, [group.id]);
+
+  useFocusEffect(useCallback(() => { fetchGroupData(); }, [fetchGroupData]));
 
   const handleCopy = () => {
     Clipboard.setString(group.invite_code || '');
@@ -171,11 +176,6 @@ export default function GroupsScreen({ navigation }) {
   const [createName, setCreateName]   = useState('');
   const [createLoading, setCreateLoading] = useState(false);
 
-  // Join group
-  const [showJoin, setShowJoin]       = useState(false);
-  const [joinCode, setJoinCode]       = useState('');
-  const [joinLoading, setJoinLoading] = useState(false);
-
   const fetchGroups = useCallback(async () => {
     try {
       const res = await API.get('/groups');
@@ -188,7 +188,8 @@ export default function GroupsScreen({ navigation }) {
     }
   }, []);
 
-  React.useEffect(() => { fetchGroups(); }, [fetchGroups]);
+  // Refetch whenever the screen comes back into view (e.g. after joining with a code)
+  useFocusEffect(useCallback(() => { fetchGroups(); }, [fetchGroups]));
 
   const handleCreate = async () => {
     if (!createName.trim()) return;
@@ -205,21 +206,6 @@ export default function GroupsScreen({ navigation }) {
     }
   };
 
-  const handleJoin = async () => {
-    if (!joinCode.trim()) return;
-    setJoinLoading(true);
-    try {
-      await API.post('/groups/join', { invite_code: joinCode.trim() });
-      setJoinCode('');
-      setShowJoin(false);
-      fetchGroups();
-    } catch (err) {
-      Alert.alert(t('common.error'), err.response?.data?.message || t('groups.could_not_join'));
-    } finally {
-      setJoinLoading(false);
-    }
-  };
-
   // ── Render ──────────────────────────────────────────────────────────────
 
   return (
@@ -232,10 +218,10 @@ export default function GroupsScreen({ navigation }) {
         </TouchableOpacity>
         <Text style={styles.headerTitle}>{t('groups.title')}</Text>
         <View style={styles.headerActions}>
-          <TouchableOpacity style={styles.headerIconBtn} onPress={() => { setShowJoin(true); setShowCreate(false); }}>
+          <TouchableOpacity style={styles.headerIconBtn} onPress={() => { setShowCreate(false); navigation.navigate('JoinFamily'); }}>
             <Ionicons name="enter-outline" size={22} color="#1a8fa8" />
           </TouchableOpacity>
-          <TouchableOpacity style={styles.headerIconBtn} onPress={() => { setShowCreate(true); setShowJoin(false); }}>
+          <TouchableOpacity style={styles.headerIconBtn} onPress={() => setShowCreate(true)}>
             <Ionicons name="add" size={24} color="#1a8fa8" />
           </TouchableOpacity>
         </View>
@@ -263,34 +249,6 @@ export default function GroupsScreen({ navigation }) {
             }
           </TouchableOpacity>
           <TouchableOpacity style={styles.inlineCancelBtn} onPress={() => setShowCreate(false)}>
-            <Ionicons name="close" size={20} color="#888" />
-          </TouchableOpacity>
-        </View>
-      )}
-
-      {/* ── Join group inline form ── */}
-      {showJoin && (
-        <View style={styles.inlineForm}>
-          <TextInput
-            style={styles.inlineInput}
-            placeholder={t('groups.invite_code_placeholder')}
-            placeholderTextColor="#aaa"
-            value={joinCode}
-            onChangeText={setJoinCode}
-            autoCapitalize="none"
-            autoFocus
-          />
-          <TouchableOpacity
-            style={[styles.inlineBtn, joinLoading && { opacity: 0.6 }]}
-            onPress={handleJoin}
-            disabled={joinLoading}
-          >
-            {joinLoading
-              ? <ActivityIndicator size="small" color="#fff" />
-              : <Text style={styles.inlineBtnText}>{t('groups.join')}</Text>
-            }
-          </TouchableOpacity>
-          <TouchableOpacity style={styles.inlineCancelBtn} onPress={() => setShowJoin(false)}>
             <Ionicons name="close" size={20} color="#888" />
           </TouchableOpacity>
         </View>
