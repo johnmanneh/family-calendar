@@ -6,51 +6,65 @@ const DRAWER_WIDTH = Dimensions.get('window').width * 0.75;
 
 const make = c => StyleSheet.create({
 
-  root: {
-    flex: 1,
-    flexDirection: 'row',
-    backgroundColor: 'rgba(0,0,0,0.4)',
+  root: { flex: 1 },
+
+  backdrop: {
+    ...StyleSheet.absoluteFillObject,
+    backgroundColor: 'rgba(0,0,0,0.35)',
   },
 
+  // Floating panel — same card language as the home screen's top card
   drawer: {
+    position: 'absolute',
+    left: 8,
     width: DRAWER_WIDTH,
-    backgroundColor: c.surface,
-    paddingTop: 60,
+    transformOrigin: 'left center',   // hinge for the drum roll
+    backgroundColor: c.bg,
+    borderRadius: 24,
     shadowColor: '#000',
-    shadowOpacity: 0.15,
-    shadowRadius: 20,
-    shadowOffset: { width: 4, height: 0 },
+    shadowOpacity: 0.18,
+    shadowRadius: 24,
+    shadowOffset: { width: 4, height: 8 },
     elevation: 16,
   },
+  // Clip scrolling content to the rounded corners (shadow stays on the parent)
+  scroll: { flex: 1, borderRadius: 24, overflow: 'hidden' },
+  scrollContent: { padding: 12, paddingTop: 16, paddingBottom: 24 },
 
-  closeArea: { flex: 1 },
-
+  // User card
   userSection: {
-    paddingHorizontal: 24,
-    paddingBottom: 24,
-    alignItems: 'flex-start',
+    flexDirection: 'row', alignItems: 'center', gap: 12,
+    backgroundColor: c.surface, borderRadius: 18,
+    padding: 14, marginBottom: 6,
   },
   avatar: {
-    width: 56, height: 56, borderRadius: 28,
-    alignItems: 'center', justifyContent: 'center', marginBottom: 12,
+    width: 48, height: 48, borderRadius: 24,
+    alignItems: 'center', justifyContent: 'center',
   },
-  avatarText: { color: '#fff', fontSize: 22, fontWeight: '700' },
-  userName: { fontSize: 18, fontWeight: '700', color: c.text, letterSpacing: -0.3 },
-  userEmail: { fontSize: 13, color: c.textMuted, marginTop: 2 },
+  avatarText: { color: '#fff', fontSize: 18, fontWeight: '700' },
+  userName: { fontSize: 17, fontWeight: '700', color: c.text, letterSpacing: -0.3 },
+  userEmail: { fontSize: 12, color: c.textMuted, marginTop: 2 },
 
-  divider: {
-    height: 1, backgroundColor: c.separator,
-    marginHorizontal: 24, marginBottom: 8,
+  // Section heading + rounded group of rows
+  sectionTitle: {
+    fontSize: 12, fontWeight: '600', color: c.textSub,
+    textTransform: 'uppercase', letterSpacing: 0.6,
+    marginTop: 14, marginBottom: 6, marginLeft: 12,
+  },
+  sectionCard: {
+    backgroundColor: c.surface, borderRadius: 18, overflow: 'hidden',
   },
 
-  nav: { flex: 1, paddingTop: 8 },
   navItem: {
-    flexDirection: 'row', alignItems: 'center', gap: 14,
-    paddingVertical: 14, paddingHorizontal: 24,
+    flexDirection: 'row', alignItems: 'center', gap: 12,
+    paddingVertical: 13, paddingHorizontal: 14,
   },
-  navLabel: { fontSize: 16, color: c.text, fontWeight: '500', flex: 1 },
+  navItemDivider: {
+    borderBottomWidth: StyleSheet.hairlineWidth, borderBottomColor: c.border,
+  },
+  navLabel: { fontSize: 15, color: c.text, fontWeight: '500', flex: 1 },
 
-  navIconWrap: { position: 'relative', width: 20, height: 20 },
+  navIconWrap: { width: 22, alignItems: 'center' },
   navBadge: {
     position: 'absolute', top: -4, right: -6,
     backgroundColor: '#ff3b30', borderRadius: 6,
@@ -63,12 +77,6 @@ const make = c => StyleSheet.create({
   },
   navBadgePillText: { color: '#fff', fontSize: 11, fontWeight: '700' },
 
-  // Dark mode toggle row
-  toggleRow: {
-    flexDirection: 'row', alignItems: 'center', gap: 14,
-    paddingVertical: 14, paddingHorizontal: 24,
-  },
-  toggleLabel: { fontSize: 16, color: c.text, fontWeight: '500', flex: 1 },
   toggleTrack: {
     width: 44, height: 26, borderRadius: 13, justifyContent: 'center', paddingHorizontal: 3,
   },
@@ -78,12 +86,7 @@ const make = c => StyleSheet.create({
     shadowOffset: { width: 0, height: 1 }, elevation: 2,
   },
 
-  signOutBtn: {
-    flexDirection: 'row', alignItems: 'center', gap: 14,
-    paddingVertical: 20, paddingHorizontal: 24,
-    borderTopWidth: 1, borderTopColor: c.separator, marginBottom: 20,
-  },
-  signOutText: { fontSize: 16, color: '#ff3b30', fontWeight: '500' },
+  signOutText: { fontSize: 15, color: '#ff3b30', fontWeight: '500', flex: 1 },
 });
 
 const lightStyles = make(LIGHT);
