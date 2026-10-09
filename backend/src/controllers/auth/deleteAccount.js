@@ -11,8 +11,9 @@ const deleteAccount = async (req, res) => {
     await pool.query('DELETE FROM group_members WHERE user_id = $1', [userId]);
     await pool.query('DELETE FROM family_members WHERE user_id = $1', [userId]);
 
-    // Orphan events they created — keep them on the family calendar, just clear the creator
+    // Orphan events/tasks they created — keep them on the family calendar, just clear the creator
     await pool.query('UPDATE events SET created_by = NULL WHERE created_by = $1', [userId]);
+    await pool.query('UPDATE tasks  SET created_by = NULL WHERE created_by = $1', [userId]);
 
     // Delete the user
     await pool.query('DELETE FROM users WHERE id = $1', [userId]);
