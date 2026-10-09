@@ -28,8 +28,17 @@ const getEvent = async (req, res) => {
        FROM events e
        JOIN  users u  ON e.created_by  = u.id
        LEFT JOIN users uu ON e.updated_by = uu.id
-       WHERE e.id = $1 AND e.family_id = $2`,
-      [id, familyId]
+       WHERE e.id = $1
+         AND (
+           e.family_id = $2
+           -- or shared into a group this user is in (e.g. grandma seeing the grandkids' events)
+           OR EXISTS (
+             SELECT 1 FROM event_groups eg
+             JOIN group_members gm ON gm.group_id = eg.group_id
+             WHERE eg.event_id = e.id AND gm.user_id = $3
+           )
+         )`,
+      [id, familyId, userId]
     );
 
     if (eventResult.rows.length === 0) {
@@ -37,6 +46,27 @@ const getEvent = async (req, res) => {
     }
 
     const event = eventResult.rows[0];
+    const fromGroup = Number(event.family_id) !== Number(familyId);
+
+    // Private events stay private, even when shared into a group
+    if (fromGroup && event.is_private && Number(event.created_by) !== Number(userId)) {
+      const isAttendee = await pool.query(
+        `SELECT 1 FROM event_attendees WHERE event_id = $1 AND user_id = $2 AND status = 'accepted'`,
+        [id, userId]
+      );
+      if (isAttendee.rows.length === 0) {
+        return errorResponse(res, 404, 'Event not found');
+      }
+    }
+
+    // ── Groups this event is shared with (only the ones this user is in) ───
+    const groupsResult = await pool.query(
+      `SELECT eg.group_id
+       FROM event_groups eg
+       JOIN group_members gm ON gm.group_id = eg.group_id AND gm.user_id = $2
+       WHERE eg.event_id = $1`,
+      [id, userId]
+    );
 
     // ── Attendees ──────────────────────────────────────────────────────────
     const attendeesResult = await pool.query(
@@ -103,6 +133,8 @@ const getEvent = async (req, res) => {
         ...event,
         attendees: attendeesResult.rows,
         tasks:     Object.values(tasksMap),
+        group_ids: groupsResult.rows.map(r => Number(r.group_id)),
+        from_group: fromGroup,
       },
     });
 

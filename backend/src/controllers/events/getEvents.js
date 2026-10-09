@@ -153,8 +153,77 @@ const getEvents = async (req, res) => {
       return { ...event, is_busy: false };
     });
 
+    // ── Groups ───────────────────────────────────────────────────────────
+    // 1. Tag every event with the groups it's shared into (only groups this user is in),
+    //    so the home screen can filter: All · Family · Ski group …
+    // 2. Add events from OTHER families that were shared into one of the user's groups
+    //    (e.g. grandma sees her grandson's football that lives in his parents' family).
+    const links = await pool.query(
+      `SELECT eg.event_id, eg.group_id
+       FROM event_groups eg
+       JOIN group_members gm ON gm.group_id = eg.group_id AND gm.user_id = $1`,
+      [userId]
+    );
+
+    const groupIdsByEvent = {};
+    links.rows.forEach(r => {
+      (groupIdsByEvent[r.event_id] = groupIdsByEvent[r.event_id] || []).push(Number(r.group_id));
+    });
+
+    const familyEvents = processedEvents.map(e => ({
+      ...e,
+      group_ids: groupIdsByEvent[e.id] || [],
+      from_group: false,
+    }));
+
+    const haveIds = new Set(familyEvents.map(e => Number(e.id)));
+    const missingIds = Object.keys(groupIdsByEvent).map(Number).filter(id => !haveIds.has(id));
+
+    let groupEvents = [];
+    if (missingIds.length > 0) {
+      const extra = await pool.query(
+        `SELECT e.*,
+          u.first_name as created_by_name,
+          uu.first_name as updated_by_name,
+          COALESCE(
+            json_agg(
+              DISTINCT jsonb_build_object(
+                'id', att_u.id,
+                'first_name', att_u.first_name,
+                'last_name', att_u.last_name,
+                'color', fm2.color
+              )
+            ) FILTER (WHERE att_u.id IS NOT NULL AND ea_all.status = 'accepted'),
+            '[]'::json
+          ) as attendees
+         FROM events e
+         JOIN users u ON e.created_by = u.id
+         LEFT JOIN users uu ON e.updated_by = uu.id
+         LEFT JOIN event_attendees ea_all ON e.id = ea_all.event_id
+         LEFT JOIN users att_u ON ea_all.user_id = att_u.id
+         LEFT JOIN family_members fm2 ON att_u.id = fm2.user_id AND fm2.family_id = e.family_id
+         WHERE e.id = ANY($1::int[])
+           -- private events stay private, even inside a group
+           AND (
+             e.is_private = false OR e.created_by = $2
+             OR EXISTS (SELECT 1 FROM event_attendees x WHERE x.event_id = e.id AND x.user_id = $2 AND x.status = 'accepted')
+           )
+         GROUP BY e.id, u.first_name, uu.first_name`,
+        [missingIds, userId]
+      );
+      groupEvents = extra.rows.map(e => ({
+        ...e,
+        is_busy: false,
+        group_ids: groupIdsByEvent[e.id] || [],
+        from_group: true,
+      }));
+    }
+
+    const allEvents = [...familyEvents, ...groupEvents]
+      .sort((a, b) => new Date(a.start_date) - new Date(b.start_date));
+
     return successResponse(res, 200, 'Events retrieved successfully', {
-      events: processedEvents,
+      events: allEvents,
     });
 
   } catch (error) {
