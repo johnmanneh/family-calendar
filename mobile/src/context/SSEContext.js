@@ -63,10 +63,14 @@ export const SSEProvider = ({ children }) => {
 
     es.addEventListener('error', (e) => {
       console.log('[SSE] error:', JSON.stringify(e));
-      // 403 = token invalid or account deleted — disconnect and log out only if still logged in
-      if (e?.xhrStatus === 403 && tokenRef.current) {
+      // 401 = token invalid or account deleted → log out.
+      // 403 = signed in but not in a family yet → just stop live updates
+      //       (logging out here locked family-less users out of the app).
+      if (e?.xhrStatus === 401 && tokenRef.current) {
         disconnect();
         logoutRef.current?.();
+      } else if (e?.xhrStatus === 403) {
+        disconnect();
       }
     });
 

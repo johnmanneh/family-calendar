@@ -15,4 +15,19 @@ API.interceptors.request.use(async (config) => {
   return config;
 });
 
+// Any 401 (expired token, deleted account) logs the user out straight away,
+// instead of showing a calendar that can't load. AuthContext registers the handler.
+let onUnauthorized = null;
+export const setOnUnauthorized = (fn) => { onUnauthorized = fn; };
+
+API.interceptors.response.use(
+  (res) => res,
+  (err) => {
+    const url = err.config?.url || '';
+    const isAuthCall = url.includes('/auth/login') || url.includes('/auth/register');
+    if (err.response?.status === 401 && !isAuthCall) onUnauthorized?.();
+    return Promise.reject(err);
+  }
+);
+
 export default API;

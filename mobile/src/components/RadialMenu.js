@@ -85,6 +85,13 @@ export default function RadialMenu({ visible, fabCenter, onClose, onNewEvent, on
     ]).start();
   }, [visible]);
 
+  // Safety net: if the parent hides the menu without going through our close
+  // animation, drop the (invisible) Modal so it can never sit on top and
+  // swallow every tap.
+  useEffect(() => {
+    if (!visible && mounted && !closing.current) setMounted(false);
+  }, [visible, mounted]);
+
   // ── Close: cards roll back into the sun (last one first), then hide ───────
   const animateClose = (after) => {
     if (closing.current) return;

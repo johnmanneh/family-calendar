@@ -1,6 +1,7 @@
 import React, { createContext, useState, useContext, useEffect } from 'react';
 import storage from '../utils/storage';
-import API from '../api/axios';
+import API, { setOnUnauthorized } from '../api/axios';
+import { clearCache } from '../utils/cache';
 import { registerPushToken } from '../utils/registerPushToken';
 
 const AuthContext = createContext();
@@ -23,7 +24,14 @@ export const AuthProvider = ({ children }) => {
           registerPushToken();
         }
       } catch (err) {
-        await storage.deleteItem('token'); // token expired or invalid
+        // Only forget the token when the server says it's no good (expired,
+        // deleted account). A network error (offline) keeps it for next time.
+        const status = err.response?.status;
+        if (status === 401 || status === 404) {
+          await storage.deleteItem('token');
+          await clearCache();
+        }
+        setToken(null);
       } finally {
         setAuthLoading(false);
       }
@@ -43,7 +51,14 @@ export const AuthProvider = ({ children }) => {
     setUser(null);
     setToken(null);
     await storage.deleteItem('token');
+    await clearCache();   // next account on this phone starts clean
   };
+
+  // Any 401 from the API (e.g. account deleted) → log out immediately
+  useEffect(() => {
+    setOnUnauthorized(() => { logout(); });
+    return () => setOnUnauthorized(null);
+  }, []);
 
   return (
     <AuthContext.Provider value={{ user, token, authLoading, login, logout }}>

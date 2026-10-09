@@ -59,3 +59,14 @@ export function savedAtLabel(isoString) {
   if (hrs < 24)  return `${hrs}h ago`;
   return 'yesterday';
 }
+
+
+/**
+ * Remove all cached events/tasks — called on logout so the next person who
+ * signs in on this phone never sees the previous account's calendar.
+ */
+export async function clearCache() {
+  try {
+    await AsyncStorage.multiRemove([KEYS.events, KEYS.tasks, KEYS.savedAt]);
+  } catch { /* silent */ }
+}

@@ -116,9 +116,23 @@ function TreadmillCell({ children, style, onLayout, ...rest }) {
 
 // bottomInset: pass the safe-area bottom inset when the list runs under the
 // system nav bar (full-screen), so the roll zone still lines up with the FAB.
-export default function TreadmillList({ contentContainerStyle, onScroll, onLayout, bottomInset = 0, ...props }) {
+export default function TreadmillList({ contentContainerStyle, onScroll, onLayout, onContentSizeChange, bottomInset = 0, ...props }) {
   const scrollY = useRef(new Animated.Value(0)).current;
+  const lastY   = useRef(0);          // last scroll offset we know of
+  const viewH   = useRef(0);
   const [viewportH, setViewportH] = useState(0);
+
+  // When the list gets SHORTER (e.g. a new day is selected after a voice create),
+  // the list snaps back but Android doesn't always send a scroll event. scrollY
+  // then keeps the old, too-large offset and every row thinks it has rolled away
+  // over the top — the list shows as flat grey bars. Clamp it to what's possible.
+  const clampToContent = (contentH) => {
+    const maxY = Math.max(0, contentH - viewH.current);
+    if (lastY.current > maxY) {
+      lastY.current = maxY;
+      scrollY.setValue(maxY);
+    }
+  };
 
   return (
     <TreadmillContext.Provider value={{ scrollY, viewportH, bottomInset }}>
@@ -129,10 +143,21 @@ export default function TreadmillList({ contentContainerStyle, onScroll, onLayou
         scrollEventThrottle={16}
         onScroll={Animated.event(
           [{ nativeEvent: { contentOffset: { y: scrollY } } }],
-          { useNativeDriver: true, listener: onScroll },
+          {
+            useNativeDriver: true,
+            listener: (e) => {
+              lastY.current = e.nativeEvent.contentOffset.y;
+              onScroll?.(e);
+            },
+          },
         )}
+        onContentSizeChange={(w, h) => {
+          onContentSizeChange?.(w, h);
+          clampToContent(h);
+        }}
         onLayout={(e) => {
           onLayout?.(e);
+          viewH.current = e.nativeEvent.layout.height;
           setViewportH(e.nativeEvent.layout.height);
         }}
       />
