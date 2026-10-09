@@ -128,7 +128,8 @@
     "start": "Start",
     "end": "End",
     "share_with_groups": "Share with groups",
-    "could_not_share": "Event saved, but sharing with a group failed"
+    "could_not_share": "Event saved, but sharing with a group failed",
+    "invited_by": "{{name}} invited you — add it to your calendar?"
   },
   "tasks": {
     "new_task": "New Task",
@@ -178,7 +179,7 @@
   "family": {
     "title": "Family",
     "your_family": "Your Family",
-    "invite_label": "Invite code — share so others can join",
+    "invite_label": "Share this code to add people to your family",
     "members_count": "Members ({{count}})",
     "cannot_leave_title": "Cannot Leave",
     "cannot_leave_message": "You are the family owner. You cannot leave your own family.",
@@ -188,7 +189,9 @@
     "leave_btn": "Leave family",
     "leave": "Leave",
     "could_not_leave": "Could not leave family",
-    "join_with_code": "Join with code"
+    "join_with_code": "Join with code",
+    "switch_family": "Switch to another family",
+    "switch_hint": "You will leave {{name}} and move to the family whose code you enter."
   },
   "profile": {
     "title": "Profile",
@@ -233,12 +236,12 @@
   "groups": {
     "title": "Groups",
     "all_groups": "All Groups",
-    "invite_label": "Invite code",
+    "invite_label": "Share this code to add people",
     "members_count_one": "{{count}} member",
     "members_count_other": "{{count}} members",
     "admin": "admin",
     "new_group": "New Group",
-    "join_group": "Join Group",
+    "join_group": "Join a group",
     "group_name_placeholder": "Group name",
     "invite_code_placeholder": "Invite code",
     "create": "Create",

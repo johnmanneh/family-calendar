@@ -41,7 +41,7 @@ function timeAgoKey(dateStr) {
 
 // ─── Notification row ────────────────────────────────────────────────────────
 
-function NotifRow({ item, onMarkRead }) {
+function NotifRow({ item, onMarkRead, onOpen }) {
   const { t } = useTranslation();
   const styles = useStyles();
   const cfg = TYPE_CONFIG[item.type] || { icon: '🔔', color: '#8e8e93' };
@@ -51,8 +51,11 @@ function NotifRow({ item, onMarkRead }) {
   return (
     <TouchableOpacity
       style={[styles.row, item.is_read ? styles.rowRead : styles.rowUnread]}
-      onPress={() => !item.is_read && onMarkRead(item.id)}
-      activeOpacity={item.is_read ? 1 : 0.75}
+      onPress={() => {
+        if (!item.is_read) onMarkRead(item.id);
+        onOpen(item);
+      }}
+      activeOpacity={0.75}
     >
       <Text style={styles.rowIcon}>{cfg.icon}</Text>
 
@@ -112,6 +115,15 @@ export default function NotificationsScreen({ navigation }) {
     } catch { /* silent */ }
   };
 
+  // Tap → go to what the notification is about.
+  // Event invitation → the event (accept/decline right there). Tasks → Pending.
+  const handleOpen = (item) => {
+    let data = item.data || {};
+    if (typeof data === 'string') { try { data = JSON.parse(data); } catch { data = {}; } }
+    if (data.eventId) navigation.navigate('EventDetails', { eventId: data.eventId });
+    else if (data.taskId || String(item.type).startsWith('task') || item.type === 'counter_accepted') navigation.navigate('Pending');
+  };
+
   const handleMarkAllRead = async () => {
     try {
       await API.patch('/notifications/read-all');
@@ -150,7 +162,7 @@ export default function NotificationsScreen({ navigation }) {
           data={notifications}
           keyExtractor={item => String(item.id)}
           renderItem={({ item }) => (
-            <NotifRow item={item} onMarkRead={handleMarkRead} />
+            <NotifRow item={item} onMarkRead={handleMarkRead} onOpen={handleOpen} />
           )}
           contentContainerStyle={
             notifications.length === 0 ? styles.emptyContainer : styles.listContent

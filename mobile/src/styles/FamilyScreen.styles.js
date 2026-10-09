@@ -65,12 +65,12 @@ const make = c => StyleSheet.create({
   },
   leaveBtnText: { color: '#ff3b30', fontSize: 15, fontWeight: '600' },
 
-  joinFamilyBtn: {
+  // Switch family — same shape as Leave, but in the app colour (less alarming)
+  switchBtn: {
     flexDirection: 'row', alignItems: 'center', gap: 8,
-    backgroundColor: c.surface, borderRadius: 12, padding: 14,
-    marginBottom: 12, borderWidth: 1, borderColor: '#1a8fa8',
+    borderWidth: 1, borderColor: '#1a8fa8', borderRadius: 10, padding: 12, justifyContent: 'center',
   },
-  joinFamilyBtnText: { color: '#1a8fa8', fontSize: 15, fontWeight: '600' },
+  switchBtnText: { color: '#1a8fa8', fontSize: 15, fontWeight: '600' },
 });
 
 const lightStyles = make(LIGHT);

@@ -128,7 +128,8 @@
     "start": "Beginn",
     "end": "Ende",
     "share_with_groups": "Mit Gruppen teilen",
-    "could_not_share": "Termin gespeichert, aber Teilen mit einer Gruppe fehlgeschlagen"
+    "could_not_share": "Termin gespeichert, aber Teilen mit einer Gruppe fehlgeschlagen",
+    "invited_by": "{{name}} hat dich eingeladen – zum Kalender hinzufügen?"
   },
   "tasks": {
     "new_task": "Neue Aufgabe",
@@ -178,7 +179,7 @@
   "family": {
     "title": "Familie",
     "your_family": "Deine Familie",
-    "invite_label": "Einladungscode — teilen zum Beitreten",
+    "invite_label": "Teile diesen Code, um Personen zu deiner Familie hinzuzufügen",
     "members_count": "Mitglieder ({{count}})",
     "cannot_leave_title": "Verlassen nicht möglich",
     "cannot_leave_message": "Du bist der Familienbesitzer. Du kannst deine Familie nicht verlassen.",
@@ -188,7 +189,9 @@
     "leave_btn": "Familie verlassen",
     "leave": "Verlassen",
     "could_not_leave": "Familie konnte nicht verlassen werden",
-    "join_with_code": "Mit Code beitreten"
+    "join_with_code": "Mit Code beitreten",
+    "switch_family": "Zu einer anderen Familie wechseln",
+    "switch_hint": "Du verlässt {{name}} und wechselst in die Familie, deren Code du eingibst."
   },
   "profile": {
     "title": "Profil",
@@ -233,12 +236,12 @@
   "groups": {
     "title": "Gruppen",
     "all_groups": "Alle Gruppen",
-    "invite_label": "Einladungscode",
+    "invite_label": "Teile diesen Code, um Personen hinzuzufügen",
     "members_count_one": "{{count}} Mitglied",
     "members_count_other": "{{count}} Mitglieder",
     "admin": "Admin",
     "new_group": "Neue Gruppe",
-    "join_group": "Gruppe beitreten",
+    "join_group": "Einer Gruppe beitreten",
     "group_name_placeholder": "Gruppenname",
     "invite_code_placeholder": "Einladungscode",
     "create": "Erstellen",

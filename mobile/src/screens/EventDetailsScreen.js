@@ -302,6 +302,27 @@ export default function EventDetailsScreen({ route, navigation }) {
 
   useEffect(() => { fetchEvent(); }, [fetchEvent]);
 
+  // ── Invitation: answer right here (e.g. after tapping the notification) ───
+  const [responding, setResponding] = useState(false);
+  const myInvite = (event?.attendees || []).find(a => Number(a.user_id) === Number(user?.id));
+  const isInvitePending = myInvite?.status === 'pending';
+
+  const respondToInvite = async (response) => {
+    setResponding(true);
+    try {
+      await API.put(`/events/invitations/${eventId}`, { response });
+      if (response === 'accepted') {
+        await fetchEvent();          // stays open, now part of the calendar
+      } else {
+        navigation.goBack();         // declined → it's gone for you
+      }
+    } catch (err) {
+      Alert.alert(t('common.error'), err.response?.data?.message || t('common.something_went_wrong'));
+    } finally {
+      setResponding(false);
+    }
+  };
+
   const handleDelete = () => {
     Alert.alert(
       t('events.delete_title'),
@@ -408,6 +429,31 @@ export default function EventDetailsScreen({ route, navigation }) {
           <View style={[styles.titleStripe, { backgroundColor: color }]} />
           <Text style={styles.titleText}>{event.title}</Text>
         </View>
+
+        {/* ── Pending invitation — accept to add it to your calendar ── */}
+        {isInvitePending && (
+          <View style={styles.inviteBanner}>
+            <Text style={styles.inviteBannerText}>
+              {t('events.invited_by', { name: event.created_by_name || '' })}
+            </Text>
+            <View style={styles.inviteBannerActions}>
+              <TouchableOpacity
+                style={[styles.inviteBtn, styles.inviteBtnDecline, responding && { opacity: 0.5 }]}
+                onPress={() => respondToInvite('denied')}
+                disabled={responding}
+              >
+                <Text style={styles.inviteBtnDeclineText}>{t('common.decline')}</Text>
+              </TouchableOpacity>
+              <TouchableOpacity
+                style={[styles.inviteBtn, styles.inviteBtnAccept, responding && { opacity: 0.5 }]}
+                onPress={() => respondToInvite('accepted')}
+                disabled={responding}
+              >
+                <Text style={styles.inviteBtnAcceptText}>{t('common.accept')}</Text>
+              </TouchableOpacity>
+            </View>
+          </View>
+        )}
 
         {/* ── Tasks card — shown above info, same order as web ── */}
         {tasks.length > 0 && (

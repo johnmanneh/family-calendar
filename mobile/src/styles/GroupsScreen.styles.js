@@ -18,6 +18,14 @@ const make = c => StyleSheet.create({
   headerActions: { flexDirection: 'row', alignItems: 'center', gap: 4 },
   headerIconBtn: { padding: 6 },
 
+  joinGroupBtn: {
+    flexDirection: 'row', alignItems: 'center', justifyContent: 'center', gap: 8,
+    marginHorizontal: 16, marginTop: 12, marginBottom: 4,
+    backgroundColor: c.surface, borderRadius: 12, padding: 12,
+    borderWidth: 1, borderColor: '#1a8fa8',
+  },
+  joinGroupBtnText: { color: '#1a8fa8', fontSize: 15, fontWeight: '600' },
+
   // ── Inline create/join form ───────────────────────────────────────────────
   inlineForm: {
     flexDirection: 'row', alignItems: 'center',

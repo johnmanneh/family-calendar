@@ -177,31 +177,39 @@ export default function FamilyScreen({ navigation }) {
           ))}
         </View>
 
-        {/* Join another family */}
-        <TouchableOpacity
-          style={styles.joinFamilyBtn}
-          onPress={() => navigation.navigate('JoinFamily')}
-        >
-          <Ionicons name="person-add-outline" size={18} color="#1a8fa8" />
-          <Text style={styles.joinFamilyBtnText}>{t('family.join_with_code')}</Text>
-        </TouchableOpacity>
-
-        {/* Leave family — only shown for non-owners */}
-        {!isOwner && family && (
+        {/* Danger zone — switching family takes you out of this one, so it lives here */}
+        {family && (
           <>
             <Text style={[styles.sectionHeader, { marginTop: 32 }]}>{t('common.danger_zone')}</Text>
             <View style={styles.card}>
               <Text style={styles.leaveDescription}>
-                {t('family.leave_description', { name: family.name })}
+                {t('family.switch_hint', { name: family.name })}
               </Text>
               <TouchableOpacity
-                style={[styles.leaveBtn, leaving && { opacity: 0.5 }]}
-                onPress={handleLeave}
-                disabled={leaving}
+                style={styles.switchBtn}
+                onPress={() => navigation.navigate('JoinFamily')}
               >
-                <Ionicons name="exit-outline" size={16} color="#ff3b30" />
-                <Text style={styles.leaveBtnText}>{t('family.leave_btn')}</Text>
+                <Ionicons name="swap-horizontal-outline" size={16} color="#1a8fa8" />
+                <Text style={styles.switchBtnText}>{t('family.switch_family')}</Text>
               </TouchableOpacity>
+
+              {/* Leave family — only for non-owners */}
+              {!isOwner && (
+                <>
+                  <View style={[styles.divider, { marginVertical: 14 }]} />
+                  <Text style={styles.leaveDescription}>
+                    {t('family.leave_description', { name: family.name })}
+                  </Text>
+                  <TouchableOpacity
+                    style={[styles.leaveBtn, leaving && { opacity: 0.5 }]}
+                    onPress={handleLeave}
+                    disabled={leaving}
+                  >
+                    <Ionicons name="exit-outline" size={16} color="#ff3b30" />
+                    <Text style={styles.leaveBtnText}>{t('family.leave_btn')}</Text>
+                  </TouchableOpacity>
+                </>
+              )}
             </View>
           </>
         )}

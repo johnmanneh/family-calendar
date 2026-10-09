@@ -28,6 +28,19 @@ const make = c => StyleSheet.create({
 
   card: { backgroundColor: c.surface, marginHorizontal: 0, marginBottom: 12 },
 
+  // Pending invitation banner (accept / decline)
+  inviteBanner: {
+    backgroundColor: c.surface, marginBottom: 12, padding: 16, gap: 12,
+    borderLeftWidth: 4, borderLeftColor: '#f48c06',
+  },
+  inviteBannerText: { fontSize: 15, fontWeight: '600', color: c.text },
+  inviteBannerActions: { flexDirection: 'row', gap: 10 },
+  inviteBtn: { flex: 1, borderRadius: 10, paddingVertical: 11, alignItems: 'center' },
+  inviteBtnDecline: { borderWidth: 1, borderColor: '#ff3b30' },
+  inviteBtnDeclineText: { color: '#ff3b30', fontSize: 15, fontWeight: '600' },
+  inviteBtnAccept: { backgroundColor: '#1a8fa8' },
+  inviteBtnAcceptText: { color: '#fff', fontSize: 15, fontWeight: '600' },
+
   infoRow: {
     flexDirection: 'row', alignItems: 'center', gap: 14,
     paddingVertical: 10, paddingHorizontal: 20,

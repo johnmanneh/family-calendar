@@ -203,6 +203,11 @@ const getEvents = async (req, res) => {
          LEFT JOIN users att_u ON ea_all.user_id = att_u.id
          LEFT JOIN family_members fm2 ON att_u.id = fm2.user_id AND fm2.family_id = e.family_id
          WHERE e.id = ANY($1::int[])
+           -- an invitation still waiting for an answer stays in Pending, not the calendar
+           AND NOT EXISTS (
+             SELECT 1 FROM event_attendees ea_pending
+             WHERE ea_pending.event_id = e.id AND ea_pending.user_id = $2 AND ea_pending.status = 'pending'
+           )
            -- private events stay private, even inside a group
            AND (
              e.is_private = false OR e.created_by = $2
