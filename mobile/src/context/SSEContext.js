@@ -15,7 +15,7 @@ import { BASE_URL } from '../api/axios';
 const SSEContext = createContext({ eventTick: 0, taskTick: 0, lastChatMsg: null });
 
 export const SSEProvider = ({ children }) => {
-  const { token } = useAuth();
+  const { token, logout } = useAuth();
   const esRef      = useRef(null);   // holds the active EventSource
   const tokenRef   = useRef(token);  // always-current token for AppState handler
   const appState   = useRef(AppState.currentState);
@@ -26,6 +26,10 @@ export const SSEProvider = ({ children }) => {
 
   // Keep tokenRef in sync so the AppState callback always uses the latest token.
   useEffect(() => { tokenRef.current = token; }, [token]);
+
+  // Keep logoutRef in sync so the AppState callback can call it without stale closure
+  const logoutRef = useRef(logout);
+  useEffect(() => { logoutRef.current = logout; }, [logout]);
 
   // ── Open a new SSE connection ─────────────────────────────────────────────
   const connect = (currentToken) => {
@@ -58,8 +62,12 @@ export const SSEProvider = ({ children }) => {
     });
 
     es.addEventListener('error', (e) => {
-      // Log but don't crash — the AppState handler will reconnect on next foreground
-      console.log('[SSE] error:', e?.message || e);
+      console.log('[SSE] error:', JSON.stringify(e));
+      // 403 = token invalid or account deleted — stop retrying and log out
+      if (e?.xhrStatus === 403) {
+        disconnect();
+        logoutRef.current?.();
+      }
     });
 
     esRef.current = es;
