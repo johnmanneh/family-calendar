@@ -16,6 +16,7 @@ import { SafeAreaView } from 'react-native-safe-area-context';
 import { Ionicons } from '@expo/vector-icons';
 import { useTranslation } from 'react-i18next';
 import API from '../api/axios';
+import { useAuth } from '../context/AuthContext';
 import { useStyles } from '../styles/GroupsScreen.styles';
 
 // ─── Helpers ─────────────────────────────────────────────────────────────────
@@ -29,7 +30,7 @@ function formatDate(dateStr) {
 
 // ─── Group detail view ────────────────────────────────────────────────────────
 
-function MemberItem({ member, styles }) {
+function MemberItem({ member, styles, isAdmin, isSelf, onRemove }) {
   const color    = member.color || '#1a8fa8';
   const initials = [member.first_name?.[0], member.last_name?.[0]]
     .filter(Boolean).join('').toUpperCase() || '?';
@@ -48,6 +49,11 @@ function MemberItem({ member, styles }) {
         <View style={styles.adminBadge}>
           <Text style={styles.adminBadgeText}>Admin</Text>
         </View>
+      )}
+      {isAdmin && !isSelf && member.role !== 'admin' && (
+        <TouchableOpacity onPress={onRemove} style={{ padding: 6 }}>
+          <Ionicons name="remove-circle-outline" size={20} color="#ff3b30" />
+        </TouchableOpacity>
       )}
     </View>
   );
@@ -74,7 +80,32 @@ function GroupDetail({ group, onBack, navigation }) {
 
   useFocusEffect(useCallback(() => { fetchGroupData(); }, [fetchGroupData]));
 
-  const [deleting, setDeleting] = useState(false);
+  const [deleting,  setDeleting]  = useState(false);
+  const { user } = useAuth();
+  const isGroupAdmin = group.role === 'admin';
+
+  const handleRemoveMember = (member) => {
+    const name = [member.first_name, member.last_name].filter(Boolean).join(' ') || member.email;
+    Alert.alert(
+      'Remove Member',
+      `Remove ${name} from ${group.name}?`,
+      [
+        { text: 'Cancel', style: 'cancel' },
+        {
+          text: 'Remove',
+          style: 'destructive',
+          onPress: async () => {
+            try {
+              await API.delete(`/groups/${group.id}/members/${member.id}`);
+              setMembers(prev => prev.filter(m => m.id !== member.id));
+            } catch (err) {
+              Alert.alert('Error', err.response?.data?.message || 'Could not remove member');
+            }
+          },
+        },
+      ]
+    );
+  };
 
   const handleCopy = () => {
     Clipboard.setString(group.invite_code || '');
@@ -150,7 +181,13 @@ function GroupDetail({ group, onBack, navigation }) {
         <View style={styles.membersCard}>
           {members.map((m, i) => (
             <React.Fragment key={m.id}>
-              <MemberItem member={m} styles={styles} />
+              <MemberItem
+                member={m}
+                styles={styles}
+                isAdmin={isGroupAdmin}
+                isSelf={Number(m.id) === Number(user?.id)}
+                onRemove={() => handleRemoveMember(m)}
+              />
               {i < members.length - 1 && <View style={styles.divider} />}
             </React.Fragment>
           ))}
@@ -258,9 +295,6 @@ export default function GroupsScreen({ navigation }) {
         </TouchableOpacity>
         <Text style={styles.headerTitle}>{t('groups.title')}</Text>
         <View style={styles.headerActions}>
-          <TouchableOpacity style={styles.headerIconBtn} onPress={() => { setShowCreate(false); navigation.navigate('JoinFamily'); }}>
-            <Ionicons name="enter-outline" size={22} color="#1a8fa8" />
-          </TouchableOpacity>
           <TouchableOpacity style={styles.headerIconBtn} onPress={() => setShowCreate(true)}>
             <Ionicons name="add" size={24} color="#1a8fa8" />
           </TouchableOpacity>
@@ -292,6 +326,17 @@ export default function GroupsScreen({ navigation }) {
             <Ionicons name="close" size={20} color="#888" />
           </TouchableOpacity>
         </View>
+      )}
+
+      {/* ── Join a group — clear, labelled entry (opens the one Join screen) ── */}
+      {!selectedGroup && (
+        <TouchableOpacity
+          style={styles.joinGroupBtn}
+          onPress={() => { setShowCreate(false); navigation.navigate('JoinFamily'); }}
+        >
+          <Ionicons name="enter-outline" size={18} color="#1a8fa8" />
+          <Text style={styles.joinGroupBtnText}>{t('groups.join_group')}</Text>
+        </TouchableOpacity>
       )}
 
       {/* ── Group detail or list ── */}

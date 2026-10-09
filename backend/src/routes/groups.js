@@ -11,6 +11,7 @@ const getPendingInvitations = require('../controllers/groups/getPendingInvitatio
 const respondToInvitation = require('../controllers/groups/respondToInvitation');
 const deleteGroup = require('../controllers/groups/deleteGroup');
 const getGroupMembers = require('../controllers/groups/getGroupMembers');
+const removeGroupMember = require('../controllers/groups/removeGroupMember');
 
 router.post('/create', verifyToken, createGroup);
 router.post('/join', verifyToken, joinGroup);
@@ -20,6 +21,7 @@ router.put('/invitations/:id', verifyToken, respondToInvitation);
 router.delete('/:id', verifyToken, deleteGroup);
 router.get('/:id/events', verifyToken, getGroupEvents);
 router.get('/:id/members', verifyToken, getGroupMembers);
+router.delete('/:id/members/:userId', verifyToken, removeGroupMember);
 router.post('/events/:id/share', verifyToken, shareEventToGroup);
 router.delete('/events/:id/share/:groupId', verifyToken, unshareEventFromGroup);
 
