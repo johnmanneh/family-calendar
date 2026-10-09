@@ -7,6 +7,7 @@ import { GestureHandlerRootView } from 'react-native-gesture-handler';
 
 import { AuthProvider, useAuth } from './src/context/AuthContext';
 import { FamilyProvider } from './src/context/FamilyContext';
+import { ThemeProvider } from './src/context/ThemeContext';
 import { SSEProvider } from './src/context/SSEContext';
 import LoginScreen from './src/screens/LoginScreen';
 import HomeScreen from './src/screens/HomeScreen';
@@ -76,6 +77,7 @@ function AppNavigator() {
 export default function App() {
   return (
     <GestureHandlerRootView style={{ flex: 1 }}>
+      <ThemeProvider>
       <AuthProvider>
         <SSEProvider>
           <FamilyProvider>
@@ -83,6 +85,7 @@ export default function App() {
           </FamilyProvider>
         </SSEProvider>
       </AuthProvider>
+      </ThemeProvider>
     </GestureHandlerRootView>
   );
 }

@@ -1,4 +1,5 @@
-import { StyleSheet, useColorScheme } from 'react-native';
+import { StyleSheet } from 'react-native';
+import { useColorScheme } from '../context/ThemeContext';
 import { LIGHT, DARK } from '../theme';
 
 const make = c => StyleSheet.create({

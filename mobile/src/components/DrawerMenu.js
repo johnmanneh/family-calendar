@@ -12,9 +12,14 @@ import { Ionicons } from '@expo/vector-icons';
 import { useAuth } from '../context/AuthContext';
 import { useFamily } from '../context/FamilyContext';
 import { SERVER_URL } from '../api/axios';
-import styles, { DRAWER_WIDTH } from '../styles/DrawerMenu.styles';
+import { useStyles, DRAWER_WIDTH } from '../styles/DrawerMenu.styles';
+import { useColorScheme, useToggleTheme } from '../context/ThemeContext';
 
 export default function DrawerMenu({ visible, onClose, navigation, pendingCount = 0, notifCount = 0 }) {
+  const styles      = useStyles();
+  const colorScheme = useColorScheme();
+  const toggleTheme = useToggleTheme();
+  const isDark      = colorScheme === 'dark';
   const { user, logout } = useAuth();
   const { members } = useFamily();
 
@@ -111,11 +116,10 @@ export default function DrawerMenu({ visible, onClose, navigation, pendingCount 
                 setTimeout(() => navigation.navigate('MemberProfile', { memberId: user?.id }), 250);
               }}
             >
-              <Ionicons name="person-outline" size={20} color="#1d1d1f" />
+              <Ionicons name="person-outline" size={20} color={isDark ? '#aeaeb2' : '#1d1d1f'} />
               <Text style={styles.navLabel}>Profile</Text>
             </TouchableOpacity>
 
-            {/* Pending tasks — badge shows count when > 0 */}
             <TouchableOpacity
               style={styles.navItem}
               onPress={() => {
@@ -124,7 +128,7 @@ export default function DrawerMenu({ visible, onClose, navigation, pendingCount 
               }}
             >
               <View style={styles.navIconWrap}>
-                <Ionicons name="notifications-outline" size={20} color="#1d1d1f" />
+                <Ionicons name="notifications-outline" size={20} color={isDark ? '#aeaeb2' : '#1d1d1f'} />
                 {pendingCount > 0 && (
                   <View style={styles.navBadge}>
                     <Text style={styles.navBadgeText}>{pendingCount > 9 ? '9+' : pendingCount}</Text>
@@ -139,7 +143,6 @@ export default function DrawerMenu({ visible, onClose, navigation, pendingCount 
               )}
             </TouchableOpacity>
 
-            {/* Family Chat */}
             <TouchableOpacity
               style={styles.navItem}
               onPress={() => {
@@ -147,11 +150,10 @@ export default function DrawerMenu({ visible, onClose, navigation, pendingCount 
                 setTimeout(() => navigation.navigate('Chat'), 250);
               }}
             >
-              <Ionicons name="chatbubble-outline" size={20} color="#1d1d1f" />
+              <Ionicons name="chatbubble-outline" size={20} color={isDark ? '#aeaeb2' : '#1d1d1f'} />
               <Text style={styles.navLabel}>Family Chat</Text>
             </TouchableOpacity>
 
-            {/* Notifications inbox — badge shows unread count */}
             <TouchableOpacity
               style={styles.navItem}
               onPress={() => {
@@ -160,7 +162,7 @@ export default function DrawerMenu({ visible, onClose, navigation, pendingCount 
               }}
             >
               <View style={styles.navIconWrap}>
-                <Ionicons name="albums-outline" size={20} color="#1d1d1f" />
+                <Ionicons name="albums-outline" size={20} color={isDark ? '#aeaeb2' : '#1d1d1f'} />
                 {notifCount > 0 && (
                   <View style={styles.navBadge}>
                     <Text style={styles.navBadgeText}>{notifCount > 9 ? '9+' : notifCount}</Text>
@@ -182,7 +184,7 @@ export default function DrawerMenu({ visible, onClose, navigation, pendingCount 
                 setTimeout(() => navigation.navigate('Family'), 250);
               }}
             >
-              <Ionicons name="home-outline" size={20} color="#1d1d1f" />
+              <Ionicons name="home-outline" size={20} color={isDark ? '#aeaeb2' : '#1d1d1f'} />
               <Text style={styles.navLabel}>Family</Text>
             </TouchableOpacity>
 
@@ -193,10 +195,19 @@ export default function DrawerMenu({ visible, onClose, navigation, pendingCount 
                 setTimeout(() => navigation.navigate('Groups'), 250);
               }}
             >
-              <Ionicons name="people-outline" size={20} color="#1d1d1f" />
+              <Ionicons name="people-outline" size={20} color={isDark ? '#aeaeb2' : '#1d1d1f'} />
               <Text style={styles.navLabel}>Groups</Text>
             </TouchableOpacity>
           </View>
+
+          {/* Dark / Light mode toggle */}
+          <TouchableOpacity style={styles.toggleRow} onPress={toggleTheme} activeOpacity={0.7}>
+            <Ionicons name={isDark ? 'moon' : 'sunny-outline'} size={20} color={isDark ? '#1a8fa8' : '#f48c06'} />
+            <Text style={styles.toggleLabel}>{isDark ? 'Dark Mode' : 'Light Mode'}</Text>
+            <View style={[styles.toggleTrack, { backgroundColor: isDark ? '#1a8fa8' : '#e5e5ea', alignItems: isDark ? 'flex-end' : 'flex-start' }]}>
+              <View style={styles.toggleThumb} />
+            </View>
+          </TouchableOpacity>
 
           {/* Sign out */}
           <TouchableOpacity style={styles.signOutBtn} onPress={handleLogout}>

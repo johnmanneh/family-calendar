@@ -15,7 +15,7 @@
  *   const styles = useStyles();
  */
 
-import { useColorScheme } from 'react-native';
+import { useColorScheme } from '../context/ThemeContext';
 
 export const LIGHT = {
   bg:        '#f2f2f7',   // page background

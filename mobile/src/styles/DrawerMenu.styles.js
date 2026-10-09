@@ -1,20 +1,20 @@
 import { StyleSheet, Dimensions } from 'react-native';
+import { useColorScheme } from '../context/ThemeContext';
+import { LIGHT, DARK } from '../theme';
 
 const DRAWER_WIDTH = Dimensions.get('window').width * 0.75;
 
-const styles = StyleSheet.create({
+const make = c => StyleSheet.create({
 
-  // Full-screen dark background, flex row
   root: {
     flex: 1,
     flexDirection: 'row',
     backgroundColor: 'rgba(0,0,0,0.4)',
   },
 
-  // Drawer occupies the left 75%
   drawer: {
     width: DRAWER_WIDTH,
-    backgroundColor: '#fff',
+    backgroundColor: c.surface,
     paddingTop: 60,
     shadowColor: '#000',
     shadowOpacity: 0.15,
@@ -23,124 +23,75 @@ const styles = StyleSheet.create({
     elevation: 16,
   },
 
-  // Remaining 25% — tap to dismiss
-  closeArea: {
-    flex: 1,
-  },
+  closeArea: { flex: 1 },
 
-  // User section
   userSection: {
     paddingHorizontal: 24,
     paddingBottom: 24,
     alignItems: 'flex-start',
   },
   avatar: {
-    width: 56,
-    height: 56,
-    borderRadius: 28,
-    alignItems: 'center',
-    justifyContent: 'center',
-    marginBottom: 12,
+    width: 56, height: 56, borderRadius: 28,
+    alignItems: 'center', justifyContent: 'center', marginBottom: 12,
   },
-  avatarText: {
-    color: '#fff',
-    fontSize: 22,
-    fontWeight: '700',
-  },
-  userName: {
-    fontSize: 18,
-    fontWeight: '700',
-    color: '#1d1d1f',
-    letterSpacing: -0.3,
-  },
-  userEmail: {
-    fontSize: 13,
-    color: '#aeaeb2',
-    marginTop: 2,
-  },
+  avatarText: { color: '#fff', fontSize: 22, fontWeight: '700' },
+  userName: { fontSize: 18, fontWeight: '700', color: c.text, letterSpacing: -0.3 },
+  userEmail: { fontSize: 13, color: c.textMuted, marginTop: 2 },
 
   divider: {
-    height: 1,
-    backgroundColor: '#f2f2f7',
-    marginHorizontal: 24,
-    marginBottom: 8,
+    height: 1, backgroundColor: c.separator,
+    marginHorizontal: 24, marginBottom: 8,
   },
 
-  // Nav
-  nav: {
-    flex: 1,
-    paddingTop: 8,
-  },
+  nav: { flex: 1, paddingTop: 8 },
   navItem: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    gap: 14,
-    paddingVertical: 14,
-    paddingHorizontal: 24,
+    flexDirection: 'row', alignItems: 'center', gap: 14,
+    paddingVertical: 14, paddingHorizontal: 24,
   },
-  navLabel: {
-    fontSize: 16,
-    color: '#1d1d1f',
-    fontWeight: '500',
-    flex: 1,
-  },
-  // Wrapper so the icon + small dot badge sit together
-  navIconWrap: {
-    position: 'relative',
-    width: 20,
-    height: 20,
-  },
-  // Small dot on the icon corner
+  navLabel: { fontSize: 16, color: c.text, fontWeight: '500', flex: 1 },
+
+  navIconWrap: { position: 'relative', width: 20, height: 20 },
   navBadge: {
-    position: 'absolute',
-    top: -4,
-    right: -6,
-    backgroundColor: '#ff3b30',
-    borderRadius: 6,
-    minWidth: 12,
-    height: 12,
-    alignItems: 'center',
-    justifyContent: 'center',
-    paddingHorizontal: 2,
+    position: 'absolute', top: -4, right: -6,
+    backgroundColor: '#ff3b30', borderRadius: 6,
+    minWidth: 12, height: 12, alignItems: 'center', justifyContent: 'center', paddingHorizontal: 2,
   },
-  navBadgeText: {
-    color: '#fff',
-    fontSize: 8,
-    fontWeight: '700',
-  },
-  // Pill on the right edge of the row
+  navBadgeText: { color: '#fff', fontSize: 8, fontWeight: '700' },
   navBadgePill: {
-    backgroundColor: '#ff3b30',
-    borderRadius: 10,
-    minWidth: 20,
-    height: 20,
-    alignItems: 'center',
-    justifyContent: 'center',
-    paddingHorizontal: 5,
+    backgroundColor: '#ff3b30', borderRadius: 10,
+    minWidth: 20, height: 20, alignItems: 'center', justifyContent: 'center', paddingHorizontal: 5,
   },
-  navBadgePillText: {
-    color: '#fff',
-    fontSize: 11,
-    fontWeight: '700',
+  navBadgePillText: { color: '#fff', fontSize: 11, fontWeight: '700' },
+
+  // Dark mode toggle row
+  toggleRow: {
+    flexDirection: 'row', alignItems: 'center', gap: 14,
+    paddingVertical: 14, paddingHorizontal: 24,
+  },
+  toggleLabel: { fontSize: 16, color: c.text, fontWeight: '500', flex: 1 },
+  toggleTrack: {
+    width: 44, height: 26, borderRadius: 13, justifyContent: 'center', paddingHorizontal: 3,
+  },
+  toggleThumb: {
+    width: 20, height: 20, borderRadius: 10, backgroundColor: '#fff',
+    shadowColor: '#000', shadowOpacity: 0.15, shadowRadius: 2,
+    shadowOffset: { width: 0, height: 1 }, elevation: 2,
   },
 
-  // Sign out
   signOutBtn: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    gap: 14,
-    paddingVertical: 20,
-    paddingHorizontal: 24,
-    borderTopWidth: 1,
-    borderTopColor: '#f2f2f7',
-    marginBottom: 20,
+    flexDirection: 'row', alignItems: 'center', gap: 14,
+    paddingVertical: 20, paddingHorizontal: 24,
+    borderTopWidth: 1, borderTopColor: c.separator, marginBottom: 20,
   },
-  signOutText: {
-    fontSize: 16,
-    color: '#ff3b30',
-    fontWeight: '500',
-  },
+  signOutText: { fontSize: 16, color: '#ff3b30', fontWeight: '500' },
 });
 
-export default styles;
+const lightStyles = make(LIGHT);
+const darkStyles  = make(DARK);
+
+export function useStyles() {
+  return useColorScheme() === 'dark' ? darkStyles : lightStyles;
+}
+
+export default lightStyles;
 export { DRAWER_WIDTH };
