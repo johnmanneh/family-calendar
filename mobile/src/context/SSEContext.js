@@ -63,8 +63,8 @@ export const SSEProvider = ({ children }) => {
 
     es.addEventListener('error', (e) => {
       console.log('[SSE] error:', JSON.stringify(e));
-      // 403 = token invalid or account deleted — stop retrying and log out
-      if (e?.xhrStatus === 403) {
+      // 403 = token invalid or account deleted — disconnect and log out only if still logged in
+      if (e?.xhrStatus === 403 && tokenRef.current) {
         disconnect();
         logoutRef.current?.();
       }

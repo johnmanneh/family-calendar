@@ -30,7 +30,7 @@ const Stack = createNativeStackNavigator();
 
 // Inner component — can call useAuth() because it's inside AuthProvider
 function AppNavigator() {
-  const { user, authLoading } = useAuth();
+  const { user, token, authLoading } = useAuth();
 
   // Still checking AsyncStorage — show a blank spinner
   if (authLoading) {
@@ -44,7 +44,7 @@ function AppNavigator() {
   return (
     <NavigationContainer>
       <Stack.Navigator screenOptions={{ headerShown: false }}>
-        {user ? (
+        {user && token ? (
           // Logged in — Home + EventDetails in the same stack
           <>
             <Stack.Screen name="Home" component={HomeScreen} />
