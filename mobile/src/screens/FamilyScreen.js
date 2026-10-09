@@ -16,6 +16,7 @@ import { useFamily } from '../context/FamilyContext';
 import API, { SERVER_URL } from '../api/axios';
 import { useStyles } from '../styles/FamilyScreen.styles';
 
+import TopCard from '../components/ui/TopCard';
 // ─── Helpers ─────────────────────────────────────────────────────────────────
 
 function avatarUrl(path) {
@@ -128,13 +129,15 @@ export default function FamilyScreen({ navigation }) {
     <SafeAreaView style={styles.container}>
 
       {/* Header */}
-      <View style={styles.header}>
-        <TouchableOpacity style={styles.backBtn} onPress={() => navigation.goBack()}>
-          <Ionicons name="chevron-back" size={24} color="#1d1d1f" />
-        </TouchableOpacity>
-        <Text style={styles.headerTitle}>{t('family.title')}</Text>
-        <View style={styles.headerSpacer} />
-      </View>
+      <TopCard>
+        <View style={styles.header}>
+          <TouchableOpacity style={styles.backBtn} onPress={() => navigation.goBack()}>
+            <Ionicons name="chevron-back" size={24} color="#1d1d1f" />
+          </TouchableOpacity>
+          <Text style={styles.headerTitle}>{t('family.title')}</Text>
+          <View style={styles.headerSpacer} />
+        </View>
+      </TopCard>
 
       <ScrollView contentContainerStyle={styles.content}>
 

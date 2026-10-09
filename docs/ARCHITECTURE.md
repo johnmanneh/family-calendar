@@ -579,6 +579,11 @@ export const CATEGORIES = [
 | — | TaskFormScreen: status badge shows "Ongoing" (green) after accept, "Done" after complete | ✅ Done |
 | — | TaskFormScreen: header shows no Save button when task is ongoing (accepted) | ✅ Done |
 | — | HomeScreen: useFocusEffect re-fetches on screen focus; taskTick also calls fetchEvents | ✅ Done |
+| 31 | 🧱 Shared UI components — `mobile/src/components/ui/` | ✅ Done |
+| — | `TopCard` — floating rounded card (24px radius, shadow) wraps every screen's header row; theme-aware background | ✅ Done |
+| — | `ListCard` — reusable list row: coloured left stripe, title + subtitle, optional badge pill or right slot; pressable or static | ✅ Done |
+| — | `SectionHeader` — uppercase spaced label exported from ListCard; theme-aware muted colour | ✅ Done |
+| — | GroupsScreen header migrated to use `<TopCard>` — consistent floating card style across screens | ✅ Done |
 
 ---
 

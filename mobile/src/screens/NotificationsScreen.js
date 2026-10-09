@@ -13,6 +13,7 @@ import { useTranslation } from 'react-i18next';
 import API from '../api/axios';
 import { useStyles } from '../styles/NotificationsScreen.styles';
 
+import TopCard from '../components/ui/TopCard';
 // ─── Type config ─────────────────────────────────────────────────────────────
 // Mirrors TYPE_CONFIG in the web SidebarNotifications component.
 
@@ -139,21 +140,23 @@ export default function NotificationsScreen({ navigation }) {
     <SafeAreaView style={styles.safe} edges={['top', 'left', 'right']}>
 
       {/* ── Header ── */}
-      <View style={styles.header}>
-        <TouchableOpacity style={styles.backBtn} onPress={() => navigation.goBack()}>
-          <Ionicons name="chevron-back" size={24} color="#1a8fa8" />
-        </TouchableOpacity>
-
-        <Text style={styles.headerTitle}>{t('notifications.title')}</Text>
-
-        {unreadCount > 0 ? (
-          <TouchableOpacity style={styles.markAllBtn} onPress={handleMarkAllRead}>
-            <Text style={styles.markAllText}>{t('notifications.mark_all_read')}</Text>
+      <TopCard>
+        <View style={styles.header}>
+          <TouchableOpacity style={styles.backBtn} onPress={() => navigation.goBack()}>
+            <Ionicons name="chevron-back" size={24} color="#1a8fa8" />
           </TouchableOpacity>
-        ) : (
-          <View style={styles.headerSpacer} />
-        )}
-      </View>
+
+          <Text style={styles.headerTitle}>{t('notifications.title')}</Text>
+
+          {unreadCount > 0 ? (
+            <TouchableOpacity style={styles.markAllBtn} onPress={handleMarkAllRead}>
+              <Text style={styles.markAllText}>{t('notifications.mark_all_read')}</Text>
+            </TouchableOpacity>
+          ) : (
+            <View style={styles.headerSpacer} />
+          )}
+        </View>
+      </TopCard>
 
       {/* ── List ── */}
       {loading ? (

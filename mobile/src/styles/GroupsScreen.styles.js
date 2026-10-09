@@ -11,7 +11,8 @@ const make = c => StyleSheet.create({
   header: {
     flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between',
     paddingHorizontal: 16, paddingVertical: 10,
-    backgroundColor: c.surface, borderBottomWidth: 1, borderBottomColor: c.border,
+    
+    // background comes from TopCard (floating card like home)
   },
   backBtn: { padding: 4, width: 40 },
   headerTitle: { fontSize: 17, fontWeight: '600', color: c.text },

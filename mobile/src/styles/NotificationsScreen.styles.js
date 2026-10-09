@@ -5,9 +5,9 @@ import { LIGHT, DARK } from '../theme';
 const make = c => StyleSheet.create({
   safe: { flex: 1, backgroundColor: c.bg },
   header: {
-    flexDirection: 'row', alignItems: 'center', backgroundColor: c.surface,
-    paddingHorizontal: 8, paddingVertical: 12,
-    borderBottomWidth: 1, borderBottomColor: c.border,
+    flexDirection: 'row', alignItems: 'center', paddingHorizontal: 8, paddingVertical: 12,
+    
+    // background comes from TopCard (floating card like home)
   },
   backBtn: { width: 40, height: 40, alignItems: 'center', justifyContent: 'center' },
   headerTitle: { flex: 1, fontSize: 17, fontWeight: '700', color: c.text, textAlign: 'center', letterSpacing: -0.3 },

@@ -6,8 +6,8 @@ const make = c => StyleSheet.create({
   container: { flex: 1, backgroundColor: c.bg },
   header: {
     paddingHorizontal: 20, paddingVertical: 12,
-    backgroundColor: c.surface,
-    borderBottomWidth: 1, borderBottomColor: c.border,
+    
+    // background comes from TopCard (floating card like home)
   },
   backBtn: { alignSelf: 'flex-start' },
   backText: { fontSize: 16, color: '#1a8fa8', fontWeight: '500' },

@@ -7,7 +7,8 @@ const make = c => StyleSheet.create({
   header: {
     flexDirection: 'row', alignItems: 'center',
     paddingHorizontal: 20, paddingVertical: 12,
-    backgroundColor: c.surface, borderBottomWidth: 1, borderBottomColor: c.border, gap: 12,
+    gap: 12,
+    // background comes from TopCard (floating card like home)
   },
   backBtn: { alignSelf: 'flex-start' },
   backText: { fontSize: 16, color: '#1a8fa8', fontWeight: '500' },

@@ -18,6 +18,7 @@ import { useAuth } from '../context/AuthContext';
 import { useFamily } from '../context/FamilyContext';
 import { useStyles } from '../styles/TaskFormScreen.styles';
 
+import TopCard from '../components/ui/TopCard';
 const POSITION_OPTIONS = ['full', 'start', 'end'];
 
 // Formats a Date to "YYYY-MM-DDTHH:mm" for the API
@@ -133,30 +134,32 @@ export default function TaskFormScreen({ route, navigation }) {
     <SafeAreaView style={styles.container}>
 
       {/* ── Header ── */}
-      <View style={styles.header}>
-        <TouchableOpacity style={styles.backBtn} onPress={() => navigation.goBack()}>
-          <Ionicons name="chevron-back" size={22} color="#1a8fa8" />
-          <Text style={styles.backBtnText}>Back</Text>
-        </TouchableOpacity>
-        <Text style={styles.headerTitle}>
-          {isEditing ? t('tasks.edit_task') : t('tasks.new_task')}
-        </Text>
-        {/* New task: no header Save — the bottom Add button saves it */}
-        {isEditing && !isOngoingForMe ? (
-          <TouchableOpacity
-            style={[styles.saveHeaderBtn, loading && styles.saveHeaderBtnDisabled]}
-            onPress={handleSubmit}
-            disabled={loading}
-          >
-            {loading
-              ? <ActivityIndicator size="small" color="#1a8fa8" />
-              : <Text style={styles.saveHeaderBtnText}>{t('common.save')}</Text>
-            }
+      <TopCard>
+        <View style={styles.header}>
+          <TouchableOpacity style={styles.backBtn} onPress={() => navigation.goBack()}>
+            <Ionicons name="chevron-back" size={22} color="#1a8fa8" />
+            <Text style={styles.backBtnText}>Back</Text>
           </TouchableOpacity>
-        ) : (
-          <View style={{ width: 60 }} />
-        )}
-      </View>
+          <Text style={styles.headerTitle}>
+            {isEditing ? t('tasks.edit_task') : t('tasks.new_task')}
+          </Text>
+          {/* New task: no header Save — the bottom Add button saves it */}
+          {isEditing && !isOngoingForMe ? (
+            <TouchableOpacity
+              style={[styles.saveHeaderBtn, loading && styles.saveHeaderBtnDisabled]}
+              onPress={handleSubmit}
+              disabled={loading}
+            >
+              {loading
+                ? <ActivityIndicator size="small" color="#1a8fa8" />
+                : <Text style={styles.saveHeaderBtnText}>{t('common.save')}</Text>
+              }
+            </TouchableOpacity>
+          ) : (
+            <View style={{ width: 60 }} />
+          )}
+        </View>
+      </TopCard>
 
       <ScrollView
         style={styles.scroll}

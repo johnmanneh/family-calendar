@@ -19,6 +19,9 @@ import * as ImagePicker from 'expo-image-picker';
 import API, { SERVER_URL } from '../api/axios';
 import { useAuth } from '../context/AuthContext';
 import { useFamily } from '../context/FamilyContext';
+import TopCard from '../components/ui/TopCard';
+import ListCard, { SectionHeader } from '../components/ui/ListCard';
+import TreadmillList from '../components/TreadmillList';
 import { useStyles } from '../styles/MemberProfileScreen.styles';
 import { useTranslation } from 'react-i18next';
 
@@ -129,6 +132,14 @@ function TaskItem({ task }) {
     </View>
   );
 }
+
+// Same status pills as the home task list
+const TASK_BADGE = {
+  pending:   { key: 'common.pending',   color: '#ff9500' },
+  accepted:  { key: 'home.ongoing',     color: '#34c759' },
+  countered: { key: 'home.counter',     color: '#ff3b30' },
+  declined:  { key: 'common.declined',  color: '#8e8e93' },
+};
 
 // ─── Settings tab ────────────────────────────────────────────────────────────
 
@@ -566,6 +577,8 @@ export default function MemberProfileScreen({ route, navigation }) {
   return (
     <SafeAreaView style={styles.container}>
 
+      {/* ── One floating top card: header + profile + tabs (like home) ── */}
+      <TopCard>
       {/* ── Header ── */}
       <View style={styles.header}>
         <TouchableOpacity style={styles.backBtn} onPress={() => navigation.goBack()}>
@@ -600,39 +613,63 @@ export default function MemberProfileScreen({ route, navigation }) {
           </TouchableOpacity>
         )}
       </View>
+      </TopCard>
 
       {/* ── Tab content ── */}
       {activeTab === 'personal' ? (
         loading ? (
           <ActivityIndicator size="large" color="#1a8fa8" style={styles.spinner} />
         ) : (
-          <ScrollView
-            style={styles.scroll}
-            contentContainerStyle={styles.scrollContent}
-            refreshControl={<RefreshControl refreshing={refreshing} onRefresh={onRefresh} tintColor="#1a8fa8" />}
-          >
-            <Text style={styles.sectionHeader}>{t('home.events')}</Text>
-            {events.length === 0
-              ? <Text style={styles.emptyText}>{t('common.no_events')}</Text>
-              : events.map(ev => <EventItem key={ev.id} event={ev} navigation={navigation} />)
+          <TreadmillList
+            data={[
+              { type: 'section', key: 'sh-ev', label: t('home.events') },
+              ...(events.length
+                ? events.map(ev => ({ type: 'event', key: `e-${ev.id}`, ev }))
+                : [{ type: 'empty', key: 'no-ev', label: t('common.no_events') }]),
+              { type: 'section', key: 'sh-tk', label: t('home.tasks') },
+              ...(tasks.length
+                ? tasks.map(tk => ({ type: 'task', key: `t-${tk.id}`, tk }))
+                : [{ type: 'empty', key: 'no-tk', label: t('common.no_tasks') }]),
+            ]}
+            keyExtractor={item => item.key}
+            contentContainerStyle={styles.listContent}
+            refreshing={refreshing}
+            onRefresh={onRefresh}
+            renderItem={({ item }) => {
+              if (item.type === 'section') return <SectionHeader>{item.label}</SectionHeader>;
+              if (item.type === 'empty')   return <Text style={styles.emptyText}>{item.label}</Text>;
+              if (item.type === 'event') {
+                const ev = item.ev;
+                return (
+                  <ListCard
+                    stripe={ev.color || '#1a8fa8'}
+                    title={ev.title}
+                    subtitle={`${formatDate(ev.start_date)}${ev.location ? `  ·  ${ev.location}` : ''}`}
+                    onPress={() => navigation.navigate('EventDetails', { eventId: ev.id })}
+                  />
+                );
+              }
+              const tk = item.tk;
+              const st = TASK_BADGE[tk.status];
+              return (
+                <ListCard
+                  stripe={memberColor}
+                  title={tk.title}
+                  subtitle={tk.event_title || t('home.no_due_date')}
+                  badge={st ? { label: t(st.key), color: st.color } : null}
+                />
+              );
+            }}
+            ListFooterComponent={
+              isAdmin && !isOwnProfile ? (
+                <AdminCircleControl
+                  memberId={memberId}
+                  currentCircle={member?.circle_type}
+                  fetchFamily={fetchFamily}
+                />
+              ) : null
             }
-            <Text style={[styles.sectionHeader, { marginTop: 24 }]}>{t('home.tasks')}</Text>
-            {tasks.length === 0
-              ? <Text style={styles.emptyText}>{t('common.no_tasks')}</Text>
-              : tasks.map(tk => <TaskItem key={tk.id} task={tk} />)
-            }
-
-            {/* Circle control — admin only, other member's profile only */}
-            {isAdmin && !isOwnProfile && (
-              <AdminCircleControl
-                memberId={memberId}
-                currentCircle={member?.circle_type}
-                fetchFamily={fetchFamily}
-              />
-            )}
-
-            <View style={{ height: 40 }} />
-          </ScrollView>
+          />
         )
       ) : (
         <SettingsTab

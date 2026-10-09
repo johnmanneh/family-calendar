@@ -10,7 +10,14 @@ const DAY_LETTERS = ['M', 'T', 'W', 'T', 'F', 'S', 'S'];
 // Timezone-safe day match
 function onSameDay(dateStr, day) {
   if (!dateStr) return false;
-  const s = typeof dateStr === 'string' ? dateStr : new Date(dateStr).toISOString();
+  // A Date object is already local — compare its local parts directly.
+  // (toISOString() converts to UTC, which shifts midnight to the previous day
+  //  in timezones ahead of UTC, e.g. tapping the 9th highlighted the 8th.)
+  if (typeof dateStr !== 'string') {
+    const dt = new Date(dateStr);
+    return dt.getFullYear() === day.getFullYear() && dt.getMonth() === day.getMonth() && dt.getDate() === day.getDate();
+  }
+  const s = dateStr;
   const [y, m, d] = s.slice(0, 10).split('-').map(Number);
   return y === day.getFullYear() && (m - 1) === day.getMonth() && d === day.getDate();
 }
@@ -74,7 +81,7 @@ export default function MonthCalendar({ events = [], selectedDate, onSelectDate,
         {days.map((day, i) => {
           const inMonth   = day.getMonth() === month;
           const isToday   = day.getTime() === today.getTime();
-          const isSel     = selectedDate && onSameDay(selectedDate.toISOString?.() || selectedDate, day);
+          const isSel     = selectedDate && onSameDay(selectedDate, day);
           const dayEvents = events.filter(e => onSameDay(e.start_date, day));
           const dots      = dayEvents.slice(0, 3);
 

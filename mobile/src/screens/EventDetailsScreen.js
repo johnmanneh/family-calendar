@@ -20,6 +20,7 @@ import { useAuth } from '../context/AuthContext';
 import { useFamily } from '../context/FamilyContext';
 import { useStyles } from '../styles/EventDetailsScreen.styles';
 
+import TopCard from '../components/ui/TopCard';
 // ─── Helpers ────────────────────────────────────────────────────────────────
 
 function formatDate(dateStr) {
@@ -512,11 +513,13 @@ export default function EventDetailsScreen({ route, navigation }) {
     <SafeAreaView style={styles.container}>
 
       {/* ── Back button ── */}
-      <View style={styles.header}>
-        <TouchableOpacity onPress={() => navigation.goBack()} style={styles.backBtn}>
-          <Text style={styles.backText}>{t('common.back')}</Text>
-        </TouchableOpacity>
-      </View>
+      <TopCard>
+        <View style={styles.header}>
+          <TouchableOpacity onPress={() => navigation.goBack()} style={styles.backBtn}>
+            <Text style={styles.backText}>{t('common.back')}</Text>
+          </TouchableOpacity>
+        </View>
+      </TopCard>
 
       <ScrollView contentContainerStyle={styles.scrollContent}>
 

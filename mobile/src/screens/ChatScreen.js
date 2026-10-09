@@ -19,6 +19,7 @@ import { useSSE } from '../context/SSEContext';
 import { parseDateMentions } from '../utils/parseDateMentions';
 import { useStyles } from '../styles/ChatScreen.styles';
 
+import TopCard from '../components/ui/TopCard';
 // ─── Helpers ──────────────────────────────────────────────────────────────────
 
 function timeLabel(dateStr) {
@@ -155,13 +156,15 @@ export default function ChatScreen({ navigation }) {
     <SafeAreaView style={styles.safe} edges={['top', 'left', 'right', 'bottom']}>
 
       {/* ── Header ── */}
-      <View style={styles.header}>
-        <TouchableOpacity style={styles.backBtn} onPress={() => navigation.goBack()}>
-          <Ionicons name="chevron-back" size={24} color="#1a8fa8" />
-        </TouchableOpacity>
-        <Text style={styles.headerTitle}>{t('chat.title')}</Text>
-        <View style={styles.headerSpacer} />
-      </View>
+      <TopCard>
+        <View style={styles.header}>
+          <TouchableOpacity style={styles.backBtn} onPress={() => navigation.goBack()}>
+            <Ionicons name="chevron-back" size={24} color="#1a8fa8" />
+          </TouchableOpacity>
+          <Text style={styles.headerTitle}>{t('chat.title')}</Text>
+          <View style={styles.headerSpacer} />
+        </View>
+      </TopCard>
 
       <KeyboardAvoidingView
         style={styles.flex}

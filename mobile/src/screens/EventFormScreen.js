@@ -19,6 +19,7 @@ import { useFamily } from '../context/FamilyContext';
 import { useAuth } from '../context/AuthContext';
 import { useStyles } from '../styles/EventFormScreen.styles';
 
+import TopCard from '../components/ui/TopCard';
 // ─── Constants ────────────────────────────────────────────────────────────────
 
 const CATEGORIES = [
@@ -344,23 +345,25 @@ export default function EventFormScreen({ route, navigation }) {
     <SafeAreaView style={styles.container}>
 
       {/* ── Header ── */}
-      <View style={styles.header}>
-        <TouchableOpacity style={styles.backBtn} onPress={() => navigation.goBack()}>
-          <Ionicons name="chevron-back" size={24} color="#1d1d1f" />
-        </TouchableOpacity>
-        <Text style={styles.headerTitle}>{isEdit ? t('events.edit_event') : t('events.new_event')}</Text>
-        {/* Save button on the right */}
-        <TouchableOpacity
-          style={[styles.saveHeaderBtn, loading && styles.saveHeaderBtnDisabled]}
-          onPress={handleSubmit}
-          disabled={loading}
-        >
-          {loading
-            ? <ActivityIndicator size="small" color="#1a8fa8" />
-            : <Text style={styles.saveHeaderBtnText}>{t('common.save')}</Text>
-          }
-        </TouchableOpacity>
-      </View>
+      <TopCard>
+        <View style={styles.header}>
+          <TouchableOpacity style={styles.backBtn} onPress={() => navigation.goBack()}>
+            <Ionicons name="chevron-back" size={24} color="#1d1d1f" />
+          </TouchableOpacity>
+          <Text style={styles.headerTitle}>{isEdit ? t('events.edit_event') : t('events.new_event')}</Text>
+          {/* Save button on the right */}
+          <TouchableOpacity
+            style={[styles.saveHeaderBtn, loading && styles.saveHeaderBtnDisabled]}
+            onPress={handleSubmit}
+            disabled={loading}
+          >
+            {loading
+              ? <ActivityIndicator size="small" color="#1a8fa8" />
+              : <Text style={styles.saveHeaderBtnText}>{t('common.save')}</Text>
+            }
+          </TouchableOpacity>
+        </View>
+      </TopCard>
 
       <ScrollView
         style={styles.scroll}

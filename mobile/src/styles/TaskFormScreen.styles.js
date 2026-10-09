@@ -9,7 +9,8 @@ const make = c => StyleSheet.create({
   header: {
     flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between',
     paddingHorizontal: 16, paddingVertical: 10,
-    backgroundColor: c.surface, borderBottomWidth: 1, borderBottomColor: c.border,
+    
+    // background comes from TopCard (floating card like home)
   },
   backBtn: { flexDirection: 'row', alignItems: 'center', padding: 4, minWidth: 60 },
   backBtnText: { color: '#1a8fa8', fontSize: 16, fontWeight: '500' },

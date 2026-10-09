@@ -10,7 +10,7 @@ const make = c => StyleSheet.create({
   header: {
     flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between',
     paddingHorizontal: 16, paddingVertical: 10,
-    backgroundColor: c.surface, borderBottomWidth: 1, borderBottomColor: c.border,
+    // background comes from TopCard (floating card like home)
   },
   backBtn: { padding: 4, width: 40 },
   headerTitle: { fontSize: 17, fontWeight: '600', color: c.text },
@@ -18,9 +18,8 @@ const make = c => StyleSheet.create({
 
   // ── Profile card ─────────────────────────────────────────────────────────
   profileCard: {
-    alignItems: 'center', backgroundColor: c.surface,
-    paddingVertical: 28, paddingHorizontal: 24,
-    borderBottomWidth: 1, borderBottomColor: c.border,
+    alignItems: 'center',
+    paddingTop: 4, paddingBottom: 14, paddingHorizontal: 24,
   },
   avatar: {
     width: 72, height: 72, borderRadius: 36,
@@ -42,21 +41,24 @@ const make = c => StyleSheet.create({
   memberEmail: { fontSize: 13, color: c.textMuted },
 
   // ── Tab bar ──────────────────────────────────────────────────────────────
+  // Segmented tabs inside the top card
   tabBar: {
-    flexDirection: 'row', backgroundColor: c.surface,
-    borderBottomWidth: 1, borderBottomColor: c.border,
+    flexDirection: 'row', backgroundColor: c.surface2,
+    marginHorizontal: 12, marginBottom: 12, padding: 3, borderRadius: 12,
   },
-  tab: {
-    flex: 1, paddingVertical: 12, alignItems: 'center',
-    borderBottomWidth: 2, borderBottomColor: 'transparent',
+  tab: { flex: 1, paddingVertical: 8, alignItems: 'center', borderRadius: 10 },
+  tabActive: {
+    backgroundColor: c.surface,
+    shadowColor: '#000', shadowOpacity: 0.08, shadowRadius: 4,
+    shadowOffset: { width: 0, height: 1 }, elevation: 1,
   },
-  tabActive: { borderBottomColor: '#1a8fa8' },
   tabLabel: { fontSize: 14, fontWeight: '500', color: c.textMuted },
   tabLabelActive: { color: '#1a8fa8', fontWeight: '600' },
 
   // ── Scroll content ───────────────────────────────────────────────────────
   scroll: { flex: 1 },
-  scrollContent: { paddingHorizontal: 16, paddingTop: 16, paddingBottom: 40 },
+  scrollContent: { paddingHorizontal: 16, paddingTop: 8, paddingBottom: 40 },
+  listContent: { paddingHorizontal: 16 },
   spinner: { marginTop: 60 },
 
   // ── Section header ───────────────────────────────────────────────────────

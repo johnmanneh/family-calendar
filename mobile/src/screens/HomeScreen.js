@@ -71,7 +71,14 @@ function formatTime(event) {
 // directly so timezone offsets never shift the displayed date.
 function onSameDay(dateStr, selectedDate) {
   if (!dateStr) return false;
-  const s = typeof dateStr === 'string' ? dateStr : new Date(dateStr).toISOString();
+  // A Date object is already local — compare its local parts directly.
+  // (toISOString() converts to UTC, which shifts midnight to the previous day
+  //  in timezones ahead of UTC, e.g. tapping the 9th highlighted the 8th.)
+  if (typeof dateStr !== 'string') {
+    const dt = new Date(dateStr);
+    return dt.getFullYear() === selectedDate.getFullYear() && dt.getMonth() === selectedDate.getMonth() && dt.getDate() === selectedDate.getDate();
+  }
+  const s = dateStr;
   const [y, m, d] = s.slice(0, 10).split('-').map(Number);
   return (
     y === selectedDate.getFullYear() &&

@@ -13,6 +13,7 @@ import { useTranslation } from 'react-i18next';
 import API from '../api/axios';
 import { useStyles } from '../styles/DayViewScreen.styles';
 
+import TopCard from '../components/ui/TopCard';
 // ─── Constants ───────────────────────────────────────────────────────────────
 
 const HOUR_HEIGHT = 64;    // px per hour
@@ -26,7 +27,11 @@ const SCREEN_W    = Dimensions.get('window').width;
 
 function onSameDay(dateStr, day) {
   if (!dateStr) return false;
-  const s = typeof dateStr === 'string' ? dateStr : new Date(dateStr).toISOString();
+  if (typeof dateStr !== 'string') {   // Date objects are local — compare local parts
+    const dt = new Date(dateStr);
+    return dt.getFullYear() === day.getFullYear() && dt.getMonth() === day.getMonth() && dt.getDate() === day.getDate();
+  }
+  const s = dateStr;
   const [y, m, d] = s.slice(0, 10).split('-').map(Number);
   return y === day.getFullYear() && (m - 1) === day.getMonth() && d === day.getDate();
 }
@@ -110,13 +115,15 @@ export default function DayViewScreen({ route, navigation }) {
       <SafeAreaView style={styles.safe}>
 
         {/* ── Header ── */}
-        <View style={styles.header}>
-          <TouchableOpacity style={styles.back} onPress={() => navigation.goBack()}>
-            <Ionicons name="chevron-back" size={24} color="#1a8fa8" />
-          </TouchableOpacity>
-          <Text style={styles.title}>{dateLabel(date)}</Text>
-          <View style={styles.back} />
-        </View>
+        <TopCard>
+          <View style={styles.header}>
+            <TouchableOpacity style={styles.back} onPress={() => navigation.goBack()}>
+              <Ionicons name="chevron-back" size={24} color="#1a8fa8" />
+            </TouchableOpacity>
+            <Text style={styles.title}>{dateLabel(date)}</Text>
+            <View style={styles.back} />
+          </View>
+        </TopCard>
 
         {loading ? (
           <ActivityIndicator size="large" color="#1a8fa8" style={{ marginTop: 60 }} />

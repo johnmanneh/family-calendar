@@ -14,6 +14,7 @@ import API from '../api/axios';
 import { useSSE } from '../context/SSEContext';
 import { useStyles } from '../styles/PendingScreen.styles';
 
+import TopCard from '../components/ui/TopCard';
 // ─── Helpers ────────────────────────────────────────────────────────────────
 
 function formatDate(dateStr) {
@@ -261,12 +262,14 @@ export default function PendingScreen({ navigation }) {
     <SafeAreaView style={styles.container}>
 
       {/* ── Header ── */}
-      <View style={styles.header}>
-        <TouchableOpacity onPress={() => navigation.goBack()} style={styles.backBtn}>
-          <Text style={styles.backText}>{t('common.back')}</Text>
-        </TouchableOpacity>
-        <Text style={styles.headerTitle}>{t('pending.title')}</Text>
-      </View>
+      <TopCard>
+        <View style={styles.header}>
+          <TouchableOpacity onPress={() => navigation.goBack()} style={styles.backBtn}>
+            <Text style={styles.backText}>{t('common.back')}</Text>
+          </TouchableOpacity>
+          <Text style={styles.headerTitle}>{t('pending.title')}</Text>
+        </View>
+      </TopCard>
 
       {loading ? (
         <ActivityIndicator size="large" color="#1a8fa8" style={styles.spinner} />

@@ -19,6 +19,7 @@ import API from '../api/axios';
 import { useAuth } from '../context/AuthContext';
 import { useStyles } from '../styles/GroupsScreen.styles';
 
+import TopCard from '../components/ui/TopCard';
 // ─── Helpers ─────────────────────────────────────────────────────────────────
 
 function formatDate(dateStr) {
@@ -289,17 +290,19 @@ export default function GroupsScreen({ navigation }) {
     <SafeAreaView style={styles.container}>
 
       {/* ── Header ── */}
-      <View style={styles.header}>
-        <TouchableOpacity style={styles.backBtn} onPress={() => navigation.goBack()}>
-          <Ionicons name="chevron-back" size={24} color="#1d1d1f" />
-        </TouchableOpacity>
-        <Text style={styles.headerTitle}>{t('groups.title')}</Text>
-        <View style={styles.headerActions}>
-          <TouchableOpacity style={styles.headerIconBtn} onPress={() => setShowCreate(true)}>
-            <Ionicons name="add" size={24} color="#1a8fa8" />
+      <TopCard>
+        <View style={styles.header}>
+          <TouchableOpacity style={styles.backBtn} onPress={() => navigation.goBack()}>
+            <Ionicons name="chevron-back" size={24} color="#1d1d1f" />
           </TouchableOpacity>
+          <Text style={styles.headerTitle}>{t('groups.title')}</Text>
+          <View style={styles.headerActions}>
+            <TouchableOpacity style={styles.headerIconBtn} onPress={() => setShowCreate(true)}>
+              <Ionicons name="add" size={24} color="#1a8fa8" />
+            </TouchableOpacity>
+          </View>
         </View>
-      </View>
+      </TopCard>
 
       {/* ── Create group inline form ── */}
       {showCreate && (

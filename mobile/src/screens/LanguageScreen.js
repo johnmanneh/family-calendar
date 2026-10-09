@@ -12,6 +12,7 @@ import { useTranslation } from 'react-i18next';
 import { SUPPORTED_LANGUAGES, setAppLanguage } from '../i18n';
 import { useStyles } from '../styles/LanguageScreen.styles';
 
+import TopCard from '../components/ui/TopCard';
 // ─── LanguageScreen ───────────────────────────────────────────────────────────
 
 export default function LanguageScreen({ navigation }) {
@@ -37,12 +38,14 @@ export default function LanguageScreen({ navigation }) {
     <SafeAreaView style={styles.safe} edges={['top', 'left', 'right', 'bottom']}>
 
       {/* ── Header ── */}
-      <View style={styles.header}>
-        <TouchableOpacity style={styles.backBtn} onPress={() => navigation.goBack()}>
-          <Ionicons name="chevron-back" size={24} color="#1a8fa8" />
-        </TouchableOpacity>
-        <Text style={styles.headerTitle}>{t('settings.language')}</Text>
-      </View>
+      <TopCard>
+        <View style={styles.header}>
+          <TouchableOpacity style={styles.backBtn} onPress={() => navigation.goBack()}>
+            <Ionicons name="chevron-back" size={24} color="#1a8fa8" />
+          </TouchableOpacity>
+          <Text style={styles.headerTitle}>{t('settings.language')}</Text>
+        </View>
+      </TopCard>
 
       <ScrollView contentContainerStyle={styles.content}>
         <Text style={styles.subtitle}>{t('settings.language_subtitle')}</Text>
