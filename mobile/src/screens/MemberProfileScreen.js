@@ -283,7 +283,7 @@ function SettingsTab({ member, user, family, fetchFamily, onAvatarChange, naviga
         {
           text: t('common.delete'), style: 'destructive',
           onPress: async () => {
-            try { await API.delete('/auth/account'); logout(); }
+            try { await API.delete('/auth/account'); await logout(); }
             catch (err) { Alert.alert(t('common.error'), err.response?.data?.message || t('profile.could_not_delete_account')); }
           },
         },
