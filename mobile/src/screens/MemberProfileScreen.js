@@ -22,6 +22,7 @@ import { useFamily } from '../context/FamilyContext';
 import TopCard from '../components/ui/TopCard';
 import ListCard, { SectionHeader } from '../components/ui/ListCard';
 import TreadmillList from '../components/TreadmillList';
+import { RollInGroup } from '../components/RollIn';
 import { useStyles } from '../styles/MemberProfileScreen.styles';
 import { useTranslation } from 'react-i18next';
 
@@ -639,7 +640,7 @@ export default function MemberProfileScreen({ route, navigation }) {
           <SectionHeader>{t('profile.coming_up')}</SectionHeader>
           {upcoming.length === 0 ? (
             <Text style={styles.emptyText}>{t('profile.nothing_coming_up')}</Text>
-          ) : upcoming.map(item => {
+          ) : <RollInGroup>{upcoming.map(item => {
             if (item.kind === 'event') {
               const ev = item.ev;
               return (
@@ -663,7 +664,7 @@ export default function MemberProfileScreen({ route, navigation }) {
                 badge={st ? { label: t(st.key), color: st.color } : null}
               />
             );
-          })}
+          })}</RollInGroup>}
 
           {/* Full view lives on home: open it filtered to this person */}
           <TouchableOpacity

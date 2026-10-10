@@ -11,6 +11,7 @@ import { SafeAreaView } from 'react-native-safe-area-context';
 import { Ionicons } from '@expo/vector-icons';
 import { useTranslation } from 'react-i18next';
 import { useSSE } from '../context/SSEContext';
+import TreadmillList from '../components/TreadmillList';
 import API from '../api/axios';
 import { useStyles } from '../styles/NotificationsScreen.styles';
 
@@ -168,7 +169,7 @@ export default function NotificationsScreen({ navigation }) {
           <ActivityIndicator size="large" color="#1a8fa8" />
         </View>
       ) : (
-        <FlatList
+        <TreadmillList
           data={notifications}
           keyExtractor={item => String(item.id)}
           renderItem={({ item }) => (

@@ -11,6 +11,7 @@ import {
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { Ionicons } from '@expo/vector-icons';
 import { useTranslation } from 'react-i18next';
+import { RollInGroup } from '../components/RollIn';
 import { useAuth } from '../context/AuthContext';
 import { useFamily } from '../context/FamilyContext';
 import API, { SERVER_URL } from '../api/axios';
@@ -168,6 +169,7 @@ export default function FamilyScreen({ navigation }) {
         {/* Members */}
         <Text style={styles.sectionHeader}>{t('family.members_count', { count: members.length })}</Text>
         <View style={styles.card}>
+          <RollInGroup>
           {members.map((m, i) => (
             <React.Fragment key={m.id}>
               <MemberRow
@@ -178,6 +180,7 @@ export default function FamilyScreen({ navigation }) {
               {i < members.length - 1 && <View style={styles.divider} />}
             </React.Fragment>
           ))}
+          </RollInGroup>
         </View>
 
         {/* Danger zone — switching family takes you out of this one, so it lives here */}

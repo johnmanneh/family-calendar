@@ -20,6 +20,8 @@ import { useAuth } from '../context/AuthContext';
 import { useStyles } from '../styles/GroupsScreen.styles';
 
 import TopCard from '../components/ui/TopCard';
+import TreadmillList from '../components/TreadmillList';
+import { RollInGroup } from '../components/RollIn';
 // ─── Helpers ─────────────────────────────────────────────────────────────────
 
 function formatDate(dateStr) {
@@ -180,6 +182,7 @@ function GroupDetail({ group, onBack, navigation }) {
         <ActivityIndicator color="#1a8fa8" style={{ marginTop: 12 }} />
       ) : (
         <View style={styles.membersCard}>
+          <RollInGroup>
           {members.map((m, i) => (
             <React.Fragment key={m.id}>
               <MemberItem
@@ -192,6 +195,7 @@ function GroupDetail({ group, onBack, navigation }) {
               {i < members.length - 1 && <View style={styles.divider} />}
             </React.Fragment>
           ))}
+          </RollInGroup>
         </View>
       )}
 
@@ -201,6 +205,7 @@ function GroupDetail({ group, onBack, navigation }) {
         <Text style={styles.emptyText}>{t('groups.no_events')}</Text>
       ) : (
         <ScrollView contentContainerStyle={{ paddingBottom: 40 }}>
+          <RollInGroup startIndex={members.length}>
           {events.map(ev => (
             <TouchableOpacity
               key={ev.id}
@@ -218,6 +223,7 @@ function GroupDetail({ group, onBack, navigation }) {
               </View>
             </TouchableOpacity>
           ))}
+          </RollInGroup>
         </ScrollView>
       )}
 
@@ -352,7 +358,7 @@ export default function GroupsScreen({ navigation }) {
       ) : loading ? (
         <ActivityIndicator size="large" color="#1a8fa8" style={{ marginTop: 60 }} />
       ) : (
-        <FlatList
+        <TreadmillList
           data={groups}
           keyExtractor={g => String(g.id)}
           contentContainerStyle={styles.listContent}

@@ -15,6 +15,7 @@ import { useSSE } from '../context/SSEContext';
 import { useStyles } from '../styles/PendingScreen.styles';
 
 import TopCard from '../components/ui/TopCard';
+import { RollInGroup } from '../components/RollIn';
 // ─── Helpers ────────────────────────────────────────────────────────────────
 
 function formatDate(dateStr) {
@@ -287,7 +288,7 @@ export default function PendingScreen({ navigation }) {
               <Text style={styles.emptyText}>{t('pending.nothing_pending')}</Text>
             </View>
           ) : (
-            <>
+            <RollInGroup>
               {/* ── 1. Event invitations + cascading tasks ── */}
               {invitations.map(inv => {
                 const cascadedTasks = tasksByEventId[inv.id] || [];
@@ -512,7 +513,7 @@ export default function PendingScreen({ navigation }) {
                   </View>
                 );
               })}
-            </>
+            </RollInGroup>
           )}
         </ScrollView>
       )}
