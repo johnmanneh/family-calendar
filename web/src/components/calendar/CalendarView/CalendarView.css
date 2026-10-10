@@ -125,8 +125,20 @@
   .fc .fc-toolbar { gap: 6px; }
   .fc .fc-toolbar-title { font-size: 16px; }
   .fc .fc-button { padding: 4px 10px; font-size: 13px; border-radius: 10px; }
-  /* App colours instead of FullCalendar's default blue */
-  .fc .fc-button-primary { background: #f2f2f7; border-color: transparent; color: #1d1d1f; box-shadow: none; }
-  .fc .fc-button-primary:not(:disabled).fc-button-active,
-  .fc .fc-button-primary:not(:disabled):active { background: #1a8fa8; color: #fff; border-color: transparent; }
+  /* App colours instead of FullCalendar's default blue (FullCalendar reads these variables) */
+  .fc {
+    --fc-button-bg-color: #f2f2f7;
+    --fc-button-border-color: transparent;
+    --fc-button-text-color: #1d1d1f;
+    --fc-button-hover-bg-color: #e5e5ea;
+    --fc-button-hover-border-color: transparent;
+    --fc-button-active-bg-color: #1a8fa8;
+    --fc-button-active-border-color: transparent;
+  }
+  /* the desktop styles above use !important, so the phone overrides must too */
+  .fc .fc-button-primary { background-color: #f2f2f7 !important; border-color: transparent !important; color: #1d1d1f !important; }
+  .fc .fc-button-primary:hover { background-color: #e5e5ea !important; }
+  .fc .fc-button-primary.fc-button-active,
+  .fc .fc-button-primary:not(:disabled):active { background-color: #1a8fa8 !important; color: #fff !important; }
+  .fc .fc-button:focus { box-shadow: none !important; }
 }

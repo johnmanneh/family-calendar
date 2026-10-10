@@ -20,12 +20,13 @@ function initials(msg) {
 
 // ─── SidebarChat ──────────────────────────────────────────────────────────────
 
-const SidebarChat = () => {
+// startOpen: used by the phone layout, where the chat icon opens this as a full sheet
+const SidebarChat = ({ startOpen = false }) => {
   const { fetchMessages, sendMessage, onChatMessage } = useEvents();
   const { user } = useAuth();
   const { openNewEvent } = useUI();
 
-  const [open,        setOpen]       = useState(false);
+  const [open,        setOpen]       = useState(startOpen);
   const [messages,    setMessages]   = useState([]);
   const [draft,       setDraft]      = useState('');
   const [sending,     setSending]    = useState(false);

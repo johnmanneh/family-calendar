@@ -29,12 +29,13 @@ function timeAgo(dateStr) {
 
 // ─── SidebarNotifications ─────────────────────────────────────────────────────
 
-const SidebarNotifications = () => {
+// startOpen: used by the phone layout, where the bell opens this as a full sheet
+const SidebarNotifications = ({ startOpen = false, onUnreadChange }) => {
   const { fetchNotifications, markAllNotificationsRead, markNotificationRead, openEventById } = useEvents();
 
   const [notifications, setNotifications] = useState([]);
   const [unreadCount,   setUnreadCount]   = useState(0);
-  const [open,          setOpen]          = useState(false);
+  const [open,          setOpen]          = useState(startOpen);
   const [loading,       setLoading]       = useState(false);
 
   const load = useCallback(async () => {
@@ -47,6 +48,8 @@ const SidebarNotifications = () => {
       setLoading(false);
     }
   }, [fetchNotifications]);
+
+  useEffect(() => { onUnreadChange?.(unreadCount); }, [unreadCount]);
 
   // Load on mount and whenever the panel opens
   useEffect(() => { load(); }, [load]);

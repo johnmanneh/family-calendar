@@ -4,11 +4,16 @@ import { CATEGORIES } from '../Sidebar/Categories';
 import Icon from '../../common/Icon/Icon';
 import './CalendarToolbar.css';
 
-const CalendarToolbar = ({ scope = 'all', setScope, groups = [] }) => {
+// showSearch: on phones the search bar + category chips only appear after tapping 🔍
+const CalendarToolbar = ({ scope = 'all', setScope, groups = [], showSearch = true, autoFocusSearch = false }) => {
   const { searchQuery, setSearchQuery, selectedCategory, setSelectedCategory } = useUI();
+
+  // Nothing to show (phone, search closed, no groups) → no empty bar
+  if (!showSearch && !(groups.length > 0 && setScope)) return null;
 
   return (
     <div className="calendar-toolbar">
+      {showSearch && (
       <div className="calendar-toolbar-search-wrap">
         <span className="calendar-toolbar-search-icon"><Icon name="search" size={14} color="#8e8e93" /></span>
         <input
@@ -17,6 +22,7 @@ const CalendarToolbar = ({ scope = 'all', setScope, groups = [] }) => {
           placeholder="Search events…"
           value={searchQuery}
           onChange={e => setSearchQuery(e.target.value)}
+          autoFocus={autoFocusSearch}
         />
         {searchQuery && (
           <button
@@ -28,6 +34,7 @@ const CalendarToolbar = ({ scope = 'all', setScope, groups = [] }) => {
           </button>
         )}
       </div>
+      )}
 
       {/* Scope chips — only for people in a group: All · Family · <groups> */}
       {groups.length > 0 && setScope && (
@@ -49,6 +56,7 @@ const CalendarToolbar = ({ scope = 'all', setScope, groups = [] }) => {
         </div>
       )}
 
+      {showSearch && (
       <div className="calendar-toolbar-chips">
         <button
           className={`calendar-toolbar-chip${!selectedCategory ? ' calendar-toolbar-chip-active' : ''}`}
@@ -67,6 +75,7 @@ const CalendarToolbar = ({ scope = 'all', setScope, groups = [] }) => {
           </button>
         ))}
       </div>
+      )}
     </div>
   );
 };

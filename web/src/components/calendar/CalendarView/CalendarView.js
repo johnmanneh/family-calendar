@@ -43,7 +43,7 @@ const buildRRule = (recurrence, start_date, recurrence_end_date) => {
   return rule;
 };
 
-const CalendarView = () => {
+const CalendarView = ({ showSearch = true, autoFocusSearch = false }) => {
   const { openNewEvent, openEditEvent, selectedMember, searchQuery, selectedCategory } = useUI();
   const { events, fetchEvents, selectEvent } = useEvents();
   const { groups } = useGroups();
@@ -222,7 +222,7 @@ const CalendarView = () => {
 
   return (
     <div className="calendar-view">
-      <CalendarToolbar scope={scope} setScope={setScope} groups={groups} />
+      <CalendarToolbar scope={scope} setScope={setScope} groups={groups} showSearch={showSearch} autoFocusSearch={autoFocusSearch} />
       <FullCalendar
         plugins={[dayGridPlugin, timeGridPlugin, listPlugin, interactionPlugin, rrulePlugin]}
         eventSources={[{ events: calendarEvents }]}
