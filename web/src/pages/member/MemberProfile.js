@@ -28,10 +28,18 @@ const MemberProfile = () => {
   const [profileError, setProfileError] = useState("");
   const [avatarError, setAvatarError] = useState("");
   const [profileData, setProfileData] = useState({
+    first_name: "",
+    last_name: "",
     age: "",
     address: "",
     occupation: ""
   });
+  // Short "Saved" confirmations per card
+  const [saved, setSaved] = useState({});
+  const flashSaved = (key) => {
+    setSaved(s => ({ ...s, [key]: true }));
+    setTimeout(() => setSaved(s => ({ ...s, [key]: false })), 2000);
+  };
   const [colorLoading, setColorLoading] = useState(false);
   const [profileLoading, setProfileLoading] = useState(false);
   const [circleLoading, setCircleLoading] = useState(false);
@@ -52,6 +60,26 @@ const MemberProfile = () => {
   // Own profile opens straight on Settings; someone else's on "Coming up"
   useEffect(() => { setActiveTab(isOwnProfile ? "settings" : "personal"); }, [isOwnProfile]);
 
+  // Start the colour picker on the member's current colour
+  useEffect(() => { if (member?.color) setSelectedColor(member.color); }, [member?.color]);
+
+  // Fill the profile form with what's saved
+  useEffect(() => {
+    if (!isOwnProfile) return;
+    API.get("/auth/me")
+      .then(res => {
+        const u = res.data.user || {};
+        setProfileData({
+          first_name: u.first_name || "",
+          last_name:  u.last_name  || "",
+          age:        u.age ?? "",
+          address:    u.address    || "",
+          occupation: u.occupation || "",
+        });
+      })
+      .catch(() => {});
+  }, [isOwnProfile]);
+
   useEffect(() => {
     const fetchData = async () => {
       try {
@@ -70,12 +98,19 @@ const MemberProfile = () => {
     fetchData();
   }, [userId]);
 
-  const handleColorSave = async () => {
+  // Tap a colour → saved straight away (same as the app)
+  const handleColorPick = async (color) => {
+    if (color === selectedColor || colorLoading) return;
+    const previous = selectedColor;
+    setSelectedColor(color);
+    setColorError("");
     setColorLoading(true);
     try {
-      await API.put("/family/member/color", { color: selectedColor });
+      await API.put("/family/member/color", { color });
       await fetchFamily();
+      flashSaved("color");
     } catch (err) {
+      setSelectedColor(previous);
       setColorError(err.response?.data?.message || "Could not save color");
     } finally {
       setColorLoading(false);
@@ -109,15 +144,30 @@ const MemberProfile = () => {
   };
 
   const handleProfileSave = async () => {
+    setProfileError("");
+    if (!profileData.first_name.trim()) {
+      setProfileError("First name can't be empty");
+      return;
+    }
+    const age = String(profileData.age ?? "").trim();
+    if (age && !/^\d{1,3}$/.test(age)) {
+      setProfileError("Age must be a number");
+      return;
+    }
     setProfileLoading(true);
-    // Only send fields that have values
-    const fieldsToUpdate = {};
-    if (profileData.age) fieldsToUpdate.age = profileData.age;
-    if (profileData.address) fieldsToUpdate.address = profileData.address;
-    if (profileData.occupation) fieldsToUpdate.occupation = profileData.occupation;
+    // Empty optional fields are cleared (null) — '' would break the integer age column
+    const fieldsToUpdate = {
+      first_name: profileData.first_name.trim(),
+      last_name:  profileData.last_name.trim()  || null,
+      age:        age ? Number(age) : null,
+      address:    profileData.address.trim()    || null,
+      occupation: profileData.occupation.trim() || null,
+    };
 
     try {
       await API.put("/auth/profile", fieldsToUpdate);
+      await fetchFamily(); // name changes show everywhere
+      flashSaved("profile");
     } catch (err) {
       setProfileError(err.response?.data?.message || "Something went wrong");
     } finally {
@@ -138,23 +188,53 @@ const MemberProfile = () => {
 
   const handleAvatarChange = (e) => {
     const file = e.target.files[0];
+    e.target.value = ""; // allow picking the same file again
     if (!file) return;
+    if (!file.type.startsWith("image/")) {
+      setAvatarError("Please choose an image");
+      return;
+    }
+    setAvatarError("");
     setAvatarFile(file);
     setAvatarPreview(URL.createObjectURL(file));
   };
 
+  // Phone photos are often several MB — shrink to a 512px JPEG before upload
+  const shrinkImage = (file) => new Promise((resolve) => {
+    const img = new Image();
+    const url = URL.createObjectURL(file);
+    img.onload = () => {
+      const max = 512;
+      const scale = Math.min(1, max / Math.max(img.width, img.height));
+      const canvas = document.createElement("canvas");
+      canvas.width = Math.round(img.width * scale);
+      canvas.height = Math.round(img.height * scale);
+      canvas.getContext("2d").drawImage(img, 0, 0, canvas.width, canvas.height);
+      URL.revokeObjectURL(url);
+      canvas.toBlob(
+        blob => resolve(blob ? new File([blob], "avatar.jpg", { type: "image/jpeg" }) : file),
+        "image/jpeg",
+        0.85
+      );
+    };
+    img.onerror = () => { URL.revokeObjectURL(url); resolve(file); };
+    img.src = url;
+  });
+
   const handleAvatarUpload = async () => {
     if (!avatarFile) return;
     setAvatarLoading(true);
+    setAvatarError("");
     try {
+      const small = await shrinkImage(avatarFile);
       const formData = new FormData();
-      formData.append("avatar", avatarFile);
-      await API.post("/auth/avatar", formData, {
-        headers: { "Content-Type": "multipart/form-data" }
-      });
+      formData.append("avatar", small);
+      // No manual Content-Type — the browser adds the multipart boundary itself
+      await API.post("/auth/avatar", formData);
       await fetchFamily();
       setAvatarFile(null);
       setAvatarPreview(null);
+      flashSaved("photo");
     } catch (err) {
       setAvatarError(err.response?.data?.message || "Failed to upload photo");
     } finally {
@@ -302,6 +382,7 @@ const MemberProfile = () => {
                   />
                 </div>
                 {avatarError && <p className="member-error">{avatarError}</p>}
+                {saved.photo && <p className="member-saved">Saved</p>}
                 {avatarFile && (
                   <Button
                     text="Save Photo"
@@ -326,16 +407,12 @@ const MemberProfile = () => {
                       selectedColor === color ? "selected" : ""
                     }`}
                     style={{ backgroundColor: color }}
-                    onClick={() => setSelectedColor(color)}
+                    onClick={() => handleColorPick(color)}
                   />
                 ))}
               </div>
               {colorError && <p className="member-error">{colorError}</p>}
-              <Button
-                text="Save Color"
-                onClick={handleColorSave}
-                loading={colorLoading}
-              />
+              {saved.color && <p className="member-saved">Saved</p>}
             </div>}
 
             {/* Circle Type Card */}
@@ -422,6 +499,26 @@ const MemberProfile = () => {
               </p>
 
               <div className="member-settings-field">
+                <label>First name</label>
+                <input
+                  type="text"
+                  placeholder="First name"
+                  value={profileData.first_name}
+                  onChange={e => setProfileData({ ...profileData, first_name: e.target.value })}
+                />
+              </div>
+
+              <div className="member-settings-field">
+                <label>Last name</label>
+                <input
+                  type="text"
+                  placeholder="Last name"
+                  value={profileData.last_name}
+                  onChange={e => setProfileData({ ...profileData, last_name: e.target.value })}
+                />
+              </div>
+
+              <div className="member-settings-field">
                 <label>Age</label>
                 <input
                   type="number"
@@ -461,6 +558,7 @@ const MemberProfile = () => {
               </div>
 
               {profileError && <p className="member-error">{profileError}</p>}
+              {saved.profile && <p className="member-saved">Saved</p>}
               <Button
                 text="Save Profile"
                 onClick={handleProfileSave}

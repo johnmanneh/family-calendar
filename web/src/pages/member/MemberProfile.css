@@ -527,3 +527,10 @@
   font-size: 14px; font-weight: 600; cursor: pointer;
 }
 .member-see-all:hover { text-decoration: underline; }
+
+.member-saved {
+  color: #34c759;
+  font-size: 13px;
+  font-weight: 600;
+  margin: 8px 0 0;
+}

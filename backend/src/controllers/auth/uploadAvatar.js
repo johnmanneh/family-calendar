@@ -1,12 +1,13 @@
 const multer = require('multer');
 const path = require('path');
+const fs = require('fs');
 const pool = require('../../config/db');
 const { successResponse, errorResponse } = require('../../utils/response/responseHandlers');
 
 // Configure storage
 const storage = multer.diskStorage({
   destination: (req, file, cb) => {
-    cb(null, path.join(__dirname, '../../../uploads/avatars'));
+    cb(null, AVATAR_DIR);
   },
   filename: (req, file, cb) => {
     const ext = path.extname(file.originalname).toLowerCase();
@@ -25,10 +26,25 @@ const fileFilter = (req, file, cb) => {
   }
 };
 
+const AVATAR_DIR = path.join(__dirname, '../../../uploads/avatars');
+fs.mkdirSync(AVATAR_DIR, { recursive: true });
+
 const upload = multer({ storage, fileFilter, limits: { fileSize: 5 * 1024 * 1024 } }); // 5MB max
 
+// Run multer ourselves so its errors come back as JSON the apps can show
+// (otherwise Express answers with an HTML error page and the app only sees "failed")
+const receiveFile = (req, res, next) => {
+  upload.single('avatar')(req, res, (err) => {
+    if (!err) return next();
+    if (err.code === 'LIMIT_FILE_SIZE') return errorResponse(res, 400, 'Photo is too large (max 5 MB)');
+    if (err.message === 'Only image files are allowed') return errorResponse(res, 400, 'Please choose a JPG, PNG, WEBP or GIF image');
+    console.error('uploadAvatar multer error:', err.message);
+    return errorResponse(res, 500, 'Could not save the photo on the server');
+  });
+};
+
 const uploadAvatar = [
-  upload.single('avatar'),
+  receiveFile,
   async (req, res) => {
     if (!req.file) {
       return errorResponse(res, 400, 'No file uploaded');
