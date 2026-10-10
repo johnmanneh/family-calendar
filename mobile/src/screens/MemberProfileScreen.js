@@ -203,7 +203,14 @@ function SettingsTab({ member, user, family, fetchFamily, onAvatarChange, naviga
     setProfileSuccess('');
     setProfileSaving(true);
     try {
-      await API.put('/auth/profile', profileData);
+      const sanitized = {
+        first_name: profileData.first_name || null,
+        last_name:  profileData.last_name  || null,
+        age:        profileData.age        || null,
+        address:    profileData.address    || null,
+        occupation: profileData.occupation || null,
+      };
+      await API.put('/auth/profile', sanitized);
       fetchFamily(); // refresh member list so name updates everywhere
       setProfileSuccess(t('common.saved'));
       setTimeout(() => setProfileSuccess(''), 2000);
