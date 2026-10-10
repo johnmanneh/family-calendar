@@ -148,10 +148,10 @@ export default function DrawerMenu({ controller, navigation, pendingCount = 0, n
   const me = members.find(m => Number(m.id) === Number(user?.id));
   const memberColor = me?.color || '#1a8fa8';
   const initials = [me?.first_name?.[0], me?.last_name?.[0]]
-    .filter(Boolean).join('').toUpperCase() || user?.email?.[0]?.toUpperCase() || '?';
+    .filter(Boolean).join('').toUpperCase() || '?';
   const displayName = me
     ? `${me.first_name || ''} ${me.last_name || ''}`.trim()
-    : user?.email || '';
+    : '';
   const avatarPhoto = me?.avatar_url
     ? (me.avatar_url.startsWith('http') ? me.avatar_url : `${SERVER_URL}${me.avatar_url}`)
     : null;
@@ -281,7 +281,6 @@ export default function DrawerMenu({ controller, navigation, pendingCount = 0, n
                 )}
                 <View style={{ flex: 1 }}>
                   <Text style={styles.userName} numberOfLines={1}>{displayName}</Text>
-                  <Text style={styles.userEmail} numberOfLines={1}>{user?.email || ''}</Text>
                 </View>
               </TouchableOpacity>
             </RollRow>

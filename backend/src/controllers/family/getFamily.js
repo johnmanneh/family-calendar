@@ -22,7 +22,7 @@ const getFamily = async (req, res) => {
 
     // Get all members of the family
     const members = await pool.query(
-      `SELECT u.id, u.first_name, u.last_name, u.email, u.avatar_url, fm.role, fm.color, fm.circle_type, fm.relationship
+      `SELECT u.id, u.first_name, u.last_name, u.avatar_url, fm.role, fm.color, fm.circle_type, fm.relationship
        FROM users u
        JOIN family_members fm ON u.id = fm.user_id
        WHERE fm.family_id = $1`,

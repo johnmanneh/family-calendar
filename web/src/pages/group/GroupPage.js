@@ -140,7 +140,6 @@ const GroupPage = () => {
                       {m.first_name} {m.last_name}
                       {isMe && <span className="group-you">You</span>}
                     </p>
-                    <p className="group-member-email">{m.email}</p>
                   </div>
                   {m.role === "admin" && <span className="group-role">Admin</span>}
                   {isAdmin && !isMe && m.role !== "admin" && (

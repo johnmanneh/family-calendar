@@ -37,7 +37,7 @@ function MemberItem({ member, styles, isAdmin, isSelf, onRemove }) {
   const color    = member.color || '#1a8fa8';
   const initials = [member.first_name?.[0], member.last_name?.[0]]
     .filter(Boolean).join('').toUpperCase() || '?';
-  const name = [member.first_name, member.last_name].filter(Boolean).join(' ') || member.email;
+  const name = [member.first_name, member.last_name].filter(Boolean).join(' ') || '?';
 
   return (
     <View style={styles.memberRow}>
@@ -46,7 +46,6 @@ function MemberItem({ member, styles, isAdmin, isSelf, onRemove }) {
       </View>
       <View style={{ flex: 1 }}>
         <Text style={styles.memberName}>{name}</Text>
-        {member.email ? <Text style={styles.memberEmail} numberOfLines={1}>{member.email}</Text> : null}
       </View>
       {member.role === 'admin' && (
         <View style={styles.adminBadge}>
@@ -88,7 +87,7 @@ function GroupDetail({ group, onBack, navigation }) {
   const isGroupAdmin = group.role === 'admin';
 
   const handleRemoveMember = (member) => {
-    const name = [member.first_name, member.last_name].filter(Boolean).join(' ') || member.email;
+    const name = [member.first_name, member.last_name].filter(Boolean).join(' ') || '?';
     Alert.alert(
       'Remove Member',
       `Remove ${name} from ${group.name}?`,

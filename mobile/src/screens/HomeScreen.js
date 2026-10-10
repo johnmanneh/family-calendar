@@ -95,7 +95,6 @@ function MemberBubble({ member, selected, onPress, onLongPress }) {
   const styles = useStyles();
   const fullName = member.name
     || [member.first_name, member.last_name].filter(Boolean).join(' ')
-    || member.email
     || '?';
   const initials = fullName
     .split(' ')

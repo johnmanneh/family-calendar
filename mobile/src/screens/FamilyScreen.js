@@ -35,7 +35,7 @@ function MemberRow({ member, isMe, navigation }) {
   const photo    = avatarUrl(member.avatar_url);
   const initials = [member.first_name?.[0], member.last_name?.[0]]
     .filter(Boolean).join('').toUpperCase() || '?';
-  const name = [member.first_name, member.last_name].filter(Boolean).join(' ') || member.email;
+  const name = [member.first_name, member.last_name].filter(Boolean).join(' ') || '?';
 
   return (
     <TouchableOpacity
@@ -52,14 +52,11 @@ function MemberRow({ member, isMe, navigation }) {
         </View>
       )}
 
-      {/* Name + email */}
+      {/* Name */}
       <View style={styles.memberBody}>
         <Text style={styles.memberName}>
           {name}{isMe ? '  (You)' : ''}
         </Text>
-        {member.email ? (
-          <Text style={styles.memberEmail} numberOfLines={1}>{member.email}</Text>
-        ) : null}
       </View>
 
       {/* Role badge */}

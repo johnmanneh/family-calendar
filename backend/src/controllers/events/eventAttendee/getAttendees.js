@@ -7,7 +7,7 @@ const getAttendees = async (req, res) => {
 
   try {
     const result = await pool.query(
-      `SELECT u.id, u.first_name, u.last_name, u.email, fm.color, ea.status
+      `SELECT u.id, u.first_name, u.last_name, fm.color, ea.status
        FROM event_attendees ea
        JOIN users u ON ea.user_id = u.id
        JOIN events e ON e.id = ea.event_id

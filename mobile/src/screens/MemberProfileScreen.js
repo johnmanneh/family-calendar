@@ -612,7 +612,6 @@ export default function MemberProfileScreen({ route, navigation }) {
         <Avatar member={displayMember} size={80} />
         <Text style={styles.memberName}>{displayName}</Text>
         {member?.relationship ? <Text style={styles.memberRelationship}>{member.relationship}</Text> : null}
-        {member?.email        ? <Text style={styles.memberEmail}>{member.email}</Text>               : null}
       </View>
 
       </TopCard>
