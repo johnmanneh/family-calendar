@@ -648,7 +648,7 @@ export default function MemberProfileScreen({ route, navigation }) {
                   stripe={ev.color || '#1a8fa8'}
                   title={ev.title}
                   subtitle={`${formatDate(ev.start_date)}${ev.location ? `  ·  ${ev.location}` : ''}`}
-                  onPress={ev.is_busy ? undefined : () => navigation.navigate('EventDetails', { eventId: ev.id })}
+                  onPress={ev.is_busy ? undefined : () => navigation.navigate('EventDetails', { eventId: ev.id, readOnly: true })}
                 />
               );
             }

@@ -291,7 +291,8 @@ function TaskRow({ task, eventId, onRefresh, currentUserId }) {
 export default function EventDetailsScreen({ route, navigation }) {
   const { t } = useTranslation();
   const styles = useStyles();
-  const { eventId } = route.params;
+  // readOnly: opened from someone's profile → just look, no actions
+  const { eventId, readOnly = false } = route.params;
   const { user } = useAuth();
   const { members } = useFamily();
   const insets = useSafeAreaInsets();
@@ -419,6 +420,8 @@ export default function EventDetailsScreen({ route, navigation }) {
 
   const color = event.color || '#1a8fa8';
   const attendees = event.attendees || [];
+  // Only the person who created the event can edit or delete it
+  const isMine = !readOnly && Number(event.created_by) === Number(user?.id);
   const tasks = event.tasks || [];
 
   const timeStr = event.is_all_day
@@ -563,13 +566,13 @@ export default function EventDetailsScreen({ route, navigation }) {
           {/* Always render the row for creators so the "+" button is reachable
               even when the event has no attendees yet.  Non-creators only see
               this row when there are attendees to show. */}
-          {(attendees.length > 0 || Number(event.created_by) === Number(user?.id)) && (
+          {(attendees.length > 0 || isMine) && (
             <InfoRow icon="people-outline">
               <View style={styles.attendeesRow}>
 
                 {/* Existing attendees — long-press to remove (creator only) */}
                 {attendees.map(a => {
-                  const isCreator = Number(event.created_by) === Number(user?.id);
+                  const isCreator = isMine;
                   const attendeeId = a.user_id || a.id;
 
                   if (!isCreator) {
@@ -611,7 +614,7 @@ export default function EventDetailsScreen({ route, navigation }) {
                 })}
 
                 {/* "+" bubble — only the creator sees this */}
-                {Number(event.created_by) === Number(user?.id) && (
+                {isMine && (
                   <TouchableOpacity
                     style={styles.addAttendeeBubble}
                     onPress={() => setShowAddModal(true)}
@@ -744,21 +747,30 @@ export default function EventDetailsScreen({ route, navigation }) {
 
         </View>
 
-        {/* ── Actions — Edit + Export + Delete ── */}
-        <View style={styles.actions}>
-          <TouchableOpacity
-            style={styles.editBtn}
-            onPress={() => navigation.navigate('EventForm', { event })}
-          >
-            <Text style={styles.editBtnText}>{t('common.edit')}</Text>
-          </TouchableOpacity>
-          <TouchableOpacity style={styles.exportBtn} onPress={handleExportToCalendar}>
-            <Text style={styles.exportBtnText}>{t('events.add_to_calendar')}</Text>
-          </TouchableOpacity>
-          <TouchableOpacity style={styles.deleteBtn} onPress={handleDelete}>
-            <Text style={styles.deleteBtnText}>{t('common.delete')}</Text>
-          </TouchableOpacity>
-        </View>
+        {/* ── Actions ──
+            Creator:        Edit · + Calendar · Delete
+            Everyone else:  + Calendar (copy it to their phone's calendar)
+            From a profile: nothing — view only, just Back */}
+        {!readOnly && (
+          <View style={styles.actions}>
+            {isMine && (
+              <TouchableOpacity
+                style={styles.editBtn}
+                onPress={() => navigation.navigate('EventForm', { event })}
+              >
+                <Text style={styles.editBtnText}>{t('common.edit')}</Text>
+              </TouchableOpacity>
+            )}
+            <TouchableOpacity style={styles.exportBtn} onPress={handleExportToCalendar}>
+              <Text style={styles.exportBtnText}>{t('events.add_to_calendar')}</Text>
+            </TouchableOpacity>
+            {isMine && (
+              <TouchableOpacity style={styles.deleteBtn} onPress={handleDelete}>
+                <Text style={styles.deleteBtnText}>{t('common.delete')}</Text>
+              </TouchableOpacity>
+            )}
+          </View>
+        )}
 
       </ScrollView>
     </SafeAreaView>
