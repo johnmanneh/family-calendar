@@ -34,6 +34,21 @@ const EventModal = () => {
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState("");
 
+  // People you share a group with (outside your family) can be invited too
+  const [groupPeople, setGroupPeople] = useState([]);
+  useEffect(() => {
+    if (!isEventModalOpen) return;
+    API.get("/groups/people")
+      .then(res => setGroupPeople(res.data.people || []))
+      .catch(() => setGroupPeople([]));
+  }, [isEventModalOpen]);
+  const attendeeOptions = [
+    ...members,
+    ...groupPeople
+      .filter(p => !members.some(m => Number(m.id) === Number(p.id)))
+      .map(p => ({ ...p, fromGroup: true })),
+  ];
+
   const [formData, setFormData] = useState({
     title: "",
     description: "",
@@ -273,7 +288,7 @@ const EventModal = () => {
           <div className="modal-field">
             <label>Who's attending?</label>
             <div className="modal-attendees">
-              {members.map(member => (
+              {attendeeOptions.map(member => (
                 <div
                   key={member.id}
                   className={`modal-attendee ${
@@ -298,12 +313,17 @@ const EventModal = () => {
                     className="modal-attendee-avatar"
                     style={{ background: member.color || "#1a8fa8" }}
                   >
-                    {member.first_name[0]}
-                    {member.last_name[0]}
+                    {(member.first_name || "?")[0]}
+                    {(member.last_name || "")[0] || ""}
                   </div>
                   <span className="modal-attendee-name">
                     {member.first_name}
                   </span>
+                  {member.fromGroup && (
+                    <span className="modal-attendee-group" title={(member.group_names || []).join(", ")}>
+                      <Icon name="users" size={10} /> {(member.group_names || [])[0]}
+                    </span>
+                  )}
                   {selectedAttendees.includes(member.id) && (
                     <div className="modal-attendee-check">✓</div>
                   )}

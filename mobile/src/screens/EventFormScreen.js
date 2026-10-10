@@ -199,6 +199,13 @@ export default function EventFormScreen({ route, navigation }) {
   // with that group (no copy), e.g. "Big Family" so grandma sees it too.
   // Only the event's creator may share it (the server enforces this as well).
   const [myGroups, setMyGroups] = useState([]);
+  const [groupPeople, setGroupPeople] = useState([]);
+  const attendeeOptions = [
+    ...members,
+    ...groupPeople
+      .filter(p => !members.some(m => Number(m.id) === Number(p.id)))
+      .map(p => ({ ...p, fromGroup: true })),
+  ];
   const initialGroupIds = isEdit ? (event.group_ids || []).map(Number) : [];
   const [selectedGroups, setSelectedGroups] = useState(initialGroupIds);
   const canShare = !isEdit || Number(event.created_by) === Number(user?.id);
@@ -207,6 +214,10 @@ export default function EventFormScreen({ route, navigation }) {
     API.get('/groups')
       .then(res => setMyGroups(res.data.groups || []))
       .catch(() => setMyGroups([]));
+    // People you share a group with (outside your family) can be invited too
+    API.get('/groups/people')
+      .then(res => setGroupPeople(res.data.people || []))
+      .catch(() => setGroupPeople([]));
   }, []);
 
   const toggleGroup = (id) => {
@@ -501,7 +512,7 @@ export default function EventFormScreen({ route, navigation }) {
         <View style={styles.card}>
           <Text style={styles.fieldLabel}>{t('events.attendees')}</Text>
           <View style={styles.attendeeRow}>
-            {members.map(m => {
+            {attendeeOptions.map(m => {
               const initials = [m.first_name?.[0], m.last_name?.[0]].filter(Boolean).join('').toUpperCase();
               const color = m.color || '#1a8fa8';
               const isSelected = selectedAttendees.includes(Number(m.id));
@@ -524,6 +535,11 @@ export default function EventFormScreen({ route, navigation }) {
                     )}
                   </View>
                   <Text style={styles.attendeeName} numberOfLines={1}>{m.first_name}</Text>
+                  {m.fromGroup && (
+                    <Text style={styles.attendeeGroup} numberOfLines={1}>
+                      <Ionicons name="people-outline" size={9} /> {(m.group_names || [])[0]}
+                    </Text>
+                  )}
                 </TouchableOpacity>
               );
             })}

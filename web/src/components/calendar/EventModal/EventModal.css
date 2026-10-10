@@ -458,3 +458,16 @@
     border-radius: 0; overflow-y: auto;
   }
 }
+
+/* Someone from one of your groups (not your family) */
+.modal-attendee-group {
+  display: inline-flex;
+  align-items: center;
+  gap: 3px;
+  font-size: 10px;
+  color: #8e8e93;
+  max-width: 76px;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}

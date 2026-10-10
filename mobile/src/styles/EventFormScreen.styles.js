@@ -91,6 +91,7 @@ const make = c => StyleSheet.create({
     borderWidth: 1.5, borderColor: '#fff',
   },
   attendeeName: { fontSize: 11, color: c.textSub, marginTop: 4, maxWidth: 52, textAlign: 'center' },
+  attendeeGroup: { fontSize: 9, color: c.textSub, opacity: 0.8, maxWidth: 60, textAlign: 'center' },
 
   taskRow: { borderTopWidth: 1, borderTopColor: c.separator, paddingTop: 10, marginTop: 4, marginBottom: 4 },
   taskTitleInput: {

@@ -176,8 +176,18 @@ const getEvents = async (req, res) => {
       from_group: false,
     }));
 
+    // Events from other families you've accepted directly (invited as an
+    // attendee by someone you share a group with) belong in your calendar too
+    const accepted = await pool.query(
+      `SELECT event_id FROM event_attendees WHERE user_id = $1 AND status = 'accepted'`,
+      [userId]
+    );
+
     const haveIds = new Set(familyEvents.map(e => Number(e.id)));
-    const missingIds = Object.keys(groupIdsByEvent).map(Number).filter(id => !haveIds.has(id));
+    const missingIds = [...new Set([
+      ...Object.keys(groupIdsByEvent).map(Number),
+      ...accepted.rows.map(r => Number(r.event_id)),
+    ])].filter(id => !haveIds.has(id));
 
     let groupEvents = [];
     if (missingIds.length > 0) {
