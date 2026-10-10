@@ -59,6 +59,11 @@ const make = c => StyleSheet.create({
   scroll: { flex: 1 },
   scrollContent: { paddingHorizontal: 16, paddingTop: 8, paddingBottom: 40 },
   listContent: { paddingHorizontal: 16 },
+  seeAllBtn: {
+    flexDirection: 'row', alignItems: 'center', justifyContent: 'center', gap: 4,
+    paddingVertical: 12, marginTop: 4,
+  },
+  seeAllText: { color: '#1a8fa8', fontSize: 15, fontWeight: '600' },
   spinner: { marginTop: 60 },
 
   // ── Section header ───────────────────────────────────────────────────────

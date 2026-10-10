@@ -232,7 +232,10 @@
     "could_not_upload": "Foto konnte nicht hochgeladen werden",
     "take_photo": "Foto aufnehmen",
     "choose_library": "Aus Bibliothek wählen",
-    "change_photo_title": "Foto ändern"
+    "change_photo_title": "Foto ändern",
+    "coming_up": "Demnächst",
+    "nothing_coming_up": "Nichts geplant",
+    "see_all": "Alle Termine von {{name}}"
   },
   "groups": {
     "title": "Gruppen",

@@ -552,9 +552,6 @@ export default function MemberProfileScreen({ route, navigation }) {
 
   const displayMember = { ...member, avatar_url: localAvatarUrl };
 
-  // ── Tabs ────────────────────────────────────────────────────────────────
-  const [activeTab, setActiveTab] = useState('personal');
-
   // ── Personal tab data ────────────────────────────────────────────────────
   const [events,    setEvents]    = useState([]);
   const [tasks,     setTasks]     = useState([]);
@@ -577,9 +574,23 @@ export default function MemberProfileScreen({ route, navigation }) {
     }
   }, [memberId]);
 
-  useEffect(() => { fetchData(); }, [fetchData]);
+  useEffect(() => { if (!isOwnProfile) fetchData(); else setLoading(false); }, [fetchData, isOwnProfile]);
 
   const onRefresh = () => { setRefreshing(true); fetchData(); };
+
+  // ── Coming up: next 3 of their events + tasks, soonest first ────────────
+  const upcoming = [
+    ...events.map(ev => ({ kind: 'event', key: `e-${ev.id}`, when: ev.start_date, ev })),
+    ...tasks.map(tk => ({ kind: 'task', key: `t-${tk.id}`, when: tk.start_date || tk.due_date, tk })),
+  ]
+    .sort((a, b) => {
+      if (!a.when) return 1;            // undated tasks go last
+      if (!b.when) return -1;
+      return new Date(a.when) - new Date(b.when);
+    })
+    .slice(0, 3);
+
+  const firstName = member?.first_name || displayName;
 
   return (
     <SafeAreaView style={styles.container}>
@@ -603,82 +614,12 @@ export default function MemberProfileScreen({ route, navigation }) {
         {member?.email        ? <Text style={styles.memberEmail}>{member.email}</Text>               : null}
       </View>
 
-      {/* ── Tab bar ── */}
-      <View style={styles.tabBar}>
-        <TouchableOpacity
-          style={[styles.tab, activeTab === 'personal' && styles.tabActive]}
-          onPress={() => setActiveTab('personal')}
-        >
-          <Text style={[styles.tabLabel, activeTab === 'personal' && styles.tabLabelActive]}>{t('profile.personal')}</Text>
-        </TouchableOpacity>
-        {isOwnProfile && (
-          <TouchableOpacity
-            style={[styles.tab, activeTab === 'settings' && styles.tabActive]}
-            onPress={() => setActiveTab('settings')}
-          >
-            <Text style={[styles.tabLabel, activeTab === 'settings' && styles.tabLabelActive]}>{t('profile.settings')}</Text>
-          </TouchableOpacity>
-        )}
-      </View>
       </TopCard>
 
-      {/* ── Tab content ── */}
-      {activeTab === 'personal' ? (
-        loading ? (
-          <ActivityIndicator size="large" color="#1a8fa8" style={styles.spinner} />
-        ) : (
-          <TreadmillList
-            data={[
-              { type: 'section', key: 'sh-ev', label: t('home.events') },
-              ...(events.length
-                ? events.map(ev => ({ type: 'event', key: `e-${ev.id}`, ev }))
-                : [{ type: 'empty', key: 'no-ev', label: t('common.no_events') }]),
-              { type: 'section', key: 'sh-tk', label: t('home.tasks') },
-              ...(tasks.length
-                ? tasks.map(tk => ({ type: 'task', key: `t-${tk.id}`, tk }))
-                : [{ type: 'empty', key: 'no-tk', label: t('common.no_tasks') }]),
-            ]}
-            keyExtractor={item => item.key}
-            contentContainerStyle={styles.listContent}
-            refreshing={refreshing}
-            onRefresh={onRefresh}
-            renderItem={({ item }) => {
-              if (item.type === 'section') return <SectionHeader>{item.label}</SectionHeader>;
-              if (item.type === 'empty')   return <Text style={styles.emptyText}>{item.label}</Text>;
-              if (item.type === 'event') {
-                const ev = item.ev;
-                return (
-                  <ListCard
-                    stripe={ev.color || '#1a8fa8'}
-                    title={ev.title}
-                    subtitle={`${formatDate(ev.start_date)}${ev.location ? `  ·  ${ev.location}` : ''}`}
-                    onPress={() => navigation.navigate('EventDetails', { eventId: ev.id })}
-                  />
-                );
-              }
-              const tk = item.tk;
-              const st = TASK_BADGE[tk.status];
-              return (
-                <ListCard
-                  stripe={memberColor}
-                  title={tk.title}
-                  subtitle={tk.event_title || t('home.no_due_date')}
-                  badge={st ? { label: t(st.key), color: st.color } : null}
-                />
-              );
-            }}
-            ListFooterComponent={
-              isAdmin && !isOwnProfile ? (
-                <AdminCircleControl
-                  memberId={memberId}
-                  currentCircle={member?.circle_type}
-                  fetchFamily={fetchFamily}
-                />
-              ) : null
-            }
-          />
-        )
-      ) : (
+      {/* ── Content ──
+          Own profile  → Settings (photo, colour, family, language, account)
+          Someone else → what's coming up for them + admin circle control */}
+      {isOwnProfile ? (
         <SettingsTab
           member={displayMember}
           user={user}
@@ -687,6 +628,62 @@ export default function MemberProfileScreen({ route, navigation }) {
           onAvatarChange={setLocalAvatarUrl}
           navigation={navigation}
         />
+      ) : loading ? (
+        <ActivityIndicator size="large" color="#1a8fa8" style={styles.spinner} />
+      ) : (
+        <ScrollView
+          style={styles.scroll}
+          contentContainerStyle={styles.scrollContent}
+          refreshControl={<RefreshControl refreshing={refreshing} onRefresh={onRefresh} tintColor="#1a8fa8" />}
+        >
+          <SectionHeader>{t('profile.coming_up')}</SectionHeader>
+          {upcoming.length === 0 ? (
+            <Text style={styles.emptyText}>{t('profile.nothing_coming_up')}</Text>
+          ) : upcoming.map(item => {
+            if (item.kind === 'event') {
+              const ev = item.ev;
+              return (
+                <ListCard
+                  key={item.key}
+                  stripe={ev.color || '#1a8fa8'}
+                  title={ev.title}
+                  subtitle={`${formatDate(ev.start_date)}${ev.location ? `  ·  ${ev.location}` : ''}`}
+                  onPress={ev.is_busy ? undefined : () => navigation.navigate('EventDetails', { eventId: ev.id })}
+                />
+              );
+            }
+            const tk = item.tk;
+            const st = TASK_BADGE[tk.status];
+            return (
+              <ListCard
+                key={item.key}
+                stripe={memberColor}
+                title={tk.title}
+                subtitle={tk.event_title || (tk.due_date ? formatDate(tk.due_date) : t('home.no_due_date'))}
+                badge={st ? { label: t(st.key), color: st.color } : null}
+              />
+            );
+          })}
+
+          {/* Full view lives on home: open it filtered to this person */}
+          <TouchableOpacity
+            style={styles.seeAllBtn}
+            onPress={() => navigation.navigate('Home', { focusMemberId: memberId })}
+            activeOpacity={0.7}
+          >
+            <Text style={styles.seeAllText}>{t('profile.see_all', { name: firstName })}</Text>
+            <Ionicons name="chevron-forward" size={16} color="#1a8fa8" />
+          </TouchableOpacity>
+
+          {/* Circle control — admins only */}
+          {isAdmin && (
+            <AdminCircleControl
+              memberId={memberId}
+              currentCircle={member?.circle_type}
+              fetchFamily={fetchFamily}
+            />
+          )}
+        </ScrollView>
       )}
 
     </SafeAreaView>

@@ -232,7 +232,10 @@
     "could_not_upload": "Could not upload photo",
     "take_photo": "Take Photo",
     "choose_library": "Choose from Library",
-    "change_photo_title": "Change Photo"
+    "change_photo_title": "Change Photo",
+    "coming_up": "Coming up",
+    "nothing_coming_up": "Nothing coming up",
+    "see_all": "See all {{name}}'s events"
   },
   "groups": {
     "title": "Groups",

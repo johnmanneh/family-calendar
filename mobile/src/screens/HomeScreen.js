@@ -380,7 +380,7 @@ const CATEGORIES = [
 
 // ─── HomeScreen ──────────────────────────────────────────────────────────────
 
-export default function HomeScreen({ navigation }) {
+export default function HomeScreen({ navigation, route }) {
   const { t } = useTranslation();
   const styles = useStyles();
   const insets = useSafeAreaInsets();
@@ -401,6 +401,15 @@ export default function HomeScreen({ navigation }) {
   const [loading, setLoading] = useState(true);
   const [refreshing, setRefreshing] = useState(false);
   const [selectedMember, setSelectedMember] = useState(null);
+  // "See all <name>'s events" on a profile → open home filtered to that person
+  useEffect(() => {
+    const id = route?.params?.focusMemberId;
+    if (id != null) {
+      setSelectedMember(id);
+      navigation.setParams({ focusMemberId: undefined });
+    }
+  }, [route?.params?.focusMemberId]);
+
   // Scope chips: 'all' | 'family' | <groupId>. Only shown when the user is in a group.
   const [myGroups, setMyGroups] = useState([]);
   const [scope, setScope] = useState('all');
