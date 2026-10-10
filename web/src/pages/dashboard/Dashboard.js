@@ -1,4 +1,5 @@
-import React, { useEffect } from "react";
+import React, { useEffect, useState } from "react";
+import useIsPhone from "../../hooks/useIsPhone";
 import { useLocation, useNavigate } from "react-router-dom";
 import { useUI } from "../../context/UIContext";
 import { useAuth } from "../../context/AuthContext";
@@ -14,8 +15,16 @@ import "./Dashboard.css";
 
 const Dashboard = () => {
   const { fetchFamily, members } = useFamily();
-  const { fetchEvents } = useEvents();
-  const { setSelectedMember } = useUI();
+  const { fetchEvents, selectedEvent, setSelectedEvent } = useEvents();
+  const { setSelectedMember, openNewEvent } = useUI();
+
+  // ── Phone layout ──────────────────────────────────────────────────────────
+  // Below 768px: header bar + full-width calendar, sidebar as a slide-in drawer,
+  // event details as a full-screen sheet, and a floating + button.
+  const isPhone = useIsPhone();
+  const [drawerOpen, setDrawerOpen] = useState(false);
+  // Opening an event (e.g. from a notification in the drawer) closes the drawer
+  useEffect(() => { if (selectedEvent) setDrawerOpen(false); }, [selectedEvent]);
   const location = useLocation();
   const navigate = useNavigate();
 
@@ -34,12 +43,47 @@ const Dashboard = () => {
   }, []);
 
   return (
-    <div className="dashboard">
-      <Sidebar />
+    <div className={`dashboard${isPhone ? " dashboard--phone" : ""}`}>
+      {/* Phone header: ☰ · WHEN */}
+      {isPhone && (
+        <header className="dashboard-phone-header">
+          <button className="dashboard-phone-menu" onClick={() => setDrawerOpen(true)} aria-label="Menu">
+            <span /><span /><span />
+          </button>
+          <span className="dashboard-phone-title">WHEN</span>
+          <span style={{ width: 40 }} />
+        </header>
+      )}
+
+      {/* Sidebar — a column on desktop, a slide-in drawer on phones */}
+      <div className={`dashboard-sidebar${drawerOpen ? " open" : ""}`}>
+        <Sidebar />
+      </div>
+      {isPhone && drawerOpen && (
+        <div className="dashboard-backdrop" onClick={() => setDrawerOpen(false)} />
+      )}
+
       <div className="calendar-container">
         <CalendarView />
       </div>
-      <EventDetails />
+
+      {/* Event details — right column on desktop, full-screen sheet on phones */}
+      <div className={`dashboard-details${selectedEvent ? " has-event" : ""}`}>
+        {isPhone && selectedEvent && (
+          <button className="dashboard-details-back" onClick={() => setSelectedEvent(null)}>
+            ← Back
+          </button>
+        )}
+        <EventDetails />
+      </div>
+
+      {/* Phone: floating + for a new event */}
+      {isPhone && !selectedEvent && (
+        <button className="dashboard-fab" onClick={() => openNewEvent()} aria-label="New event">
+          +
+        </button>
+      )}
+
       <EventModal />
       <StandaloneTaskModal />
     </div>

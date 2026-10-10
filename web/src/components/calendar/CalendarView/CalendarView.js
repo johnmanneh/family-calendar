@@ -11,6 +11,7 @@ import CalendarToolbar from "./CalendarToolbar";
 import { useGroups } from "../../../context/GroupContext";
 import { useAuth } from "../../../context/AuthContext";
 import Icon from "../../common/Icon/Icon";
+import useIsPhone from "../../../hooks/useIsPhone";
 import "./CalendarView.css";
 
 // Map recurrence value + start_date to an rrule string
@@ -46,6 +47,7 @@ const CalendarView = () => {
   const { openNewEvent, openEditEvent, selectedMember, searchQuery, selectedCategory } = useUI();
   const { events, fetchEvents, selectEvent } = useEvents();
   const { groups } = useGroups();
+  const isPhone = useIsPhone();
   const { user } = useAuth();
 
   // Scope: 'all' (family + groups) · 'family' · <groupId>  — same as the mobile chips
@@ -224,12 +226,19 @@ const CalendarView = () => {
       <FullCalendar
         plugins={[dayGridPlugin, timeGridPlugin, listPlugin, interactionPlugin, rrulePlugin]}
         eventSources={[{ events: calendarEvents }]}
-        initialView="dayGridMonth"
-        headerToolbar={{
+        // Phones start on a list of the week — a month grid is too cramped
+        key={isPhone ? "phone" : "desktop"}
+        initialView={isPhone ? "listWeek" : "dayGridMonth"}
+        headerToolbar={isPhone ? {
+          left: "prev,next",
+          center: "title",
+          right: "listWeek,dayGridMonth"
+        } : {
           left: "prev,next today",
           center: "title",
           right: "timeGridDay,timeGridWeek,dayGridMonth,listYear"
         }}
+        buttonText={isPhone ? { listWeek: "List", dayGridMonth: "Month" } : undefined}
         height="100%"
         eventContent={renderEventContent}
         eventClick={handleEventClick}

@@ -107,3 +107,13 @@
 /* Scope row (All · Family · groups) sits above the category chips */
 .calendar-toolbar-scope { margin-bottom: 6px; }
 .calendar-toolbar-scope .calendar-toolbar-chip { display: inline-flex; align-items: center; }
+
+/* ── Phone: chips scroll sideways instead of wrapping ── */
+@media (max-width: 767px) {
+  .calendar-toolbar-chips {
+    flex-wrap: nowrap; overflow-x: auto; -webkit-overflow-scrolling: touch;
+    scrollbar-width: none;
+  }
+  .calendar-toolbar-chips::-webkit-scrollbar { display: none; }
+  .calendar-toolbar-chip { flex-shrink: 0; }
+}

@@ -402,3 +402,11 @@
   .modal-toggle-slider { background: #3a3a3c; }
   .modal-color-dot.selected { border-color: #fff; }
 }
+/* ── Phone: forms open full screen ── */
+@media (max-width: 767px) {
+  .modal-overlay { align-items: stretch; padding: 0; }
+  .modal-container {
+    width: 100%; max-width: none; height: 100dvh; max-height: none;
+    border-radius: 0; overflow-y: auto;
+  }
+}
