@@ -14,10 +14,15 @@ export const formatTime = (date) =>
     minute: '2-digit',
   });
 
-// Formats: "2026-05-13T22:42" → "2026-05-13T22:42:00"
+// What the user picked in a datetime-local input ("2026-05-13T22:42", their
+// own clock) → an exact moment in UTC ("2026-05-13T20:42:00.000Z").
+// The server stores UTC, so everyone sees it at the right time in their zone.
+// Date-only values ("2026-05-13", all-day) are passed through unchanged.
 export const formatDateTime = (dateStr) => {
   if (!dateStr) return '';
-  return dateStr.length === 16 ? dateStr + ':00' : dateStr;
+  if (dateStr.length === 10) return dateStr;
+  const d = new Date(dateStr); // no offset in the string → read as local time
+  return isNaN(d) ? dateStr : d.toISOString();
 };
 
 // Formats: "2026-05-13" for date inputs

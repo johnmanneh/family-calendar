@@ -295,7 +295,7 @@ function TaskRow({ task, navigation, onComplete, onDelete, onAccept, onSetArriva
               </View>
             ) : task.due_date ? (
               <Text style={styles.eventTime}>
-                Due {new Date(task.due_date.replace(/Z$/, '')).toLocaleDateString(undefined, { day: 'numeric', month: 'short' })}
+                Due {new Date(task.due_date).toLocaleDateString(undefined, { day: 'numeric', month: 'short' })}
               </Text>
             ) : (
               <Text style={styles.eventTime}>{t('home.no_due_date')}</Text>
@@ -701,8 +701,7 @@ export default function HomeScreen({ navigation, route }) {
 
     // ── Shared date helpers ───────────────────────────────────────────────
     const pad = n => String(n).padStart(2, '0');
-    const toISOLocal = d =>
-      `${d.getFullYear()}-${pad(d.getMonth()+1)}-${pad(d.getDate())}T${pad(d.getHours())}:${pad(d.getMinutes())}`;
+    const toISOLocal = d => d.toISOString(); // exact moment (UTC), shown in local time everywhere
     const toDateOnly = d =>
       `${d.getFullYear()}-${pad(d.getMonth()+1)}-${pad(d.getDate())}`;
 

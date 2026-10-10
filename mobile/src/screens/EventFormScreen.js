@@ -61,9 +61,10 @@ function defaultEnd(start) {
 }
 
 // Formats a Date object to "YYYY-MM-DDTHH:mm" for the API
+// Exact moment in UTC — the server stores UTC so every device (and every
+// timezone) shows the time the user actually picked
 function toISOLocal(date) {
-  const pad = n => String(n).padStart(2, '0');
-  return `${date.getFullYear()}-${pad(date.getMonth() + 1)}-${pad(date.getDate())}T${pad(date.getHours())}:${pad(date.getMinutes())}`;
+  return date.toISOString();
 }
 
 // Formats a Date to "YYYY-MM-DD" for all-day events

@@ -1,3 +1,7 @@
+// All times are stored in UTC. Make Node read them as UTC regardless of the
+// machine's timezone (Railway is UTC already; a dev Mac is not).
+process.env.TZ = 'UTC';
+
 const express = require('express');
 const cors = require('cors');
 const path = require('path');

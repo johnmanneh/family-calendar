@@ -1,6 +1,7 @@
 import React, { createContext, useContext, useEffect, useRef, useState } from "react";
 import API from "../api/axios";
 import { sanitizeData } from "../utils/dataUtils";
+import { formatDateTime } from "../utils/dateUtils";
 import { useUI } from "./UIContext";
 import { useAuth } from "./AuthContext";
 
@@ -157,7 +158,10 @@ export const EventProvider = ({ children }) => {
   //
   const createStandaloneTask = async taskData => {
     try {
-      const res = await API.post("/tasks/standalone", taskData);
+      const res = await API.post("/tasks/standalone", {
+        ...taskData,
+        due_date: formatDateTime(taskData.due_date) || null,
+      });
       await fetchMyTasks(); // refresh sidebar
       return res.data;
     } catch (err) {
@@ -231,7 +235,7 @@ export const EventProvider = ({ children }) => {
   //
   const updateTaskDueDate = async (taskId, dueDate) => {
     try {
-      await API.patch(`/tasks/${taskId}/due-date`, { due_date: dueDate });
+      await API.patch(`/tasks/${taskId}/due-date`, { due_date: formatDateTime(dueDate) || null });
       if (selectedEvent) await fetchTasks(selectedEvent.id);
       await fetchMyTasks();
     } catch (err) {
