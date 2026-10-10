@@ -7,7 +7,7 @@ const getFamily = async (req, res) => {
   try {
     // Get family the user belongs to
     const family = await pool.query(
-      `SELECT f.id, f.name, f.invite_code
+      `SELECT f.id, f.name, f.invite_code, f.is_personal
        FROM families f
        JOIN family_members fm ON f.id = fm.family_id
        WHERE fm.user_id = $1

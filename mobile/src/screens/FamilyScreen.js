@@ -7,6 +7,8 @@ import {
   Image,
   Alert,
   Clipboard,
+  TextInput,
+  ActivityIndicator,
 } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { Ionicons } from '@expo/vector-icons';
@@ -81,6 +83,28 @@ export default function FamilyScreen({ navigation }) {
 
   const [codeCopied, setCodeCopied] = useState(false);
   const [leaving,    setLeaving]    = useState(false);
+  // Create a family (personal space) / rename it (admin)
+  const [nameInput, setNameInput] = useState('');
+  const [renaming,  setRenaming]  = useState(false);
+  const [busy,      setBusy]      = useState(false);
+  const personal = !!family?.is_personal;
+
+  const saveName = async (kind) => {
+    const name = nameInput.trim();
+    if (!name) return;
+    setBusy(true);
+    try {
+      if (kind === 'create') await API.post('/family/create', { name });
+      else await API.put('/family/name', { name });
+      await fetchFamily();
+      setRenaming(false);
+      setNameInput('');
+    } catch (err) {
+      Alert.alert(t('common.error'), err.response?.data?.message || t('common.something_went_wrong'));
+    } finally {
+      setBusy(false);
+    }
+  };
 
   const myMembership = members.find(m => Number(m.id) === Number(user?.id));
   const isOwner = myMembership?.role === 'admin';
@@ -139,12 +163,75 @@ export default function FamilyScreen({ navigation }) {
 
       <ScrollView contentContainerStyle={styles.content}>
 
+        {/* On your own: create a family or join one */}
+        {personal && (
+          <>
+            <Text style={styles.sectionHeader}>{t('family.title')}</Text>
+            <View style={styles.card}>
+              <Text style={styles.familyName}>{t('family.personal_title')}</Text>
+              <Text style={styles.leaveDescription}>{t('family.personal_hint')}</Text>
+              <TextInput
+                style={styles.nameInput}
+                placeholder={t('family.name_placeholder')}
+                placeholderTextColor="#aeaeb2"
+                value={nameInput}
+                onChangeText={setNameInput}
+                maxLength={60}
+                returnKeyType="done"
+                onSubmitEditing={() => saveName('create')}
+              />
+              <TouchableOpacity
+                style={[styles.primaryBtn, !nameInput.trim() && { opacity: 0.5 }]}
+                disabled={!nameInput.trim() || busy}
+                onPress={() => saveName('create')}
+              >
+                {busy ? <ActivityIndicator color="#fff" /> : (
+                  <>
+                    <Ionicons name="people-outline" size={16} color="#fff" />
+                    <Text style={styles.primaryBtnText}>{t('family.create')}</Text>
+                  </>
+                )}
+              </TouchableOpacity>
+              <TouchableOpacity style={[styles.switchBtn, { marginTop: 10 }]} onPress={() => navigation.navigate('JoinFamily')}>
+                <Ionicons name="enter-outline" size={16} color="#1a8fa8" />
+                <Text style={styles.switchBtnText}>{t('family.join_with_code')}</Text>
+              </TouchableOpacity>
+            </View>
+          </>
+        )}
+
         {/* Family info card */}
-        {family && (
+        {family && !personal && (
           <>
             <Text style={styles.sectionHeader}>{t('family.your_family')}</Text>
             <View style={styles.card}>
-              <Text style={styles.familyName}>{family.name}</Text>
+              {renaming ? (
+                <View style={styles.renameRow}>
+                  <TextInput
+                    style={[styles.nameInput, { flex: 1, marginBottom: 0 }]}
+                    value={nameInput}
+                    onChangeText={setNameInput}
+                    autoFocus
+                    maxLength={60}
+                    onSubmitEditing={() => saveName('rename')}
+                  />
+                  <TouchableOpacity style={styles.renameSave} onPress={() => saveName('rename')} disabled={busy}>
+                    <Text style={styles.primaryBtnText}>{t('common.save')}</Text>
+                  </TouchableOpacity>
+                  <TouchableOpacity onPress={() => { setRenaming(false); setNameInput(''); }}>
+                    <Ionicons name="close" size={20} color="#8e8e93" />
+                  </TouchableOpacity>
+                </View>
+              ) : (
+                <View style={styles.renameRow}>
+                  <Text style={[styles.familyName, { flex: 1 }]}>{family.name}</Text>
+                  {isOwner && (
+                    <TouchableOpacity onPress={() => { setNameInput(family.name); setRenaming(true); }} hitSlop={10}>
+                      <Ionicons name="create-outline" size={20} color="#8e8e93" />
+                    </TouchableOpacity>
+                  )}
+                </View>
+              )}
               <Text style={styles.inviteLabel}>{t('family.invite_label')}</Text>
               <View style={styles.inviteRow}>
                 <Text style={styles.inviteCode}>{family.invite_code}</Text>
@@ -163,6 +250,7 @@ export default function FamilyScreen({ navigation }) {
           </>
         )}
 
+        {!personal && (<>
         {/* Members */}
         <Text style={styles.sectionHeader}>{t('family.members_count', { count: members.length })}</Text>
         <View style={styles.card}>
@@ -216,6 +304,8 @@ export default function FamilyScreen({ navigation }) {
             </View>
           </>
         )}
+
+        </>)}
 
         <View style={{ height: 40 }} />
       </ScrollView>

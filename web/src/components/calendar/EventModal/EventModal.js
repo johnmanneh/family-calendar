@@ -65,6 +65,41 @@ const EventModal = () => {
     status: "confirmed"
   });
 
+  // ── Busy: who already has something at this time? ──────────────────────
+  // People who are busy can't be added (greyed out). Someone already on the
+  // event stays — they can be removed, just not re-added.
+  const [busyIds, setBusyIds] = useState([]);
+  const optionIdsKey = attendeeOptions.map(m => m.id).join(",");
+  useEffect(() => {
+    if (!isEventModalOpen || !formData.start_date) { setBusyIds([]); return; }
+    let start, end;
+    if (formData.is_all_day) {
+      start = new Date(`${formData.start_date.slice(0, 10)}T00:00`);
+      const last = new Date(`${(formData.end_date || formData.start_date).slice(0, 10)}T00:00`);
+      end = new Date(last.getTime() + 86400000);
+    } else {
+      start = new Date(formData.start_date);
+      end = formData.end_date ? new Date(formData.end_date) : new Date(start.getTime() + 3600000);
+    }
+    if (isNaN(start) || isNaN(end)) return;
+    const timer = setTimeout(() => {
+      API.post("/events/availability", {
+        start: start.toISOString(),
+        end: end.toISOString(),
+        user_ids: attendeeOptions.map(m => Number(m.id)),
+        exclude_event_id: isEditMode && selectedEvent ? Number(selectedEvent.id) : null,
+        tz: Intl.DateTimeFormat().resolvedOptions().timeZone,
+      })
+        .then(res => setBusyIds((res.data.busy || []).map(Number)))
+        .catch(() => setBusyIds([]));
+    }, 300);
+    return () => clearTimeout(timer);
+  // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [isEventModalOpen, formData.start_date, formData.end_date, formData.is_all_day, optionIdsKey]);
+  const busySelected = attendeeOptions.filter(
+    m => busyIds.includes(Number(m.id)) && selectedAttendees.map(Number).includes(Number(m.id))
+  );
+
   const addTask = () => {
     setModalTasks([...modalTasks, { title: "", assigned_to: "", position: "full" }]);
   };
@@ -288,13 +323,16 @@ const EventModal = () => {
           <div className="modal-field">
             <label>Who's attending?</label>
             <div className="modal-attendees">
-              {attendeeOptions.map(member => (
+              {attendeeOptions.map(member => {
+                const isBusy = busyIds.includes(Number(member.id));
+                const isSelected = selectedAttendees.includes(member.id);
+                return (
                 <div
                   key={member.id}
-                  className={`modal-attendee ${
-                    selectedAttendees.includes(member.id) ? "selected" : ""
-                  }`}
+                  className={`modal-attendee ${isSelected ? "selected" : ""} ${isBusy ? "busy" : ""}`}
+                  title={isBusy ? `${member.first_name} is busy at this time` : undefined}
                   onClick={() => {
+                    if (isBusy && !isSelected) return; // busy → can't be added
                     toggleAttendee(member.id);
                     // Clear task assignments for this member if they're being removed
                     if (selectedAttendees.includes(member.id)) {
@@ -319,17 +357,25 @@ const EventModal = () => {
                   <span className="modal-attendee-name">
                     {member.first_name}
                   </span>
-                  {member.fromGroup && (
+                  {isBusy ? (
+                    <span className="modal-attendee-busy"><Icon name="lock" size={10} /> Busy</span>
+                  ) : member.fromGroup && (
                     <span className="modal-attendee-group" title={(member.group_names || []).join(", ")}>
                       <Icon name="users" size={10} /> {(member.group_names || [])[0]}
                     </span>
                   )}
-                  {selectedAttendees.includes(member.id) && (
+                  {isSelected && (
                     <div className="modal-attendee-check">✓</div>
                   )}
                 </div>
-              ))}
+                );
+              })}
             </div>
+            {busySelected.length > 0 && (
+              <p className="modal-busy-note">
+                {busySelected.map(m => m.first_name).join(", ")} {busySelected.length > 1 ? "are" : "is"} busy at this time.
+              </p>
+            )}
           </div>
           {/* Share with Groups */}
           {groups.length > 0 && (

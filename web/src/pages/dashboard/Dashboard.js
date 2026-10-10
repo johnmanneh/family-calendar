@@ -17,7 +17,7 @@ import StandaloneTaskModal from "../../components/calendar/EventModal/Standalone
 import "./Dashboard.css";
 
 const Dashboard = () => {
-  const { fetchFamily, members } = useFamily();
+  const { fetchFamily, members, family } = useFamily();
   const { fetchEvents, selectedEvent, setSelectedEvent } = useEvents();
   const { setSelectedMember, openNewEvent, setSearchQuery, setSelectedCategory } = useUI();
   const { fetchNotifications } = useEvents();
@@ -72,9 +72,11 @@ const Dashboard = () => {
             <button className={`dashboard-phone-icon${searchOpen ? " active" : ""}`} onClick={toggleSearch} aria-label="Search">
               <Icon name="search" size={21} />
             </button>
-            <button className="dashboard-phone-icon" onClick={() => setSheet("chat")} aria-label="Family chat">
-              <Icon name="chat" size={21} />
-            </button>
+            {!family?.is_personal && (
+              <button className="dashboard-phone-icon" onClick={() => setSheet("chat")} aria-label="Family chat">
+                <Icon name="chat" size={21} />
+              </button>
+            )}
             <button className="dashboard-phone-icon" onClick={() => setSheet("notifications")} aria-label="Notifications">
               <Icon name="bell" size={21} />
               {unread > 0 && <span className="dashboard-phone-badge">{unread > 9 ? "9+" : unread}</span>}

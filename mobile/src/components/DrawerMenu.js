@@ -143,7 +143,8 @@ export default function DrawerMenu({ controller, navigation, pendingCount = 0, n
   const insets      = useSafeAreaInsets();
   const { t }       = useTranslation();
   const { user, logout } = useAuth();
-  const { members } = useFamily();
+  const { members, family } = useFamily();
+  const personal = !!family?.is_personal;
 
   const me = members.find(m => Number(m.id) === Number(user?.id));
   const memberColor = me?.color || '#1a8fa8';
@@ -188,9 +189,9 @@ export default function DrawerMenu({ controller, navigation, pendingCount = 0, n
       key: 'family',
       title: 'Family & Groups',
       rows: [
-        { key: 'family', icon: 'home-outline', label: 'Family', onPress: () => go('Family') },
+        { key: 'family', icon: personal ? 'add-circle-outline' : 'home-outline', label: personal ? t('family.create') : 'Family', onPress: () => go('Family') },
         { key: 'groups', icon: 'people-outline', label: 'Groups', onPress: () => go('Groups') },
-        { key: 'chat', icon: 'chatbubble-outline', label: 'Family Chat', onPress: () => go('Chat') },
+        ...(personal ? [] : [{ key: 'chat', icon: 'chatbubble-outline', label: 'Family Chat', onPress: () => go('Chat') }]),
         { key: 'join', icon: 'enter-outline', label: t('join.title'), onPress: () => go('JoinFamily') },
       ],
     },

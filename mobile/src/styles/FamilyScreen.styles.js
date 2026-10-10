@@ -72,6 +72,19 @@ const make = c => StyleSheet.create({
     borderWidth: 1, borderColor: '#1a8fa8', borderRadius: 10, padding: 12, justifyContent: 'center',
   },
   switchBtnText: { color: '#1a8fa8', fontSize: 15, fontWeight: '600' },
+
+  // Create / rename family
+  nameInput: {
+    backgroundColor: c.surface2, borderRadius: 10, paddingVertical: 12, paddingHorizontal: 14,
+    fontSize: 16, color: c.text, marginBottom: 12,
+  },
+  primaryBtn: {
+    flexDirection: 'row', alignItems: 'center', justifyContent: 'center', gap: 8,
+    backgroundColor: '#1a8fa8', borderRadius: 10, padding: 13,
+  },
+  primaryBtnText: { color: '#fff', fontSize: 15, fontWeight: '600' },
+  renameRow: { flexDirection: 'row', alignItems: 'center', gap: 10, marginBottom: 6 },
+  renameSave: { backgroundColor: '#1a8fa8', borderRadius: 10, paddingVertical: 10, paddingHorizontal: 14 },
 });
 
 const lightStyles = make(LIGHT);

@@ -1629,3 +1629,42 @@
   :root:not([data-theme="light"]) .sidebar-theme { background: #2c2c2e; color: #f2f2f7; box-shadow: none; }
 }
 :root[data-theme="dark"] .sidebar-theme { background: #2c2c2e; color: #f2f2f7; box-shadow: none; }
+
+/* ── On your own (no family yet) ── */
+.sidebar-me { display: flex; align-items: center; gap: 12px; }
+.sidebar-me-info { min-width: 0; }
+.sidebar-me-info .sidebar-invite { margin-top: 2px; }
+.sidebar-me-actions { display: flex; gap: 8px; margin-top: 14px; }
+.sidebar-me-btn {
+  flex: 1;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 6px;
+  padding: 9px 8px;
+  border: none;
+  border-radius: 10px;
+  background: #f2f2f7;
+  color: #1d1d1f;
+  font-size: 12px;
+  font-weight: 600;
+  cursor: pointer;
+  font-family: inherit;
+  white-space: nowrap;
+}
+.sidebar-me-btn.primary { background: #1a8fa8; color: #fff; }
+.sidebar-family-edit {
+  border: none;
+  background: none;
+  color: #8e8e93;
+  cursor: pointer;
+  padding: 2px 6px;
+  margin-left: 4px;
+  vertical-align: middle;
+  box-shadow: none;
+}
+.sidebar-family-edit:hover { color: #1a8fa8; }
+@media (prefers-color-scheme: dark) {
+  :root:not([data-theme="light"]) .sidebar-me-btn:not(.primary) { background: #2c2c2e; color: #f2f2f7; }
+}
+:root[data-theme="dark"] .sidebar-me-btn:not(.primary) { background: #2c2c2e; color: #f2f2f7; }

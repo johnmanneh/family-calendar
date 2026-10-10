@@ -471,3 +471,18 @@
   overflow: hidden;
   text-overflow: ellipsis;
 }
+
+/* Busy at this time — greyed out, can't be added */
+.modal-attendee.busy { cursor: not-allowed; }
+.modal-attendee.busy:not(.selected) { opacity: 0.45; filter: grayscale(1); }
+.modal-attendee.busy:not(.selected):hover { background: transparent; }
+.modal-attendee-busy {
+  display: inline-flex;
+  align-items: center;
+  gap: 3px;
+  font-size: 10px;
+  font-weight: 600;
+  color: #8e8e93;
+}
+.modal-attendee.busy.selected .modal-attendee-busy { color: #ff3b30; }
+.modal-busy-note { font-size: 12px; color: #ff3b30; margin-top: 6px; }

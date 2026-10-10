@@ -206,6 +206,36 @@ export default function EventFormScreen({ route, navigation }) {
       .filter(p => !members.some(m => Number(m.id) === Number(p.id)))
       .map(p => ({ ...p, fromGroup: true })),
   ];
+
+  // ── Busy: who already has something at this time? ──────────────────────
+  // Busy people are greyed out and can't be added. Someone already on the
+  // event stays (they can be removed, just not re-added).
+  const [busyIds, setBusyIds] = useState([]);
+  const optionIdsKey = attendeeOptions.map(m => m.id).join(',');
+  useEffect(() => {
+    let start, end;
+    if (formData.is_all_day) {
+      start = new Date(startDate); start.setHours(0, 0, 0, 0);
+      end = new Date(endDate); end.setHours(0, 0, 0, 0); end.setDate(end.getDate() + 1);
+    } else {
+      start = startDate;
+      end = endDate > startDate ? endDate : new Date(startDate.getTime() + 3600000);
+    }
+    const timer = setTimeout(() => {
+      API.post('/events/availability', {
+        start: start.toISOString(),
+        end: end.toISOString(),
+        user_ids: attendeeOptions.map(m => Number(m.id)),
+        exclude_event_id: isEdit ? Number(event.id) : null,
+        tz: Intl.DateTimeFormat().resolvedOptions().timeZone,
+      })
+        .then(res => setBusyIds((res.data.busy || []).map(Number)))
+        .catch(() => setBusyIds([]));
+    }, 300);
+    return () => clearTimeout(timer);
+  // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [startDate, endDate, formData.is_all_day, optionIdsKey]);
+  const busySelected = attendeeOptions.filter(m => busyIds.includes(Number(m.id)) && selectedAttendees.includes(Number(m.id)));
   const initialGroupIds = isEdit ? (event.group_ids || []).map(Number) : [];
   const [selectedGroups, setSelectedGroups] = useState(initialGroupIds);
   const canShare = !isEdit || Number(event.created_by) === Number(user?.id);
@@ -519,8 +549,12 @@ export default function EventFormScreen({ route, navigation }) {
               return (
                 <TouchableOpacity
                   key={m.id}
-                  style={styles.attendeeBubble}
-                  onPress={() => toggleAttendee(m.id)}
+                  style={[styles.attendeeBubble, busyIds.includes(Number(m.id)) && !isSelected && styles.attendeeBusy]}
+                  onPress={() => {
+                    if (busyIds.includes(Number(m.id)) && !isSelected) return; // busy → can't be added
+                    toggleAttendee(m.id);
+                  }}
+                  activeOpacity={busyIds.includes(Number(m.id)) && !isSelected ? 1 : 0.7}
                 >
                   <View style={[
                     styles.attendeeCircle,
@@ -535,7 +569,11 @@ export default function EventFormScreen({ route, navigation }) {
                     )}
                   </View>
                   <Text style={styles.attendeeName} numberOfLines={1}>{m.first_name}</Text>
-                  {m.fromGroup && (
+                  {busyIds.includes(Number(m.id)) ? (
+                    <Text style={[styles.attendeeGroup, isSelected && { color: '#ff3b30', opacity: 1 }]} numberOfLines={1}>
+                      <Ionicons name="lock-closed-outline" size={9} /> {t('events.busy')}
+                    </Text>
+                  ) : m.fromGroup && (
                     <Text style={styles.attendeeGroup} numberOfLines={1}>
                       <Ionicons name="people-outline" size={9} /> {(m.group_names || [])[0]}
                     </Text>
@@ -544,6 +582,11 @@ export default function EventFormScreen({ route, navigation }) {
               );
             })}
           </View>
+          {busySelected.length > 0 && (
+            <Text style={styles.busyNote}>
+              {t('events.busy_note', { names: busySelected.map(m => m.first_name).join(', '), count: busySelected.length })}
+            </Text>
+          )}
         </View>
 
         {/* ── Share with groups ── */}

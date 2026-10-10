@@ -30,7 +30,8 @@
     "pending": "Ausstehend",
     "accepted": "Angenommen",
     "declined": "Abgelehnt",
-    "countered": "Gegenangebot"
+    "countered": "Gegenangebot",
+    "faith": "Glaube"
   },
   "auth": {
     "welcome_back": "Willkommen zurück",
@@ -130,7 +131,10 @@
     "share_with_groups": "Mit Gruppen teilen",
     "could_not_share": "Termin gespeichert, aber Teilen mit einer Gruppe fehlgeschlagen",
     "invited_by": "{{name}} hat dich eingeladen",
-    "add_to_your_calendar": "Zu deinem Kalender hinzufügen?"
+    "add_to_your_calendar": "Zu deinem Kalender hinzufügen?",
+    "busy": "Belegt",
+    "busy_note_one": "{{names}} hat zu dieser Zeit schon etwas.",
+    "busy_note_other": "{{names}} haben zu dieser Zeit schon etwas."
   },
   "tasks": {
     "new_task": "Neue Aufgabe",
@@ -192,7 +196,11 @@
     "could_not_leave": "Familie konnte nicht verlassen werden",
     "join_with_code": "Mit Code beitreten",
     "switch_family": "Zu einer anderen Familie wechseln",
-    "switch_hint": "Du verlässt {{name}} und wechselst in die Familie, deren Code du eingibst."
+    "switch_hint": "Du verlässt {{name}} und wechselst in die Familie, deren Code du eingibst.",
+    "personal_title": "Du bist noch in keiner Familie",
+    "personal_hint": "Erstelle eine und teile den Code, oder tritt deiner Familie mit ihrem Code bei.",
+    "name_placeholder": "Familienname, z. B. Familie Manneh",
+    "create": "Familie erstellen"
   },
   "profile": {
     "title": "Profil",

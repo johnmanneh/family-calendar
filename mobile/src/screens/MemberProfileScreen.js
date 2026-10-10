@@ -315,8 +315,8 @@ function SettingsTab({ member, user, family, fetchFamily, onAvatarChange, naviga
         </TouchableOpacity>
       </View>
 
-      {/* ── Family ── */}
-      {family && (
+      {/* ── Family ── (hidden while you're on your own) */}
+      {family && !family.is_personal && (
         <>
           <Text style={styles.settingsSectionHeader}>{t('family.your_family')}</Text>
           <View style={styles.settingsCard}>

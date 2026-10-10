@@ -40,14 +40,14 @@ const register = async (req, res) => {
 
     const userId = newUser.rows[0].id;
 
-    // Auto-create a personal family so the user can use the app immediately.
-    // They can rename it or invite others later.
+    // Personal space behind the scenes so the user can use the app immediately.
+    // It stays hidden (no name or code shown) until they create a family or join one.
     const inviteCode = crypto.randomBytes(4).toString('hex').toUpperCase(); // e.g. "A3F2B1C4"
     const familyName = `${first_name}'s Family`;
 
     const newFamily = await pool.query(
-      `INSERT INTO families (name, invite_code, created_by)
-       VALUES ($1, $2, $3) RETURNING id`,
+      `INSERT INTO families (name, invite_code, created_by, is_personal)
+       VALUES ($1, $2, $3, true) RETURNING id`,
       [familyName, inviteCode, userId]
     );
 

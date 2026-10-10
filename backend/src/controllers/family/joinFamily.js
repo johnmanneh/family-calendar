@@ -93,6 +93,8 @@ const joinFamily = async (req, res) => {
       'INSERT INTO family_members (family_id, user_id, role) VALUES ($1, $2, $3)',
       [target.id, userId, 'member']
     );
+    // Someone joined → it's a real family now, even if it started as a personal space
+    await client.query('UPDATE families SET is_personal = false WHERE id = $1', [target.id]);
 
     await client.query('COMMIT');
 

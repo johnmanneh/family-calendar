@@ -130,7 +130,10 @@
     "share_with_groups": "Share with groups",
     "could_not_share": "Event saved, but sharing with a group failed",
     "invited_by": "{{name}} invited you",
-    "add_to_your_calendar": "Add it to your calendar?"
+    "add_to_your_calendar": "Add it to your calendar?",
+    "busy": "Busy",
+    "busy_note_one": "{{names}} is busy at this time.",
+    "busy_note_other": "{{names}} are busy at this time."
   },
   "tasks": {
     "new_task": "New Task",
@@ -192,7 +195,11 @@
     "could_not_leave": "Could not leave family",
     "join_with_code": "Join with code",
     "switch_family": "Switch to another family",
-    "switch_hint": "You will leave {{name}} and move to the family whose code you enter."
+    "switch_hint": "You will leave {{name}} and move to the family whose code you enter.",
+    "personal_title": "You're not in a family yet",
+    "personal_hint": "Create one and share the code, or join your family with their code.",
+    "name_placeholder": "Family name, e.g. Manneh Family",
+    "create": "Create a family"
   },
   "profile": {
     "title": "Profile",
