@@ -12,6 +12,7 @@ import { useGroups } from "../../../context/GroupContext";
 import { useAuth } from "../../../context/AuthContext";
 import Icon from "../../common/Icon/Icon";
 import useIsPhone from "../../../hooks/useIsPhone";
+import PhoneCalendar from "./PhoneCalendar";
 import "./CalendarView.css";
 
 // Map recurrence value + start_date to an rrule string
@@ -219,6 +220,23 @@ const CalendarView = ({ showSearch = true, autoFocusSearch = false }) => {
     }
     openNewEvent(localDate);
   };
+
+  // Phone: month grid + day cards. Builds the same object FullCalendar hands to
+  // eventClick, so the details sheet works unchanged.
+  const openFromPhone = (event, start, end) => {
+    const fc = calendarEvents.find(c => c.id === String(event.id));
+    if (!fc) return;
+    selectEvent({ ...fc, start, end, allDay: !!event.is_all_day });
+  };
+
+  if (isPhone) {
+    return (
+      <div className="calendar-view calendar-view--phone">
+        <CalendarToolbar scope={scope} setScope={setScope} groups={groups} showSearch={showSearch} autoFocusSearch={autoFocusSearch} />
+        <PhoneCalendar events={visibleEvents} onOpen={openFromPhone} onAdd={openNewEvent} />
+      </div>
+    );
+  }
 
   return (
     <div className="calendar-view">

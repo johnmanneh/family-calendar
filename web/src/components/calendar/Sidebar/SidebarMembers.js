@@ -1,4 +1,4 @@
-import React, { useEffect } from "react";
+import React from "react";
 import { useFamily } from "../../../context/FamilyContext";
 import { useAuth } from "../../../context/AuthContext";
 import { formatDate } from "../../../utils/dateUtils";
@@ -20,22 +20,13 @@ const SidebarMembers = () => {
     openTaskModal,
     closeTaskModal,
     selectedMember,
-    setSelectedMember,
+
     memberTasks,
     toggleMember
   } = useUI();
 
-  // Auto-select current user on first load — depends on both members and user
-  useEffect(() => {
-    if (members.length && user) {
-      const me = members.find(m => Number(m.id) === Number(user.id));
-      if (me) {
-        setSelectedMember(me);
-        getMemberTask(me);
-      }
-    }
-  // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [members, user]);
+  // Nobody is pre-selected: the calendar starts with everyone's events, like the
+  // app. (Auto-selecting yourself silently hid events you don't attend.)
 
   const handleMemberClick = member => {
     toggleMember(member);
