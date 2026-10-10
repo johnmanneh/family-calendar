@@ -53,7 +53,11 @@ function TreadmillCell({ children, style, onLayout, ...rest }) {
 
   let topStyle = null;      // outer view: rolls away at the TOP edge
   let bottomStyle = null;   // inner view: rolls under the FAB at the BOTTOM
-  if (ctx && layout && ctx.viewportH > 0) {
+  // Only roll when the list really scrolls. If everything fits on screen there's
+  // nothing to roll under the FAB — and a stale/tiny viewport measurement (e.g.
+  // after filters change the list, or the keyboard was up) can't tip rows flat.
+  const scrollable = ctx && ctx.viewportH >= 120 && ctx.contentH > ctx.viewportH + 1;
+  if (ctx && layout && scrollable) {
     const { y, height: h } = layout;
 
     // ── Bottom: row rolls under the FAB ────────────────────────────────────
@@ -121,6 +125,7 @@ export default function TreadmillList({ contentContainerStyle, onScroll, onLayou
   const lastY   = useRef(0);          // last scroll offset we know of
   const viewH   = useRef(0);
   const [viewportH, setViewportH] = useState(0);
+  const [contentH, setContentH]   = useState(0);
 
   // When the list gets SHORTER (e.g. a new day is selected after a voice create),
   // the list snaps back but Android doesn't always send a scroll event. scrollY
@@ -135,7 +140,7 @@ export default function TreadmillList({ contentContainerStyle, onScroll, onLayou
   };
 
   return (
-    <TreadmillContext.Provider value={{ scrollY, viewportH, bottomInset }}>
+    <TreadmillContext.Provider value={{ scrollY, viewportH, contentH, bottomInset }}>
       <Animated.FlatList
         {...props}
         CellRendererComponent={TreadmillCell}
@@ -153,6 +158,7 @@ export default function TreadmillList({ contentContainerStyle, onScroll, onLayou
         )}
         onContentSizeChange={(w, h) => {
           onContentSizeChange?.(w, h);
+          setContentH(h);
           clampToContent(h);
         }}
         onLayout={(e) => {
