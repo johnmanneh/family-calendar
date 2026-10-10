@@ -124,7 +124,7 @@ const MemberProfile = () => {
     setDeleteLoading(true);
     try {
       await API.delete("/auth/account");
-      logout();
+      await logout();
       navigate("/login");
     } catch (err) {
       setDeleteError(err.response?.data?.message || "Could not delete account");

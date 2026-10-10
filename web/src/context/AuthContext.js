@@ -1,5 +1,5 @@
 import React, { createContext, useState, useContext, useEffect } from 'react';
-import API from '../api/axios';
+import API, { setOnUnauthorized } from '../api/axios';
 
 const AuthContext = createContext();
 
@@ -16,7 +16,12 @@ export const AuthProvider = ({ children }) => {
           const res = await API.get('/auth/me');
           setUser(res.data.user);
         } catch (err) {
-          logout(); // token expired → logout
+          // Only clear the token when the server rejects it (deleted account, expired).
+          // A network error (offline) keeps it so they stay logged in next time.
+          const status = err.response?.status;
+          if (status === 401 || status === 404) {
+            logout();
+          }
         } finally {
           setAuthLoading(false);
         }
@@ -37,6 +42,12 @@ export const AuthProvider = ({ children }) => {
     setAuthLoading(false);
     localStorage.removeItem('token');
   };
+
+  // Any 401 from the API (e.g. account deleted) → log out immediately
+  useEffect(() => {
+    setOnUnauthorized(() => { logout(); });
+    return () => setOnUnauthorized(null);
+  }, []);
 
   return (
     <AuthContext.Provider value={{ user, token, authLoading, login, logout }}>
