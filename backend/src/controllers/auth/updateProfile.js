@@ -3,7 +3,7 @@ const { successResponse, errorResponse } = require('../../utils/response/respons
 
 const updateProfile = async (req, res) => {
   const userId = req.user.id;
-  const { first_name, last_name, age, address, occupation } = req.body;
+  const { first_name, last_name, age, address, occupation, color } = req.body;
 
   // Only update fields that were actually sent
   const fields = [];
@@ -15,6 +15,7 @@ const updateProfile = async (req, res) => {
   if (age !== undefined)        { fields.push(`age = $${index++}`);        values.push(age); }
   if (address !== undefined)    { fields.push(`address = $${index++}`);    values.push(address); }
   if (occupation !== undefined) { fields.push(`occupation = $${index++}`); values.push(occupation); }
+  if (color !== undefined)      { fields.push(`color = $${index++}`);      values.push(color); }
 
   if (fields.length === 0) {
     return errorResponse(res, 400, 'No fields to update');
@@ -24,7 +25,7 @@ const updateProfile = async (req, res) => {
 
   try {
     const result = await pool.query(
-      `UPDATE users SET ${fields.join(', ')} WHERE id = $${index} RETURNING id, first_name, last_name, email, age, address, occupation`,
+      `UPDATE users SET ${fields.join(', ')} WHERE id = $${index} RETURNING id, first_name, last_name, email, age, address, occupation, color`,
       values
     );
     return successResponse(res, 200, 'Profile updated successfully', {
