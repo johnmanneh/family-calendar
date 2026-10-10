@@ -1,10 +1,14 @@
 import React, { useState } from "react";
 import { useGroups } from "../../../context/GroupContext";
 import { useNavigate } from "react-router-dom";
+import { useFamily } from "../../../context/FamilyContext";
+import { runJoinFlow } from "../../../utils/joinFlow";
+import Icon from "../../common/Icon/Icon";
 import "./Sidebar.css";
 
 const SidebarGroups = () => {
-  const { groups, createGroup, joinGroup, invitations, respondToInvitation, deleteGroup } = useGroups();
+  const { groups, createGroup, joinWithCode, invitations, respondToInvitation, deleteGroup } = useGroups();
+  const { fetchFamily } = useFamily();
   const navigate = useNavigate();
 
   const [mode, setMode] = useState(null); // 'create' | 'join' | null
@@ -47,7 +51,9 @@ const SidebarGroups = () => {
       if (mode === "create") {
         await createGroup(input.trim());
       } else {
-        await joinGroup(input.trim());
+        // One Join box: works for group AND family codes
+        const res = await runJoinFlow(input, joinWithCode, fetchFamily);
+        if (res === null) { setLoading(false); return; }   // user cancelled the family switch
       }
       setInput("");
       setMode(null);
@@ -113,7 +119,7 @@ const SidebarGroups = () => {
                   className="sidebar-group-delete-btn"
                   title="Delete group"
                   onClick={e => { e.stopPropagation(); setConfirmDeleteId(group.id); }}
-                >🗑</button>
+                ><Icon name="trash" size={14} /></button>
               </>
             )}
           </div>
@@ -146,7 +152,7 @@ const SidebarGroups = () => {
           <input
             autoFocus
             className="sidebar-group-input"
-            placeholder={mode === "create" ? "Group name" : "Invite code"}
+            placeholder={mode === "create" ? "Group name" : "Invite code (family or group)"}
             value={input}
             onChange={e => setInput(e.target.value)}
           />
@@ -165,7 +171,7 @@ const SidebarGroups = () => {
       {!mode && (
         <div className="sidebar-group-actions">
           <button className="sidebar-group-action-btn" onClick={() => setMode("create")}>Create</button>
-          <button className="sidebar-group-action-btn" onClick={() => setMode("join")}>Join</button>
+          <button className="sidebar-group-action-btn" onClick={() => setMode("join")}>Join a group</button>
         </div>
       )}
     </div>

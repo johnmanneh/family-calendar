@@ -518,3 +518,12 @@
   .member-skeleton { background: linear-gradient(90deg, #2c2c2e 25%, #3a3a3c 50%, #2c2c2e 75%); background-size: 200% 100%; }
   .member-color-dot.selected { border-color: #fff; }
 }
+
+.member-card-title { display: flex; align-items: center; gap: 8px; }
+.member-event-location { display: flex; align-items: center; gap: 4px; }
+.member-see-all {
+  display: block; width: 100%; margin-top: 8px; padding: 10px;
+  border: none; background: none; color: #1a8fa8;
+  font-size: 14px; font-weight: 600; cursor: pointer;
+}
+.member-see-all:hover { text-decoration: underline; }

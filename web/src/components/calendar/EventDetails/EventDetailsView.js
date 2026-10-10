@@ -4,6 +4,7 @@ import { formatDate, formatTime } from "../../../utils/dateUtils";
 import { useUI } from "../../../context/UIContext";
 import { useAuth } from "../../../context/AuthContext";
 
+import StdIcon from "../../common/Icon/Icon";
 import "./EventDetails.css";
 
 const Icon = ({ children }) => (
@@ -19,7 +20,8 @@ const EventDetailsView = () => {
     deleteEvent,
     deleteTask,
     fetchTasks,
-    addSubTask, deleteSubTask
+    addSubTask, deleteSubTask,
+    respondToEventInvitation, openEventById, setSelectedEvent
   } = useEvents();
 
   const {
@@ -35,6 +37,28 @@ const EventDetailsView = () => {
   const hideActions = isViewModalOpen;
   const start = new Date(selectedEvent.start);
   const end = new Date(selectedEvent.end);
+
+  // Only the person who created the event can edit or delete it
+  const isMine = Number(selectedEvent.extendedProps?.created_by) === Number(user?.id);
+  // Invitation not answered yet (opened from a notification)
+  const invitePending = !!selectedEvent.extendedProps?.invite_pending;
+  const [responding, setResponding] = React.useState(false);
+
+  const respond = async (response) => {
+    setResponding(true);
+    try {
+      await respondToEventInvitation(selectedEvent.id, response);
+      if (response === 'accepted') await openEventById(selectedEvent.id);   // now in the calendar
+      else setSelectedEvent(null);                                          // declined → gone
+    } finally {
+      setResponding(false);
+    }
+  };
+
+  const priorityColor = (p) => {
+    const v = String(p || '').toLowerCase();
+    return v === 'high' ? '#ff3b30' : v === 'medium' ? '#f48c06' : '#8e8e93';
+  };
 
   const handleDelete = async () => { await deleteEvent(selectedEvent.id); };
   const handleEdit = () => openEditEvent();
@@ -57,6 +81,14 @@ const EventDetailsView = () => {
         />
         <h2 className="event-details-title">{selectedEvent.title}</h2>
       </div>
+
+      {/* Invitation not answered yet → who invited you */}
+      {invitePending && (
+        <div className="event-details-invite-from">
+          <StdIcon name="mail" size={14} color="#f48c06" />
+          <span>{selectedEvent.extendedProps.created_by_name || 'Someone'} invited you</span>
+        </div>
+      )}
 
       {/* Tasks card */}
       {tasks.length > 0 && (
@@ -255,7 +287,7 @@ const EventDetailsView = () => {
         {selectedEvent.extendedProps.priority && (
           <div className="event-details-row">
             <Icon>
-              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><polygon points="13 2 3 14 12 14 11 22 21 10 12 10 13 2"/></svg>
+              <StdIcon name="flag" size={16} color={priorityColor(selectedEvent.extendedProps.priority)} strokeWidth={2.5} />
             </Icon>
             <span className="event-details-value" style={{ textTransform: "capitalize" }}>
               {selectedEvent.extendedProps.priority} Priority
@@ -276,11 +308,24 @@ const EventDetailsView = () => {
 
       </div>
 
-      {/* Actions */}
-      <div className="event-details-actions">
-        <button className="event-action-btn edit" onClick={handleEdit}>Edit</button>
-        <button className="event-action-btn delete" onClick={handleDelete}>Delete</button>
-      </div>
+      {/* Actions
+          Invitation: Decline · Accept
+          Creator:    Edit · Delete
+          Others:     view only */}
+      {invitePending ? (
+        <div className="event-details-invite">
+          <p className="event-details-invite-question">Add it to your calendar?</p>
+          <div className="event-details-actions">
+            <button className="event-action-btn delete" disabled={responding} onClick={() => respond('denied')}>Decline</button>
+            <button className="event-action-btn accept" disabled={responding} onClick={() => respond('accepted')}>Accept</button>
+          </div>
+        </div>
+      ) : isMine && !hideActions && (
+        <div className="event-details-actions">
+          <button className="event-action-btn edit" onClick={handleEdit}>Edit</button>
+          <button className="event-action-btn delete" onClick={handleDelete}>Delete</button>
+        </div>
+      )}
 
     </div>
   );

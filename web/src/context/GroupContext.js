@@ -51,6 +51,16 @@ export const GroupProvider = ({ children }) => {
     return res.data.group;
   };
 
+  // One Join box: the server works out whether the code is a family or a group.
+  // Returns { type: 'family' | 'group', ... }. A 409 IN_OTHER_FAMILY error means
+  // "you're in a family with others — confirm leaving it"; call again with
+  // leaveCurrent = true after the user agrees.
+  const joinWithCode = async (code, leaveCurrent = false) => {
+    const res = await API.post("/join", { code: code.trim().toUpperCase(), leave_current: leaveCurrent });
+    await fetchGroups();
+    return res.data;
+  };
+
   const fetchGroupEvents = async (groupId) => {
     const res = await API.get(`/groups/${groupId}/events`);
     return res.data.events;
@@ -75,6 +85,7 @@ export const GroupProvider = ({ children }) => {
       fetchGroups,
       createGroup,
       joinGroup,
+      joinWithCode,
       fetchGroupEvents,
       shareEvent,
       unshareEvent,

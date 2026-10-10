@@ -1,4 +1,4 @@
-import React, { useEffect, useRef } from "react";
+import React, { useEffect, useRef, useState } from "react";
 import FullCalendar from "@fullcalendar/react";
 import interactionPlugin from "@fullcalendar/interaction";
 import dayGridPlugin from "@fullcalendar/daygrid";
@@ -8,6 +8,9 @@ import rrulePlugin from "@fullcalendar/rrule";
 import { useEvents } from "../../../context/EventContext";
 import { useUI } from "../../../context/UIContext";
 import CalendarToolbar from "./CalendarToolbar";
+import { useGroups } from "../../../context/GroupContext";
+import { useAuth } from "../../../context/AuthContext";
+import Icon from "../../common/Icon/Icon";
 import "./CalendarView.css";
 
 // Map recurrence value + start_date to an rrule string
@@ -42,20 +45,33 @@ const buildRRule = (recurrence, start_date, recurrence_end_date) => {
 const CalendarView = () => {
   const { openNewEvent, openEditEvent, selectedMember, searchQuery, selectedCategory } = useUI();
   const { events, fetchEvents, selectEvent } = useEvents();
+  const { groups } = useGroups();
+  const { user } = useAuth();
+
+  // Scope: 'all' (family + groups) · 'family' · <groupId>  — same as the mobile chips
+  const [scope, setScope] = useState('all');
+  useEffect(() => {
+    if (typeof scope === 'number' && !groups.some(g => Number(g.id) === scope)) setScope('all');
+  }, [groups]);
 
   useEffect(() => {
     fetchEvents();
   }, []);
 
+  const scopeFiltered =
+    scope === 'all'    ? events :
+    scope === 'family' ? events.filter(e => !e.from_group) :
+    events.filter(e => (e.group_ids || []).map(Number).includes(Number(scope)));
+
   const memberFiltered = selectedMember
-    ? events.filter(event => {
+    ? scopeFiltered.filter(event => {
         const isCreator = Number(event.created_by) === Number(selectedMember.id);
         const isAttendee = (event.attendees || []).some(
           a => Number(a.id) === Number(selectedMember.id)
         );
         return isCreator || isAttendee;
       })
-    : events;
+    : scopeFiltered;
 
   const q = searchQuery.trim().toLowerCase();
   const visibleEvents = memberFiltered.filter(event => {
@@ -92,7 +108,9 @@ const CalendarView = () => {
         recurrence_end_date: event.recurrence_end_date,
         status: event.status,
         created_by: event.created_by,
-        attendees: event.attendees || []
+        attendees: event.attendees || [],
+        group_ids: event.group_ids || [],
+        from_group: !!event.from_group
       }
     };
 
@@ -127,7 +145,7 @@ const CalendarView = () => {
         <div className="fc-event-custom fc-event-busy">
           <div className="fc-event-main-row">
             {timeText && <span className="fc-event-time-custom">{timeText}</span>}
-            <span className="fc-event-title-custom">🔒 Busy</span>
+            <span className="fc-event-title-custom"><Icon name="lock" size={11} /> Busy</span>
           </div>
         </div>
       );
@@ -138,7 +156,7 @@ const CalendarView = () => {
         <div className="fc-event-main-row">
           {timeText && <span className="fc-event-time-custom">{timeText}</span>}
           <span className="fc-event-title-custom">
-            {event.extendedProps.is_private && "🔒 "}
+            {event.extendedProps.is_private && <><Icon name="lock" size={11} /> </>}
             {event.title}
           </span>
         </div>
@@ -177,7 +195,8 @@ const CalendarView = () => {
 
     selectEvent(clickInfo.event);
 
-    if (isDouble) {
+    const isMine = Number(clickInfo.event.extendedProps.created_by) === Number(user?.id);
+    if (isDouble && isMine) {          // only the creator can edit
       openEditEvent();
       lastClick.current = { id: null, time: 0 };
     } else {
@@ -201,7 +220,7 @@ const CalendarView = () => {
 
   return (
     <div className="calendar-view">
-      <CalendarToolbar />
+      <CalendarToolbar scope={scope} setScope={setScope} groups={groups} />
       <FullCalendar
         plugins={[dayGridPlugin, timeGridPlugin, listPlugin, interactionPlugin, rrulePlugin]}
         eventSources={[{ events: calendarEvents }]}

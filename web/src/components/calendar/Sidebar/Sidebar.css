@@ -1528,3 +1528,18 @@
   .sidebar-chat-input { background: #2c2c2e; color: #fff; border-color: rgba(255,255,255,0.12); }
   .sidebar-task-badge-pending { background: rgba(245,158,11,0.15); }
 }
+
+/* "Switch to another family" — quiet text button under the invite code */
+.sidebar-family-switch {
+  display: inline-flex; align-items: center; gap: 6px;
+  margin-top: 8px; padding: 0; border: none; background: none;
+  color: #1a8fa8; font-size: 12px; font-weight: 600; cursor: pointer;
+}
+.sidebar-family-switch:hover { text-decoration: underline; }
+
+/* Notification icon: outline icon in a soft tinted circle (matches mobile) */
+.sidebar-notif-icon {
+  width: 28px; height: 28px; border-radius: 50%;
+  display: inline-flex; align-items: center; justify-content: center; flex-shrink: 0;
+}
+.sidebar-notif-item { cursor: pointer; }

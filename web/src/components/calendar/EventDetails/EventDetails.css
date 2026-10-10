@@ -456,3 +456,12 @@
   .event-action-btn.delete { background: #2c2c2e; }
   .event-action-btn.delete:hover { background: rgba(255,59,48,0.12); }
 }
+
+/* Invitation (opened from a notification) */
+.event-details-invite-from {
+  display: flex; align-items: center; gap: 6px;
+  margin: -4px 0 12px; color: #f48c06; font-size: 13px; font-weight: 600;
+}
+.event-details-invite-question { font-size: 14px; color: #6e6e73; margin: 4px 0 10px; }
+.event-action-btn.accept { background: #1a8fa8; color: #fff; border-color: #1a8fa8; }
+.event-action-btn:disabled { opacity: 0.5; cursor: default; }

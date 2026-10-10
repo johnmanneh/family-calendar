@@ -5,6 +5,7 @@ import { useUI } from '../../../context/UIContext';
 import { parseDateMentions } from '../../../utils/parseDateMentions';
 import './Sidebar.css';
 
+import Icon from '../../common/Icon/Icon';
 // ─── Helpers ──────────────────────────────────────────────────────────────────
 
 function timeLabel(dateStr) {
@@ -100,7 +101,7 @@ const SidebarChat = () => {
         onClick={() => setOpen(o => !o)}
       >
         <span className="sidebar-chat-label">
-          💬 Family Chat
+          <Icon name="chat" size={14} /> Family Chat
           {chatUnread > 0 && (
             <span className="sidebar-notifications-badge">
               {chatUnread > 99 ? '99+' : chatUnread}
@@ -166,7 +167,7 @@ const SidebarChat = () => {
                               </span>
                               {hasDate && (
                                 <div className={`sidebar-chat-date-hint${isMe ? ' sidebar-chat-date-hint-me' : ''}`}>
-                                  📅 Tap a date to add to calendar
+                                  <Icon name="calendar" size={12} /> Tap a date to add to calendar
                                 </div>
                               )}
                             </>

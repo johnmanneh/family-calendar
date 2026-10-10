@@ -103,3 +103,7 @@
   .calendar-toolbar-clear { color: #636366; }
   .calendar-toolbar-clear:hover { color: #aeaeb2; }
 }
+
+/* Scope row (All · Family · groups) sits above the category chips */
+.calendar-toolbar-scope { margin-bottom: 6px; }
+.calendar-toolbar-scope .calendar-toolbar-chip { display: inline-flex; align-items: center; }

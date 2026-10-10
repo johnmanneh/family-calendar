@@ -2,10 +2,12 @@ import React, { createContext, useContext, useEffect, useRef } from "react";
 import API from "../api/axios";
 import { sanitizeData } from "../utils/dataUtils";
 import { useUI } from "./UIContext";
+import { useAuth } from "./AuthContext";
 
 const EventContext = createContext();
 
 export const EventProvider = ({ children }) => {
+  const { user } = useAuth();
 
   const {
     loading,
@@ -110,6 +112,30 @@ export const EventProvider = ({ children }) => {
   };
   //
   //
+  // Open an event by id (e.g. from a notification) — also works for events that
+  // aren't in the calendar yet, like an invitation still waiting for an answer.
+  // Builds the same shape FullCalendar gives selectEvent().
+  const openEventById = async (eventId) => {
+    const res = await API.get(`/events/${eventId}`);
+    const e = res.data.event;
+    const me = (e.attendees || []).find(a => Number(a.user_id) === Number(user?.id));
+    const ev = {
+      id: String(e.id),
+      title: e.title,
+      start: e.start_date,
+      end: e.end_date,
+      backgroundColor: e.color || "#1a8fa8",
+      extendedProps: {
+        ...e,
+        attendees: (e.attendees || []).map(a => ({ ...a, id: a.user_id })),
+        group_ids: e.group_ids || [],
+        invite_pending: me?.status === "pending",
+      },
+    };
+    selectEvent(ev);
+    return ev;
+  };
+
   const selectEvent = event => {
     setSelectedEvent(event);
     fetchAttendees(event.id);
@@ -176,6 +202,20 @@ export const EventProvider = ({ children }) => {
         await Promise.all(
           validTasks.map(task => API.post(`/events/${eventId}/tasks`, task))
         );
+      }
+
+      // Sync shared groups (same event, no copy) — tick = share, untick = unshare
+      const before = (selectedEvent?.extendedProps?.group_ids || []).map(Number);
+      const after  = selectedGroups.map(Number);
+      try {
+        await Promise.all([
+          ...after.filter(id => !before.includes(id))
+            .map(id => API.post(`/groups/events/${eventId}/share`, { group_id: id })),
+          ...before.filter(id => !after.includes(id))
+            .map(id => API.delete(`/groups/events/${eventId}/share/${id}`)),
+        ]);
+      } catch {
+        setError("Event saved, but sharing with a group failed");
       }
 
       await fetchEvents();
@@ -433,6 +473,8 @@ export const EventProvider = ({ children }) => {
         events,
         selectedEvent,
         selectEvent,
+        openEventById,
+        setSelectedEvent,
         attendees,
         tasks,
         fetchTasks,

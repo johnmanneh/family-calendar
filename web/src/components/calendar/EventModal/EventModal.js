@@ -10,6 +10,7 @@ import { useUI } from "../../../context/UIContext";
 import { useGroups } from "../../../context/GroupContext";
 import "./EventModal.css";
 
+import Icon from "../../common/Icon/Icon";
 const EventModal = () => {
   const {
     isEventModalOpen,
@@ -102,6 +103,8 @@ const EventModal = () => {
       setFormData(mapEventToForm(selectedEvent));
       const attendeeIds = attendees.map(a => a.id);
       setSelectedAttendees(attendeeIds);
+      // Pre-tick the groups this event is already shared with
+      setSelectedGroups((selectedEvent.extendedProps?.group_ids || []).map(Number));
     } else {
       // Default start to selected date or now, end to start + 1 hour
       const now = new Date();
@@ -185,7 +188,7 @@ const EventModal = () => {
               </span>
             </label>
             <label className="modal-toggle-item">
-              <span className="modal-toggle-label">🔒 Private</span>
+              <span className="modal-toggle-label"><Icon name="lock" size={13} /> Private</span>
               <span className="modal-toggle-switch">
                 <input
                   type="checkbox"

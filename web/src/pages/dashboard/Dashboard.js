@@ -1,4 +1,6 @@
 import React, { useEffect } from "react";
+import { useLocation, useNavigate } from "react-router-dom";
+import { useUI } from "../../context/UIContext";
 import { useAuth } from "../../context/AuthContext";
 import { useFamily } from "../../context/FamilyContext";
 import { useEvents } from "../../context/EventContext";
@@ -11,8 +13,20 @@ import StandaloneTaskModal from "../../components/calendar/EventModal/Standalone
 import "./Dashboard.css";
 
 const Dashboard = () => {
-  const { fetchFamily } = useFamily();
+  const { fetchFamily, members } = useFamily();
   const { fetchEvents } = useEvents();
+  const { setSelectedMember } = useUI();
+  const location = useLocation();
+  const navigate = useNavigate();
+
+  // "See all <name>'s events" on a profile → open the calendar filtered to them
+  useEffect(() => {
+    const id = location.state?.focusMemberId;
+    if (id == null || members.length === 0) return;
+    const m = members.find(x => Number(x.id) === Number(id));
+    if (m) setSelectedMember(m);
+    navigate(location.pathname, { replace: true, state: {} });
+  }, [location.state, members]);
 
   useEffect(() => {
     fetchFamily();

@@ -1,17 +1,18 @@
 import React, { useState, useEffect, useCallback } from 'react';
 import { useEvents } from '../../../context/EventContext';
+import Icon from '../../common/Icon/Icon';
 import './Sidebar.css';
 
 // ─── Type config ──────────────────────────────────────────────────────────────
 // Each notification type gets an emoji icon and a label colour.
 
 const TYPE_CONFIG = {
-  task_assigned:   { icon: '📋', color: '#f48c06' },
-  task_accepted:   { icon: '✅', color: '#34c759' },
-  task_declined:   { icon: '❌', color: '#ff3b30' },
-  task_countered:  { icon: '↩️', color: '#007aff' },
-  counter_accepted:{ icon: '🤝', color: '#34c759' },
-  event_invited:   { icon: '📅', color: '#1a8fa8' },
+  task_assigned:    { icon: 'clipboard',   color: '#f48c06' },
+  task_accepted:    { icon: 'checkCircle', color: '#34c759' },
+  task_declined:    { icon: 'xCircle',     color: '#ff3b30' },
+  task_countered:   { icon: 'reply',       color: '#007aff' },
+  counter_accepted: { icon: 'thumbsUp',    color: '#34c759' },
+  event_invited:    { icon: 'calendar',    color: '#1a8fa8' },
 };
 
 function timeAgo(dateStr) {
@@ -29,7 +30,7 @@ function timeAgo(dateStr) {
 // ─── SidebarNotifications ─────────────────────────────────────────────────────
 
 const SidebarNotifications = () => {
-  const { fetchNotifications, markAllNotificationsRead, markNotificationRead } = useEvents();
+  const { fetchNotifications, markAllNotificationsRead, markNotificationRead, openEventById } = useEvents();
 
   const [notifications, setNotifications] = useState([]);
   const [unreadCount,   setUnreadCount]   = useState(0);
@@ -65,6 +66,17 @@ const SidebarNotifications = () => {
     setUnreadCount(prev => Math.max(0, prev - 1));
   };
 
+  // Click → mark read and open what it's about (event invitation → the event,
+  // where it can be accepted or declined)
+  const handleOpen = async (n) => {
+    if (!n.is_read) handleMarkOneRead(n.id);
+    let data = n.data || {};
+    if (typeof data === 'string') { try { data = JSON.parse(data); } catch { data = {}; } }
+    if (data.eventId) {
+      try { await openEventById(data.eventId); } catch { /* event gone */ }
+    }
+  };
+
   return (
     <div className="sidebar-notifications">
 
@@ -74,7 +86,7 @@ const SidebarNotifications = () => {
         onClick={() => setOpen(o => !o)}
       >
         <span className="sidebar-notifications-label">
-          🔔 Notifications
+          <Icon name="bell" size={14} /> Notifications
           {unreadCount > 0 && (
             <span className="sidebar-notifications-badge">{unreadCount > 99 ? '99+' : unreadCount}</span>
           )}
@@ -97,15 +109,15 @@ const SidebarNotifications = () => {
             <p className="sidebar-notifications-empty">No notifications yet</p>
           ) : (
             notifications.map(n => {
-              const cfg = TYPE_CONFIG[n.type] || { icon: '🔔', color: '#8e8e93' };
+              const cfg = TYPE_CONFIG[n.type] || { icon: 'bell', color: '#8e8e93' };
               return (
                 <div
                   key={n.id}
                   className={`sidebar-notif-item${n.is_read ? ' read' : ' unread'}`}
-                  onClick={() => !n.is_read && handleMarkOneRead(n.id)}
+                  onClick={() => handleOpen(n)}
                 >
-                  <span className="sidebar-notif-icon" style={{ color: cfg.color }}>
-                    {cfg.icon}
+                  <span className="sidebar-notif-icon" style={{ background: cfg.color + '1f' }}>
+                    <Icon name={cfg.icon} size={15} color={cfg.color} />
                   </span>
                   <div className="sidebar-notif-body">
                     <p className="sidebar-notif-title">{n.title}</p>

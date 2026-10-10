@@ -7,6 +7,7 @@ import { useAuth } from "../../context/AuthContext";
 import { MEMBER_COLORS } from "./MemberColors";
 import Button from "../../components/common/Button/Button";
 import Avatar from "../../components/common/Avatar/Avatar";
+import Icon from "../../components/common/Icon/Icon";
 
 import "./MemberProfile.css";
 
@@ -17,7 +18,7 @@ const MemberProfile = () => {
   const navigate = useNavigate();
 
   const [selectedColor, setSelectedColor] = useState("");
-  const [activeTab, setActiveTab] = useState("personal");
+  const [activeTab, setActiveTab] = useState("personal");   // corrected below once we know whose profile it is
   const [events, setEvents] = useState([]);
   const [tasks, setTasks] = useState([]);
   const [loading, setLoading] = useState(true);
@@ -47,6 +48,9 @@ const MemberProfile = () => {
   const isOwnProfile = Number(user?.id) === parseInt(userId);
   const currentUser = members.find(m => Number(m.id) === Number(user?.id));
   const isAdmin = currentUser?.role === 'admin';
+
+  // Own profile opens straight on Settings; someone else's on "Coming up"
+  useEffect(() => { setActiveTab(isOwnProfile ? "settings" : "personal"); }, [isOwnProfile]);
 
   useEffect(() => {
     const fetchData = async () => {
@@ -158,6 +162,13 @@ const MemberProfile = () => {
     }
   };
 
+  const upcoming = [
+    ...events.map(ev => ({ kind: 'event', key: `e-${ev.id}`, when: ev.start_date, ev })),
+    ...tasks.map(tk => ({ kind: 'task', key: `t-${tk.id}`, when: tk.start_date || tk.due_date, tk })),
+  ]
+    .sort((a, b) => (!a.when ? 1 : !b.when ? -1 : new Date(a.when) - new Date(b.when)))
+    .slice(0, 3);
+
   if (!member) {
     return (
       <div className="member-page">
@@ -196,25 +207,23 @@ const MemberProfile = () => {
           </div>
         </div>
 
-        {/* Tabs */}
-        <div className="member-tabs">
-          <button
-            className={`member-tab ${activeTab === "personal" ? "active" : ""}`}
-            onClick={() => setActiveTab("personal")}
-          >
-            Personal View
-          </button>
-          {(isOwnProfile || isAdmin) && (
+        {/* Tabs — only when there's a choice: an admin looking at someone else */}
+        {!isOwnProfile && isAdmin && (
+          <div className="member-tabs">
             <button
-              className={`member-tab ${
-                activeTab === "settings" ? "active" : ""
-              }`}
+              className={`member-tab ${activeTab === "personal" ? "active" : ""}`}
+              onClick={() => setActiveTab("personal")}
+            >
+              Coming up
+            </button>
+            <button
+              className={`member-tab ${activeTab === "settings" ? "active" : ""}`}
               onClick={() => setActiveTab("settings")}
             >
               Settings
             </button>
-          )}
-        </div>
+          </div>
+        )}
       </div>
 
       {/* Content */}
@@ -223,62 +232,40 @@ const MemberProfile = () => {
           <p className="member-loading">Loading...</p>
         ) : activeTab === "personal" ? (
           <div className="member-personal">
-            {/* Events */}
+            {/* Coming up: their next 3 events/tasks — the full view is the calendar */}
             <div className="member-card">
-              <h3 className="member-card-title">📅 Events</h3>
-              {events.length === 0 ? (
-                <p className="member-empty">No events yet</p>
-              ) : (
-                events.map(event => (
-                  <div key={event.id} className="member-event">
-                    <div
-                      className="member-event-color"
-                      style={{ background: event.color || "#1a8fa8" }}
-                    />
-                    <div className="member-event-info">
-                      <p className="member-event-title">{event.title}</p>
-                      <p className="member-event-date">
-                        {formatDate(new Date(event.start_date))}
-                      </p>
-                      {event.location && (
-                        <p className="member-event-location">
-                          📍 {event.location}
-                        </p>
-                      )}
-                    </div>
-                    <span className={`member-event-priority ${event.priority}`}>
-                      {event.priority}
-                    </span>
+              <h3 className="member-card-title"><Icon name="calendar" size={15} /> Coming up</h3>
+              {upcoming.length === 0 ? (
+                <p className="member-empty">Nothing coming up</p>
+              ) : upcoming.map(item => item.kind === 'event' ? (
+                <div key={item.key} className="member-event">
+                  <div className="member-event-color" style={{ background: item.ev.color || "#1a8fa8" }} />
+                  <div className="member-event-info">
+                    <p className="member-event-title">{item.ev.title}</p>
+                    <p className="member-event-date">{formatDate(new Date(item.ev.start_date))}</p>
+                    {item.ev.location && (
+                      <p className="member-event-location"><Icon name="mapPin" size={12} /> {item.ev.location}</p>
+                    )}
                   </div>
-                ))
-              )}
-            </div>
+                </div>
+              ) : (
+                <div key={item.key} className="member-event">
+                  <div className="member-event-color" style={{ background: member.color || "#1a8fa8" }} />
+                  <div className="member-event-info">
+                    <p className="member-event-title">{item.tk.title}</p>
+                    <p className="member-event-date">
+                      {item.tk.event_title || (item.tk.due_date ? formatDate(new Date(item.tk.due_date)) : "No due date")}
+                    </p>
+                  </div>
+                </div>
+              ))}
 
-            {/* Tasks */}
-            <div className="member-card">
-              <h3 className="member-card-title">✅ Tasks</h3>
-              {tasks.length === 0 ? (
-                <p className="member-empty">No tasks yet</p>
-              ) : (
-                tasks.map(task => (
-                  <div key={task.id} className="member-task">
-                    <div
-                      className="member-task-dot"
-                      style={{ background: task.color || "#1a8fa8" }}
-                    />
-                    <div className="member-task-info">
-                      <p className="member-task-title">{task.title}</p>
-                      <p className="member-task-event">{task.event_title}</p>
-                      <p className="member-task-date">
-                        {formatDate(new Date(task.start_date))}
-                      </p>
-                    </div>
-                    <span className="member-task-position">
-                      {task.position}
-                    </span>
-                  </div>
-                ))
-              )}
+              <button
+                className="member-see-all"
+                onClick={() => navigate("/dashboard", { state: { focusMemberId: member.id } })}
+              >
+                See all {member.first_name}'s events ›
+              </button>
             </div>
           </div>
         ) : (
@@ -286,7 +273,7 @@ const MemberProfile = () => {
             {/* Photo Card — own profile only */}
             {isOwnProfile && (
               <div className="member-card">
-                <h3 className="member-card-title">📷 Profile Photo</h3>
+                <h3 className="member-card-title"><Icon name="camera" size={15} /> Profile Photo</h3>
                 <p className="member-settings-hint">
                   Upload a photo — it shows in the sidebar and your profile
                 </p>
@@ -327,7 +314,7 @@ const MemberProfile = () => {
 
             {/* Color Card — own profile only */}
             {isOwnProfile && <div className="member-card">
-              <h3 className="member-card-title">🎨 Your Color</h3>
+              <h3 className="member-card-title"><Icon name="palette" size={15} /> Your Color</h3>
               <p className="member-settings-hint">
                 This color shows on your avatar and events
               </p>
@@ -353,7 +340,7 @@ const MemberProfile = () => {
 
             {/* Circle Type Card */}
             <div className="member-card">
-              <h3 className="member-card-title">🔒 Privacy Circle</h3>
+              <h3 className="member-card-title"><Icon name="lock" size={15} /> Privacy Circle</h3>
               <p className="member-settings-hint">
                 Inner — sees all events (private shown as Busy).<br />
                 Extended — sees all non-private events.<br />
@@ -377,7 +364,7 @@ const MemberProfile = () => {
             {/* Relationship Label Card — admin only, not own profile */}
             {isAdmin && !isOwnProfile && (
               <div className="member-card">
-                <h3 className="member-card-title">🏷️ Relationship Label</h3>
+                <h3 className="member-card-title"><Icon name="tag" size={15} /> Relationship Label</h3>
                 <p className="member-settings-hint">
                   Label this member's relationship — e.g. Grandma, Uncle Bob, Cousin.
                   {member.relationship && <> Current: <strong>{member.relationship}</strong></>}
@@ -402,7 +389,7 @@ const MemberProfile = () => {
             {/* Danger Zone — own profile only */}
             {isOwnProfile && (
               <div className="member-card member-card--danger">
-                <h3 className="member-card-title">⚠️ Danger Zone</h3>
+                <h3 className="member-card-title"><Icon name="alert" size={15} /> Danger Zone</h3>
                 <p className="member-settings-hint">
                   Permanently delete your account. Your family events will remain but your name will be removed from them. This cannot be undone.
                 </p>
@@ -429,7 +416,7 @@ const MemberProfile = () => {
 
             {/* Profile Info Card — own profile only */}
             {isOwnProfile && <div className="member-card">
-              <h3 className="member-card-title">👤 Profile Info</h3>
+              <h3 className="member-card-title"><Icon name="user" size={15} /> Profile Info</h3>
               <p className="member-settings-hint">
                 All fields are optional — update only what you want
               </p>
