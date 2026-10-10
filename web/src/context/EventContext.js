@@ -1,4 +1,4 @@
-import React, { createContext, useContext, useEffect, useRef } from "react";
+import React, { createContext, useContext, useEffect, useRef, useState } from "react";
 import API from "../api/axios";
 import { sanitizeData } from "../utils/dataUtils";
 import { useUI } from "./UIContext";
@@ -8,6 +8,8 @@ const EventContext = createContext();
 
 export const EventProvider = ({ children }) => {
   const { user } = useAuth();
+  // Bumps whenever the server pings this user about a new notification
+  const [notifTick, setNotifTick] = useState(0);
 
   const {
     loading,
@@ -435,6 +437,10 @@ export const EventProvider = ({ children }) => {
       fetchEvents();
     });
 
+    es.addEventListener('notification', () => {
+      setNotifTick(t => t + 1);
+    });
+
     es.addEventListener('chat_message', (e) => {
       try {
         const msg = JSON.parse(e.data);
@@ -474,6 +480,7 @@ export const EventProvider = ({ children }) => {
         selectedEvent,
         selectEvent,
         openEventById,
+        notifTick,
         setSelectedEvent,
         attendees,
         tasks,

@@ -10,6 +10,7 @@ import {
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { Ionicons } from '@expo/vector-icons';
 import { useTranslation } from 'react-i18next';
+import { useSSE } from '../context/SSEContext';
 import API from '../api/axios';
 import { useStyles } from '../styles/NotificationsScreen.styles';
 
@@ -24,6 +25,7 @@ const TYPE_CONFIG = {
   task_countered:   { icon: 'return-up-back-outline',   color: '#007aff' },
   counter_accepted: { icon: 'thumbs-up-outline',        color: '#34c759' },
   event_invited:    { icon: 'calendar-outline',         color: '#1a8fa8' },
+  event_shared:     { icon: 'people-outline',           color: '#7b61ff' },
 };
 
 // ─── Time ago helper ─────────────────────────────────────────────────────────
@@ -103,6 +105,8 @@ export default function NotificationsScreen({ navigation }) {
   }, []);
 
   useEffect(() => { load(); }, [load]);
+  const { notifTick } = useSSE();
+  useEffect(() => { if (notifTick > 0) load(); }, [notifTick]);
 
   const handleRefresh = () => {
     setRefreshing(true);

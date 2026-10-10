@@ -386,7 +386,7 @@ export default function HomeScreen({ navigation, route }) {
   const insets = useSafeAreaInsets();
   const { logout, user } = useAuth();
   const { members } = useFamily();
-  const { eventTick, taskTick, lastChatMsg } = useSSE();
+  const { eventTick, taskTick, notifTick, lastChatMsg } = useSSE();
 
   // Put the logged-in user first, everyone else follows in original order
   const sortedMembers = user
@@ -882,6 +882,7 @@ export default function HomeScreen({ navigation, route }) {
   // Skip the very first render (tick = 0) since mount already fetches.
   useEffect(() => { if (eventTick > 0) fetchEvents(); },                                    [eventTick]);
   useEffect(() => { if (taskTick  > 0) { fetchEvents(); fetchPendingCount(); fetchNotifUnread(); } }, [taskTick]);
+  useEffect(() => { if (notifTick > 0) { fetchPendingCount(); fetchNotifUnread(); } }, [notifTick]);
 
   // Re-fetch tasks when returning from TaskFormScreen or any other screen
   useFocusEffect(useCallback(() => { fetchEvents(); fetchPendingCount(); }, [fetchEvents, fetchPendingCount]));

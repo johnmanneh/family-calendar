@@ -1,12 +1,15 @@
 const pool = require('../../config/db');
-const { addClient, removeClient } = require('../../utils/sseClients');
+const { addClient, removeClient, addUserClient, removeUserClient } = require('../../utils/sseClients');
 
 const streamConnect = async (req, res) => {
   const userId = req.user.id;
 
   // JWT only carries user id — look up family membership
   const memberRes = await pool.query(
-    'SELECT family_id FROM family_members WHERE user_id = $1 LIMIT 1',
+    `SELECT fm.family_id FROM family_members fm
+     WHERE fm.user_id = $1
+     ORDER BY (SELECT COUNT(*) FROM family_members WHERE family_id = fm.family_id) DESC
+     LIMIT 1`,
     [userId]
   );
   if (memberRes.rowCount === 0) {
@@ -22,6 +25,7 @@ const streamConnect = async (req, res) => {
 
   // Register this connection
   addClient(familyId, res);
+  addUserClient(userId, res);
 
   // Send a heartbeat every 30s to prevent proxy timeouts
   const heartbeat = setInterval(() => {
@@ -32,6 +36,7 @@ const streamConnect = async (req, res) => {
   req.on('close', () => {
     clearInterval(heartbeat);
     removeClient(familyId, res);
+    removeUserClient(userId, res);
   });
 };
 

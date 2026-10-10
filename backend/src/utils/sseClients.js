@@ -1,26 +1,39 @@
-// In-memory store: familyId (string) → Set of response objects
+// In-memory stores:
+//   clients     familyId (string) → Set of response objects  (family-wide updates)
+//   userClients userId   (string) → Set of response objects  (personal: notifications)
 const clients = new Map();
+const userClients = new Map();
 
-const addClient = (familyId, res) => {
-  const key = String(familyId);
-  if (!clients.has(key)) clients.set(key, new Set());
-  clients.get(key).add(res);
+const addTo = (map, key, res) => {
+  const k = String(key);
+  if (!map.has(k)) map.set(k, new Set());
+  map.get(k).add(res);
 };
 
-const removeClient = (familyId, res) => {
-  const key = String(familyId);
-  if (clients.has(key)) {
-    clients.get(key).delete(res);
-    if (clients.get(key).size === 0) clients.delete(key);
+const removeFrom = (map, key, res) => {
+  const k = String(key);
+  if (map.has(k)) {
+    map.get(k).delete(res);
+    if (map.get(k).size === 0) map.delete(k);
   }
 };
 
-// Sends a named SSE event to every connected member of a family
-const broadcast = (familyId, eventName, data) => {
-  const key = String(familyId);
-  if (!clients.has(key)) return;
+const writeTo = (map, key, eventName, data) => {
+  const k = String(key);
+  if (!map.has(k)) return;
   const payload = `event: ${eventName}\ndata: ${JSON.stringify(data)}\n\n`;
-  clients.get(key).forEach(res => res.write(payload));
+  map.get(k).forEach(res => { try { res.write(payload); } catch { /* closed */ } });
 };
 
-module.exports = { addClient, removeClient, broadcast };
+const addClient     = (familyId, res) => addTo(clients, familyId, res);
+const removeClient  = (familyId, res) => removeFrom(clients, familyId, res);
+const addUserClient    = (userId, res) => addTo(userClients, userId, res);
+const removeUserClient = (userId, res) => removeFrom(userClients, userId, res);
+
+// Sends a named SSE event to every connected member of a family
+const broadcast = (familyId, eventName, data) => writeTo(clients, familyId, eventName, data);
+
+// Sends a named SSE event to every open connection of one user (any device)
+const sendToUser = (userId, eventName, data) => writeTo(userClients, userId, eventName, data);
+
+module.exports = { addClient, removeClient, addUserClient, removeUserClient, broadcast, sendToUser };

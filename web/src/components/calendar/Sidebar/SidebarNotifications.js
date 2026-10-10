@@ -13,6 +13,7 @@ const TYPE_CONFIG = {
   task_countered:   { icon: 'reply',       color: '#007aff' },
   counter_accepted: { icon: 'thumbsUp',    color: '#34c759' },
   event_invited:    { icon: 'calendar',    color: '#1a8fa8' },
+  event_shared:     { icon: 'users',       color: '#7b61ff' },
 };
 
 function timeAgo(dateStr) {
@@ -31,7 +32,7 @@ function timeAgo(dateStr) {
 
 // startOpen: used by the phone layout, where the bell opens this as a full sheet
 const SidebarNotifications = ({ startOpen = false, onUnreadChange }) => {
-  const { fetchNotifications, markAllNotificationsRead, markNotificationRead, openEventById } = useEvents();
+  const { fetchNotifications, markAllNotificationsRead, markNotificationRead, openEventById, notifTick } = useEvents();
 
   const [notifications, setNotifications] = useState([]);
   const [unreadCount,   setUnreadCount]   = useState(0);
@@ -54,6 +55,8 @@ const SidebarNotifications = ({ startOpen = false, onUnreadChange }) => {
   // Load on mount and whenever the panel opens
   useEffect(() => { load(); }, [load]);
   useEffect(() => { if (open) load(); }, [open]);
+  // Live: the server pinged us about a new notification
+  useEffect(() => { if (notifTick > 0) load(); }, [notifTick]);
 
   const handleMarkAllRead = async () => {
     await markAllNotificationsRead();

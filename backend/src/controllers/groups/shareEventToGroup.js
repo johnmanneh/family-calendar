@@ -1,5 +1,7 @@
 const pool = require('../../config/db');
 const { successResponse, errorResponse } = require('../../utils/response/responseHandlers');
+const { broadcast } = require('../../utils/sseClients');
+const notifyUser = require('../../utils/notifyUser');
 
 const shareEventToGroup = async (req, res) => {
   const userId = req.user.id;
@@ -28,10 +30,12 @@ const shareEventToGroup = async (req, res) => {
       return errorResponse(res, 403, 'You are not a member of this group');
     }
 
-    await pool.query(
-      `INSERT INTO event_groups (event_id, group_id) VALUES ($1, $2) ON CONFLICT DO NOTHING`,
+    const inserted = await pool.query(
+      `INSERT INTO event_groups (event_id, group_id) VALUES ($1, $2)
+       ON CONFLICT DO NOTHING RETURNING event_id`,
       [eventId, group_id]
     );
+    const isNewShare = inserted.rowCount > 0;
 
     // Auto-invite event attendees who are not already group members and have no pending invite
     const attendees = await pool.query(
@@ -70,10 +74,63 @@ const shareEventToGroup = async (req, res) => {
       }
     }
 
+    if (isNewShare) await announceShare(eventId, group_id, userId);
+
     return successResponse(res, 200, 'Event shared with group');
   } catch (error) {
     return errorResponse(res, 500, 'Server error');
   }
 };
+
+// Tell the group: refresh every member's calendar live, and notify each member
+// (except the sharer). People who are already invited as attendees got an
+// invitation of their own, so they don't get a second "shared" notification.
+async function announceShare(eventId, groupId, sharerId) {
+  try {
+    const info = await pool.query(
+      `SELECT e.title, e.is_private, e.start_date, g.name AS group_name,
+              u.first_name, u.last_name
+       FROM events e, groups g, users u
+       WHERE e.id = $1 AND g.id = $2 AND u.id = $3`,
+      [eventId, groupId, sharerId]
+    );
+    if (info.rows.length === 0) return;
+    const { title, is_private, group_name, first_name, last_name } = info.rows[0];
+    const sharer = [first_name, last_name].filter(Boolean).join(' ') || 'Someone';
+
+    const members = await pool.query(
+      `SELECT gm.user_id,
+              EXISTS (SELECT 1 FROM event_attendees ea
+                      WHERE ea.event_id = $2 AND ea.user_id = gm.user_id) AS is_attendee
+       FROM group_members gm
+       WHERE gm.group_id = $1 AND gm.user_id != $3`,
+      [groupId, eventId, sharerId]
+    );
+
+    // Live refresh: every family that has a member in this group
+    const fams = await pool.query(
+      `SELECT DISTINCT fm.family_id FROM family_members fm
+       JOIN group_members gm ON gm.user_id = fm.user_id
+       WHERE gm.group_id = $1`,
+      [groupId]
+    );
+    fams.rows.forEach(r => broadcast(r.family_id, 'event_update', { eventId: Number(eventId) }));
+
+    // Private events show up as "Busy" at most — nothing to announce
+    if (is_private) return;
+
+    members.rows
+      .filter(m => !m.is_attendee)
+      .forEach(m => notifyUser(
+        m.user_id,
+        'event_shared',
+        group_name,
+        `${sharer} shared: ${title}`,
+        { eventId: Number(eventId), groupId: Number(groupId) }
+      ));
+  } catch (err) {
+    console.error('announceShare error:', err.message);
+  }
+}
 
 module.exports = shareEventToGroup;

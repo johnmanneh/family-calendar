@@ -12,7 +12,7 @@ import { BASE_URL } from '../api/axios';
 //   taskTick    — increments on every task_update from the server
 //   lastChatMsg — the most recent chat_message payload (null until first message)
 
-const SSEContext = createContext({ eventTick: 0, taskTick: 0, lastChatMsg: null });
+const SSEContext = createContext({ eventTick: 0, taskTick: 0, notifTick: 0, lastChatMsg: null });
 
 export const SSEProvider = ({ children }) => {
   const { token, logout } = useAuth();
@@ -22,6 +22,7 @@ export const SSEProvider = ({ children }) => {
 
   const [eventTick,   setEventTick]   = useState(0);
   const [taskTick,    setTaskTick]    = useState(0);
+  const [notifTick,   setNotifTick]   = useState(0);
   const [lastChatMsg, setLastChatMsg] = useState(null);
 
   // Keep tokenRef in sync so the AppState callback always uses the latest token.
@@ -52,6 +53,11 @@ export const SSEProvider = ({ children }) => {
 
     es.addEventListener('task_update', () => {
       setTaskTick(t => t + 1);
+    });
+
+    // Personal: a new notification landed for this user (invite, group share…)
+    es.addEventListener('notification', () => {
+      setNotifTick(t => t + 1);
     });
 
     es.addEventListener('chat_message', (e) => {
@@ -121,7 +127,7 @@ export const SSEProvider = ({ children }) => {
   }, []); // runs once — uses tokenRef so it always reads the latest token
 
   return (
-    <SSEContext.Provider value={{ eventTick, taskTick, lastChatMsg }}>
+    <SSEContext.Provider value={{ eventTick, taskTick, notifTick, lastChatMsg }}>
       {children}
     </SSEContext.Provider>
   );

@@ -1,6 +1,6 @@
 const pool = require('../../../config/db');
 const { successResponse, errorResponse } = require('../../../utils/response/responseHandlers');
-const insertNotification = require('../../../utils/insertNotification');
+const notifyUser = require('../../../utils/notifyUser');
 
 const addAttendee = async (req, res) => {
   const { id } = req.params; // event_id
@@ -36,7 +36,7 @@ const addAttendee = async (req, res) => {
       if (eventDetail.rows.length > 0) {
         const { title, first_name, last_name } = eventDetail.rows[0];
         const creatorName = [first_name, last_name].filter(Boolean).join(' ') || 'Someone';
-        insertNotification(
+        notifyUser(
           user_id,
           'event_invited',
           'Event invitation',
