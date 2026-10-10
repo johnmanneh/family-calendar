@@ -97,28 +97,68 @@
   }
 
 @media (prefers-color-scheme: dark) {
-  .calendar-view { background: #1c1c1e; }
+  :root:not([data-theme="light"]) .calendar-view { background: #1c1c1e; }
 
   /* FullCalendar dark overrides */
-  .fc { color: #fff; }
-  .fc-theme-standard .fc-scrollgrid { border-color: #3a3a3c; }
-  .fc-theme-standard td, .fc-theme-standard th { border-color: #3a3a3c; }
-  .fc .fc-daygrid-day { background: #1c1c1e; }
-  .fc .fc-daygrid-day.fc-day-today { background: rgba(26,143,168,0.12); }
-  .fc .fc-col-header-cell { background: #1c1c1e; color: #aeaeb2; }
-  .fc .fc-daygrid-day-number { color: #aeaeb2; }
-  .fc .fc-daygrid-day.fc-day-today .fc-daygrid-day-number { color: #1a8fa8; }
-  .fc .fc-daygrid-day:hover { background: rgba(255,255,255,0.03); }
-  .fc .fc-toolbar-title { color: #fff; }
-  .fc .fc-button { background: #2c2c2e; border-color: #3a3a3c; color: #fff; }
-  .fc .fc-button:hover { background: #3a3a3c; }
-  .fc .fc-button-primary:not(:disabled).fc-button-active { background: #1a8fa8; border-color: #1a8fa8; }
-  .fc .fc-more-link { color: #1a8fa8; }
-  .fc .fc-timegrid-slot { border-color: #3a3a3c; }
-  .fc .fc-timegrid-axis { color: #636366; }
-  .fc .fc-list-day-cushion { background: #2c2c2e; }
-  .fc .fc-list-event:hover td { background: rgba(255,255,255,0.04); }
+  :root:not([data-theme="light"]) .fc { color: #fff; }
+  :root:not([data-theme="light"]) .fc-theme-standard .fc-scrollgrid { border-color: #3a3a3c; }
+  :root:not([data-theme="light"]) .fc-theme-standard td, :root:not([data-theme="light"]) .fc-theme-standard th { border-color: #3a3a3c; }
+  :root:not([data-theme="light"]) .fc .fc-daygrid-day { background: #1c1c1e; }
+  :root:not([data-theme="light"]) .fc .fc-daygrid-day.fc-day-today { background: rgba(26,143,168,0.12); }
+  :root:not([data-theme="light"]) .fc .fc-col-header-cell { background: #1c1c1e; color: #aeaeb2; }
+  :root:not([data-theme="light"]) .fc .fc-daygrid-day-number { color: #aeaeb2; }
+  :root:not([data-theme="light"]) .fc .fc-daygrid-day.fc-day-today .fc-daygrid-day-number { color: #1a8fa8; }
+  :root:not([data-theme="light"]) .fc .fc-daygrid-day:hover { background: rgba(255,255,255,0.03); }
+  :root:not([data-theme="light"]) .fc .fc-toolbar-title { color: #fff; }
+  :root:not([data-theme="light"]) .fc .fc-button { background: #2c2c2e; border-color: #3a3a3c; color: #fff; }
+  :root:not([data-theme="light"]) .fc .fc-button:hover { background: #3a3a3c; }
+  :root:not([data-theme="light"]) .fc .fc-button-primary:not(:disabled).fc-button-active { background: #1a8fa8; border-color: #1a8fa8; }
+  :root:not([data-theme="light"]) .fc .fc-more-link { color: #1a8fa8; }
+  :root:not([data-theme="light"]) .fc .fc-timegrid-slot { border-color: #3a3a3c; }
+  :root:not([data-theme="light"]) .fc .fc-timegrid-axis { color: #636366; }
+  :root:not([data-theme="light"]) .fc .fc-list-day-cushion { background: #2c2c2e; }
+  :root:not([data-theme="light"]) .fc .fc-list-event:hover td { background: rgba(255,255,255,0.04); }
 }
+
+/*  Dark mode chosen in the app (overrides the device setting)  */
+
+:root[data-theme="dark"] .calendar-view { background: #1c1c1e; }
+
+:root[data-theme="dark"] .fc { color: #fff; }
+
+:root[data-theme="dark"] .fc-theme-standard .fc-scrollgrid { border-color: #3a3a3c; }
+
+:root[data-theme="dark"] .fc-theme-standard td, :root[data-theme="dark"] .fc-theme-standard th { border-color: #3a3a3c; }
+
+:root[data-theme="dark"] .fc .fc-daygrid-day { background: #1c1c1e; }
+
+:root[data-theme="dark"] .fc .fc-daygrid-day.fc-day-today { background: rgba(26,143,168,0.12); }
+
+:root[data-theme="dark"] .fc .fc-col-header-cell { background: #1c1c1e; color: #aeaeb2; }
+
+:root[data-theme="dark"] .fc .fc-daygrid-day-number { color: #aeaeb2; }
+
+:root[data-theme="dark"] .fc .fc-daygrid-day.fc-day-today .fc-daygrid-day-number { color: #1a8fa8; }
+
+:root[data-theme="dark"] .fc .fc-daygrid-day:hover { background: rgba(255,255,255,0.03); }
+
+:root[data-theme="dark"] .fc .fc-toolbar-title { color: #fff; }
+
+:root[data-theme="dark"] .fc .fc-button { background: #2c2c2e; border-color: #3a3a3c; color: #fff; }
+
+:root[data-theme="dark"] .fc .fc-button:hover { background: #3a3a3c; }
+
+:root[data-theme="dark"] .fc .fc-button-primary:not(:disabled).fc-button-active { background: #1a8fa8; border-color: #1a8fa8; }
+
+:root[data-theme="dark"] .fc .fc-more-link { color: #1a8fa8; }
+
+:root[data-theme="dark"] .fc .fc-timegrid-slot { border-color: #3a3a3c; }
+
+:root[data-theme="dark"] .fc .fc-timegrid-axis { color: #636366; }
+
+:root[data-theme="dark"] .fc .fc-list-day-cushion { background: #2c2c2e; }
+
+:root[data-theme="dark"] .fc .fc-list-event:hover td { background: rgba(255,255,255,0.04); }
 /* ── Phone ── */
 @media (max-width: 767px) {
   .fc { padding: 6px; }

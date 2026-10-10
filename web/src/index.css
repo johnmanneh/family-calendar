@@ -31,7 +31,7 @@
 }
 
 @media (prefers-color-scheme: dark) {
-  :root {
+  :root:not([data-theme="light"]) {
     --bg: #000000;
     --card: #1c1c1e;
     --text-primary: #ffffff;
@@ -46,7 +46,7 @@
     --hover-overlay: rgba(255,255,255,0.06);
   }
 
-  body {
+  :root:not([data-theme="light"]) body {
     background:
       radial-gradient(ellipse 60% 40% at 20% 20%, rgba(86,227,159,0.04), transparent),
       radial-gradient(ellipse 60% 40% at 80% 80%, rgba(79,172,254,0.04), transparent),
@@ -54,9 +54,38 @@
     color: var(--text-primary);
   }
 
-  ::-webkit-scrollbar-track { background: var(--bg); }
-  ::-webkit-scrollbar-thumb { background: var(--border); }
+  :root:not([data-theme="light"]) ::-webkit-scrollbar-track { background: var(--bg); }
+  :root:not([data-theme="light"]) ::-webkit-scrollbar-thumb { background: var(--border); }
 }
+
+/*  Dark mode chosen in the app (overrides the device setting)  */
+
+:root[data-theme="dark"] {
+    --bg: #000000;
+    --card: #1c1c1e;
+    --text-primary: #ffffff;
+    --text-secondary: #aeaeb2;
+    --input-bg: #2c2c2e;
+    --border: #3a3a3c;
+    --shadow: 0 2px 8px rgba(0,0,0,0.3), 0 8px 32px rgba(0,0,0,0.4);
+    --surface: #1c1c1e;
+    --surface2: #2c2c2e;
+    --separator: rgba(255,255,255,0.08);
+    --text-muted: #636366;
+    --hover-overlay: rgba(255,255,255,0.06);
+  }
+
+:root[data-theme="dark"] body {
+    background:
+      radial-gradient(ellipse 60% 40% at 20% 20%, rgba(86,227,159,0.04), transparent),
+      radial-gradient(ellipse 60% 40% at 80% 80%, rgba(79,172,254,0.04), transparent),
+      #000000;
+    color: var(--text-primary);
+  }
+
+:root[data-theme="dark"] ::-webkit-scrollbar-track { background: var(--bg); }
+
+:root[data-theme="dark"] ::-webkit-scrollbar-thumb { background: var(--border); }
 
 * {
   margin: 0;

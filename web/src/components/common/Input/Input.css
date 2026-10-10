@@ -31,5 +31,9 @@
 }
 
 @media (prefers-color-scheme: dark) {
-  .form-group input:focus { background: #3a3a3c; }
+  :root:not([data-theme="light"]) .form-group input:focus { background: #3a3a3c; }
 }
+
+/*  Dark mode chosen in the app (overrides the device setting)  */
+
+:root[data-theme="dark"] .form-group input:focus { background: #3a3a3c; }

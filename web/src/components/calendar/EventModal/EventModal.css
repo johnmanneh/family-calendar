@@ -375,33 +375,81 @@
   }
 
 @media (prefers-color-scheme: dark) {
-  .modal-container { background: #1c1c1e; }
-  .modal-header { background: #1c1c1e; }
-  .modal-header h2 { color: #fff; }
-  .modal-close { background: #2c2c2e; color: #aeaeb2; }
-  .modal-close:hover { background: #3a3a3c; color: #fff; }
-  .modal-field label { color: #aeaeb2; }
-  .modal-field input,
-  .modal-field select,
-  .modal-field textarea {
+  :root:not([data-theme="light"]) .modal-container { background: #1c1c1e; }
+  :root:not([data-theme="light"]) .modal-header { background: #1c1c1e; }
+  :root:not([data-theme="light"]) .modal-header h2 { color: #fff; }
+  :root:not([data-theme="light"]) .modal-close { background: #2c2c2e; color: #aeaeb2; }
+  :root:not([data-theme="light"]) .modal-close:hover { background: #3a3a3c; color: #fff; }
+  :root:not([data-theme="light"]) .modal-field label { color: #aeaeb2; }
+  :root:not([data-theme="light"]) .modal-field input,
+  :root:not([data-theme="light"]) .modal-field select,
+  :root:not([data-theme="light"]) .modal-field textarea {
     background: #2c2c2e; color: #fff; border-color: transparent;
   }
-  .modal-field input:focus,
-  .modal-field select:focus,
-  .modal-field textarea:focus { background: #3a3a3c; }
-  .modal-submit { background: transparent; color: #aeaeb2; border-color: #3a3a3c; }
-  .modal-submit:hover { background: #2c2c2e; color: #fff; border-color: #3a3a3c; }
-  .modal-attendee:hover { background: rgba(255,255,255,0.06); }
-  .modal-attendee-name { color: #aeaeb2; }
-  .modal-task-input { background: #2c2c2e; color: #fff; }
-  .modal-task-input:focus { background: #3a3a3c; }
-  .modal-task-select { background: #2c2c2e; color: #fff; }
-  .modal-task-add { border-color: #3a3a3c; color: #636366; }
-  .modal-toggle-item { background: #2c2c2e; }
-  .modal-toggle-label { color: #fff; }
-  .modal-toggle-slider { background: #3a3a3c; }
-  .modal-color-dot.selected { border-color: #fff; }
+  :root:not([data-theme="light"]) .modal-field input:focus,
+  :root:not([data-theme="light"]) .modal-field select:focus,
+  :root:not([data-theme="light"]) .modal-field textarea:focus { background: #3a3a3c; }
+  :root:not([data-theme="light"]) .modal-submit { background: transparent; color: #aeaeb2; border-color: #3a3a3c; }
+  :root:not([data-theme="light"]) .modal-submit:hover { background: #2c2c2e; color: #fff; border-color: #3a3a3c; }
+  :root:not([data-theme="light"]) .modal-attendee:hover { background: rgba(255,255,255,0.06); }
+  :root:not([data-theme="light"]) .modal-attendee-name { color: #aeaeb2; }
+  :root:not([data-theme="light"]) .modal-task-input { background: #2c2c2e; color: #fff; }
+  :root:not([data-theme="light"]) .modal-task-input:focus { background: #3a3a3c; }
+  :root:not([data-theme="light"]) .modal-task-select { background: #2c2c2e; color: #fff; }
+  :root:not([data-theme="light"]) .modal-task-add { border-color: #3a3a3c; color: #636366; }
+  :root:not([data-theme="light"]) .modal-toggle-item { background: #2c2c2e; }
+  :root:not([data-theme="light"]) .modal-toggle-label { color: #fff; }
+  :root:not([data-theme="light"]) .modal-toggle-slider { background: #3a3a3c; }
+  :root:not([data-theme="light"]) .modal-color-dot.selected { border-color: #fff; }
 }
+
+/*  Dark mode chosen in the app (overrides the device setting)  */
+
+:root[data-theme="dark"] .modal-container { background: #1c1c1e; }
+
+:root[data-theme="dark"] .modal-header { background: #1c1c1e; }
+
+:root[data-theme="dark"] .modal-header h2 { color: #fff; }
+
+:root[data-theme="dark"] .modal-close { background: #2c2c2e; color: #aeaeb2; }
+
+:root[data-theme="dark"] .modal-close:hover { background: #3a3a3c; color: #fff; }
+
+:root[data-theme="dark"] .modal-field label { color: #aeaeb2; }
+
+:root[data-theme="dark"] .modal-field input,
+  :root[data-theme="dark"] .modal-field select,
+  :root[data-theme="dark"] .modal-field textarea {
+    background: #2c2c2e; color: #fff; border-color: transparent;
+  }
+
+:root[data-theme="dark"] .modal-field input:focus,
+  :root[data-theme="dark"] .modal-field select:focus,
+  :root[data-theme="dark"] .modal-field textarea:focus { background: #3a3a3c; }
+
+:root[data-theme="dark"] .modal-submit { background: transparent; color: #aeaeb2; border-color: #3a3a3c; }
+
+:root[data-theme="dark"] .modal-submit:hover { background: #2c2c2e; color: #fff; border-color: #3a3a3c; }
+
+:root[data-theme="dark"] .modal-attendee:hover { background: rgba(255,255,255,0.06); }
+
+:root[data-theme="dark"] .modal-attendee-name { color: #aeaeb2; }
+
+:root[data-theme="dark"] .modal-task-input { background: #2c2c2e; color: #fff; }
+
+:root[data-theme="dark"] .modal-task-input:focus { background: #3a3a3c; }
+
+:root[data-theme="dark"] .modal-task-select { background: #2c2c2e; color: #fff; }
+
+:root[data-theme="dark"] .modal-task-add { border-color: #3a3a3c; color: #636366; }
+
+:root[data-theme="dark"] .modal-toggle-item { background: #2c2c2e; }
+
+:root[data-theme="dark"] .modal-toggle-label { color: #fff; }
+
+:root[data-theme="dark"] .modal-toggle-slider { background: #3a3a3c; }
+
+:root[data-theme="dark"] .modal-color-dot.selected { border-color: #fff; }
 /* ── Phone: forms open full screen ── */
 @media (max-width: 767px) {
   .modal-overlay { align-items: stretch; padding: 0; }

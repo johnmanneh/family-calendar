@@ -198,17 +198,45 @@
   }
 
 @media (prefers-color-scheme: dark) {
-  .login-page { background: radial-gradient(ellipse 60% 40% at 20% 20%, rgba(86,227,159,0.06), transparent), radial-gradient(ellipse 60% 40% at 80% 80%, rgba(79,172,254,0.06), transparent), #000; }
-  .login-container { background: #1c1c1e; box-shadow: 0 2px 8px rgba(0,0,0,0.3), 0 8px 32px rgba(0,0,0,0.4); }
-  .login-container h2 { color: #fff; }
-  .login-subtitle { color: #aeaeb2; }
-  .season-badge { background: #2c2c2e; }
-  .season-badge:hover { background: #3a3a3c; }
-  .login-divider::before, .login-divider::after { background: #3a3a3c; }
-  .register-family-option { border-color: #3a3a3c; color: #aeaeb2; }
-  .register-family-option p { color: #aeaeb2; }
-  .register-family-option:hover { background: rgba(26,143,168,0.08); border-color: var(--btn-color); }
-  .register-family-option.selected { background: rgba(26,143,168,0.15); }
-  .register-family-input { background: #2c2c2e; color: #fff; }
-  .register-family-input:focus { background: #3a3a3c; }
+  :root:not([data-theme="light"]) .login-page { background: radial-gradient(ellipse 60% 40% at 20% 20%, rgba(86,227,159,0.06), transparent), radial-gradient(ellipse 60% 40% at 80% 80%, rgba(79,172,254,0.06), transparent), #000; }
+  :root:not([data-theme="light"]) .login-container { background: #1c1c1e; box-shadow: 0 2px 8px rgba(0,0,0,0.3), 0 8px 32px rgba(0,0,0,0.4); }
+  :root:not([data-theme="light"]) .login-container h2 { color: #fff; }
+  :root:not([data-theme="light"]) .login-subtitle { color: #aeaeb2; }
+  :root:not([data-theme="light"]) .season-badge { background: #2c2c2e; }
+  :root:not([data-theme="light"]) .season-badge:hover { background: #3a3a3c; }
+  :root:not([data-theme="light"]) .login-divider::before, :root:not([data-theme="light"]) .login-divider::after { background: #3a3a3c; }
+  :root:not([data-theme="light"]) .register-family-option { border-color: #3a3a3c; color: #aeaeb2; }
+  :root:not([data-theme="light"]) .register-family-option p { color: #aeaeb2; }
+  :root:not([data-theme="light"]) .register-family-option:hover { background: rgba(26,143,168,0.08); border-color: var(--btn-color); }
+  :root:not([data-theme="light"]) .register-family-option.selected { background: rgba(26,143,168,0.15); }
+  :root:not([data-theme="light"]) .register-family-input { background: #2c2c2e; color: #fff; }
+  :root:not([data-theme="light"]) .register-family-input:focus { background: #3a3a3c; }
 }
+
+/*  Dark mode chosen in the app (overrides the device setting)  */
+
+:root[data-theme="dark"] .login-page { background: radial-gradient(ellipse 60% 40% at 20% 20%, rgba(86,227,159,0.06), transparent), radial-gradient(ellipse 60% 40% at 80% 80%, rgba(79,172,254,0.06), transparent), #000; }
+
+:root[data-theme="dark"] .login-container { background: #1c1c1e; box-shadow: 0 2px 8px rgba(0,0,0,0.3), 0 8px 32px rgba(0,0,0,0.4); }
+
+:root[data-theme="dark"] .login-container h2 { color: #fff; }
+
+:root[data-theme="dark"] .login-subtitle { color: #aeaeb2; }
+
+:root[data-theme="dark"] .season-badge { background: #2c2c2e; }
+
+:root[data-theme="dark"] .season-badge:hover { background: #3a3a3c; }
+
+:root[data-theme="dark"] .login-divider::before, :root[data-theme="dark"] .login-divider::after { background: #3a3a3c; }
+
+:root[data-theme="dark"] .register-family-option { border-color: #3a3a3c; color: #aeaeb2; }
+
+:root[data-theme="dark"] .register-family-option p { color: #aeaeb2; }
+
+:root[data-theme="dark"] .register-family-option:hover { background: rgba(26,143,168,0.08); border-color: var(--btn-color); }
+
+:root[data-theme="dark"] .register-family-option.selected { background: rgba(26,143,168,0.15); }
+
+:root[data-theme="dark"] .register-family-input { background: #2c2c2e; color: #fff; }
+
+:root[data-theme="dark"] .register-family-input:focus { background: #3a3a3c; }

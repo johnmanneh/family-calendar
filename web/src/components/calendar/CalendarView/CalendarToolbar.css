@@ -83,26 +83,55 @@
 }
 
 @media (prefers-color-scheme: dark) {
-  .calendar-toolbar {
+  :root:not([data-theme="light"]) .calendar-toolbar {
     background: #1c1c1e;
     border-bottom-color: #3a3a3c;
   }
-  .calendar-toolbar-search {
+  :root:not([data-theme="light"]) .calendar-toolbar-search {
     background: #2c2c2e;
     border-color: #3a3a3c;
     color: #fff;
   }
-  .calendar-toolbar-search::placeholder { color: #636366; }
-  .calendar-toolbar-search:focus { background: #2c2c2e; }
-  .calendar-toolbar-chip {
+  :root:not([data-theme="light"]) .calendar-toolbar-search::placeholder { color: #636366; }
+  :root:not([data-theme="light"]) .calendar-toolbar-search:focus { background: #2c2c2e; }
+  :root:not([data-theme="light"]) .calendar-toolbar-chip {
     background: #2c2c2e;
     border-color: #3a3a3c;
     color: #aeaeb2;
   }
-  .calendar-toolbar-chip:hover { background: #3a3a3c; }
-  .calendar-toolbar-clear { color: #636366; }
-  .calendar-toolbar-clear:hover { color: #aeaeb2; }
+  :root:not([data-theme="light"]) .calendar-toolbar-chip:hover { background: #3a3a3c; }
+  :root:not([data-theme="light"]) .calendar-toolbar-clear { color: #636366; }
+  :root:not([data-theme="light"]) .calendar-toolbar-clear:hover { color: #aeaeb2; }
 }
+
+/*  Dark mode chosen in the app (overrides the device setting)  */
+
+:root[data-theme="dark"] .calendar-toolbar {
+    background: #1c1c1e;
+    border-bottom-color: #3a3a3c;
+  }
+
+:root[data-theme="dark"] .calendar-toolbar-search {
+    background: #2c2c2e;
+    border-color: #3a3a3c;
+    color: #fff;
+  }
+
+:root[data-theme="dark"] .calendar-toolbar-search::placeholder { color: #636366; }
+
+:root[data-theme="dark"] .calendar-toolbar-search:focus { background: #2c2c2e; }
+
+:root[data-theme="dark"] .calendar-toolbar-chip {
+    background: #2c2c2e;
+    border-color: #3a3a3c;
+    color: #aeaeb2;
+  }
+
+:root[data-theme="dark"] .calendar-toolbar-chip:hover { background: #3a3a3c; }
+
+:root[data-theme="dark"] .calendar-toolbar-clear { color: #636366; }
+
+:root[data-theme="dark"] .calendar-toolbar-clear:hover { color: #aeaeb2; }
 
 /* Scope row (All · Family · groups) sits above the category chips */
 .calendar-toolbar-scope { margin-bottom: 6px; }

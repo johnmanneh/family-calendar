@@ -189,11 +189,27 @@
 }
 
 @media (prefers-color-scheme: dark) {
-  .calendar-view--phone { background: #000000; }
-  .pcal-card, .pcal-event { background: #1c1c1e; box-shadow: none; }
-  .pcal-title, .pcal-num, .pcal-ev-title { color: #f2f2f7; }
-  .pcal-nav { background: #2c2c2e; }
-  .pcal-day.is-out .pcal-num { color: #48484a; }
-  .pcal-avatar { border-color: #1c1c1e; }
-  .pcal-empty { border-color: #3a3a3c; }
+  :root:not([data-theme="light"]) .calendar-view--phone { background: #000000; }
+  :root:not([data-theme="light"]) .pcal-card, :root:not([data-theme="light"]) .pcal-event { background: #1c1c1e; box-shadow: none; }
+  :root:not([data-theme="light"]) .pcal-title, :root:not([data-theme="light"]) .pcal-num, :root:not([data-theme="light"]) .pcal-ev-title { color: #f2f2f7; }
+  :root:not([data-theme="light"]) .pcal-nav { background: #2c2c2e; }
+  :root:not([data-theme="light"]) .pcal-day.is-out .pcal-num { color: #48484a; }
+  :root:not([data-theme="light"]) .pcal-avatar { border-color: #1c1c1e; }
+  :root:not([data-theme="light"]) .pcal-empty { border-color: #3a3a3c; }
 }
+
+/*  Dark mode chosen in the app (overrides the device setting)  */
+
+:root[data-theme="dark"] .calendar-view--phone { background: #000000; }
+
+:root[data-theme="dark"] .pcal-card, :root[data-theme="dark"] .pcal-event { background: #1c1c1e; box-shadow: none; }
+
+:root[data-theme="dark"] .pcal-title, :root[data-theme="dark"] .pcal-num, :root[data-theme="dark"] .pcal-ev-title { color: #f2f2f7; }
+
+:root[data-theme="dark"] .pcal-nav { background: #2c2c2e; }
+
+:root[data-theme="dark"] .pcal-day.is-out .pcal-num { color: #48484a; }
+
+:root[data-theme="dark"] .pcal-avatar { border-color: #1c1c1e; }
+
+:root[data-theme="dark"] .pcal-empty { border-color: #3a3a3c; }

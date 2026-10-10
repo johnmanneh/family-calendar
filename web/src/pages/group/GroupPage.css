@@ -199,16 +199,36 @@ button.group-back:hover {
 }
 
 @media (prefers-color-scheme: dark) {
-  .group-page { background: #000; }
-  .group-header { background: #1c1c1e; border-bottom-color: #3a3a3c; }
-  .group-hero-info h1 { color: #fff; }
-  .group-hero-info p { color: #636366; }
-  .group-events { background: #1c1c1e; border-color: #3a3a3c; }
-  .group-event { border-bottom-color: #2c2c2e; }
-  .group-event-title { color: #fff; }
-  .group-event-date { color: #aeaeb2; }
-  .group-skeleton, .group-hero-icon--skeleton { background: linear-gradient(90deg, #2c2c2e 25%, #3a3a3c 50%, #2c2c2e 75%); background-size: 200% 100%; }
+  :root:not([data-theme="light"]) .group-page { background: #000; }
+  :root:not([data-theme="light"]) .group-header { background: #1c1c1e; border-bottom-color: #3a3a3c; }
+  :root:not([data-theme="light"]) .group-hero-info h1 { color: #fff; }
+  :root:not([data-theme="light"]) .group-hero-info p { color: #636366; }
+  :root:not([data-theme="light"]) .group-events { background: #1c1c1e; border-color: #3a3a3c; }
+  :root:not([data-theme="light"]) .group-event { border-bottom-color: #2c2c2e; }
+  :root:not([data-theme="light"]) .group-event-title { color: #fff; }
+  :root:not([data-theme="light"]) .group-event-date { color: #aeaeb2; }
+  :root:not([data-theme="light"]) .group-skeleton, :root:not([data-theme="light"]) .group-hero-icon--skeleton { background: linear-gradient(90deg, #2c2c2e 25%, #3a3a3c 50%, #2c2c2e 75%); background-size: 200% 100%; }
 }
+
+/*  Dark mode chosen in the app (overrides the device setting)  */
+
+:root[data-theme="dark"] .group-page { background: #000; }
+
+:root[data-theme="dark"] .group-header { background: #1c1c1e; border-bottom-color: #3a3a3c; }
+
+:root[data-theme="dark"] .group-hero-info h1 { color: #fff; }
+
+:root[data-theme="dark"] .group-hero-info p { color: #636366; }
+
+:root[data-theme="dark"] .group-events { background: #1c1c1e; border-color: #3a3a3c; }
+
+:root[data-theme="dark"] .group-event { border-bottom-color: #2c2c2e; }
+
+:root[data-theme="dark"] .group-event-title { color: #fff; }
+
+:root[data-theme="dark"] .group-event-date { color: #aeaeb2; }
+
+:root[data-theme="dark"] .group-skeleton, :root[data-theme="dark"] .group-hero-icon--skeleton { background: linear-gradient(90deg, #2c2c2e 25%, #3a3a3c 50%, #2c2c2e 75%); background-size: 200% 100%; }
 
 /* ── Cards & sections (same layout as the app's group screen) ── */
 .group-card {
@@ -352,8 +372,18 @@ button.group-remove:hover { color: #ff3b30; background: #fff0f0; }
 }
 
 @media (prefers-color-scheme: dark) {
-  .group-card { background: #1c1c1e; box-shadow: none; }
-  .group-code, .group-member-name { color: #f2f2f7; }
-  .group-member { border-bottom-color: #2c2c2e; }
-  .group-you, .group-confirm-no { background: #2c2c2e; color: #aeaeb2; }
+  :root:not([data-theme="light"]) .group-card { background: #1c1c1e; box-shadow: none; }
+  :root:not([data-theme="light"]) .group-code, :root:not([data-theme="light"]) .group-member-name { color: #f2f2f7; }
+  :root:not([data-theme="light"]) .group-member { border-bottom-color: #2c2c2e; }
+  :root:not([data-theme="light"]) .group-you, :root:not([data-theme="light"]) .group-confirm-no { background: #2c2c2e; color: #aeaeb2; }
 }
+
+/*  Dark mode chosen in the app (overrides the device setting)  */
+
+:root[data-theme="dark"] .group-card { background: #1c1c1e; box-shadow: none; }
+
+:root[data-theme="dark"] .group-code, :root[data-theme="dark"] .group-member-name { color: #f2f2f7; }
+
+:root[data-theme="dark"] .group-member { border-bottom-color: #2c2c2e; }
+
+:root[data-theme="dark"] .group-you, :root[data-theme="dark"] .group-confirm-no { background: #2c2c2e; color: #aeaeb2; }

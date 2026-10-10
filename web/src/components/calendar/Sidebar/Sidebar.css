@@ -1468,66 +1468,126 @@
    Dark mode overrides
 ───────────────────────────────────────── */
 @media (prefers-color-scheme: dark) {
-  .sidebar {
+  :root:not([data-theme="light"]) .sidebar {
     background: #1c1c1e;
     border-right-color: #3a3a3c;
   }
-  .sidebar-divider { background: rgba(255,255,255,0.08); }
-  .sidebar-family-name { color: #fff; }
-  .sidebar-invite { color: #aeaeb2; }
-  .sidebar-label { color: #636366; }
-  .sidebar-member-bubble-name { color: #aeaeb2; }
-  .sidebar-member-relationship { color: #636366; }
-  .sidebar-member-bubble.active .sidebar-member-avatar {
+  :root:not([data-theme="light"]) .sidebar-divider { background: rgba(255,255,255,0.08); }
+  :root:not([data-theme="light"]) .sidebar-family-name { color: #fff; }
+  :root:not([data-theme="light"]) .sidebar-invite { color: #aeaeb2; }
+  :root:not([data-theme="light"]) .sidebar-label { color: #636366; }
+  :root:not([data-theme="light"]) .sidebar-member-bubble-name { color: #aeaeb2; }
+  :root:not([data-theme="light"]) .sidebar-member-relationship { color: #636366; }
+  :root:not([data-theme="light"]) .sidebar-member-bubble.active .sidebar-member-avatar {
     box-shadow: 0 0 0 3px #1c1c1e, 0 0 0 5px #1a8fa8;
   }
-  .sidebar-member-panel { background: #2c2c2e; box-shadow: none; }
-  .sidebar-member-panel-name { color: #636366; }
-  .sidebar-current-user-name { color: #fff; }
-  .sidebar-current-user-role { color: #636366; }
-  .sidebar-task-title { color: #fff; }
-  .sidebar-task-sub { color: #8e8e93; }
-  .sidebar-task-add { background: rgba(255,255,255,0.06); color: #636366; }
-  .sidebar-task-add:hover { background: rgba(255,255,255,0.1); color: #aeaeb2; }
-  .sidebar-task-card:hover { background: rgba(255,255,255,0.06); }
-  .sidebar-section:has(.sidebar-group-row:hover) .sidebar-group-action-btn,
-  .sidebar-section:has(.sidebar-task-card:hover) .sidebar-task-add {
+  :root:not([data-theme="light"]) .sidebar-member-panel { background: #2c2c2e; box-shadow: none; }
+  :root:not([data-theme="light"]) .sidebar-member-panel-name { color: #636366; }
+  :root:not([data-theme="light"]) .sidebar-current-user-name { color: #fff; }
+  :root:not([data-theme="light"]) .sidebar-current-user-role { color: #636366; }
+  :root:not([data-theme="light"]) .sidebar-task-title { color: #fff; }
+  :root:not([data-theme="light"]) .sidebar-task-sub { color: #8e8e93; }
+  :root:not([data-theme="light"]) .sidebar-task-add { background: rgba(255,255,255,0.06); color: #636366; }
+  :root:not([data-theme="light"]) .sidebar-task-add:hover { background: rgba(255,255,255,0.1); color: #aeaeb2; }
+  :root:not([data-theme="light"]) .sidebar-task-card:hover { background: rgba(255,255,255,0.06); }
+  :root:not([data-theme="light"]) .sidebar-section:has(.sidebar-group-row:hover) .sidebar-group-action-btn,
+  :root:not([data-theme="light"]) .sidebar-section:has(.sidebar-task-card:hover) .sidebar-task-add {
     background: #2c2c2e; color: #3a3a3c;
   }
-  .sidebar-group-row:hover { background: rgba(255,255,255,0.06); }
-  .sidebar-group-name { color: #fff; }
-  .sidebar-group-meta { color: #636366; }
-  .sidebar-group-action-btn { background: rgba(255,255,255,0.06); color: #636366; }
-  .sidebar-group-action-btn:hover { background: rgba(255,255,255,0.1); color: #aeaeb2; }
-  .sidebar-group-input { background: #2c2c2e; color: #fff; border-color: rgba(255,255,255,0.12); }
-  .sidebar-group-btn-cancel { background: #2c2c2e; color: #aeaeb2; border-color: rgba(255,255,255,0.12); }
-  .sidebar-group-invite { background: rgba(244,140,6,0.08); }
-  .sidebar-group-invite-name { color: #fff; }
-  .sidebar-pending-item { background: rgba(244,140,6,0.08); }
-  .sidebar-pending-title { color: #fff; }
-  .sidebar-pending-meta { color: #aeaeb2; }
-  .sidebar-pending-task { background: rgba(0,122,255,0.1); }
-  .sidebar-pending-notif { background: rgba(255,159,10,0.08); }
-  .sidebar-pending-accepted { background: rgba(52,199,89,0.08); }
-  .sidebar-pending-subtask-title { background: rgba(0,0,0,0.3); color: #fff; }
-  .sidebar-pending-counter input { background: #2c2c2e; color: #fff; border-color: rgba(0,122,255,0.4); }
-  .sidebar-pending-counter-cancel { background: #3a3a3c; color: #aeaeb2; }
-  .sidebar-pending-counter-btn { background: #3a3a3c; color: #fff; }
-  .sidebar-notif-item.read:hover { background: rgba(255,255,255,0.04); }
-  .sidebar-notif-title { color: #fff; }
-  .sidebar-notif-item.read .sidebar-notif-title { color: #aeaeb2; }
-  .sidebar-notif-text { color: #8e8e93; }
-  .sidebar-profile:hover { background: rgba(255,255,255,0.06); }
-  .sidebar-profile-name { color: #fff; }
-  .sidebar-profile-role { color: #636366; }
-  .sidebar-logout { background: #2c2c2e; color: #8e8e93; box-shadow: none; }
-  .sidebar-logout:hover { color: #ff453a; }
-  .sidebar-gear { background: #2c2c2e; box-shadow: none; }
-  .sidebar-gear:hover { box-shadow: 0 2px 8px rgba(0,0,0,0.4); }
-  .sidebar-chat-bubble { background: #3a3a3c; color: #fff; }
-  .sidebar-chat-input { background: #2c2c2e; color: #fff; border-color: rgba(255,255,255,0.12); }
-  .sidebar-task-badge-pending { background: rgba(245,158,11,0.15); }
+  :root:not([data-theme="light"]) .sidebar-group-row:hover { background: rgba(255,255,255,0.06); }
+  :root:not([data-theme="light"]) .sidebar-group-name { color: #fff; }
+  :root:not([data-theme="light"]) .sidebar-group-meta { color: #636366; }
+  :root:not([data-theme="light"]) .sidebar-group-action-btn { background: rgba(255,255,255,0.06); color: #636366; }
+  :root:not([data-theme="light"]) .sidebar-group-action-btn:hover { background: rgba(255,255,255,0.1); color: #aeaeb2; }
+  :root:not([data-theme="light"]) .sidebar-group-input { background: #2c2c2e; color: #fff; border-color: rgba(255,255,255,0.12); }
+  :root:not([data-theme="light"]) .sidebar-group-btn-cancel { background: #2c2c2e; color: #aeaeb2; border-color: rgba(255,255,255,0.12); }
+  :root:not([data-theme="light"]) .sidebar-group-invite { background: rgba(244,140,6,0.08); }
+  :root:not([data-theme="light"]) .sidebar-group-invite-name { color: #fff; }
+  :root:not([data-theme="light"]) .sidebar-pending-item { background: rgba(244,140,6,0.08); }
+  :root:not([data-theme="light"]) .sidebar-pending-title { color: #fff; }
+  :root:not([data-theme="light"]) .sidebar-pending-meta { color: #aeaeb2; }
+  :root:not([data-theme="light"]) .sidebar-pending-task { background: rgba(0,122,255,0.1); }
+  :root:not([data-theme="light"]) .sidebar-pending-notif { background: rgba(255,159,10,0.08); }
+  :root:not([data-theme="light"]) .sidebar-pending-accepted { background: rgba(52,199,89,0.08); }
+  :root:not([data-theme="light"]) .sidebar-pending-subtask-title { background: rgba(0,0,0,0.3); color: #fff; }
+  :root:not([data-theme="light"]) .sidebar-pending-counter input { background: #2c2c2e; color: #fff; border-color: rgba(0,122,255,0.4); }
+  :root:not([data-theme="light"]) .sidebar-pending-counter-cancel { background: #3a3a3c; color: #aeaeb2; }
+  :root:not([data-theme="light"]) .sidebar-pending-counter-btn { background: #3a3a3c; color: #fff; }
+  :root:not([data-theme="light"]) .sidebar-notif-item.read:hover { background: rgba(255,255,255,0.04); }
+  :root:not([data-theme="light"]) .sidebar-notif-title { color: #fff; }
+  :root:not([data-theme="light"]) .sidebar-notif-item.read .sidebar-notif-title { color: #aeaeb2; }
+  :root:not([data-theme="light"]) .sidebar-notif-text { color: #8e8e93; }
+  :root:not([data-theme="light"]) .sidebar-profile:hover { background: rgba(255,255,255,0.06); }
+  :root:not([data-theme="light"]) .sidebar-profile-name { color: #fff; }
+  :root:not([data-theme="light"]) .sidebar-profile-role { color: #636366; }
+  :root:not([data-theme="light"]) .sidebar-logout { background: #2c2c2e; color: #8e8e93; box-shadow: none; }
+  :root:not([data-theme="light"]) .sidebar-logout:hover { color: #ff453a; }
+  :root:not([data-theme="light"]) .sidebar-gear { background: #2c2c2e; box-shadow: none; }
+  :root:not([data-theme="light"]) .sidebar-gear:hover { box-shadow: 0 2px 8px rgba(0,0,0,0.4); }
+  :root:not([data-theme="light"]) .sidebar-chat-bubble { background: #3a3a3c; color: #fff; }
+  :root:not([data-theme="light"]) .sidebar-chat-input { background: #2c2c2e; color: #fff; border-color: rgba(255,255,255,0.12); }
+  :root:not([data-theme="light"]) .sidebar-task-badge-pending { background: rgba(245,158,11,0.15); }
 }
+/*  Dark mode chosen in the app (overrides the device setting)  */
+:root[data-theme="dark"] .sidebar {
+    background: #1c1c1e;
+    border-right-color: #3a3a3c;
+  }
+:root[data-theme="dark"] .sidebar-divider { background: rgba(255,255,255,0.08); }
+:root[data-theme="dark"] .sidebar-family-name { color: #fff; }
+:root[data-theme="dark"] .sidebar-invite { color: #aeaeb2; }
+:root[data-theme="dark"] .sidebar-label { color: #636366; }
+:root[data-theme="dark"] .sidebar-member-bubble-name { color: #aeaeb2; }
+:root[data-theme="dark"] .sidebar-member-relationship { color: #636366; }
+:root[data-theme="dark"] .sidebar-member-bubble.active .sidebar-member-avatar {
+    box-shadow: 0 0 0 3px #1c1c1e, 0 0 0 5px #1a8fa8;
+  }
+:root[data-theme="dark"] .sidebar-member-panel { background: #2c2c2e; box-shadow: none; }
+:root[data-theme="dark"] .sidebar-member-panel-name { color: #636366; }
+:root[data-theme="dark"] .sidebar-current-user-name { color: #fff; }
+:root[data-theme="dark"] .sidebar-current-user-role { color: #636366; }
+:root[data-theme="dark"] .sidebar-task-title { color: #fff; }
+:root[data-theme="dark"] .sidebar-task-sub { color: #8e8e93; }
+:root[data-theme="dark"] .sidebar-task-add { background: rgba(255,255,255,0.06); color: #636366; }
+:root[data-theme="dark"] .sidebar-task-add:hover { background: rgba(255,255,255,0.1); color: #aeaeb2; }
+:root[data-theme="dark"] .sidebar-task-card:hover { background: rgba(255,255,255,0.06); }
+:root[data-theme="dark"] .sidebar-section:has(.sidebar-group-row:hover) .sidebar-group-action-btn,
+  :root[data-theme="dark"] .sidebar-section:has(.sidebar-task-card:hover) .sidebar-task-add {
+    background: #2c2c2e; color: #3a3a3c;
+  }
+:root[data-theme="dark"] .sidebar-group-row:hover { background: rgba(255,255,255,0.06); }
+:root[data-theme="dark"] .sidebar-group-name { color: #fff; }
+:root[data-theme="dark"] .sidebar-group-meta { color: #636366; }
+:root[data-theme="dark"] .sidebar-group-action-btn { background: rgba(255,255,255,0.06); color: #636366; }
+:root[data-theme="dark"] .sidebar-group-action-btn:hover { background: rgba(255,255,255,0.1); color: #aeaeb2; }
+:root[data-theme="dark"] .sidebar-group-input { background: #2c2c2e; color: #fff; border-color: rgba(255,255,255,0.12); }
+:root[data-theme="dark"] .sidebar-group-btn-cancel { background: #2c2c2e; color: #aeaeb2; border-color: rgba(255,255,255,0.12); }
+:root[data-theme="dark"] .sidebar-group-invite { background: rgba(244,140,6,0.08); }
+:root[data-theme="dark"] .sidebar-group-invite-name { color: #fff; }
+:root[data-theme="dark"] .sidebar-pending-item { background: rgba(244,140,6,0.08); }
+:root[data-theme="dark"] .sidebar-pending-title { color: #fff; }
+:root[data-theme="dark"] .sidebar-pending-meta { color: #aeaeb2; }
+:root[data-theme="dark"] .sidebar-pending-task { background: rgba(0,122,255,0.1); }
+:root[data-theme="dark"] .sidebar-pending-notif { background: rgba(255,159,10,0.08); }
+:root[data-theme="dark"] .sidebar-pending-accepted { background: rgba(52,199,89,0.08); }
+:root[data-theme="dark"] .sidebar-pending-subtask-title { background: rgba(0,0,0,0.3); color: #fff; }
+:root[data-theme="dark"] .sidebar-pending-counter input { background: #2c2c2e; color: #fff; border-color: rgba(0,122,255,0.4); }
+:root[data-theme="dark"] .sidebar-pending-counter-cancel { background: #3a3a3c; color: #aeaeb2; }
+:root[data-theme="dark"] .sidebar-pending-counter-btn { background: #3a3a3c; color: #fff; }
+:root[data-theme="dark"] .sidebar-notif-item.read:hover { background: rgba(255,255,255,0.04); }
+:root[data-theme="dark"] .sidebar-notif-title { color: #fff; }
+:root[data-theme="dark"] .sidebar-notif-item.read .sidebar-notif-title { color: #aeaeb2; }
+:root[data-theme="dark"] .sidebar-notif-text { color: #8e8e93; }
+:root[data-theme="dark"] .sidebar-profile:hover { background: rgba(255,255,255,0.06); }
+:root[data-theme="dark"] .sidebar-profile-name { color: #fff; }
+:root[data-theme="dark"] .sidebar-profile-role { color: #636366; }
+:root[data-theme="dark"] .sidebar-logout { background: #2c2c2e; color: #8e8e93; box-shadow: none; }
+:root[data-theme="dark"] .sidebar-logout:hover { color: #ff453a; }
+:root[data-theme="dark"] .sidebar-gear { background: #2c2c2e; box-shadow: none; }
+:root[data-theme="dark"] .sidebar-gear:hover { box-shadow: 0 2px 8px rgba(0,0,0,0.4); }
+:root[data-theme="dark"] .sidebar-chat-bubble { background: #3a3a3c; color: #fff; }
+:root[data-theme="dark"] .sidebar-chat-input { background: #2c2c2e; color: #fff; border-color: rgba(255,255,255,0.12); }
+:root[data-theme="dark"] .sidebar-task-badge-pending { background: rgba(245,158,11,0.15); }
 
 /* "Switch to another family" — quiet text button under the invite code */
 .sidebar-family-switch {
@@ -1543,3 +1603,29 @@
   display: inline-flex; align-items: center; justify-content: center; flex-shrink: 0;
 }
 .sidebar-notif-item { cursor: pointer; }
+
+/* ── Dark / light switch (next to Logout) ── */
+.sidebar-theme {
+  flex: 1;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 6px;
+  padding: 9px;
+  background: white;
+  color: #1d1d1f;
+  border: none;
+  border-radius: 8px;
+  font-size: 12px;
+  font-weight: 600;
+  cursor: pointer;
+  font-family: inherit;
+  transition: all 0.18s ease;
+  box-shadow: 0 1px 3px rgba(0,0,0,0.06);
+  white-space: nowrap;
+}
+.sidebar-theme:hover { color: #1a8fa8; box-shadow: 0 2px 8px rgba(26,143,168,0.15); }
+@media (prefers-color-scheme: dark) {
+  :root:not([data-theme="light"]) .sidebar-theme { background: #2c2c2e; color: #f2f2f7; box-shadow: none; }
+}
+:root[data-theme="dark"] .sidebar-theme { background: #2c2c2e; color: #f2f2f7; box-shadow: none; }

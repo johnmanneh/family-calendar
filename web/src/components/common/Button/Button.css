@@ -44,7 +44,15 @@
   }
 
 @media (prefers-color-scheme: dark) {
-  .btn-primary { color: #aeaeb2; border-color: #3a3a3c; }
-  .btn-primary:hover { background: #2c2c2e; color: #fff; border-color: #3a3a3c; }
-  .btn-danger:hover { background: #2c2c2e !important; color: #aeaeb2 !important; }
+  :root:not([data-theme="light"]) .btn-primary { color: #aeaeb2; border-color: #3a3a3c; }
+  :root:not([data-theme="light"]) .btn-primary:hover { background: #2c2c2e; color: #fff; border-color: #3a3a3c; }
+  :root:not([data-theme="light"]) .btn-danger:hover { background: #2c2c2e !important; color: #aeaeb2 !important; }
 }
+
+/*  Dark mode chosen in the app (overrides the device setting)  */
+
+:root[data-theme="dark"] .btn-primary { color: #aeaeb2; border-color: #3a3a3c; }
+
+:root[data-theme="dark"] .btn-primary:hover { background: #2c2c2e; color: #fff; border-color: #3a3a3c; }
+
+:root[data-theme="dark"] .btn-danger:hover { background: #2c2c2e !important; color: #aeaeb2 !important; }
