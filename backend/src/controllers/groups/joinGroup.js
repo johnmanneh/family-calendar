@@ -1,5 +1,6 @@
 const pool = require('../../config/db');
 const { successResponse, errorResponse } = require('../../utils/response/responseHandlers');
+const { inviteNewGroupMember } = require('../../utils/inviteToEvent');
 
 const joinGroup = async (req, res) => {
   const userId = req.user.id;
@@ -26,6 +27,9 @@ const joinGroup = async (req, res) => {
       `INSERT INTO group_members (group_id, user_id, role) VALUES ($1, $2, 'member')`,
       [groupId, userId]
     );
+
+    // New member gets invitations to the group's upcoming events
+    inviteNewGroupMember(groupId, userId);
 
     return successResponse(res, 200, 'Joined group', { group: group.rows[0] });
   } catch (error) {

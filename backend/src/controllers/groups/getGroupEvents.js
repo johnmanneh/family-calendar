@@ -26,7 +26,7 @@ const getGroupEvents = async (req, res) => {
        FROM events e
        JOIN event_groups eg ON e.id = eg.event_id
        JOIN users u ON e.created_by = u.id
-       LEFT JOIN event_attendees ea ON e.id = ea.event_id
+       LEFT JOIN event_attendees ea ON e.id = ea.event_id AND ea.status = 'accepted'
        LEFT JOIN users att_u ON ea.user_id = att_u.id
        WHERE eg.group_id = $1
        GROUP BY e.id, u.first_name

@@ -10,8 +10,9 @@ const getAttendees = async (req, res) => {
       `SELECT u.id, u.first_name, u.last_name, u.email, fm.color, ea.status
        FROM event_attendees ea
        JOIN users u ON ea.user_id = u.id
-       JOIN family_members fm ON u.id = fm.user_id
-       WHERE ea.event_id = $1`,
+       JOIN events e ON e.id = ea.event_id
+       LEFT JOIN family_members fm ON fm.user_id = u.id AND fm.family_id = e.family_id
+       WHERE ea.event_id = $1 AND ea.status != 'declined'`,
       [id]
     );
     return successResponse(res, 200, 'Attendees fetched', {

@@ -1,5 +1,6 @@
 const pool = require('../../config/db');
 const { successResponse, errorResponse } = require('../../utils/response/responseHandlers');
+const { inviteNewGroupMember } = require('../../utils/inviteToEvent');
 
 const respondToInvitation = async (req, res) => {
   const userId = req.user.id;
@@ -32,6 +33,7 @@ const respondToInvitation = async (req, res) => {
         `INSERT INTO group_members (group_id, user_id, role) VALUES ($1, $2, 'member') ON CONFLICT DO NOTHING`,
         [group_id, userId]
       );
+      inviteNewGroupMember(group_id, userId);
     }
 
     return successResponse(res, 200, `Invitation ${response}`);

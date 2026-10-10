@@ -17,6 +17,20 @@ const unshareEventFromGroup = async (req, res) => {
       [eventId, groupId]
     );
 
+    // Withdraw invitations nobody answered yet that came through this group
+    // (unless the person is still reachable through another group it's shared with)
+    await pool.query(
+      `DELETE FROM event_attendees ea
+       WHERE ea.event_id = $1 AND ea.status = 'pending'
+         AND ea.user_id IN (SELECT user_id FROM group_members WHERE group_id = $2)
+         AND NOT EXISTS (
+           SELECT 1 FROM event_groups eg
+           JOIN group_members gm ON gm.group_id = eg.group_id
+           WHERE eg.event_id = $1 AND gm.user_id = ea.user_id
+         )`,
+      [eventId, groupId]
+    );
+
     return successResponse(res, 200, 'Event unshared from group');
   } catch (error) {
     return errorResponse(res, 500, 'Server error');

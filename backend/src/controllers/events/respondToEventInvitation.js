@@ -26,9 +26,10 @@ const respondToEventInvitation = async (req, res) => {
         [eventId, userId]
       );
     } else {
-      // Denied — remove from attendees entirely
+      // Denied — remember it (status 'declined') so the event stays out of their
+      // calendar, even when it's a family event they'd otherwise see
       await pool.query(
-        `DELETE FROM event_attendees WHERE event_id = $1 AND user_id = $2`,
+        `UPDATE event_attendees SET status = 'declined' WHERE event_id = $1 AND user_id = $2`,
         [eventId, userId]
       );
     }

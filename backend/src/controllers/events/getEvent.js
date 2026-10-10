@@ -37,6 +37,8 @@ const getEvent = async (req, res) => {
              JOIN group_members gm ON gm.group_id = eg.group_id
              WHERE eg.event_id = e.id AND gm.user_id = $3
            )
+           -- or invited to it (pending or accepted)
+           OR EXISTS (SELECT 1 FROM event_attendees ea WHERE ea.event_id = e.id AND ea.user_id = $3)
          )`,
       [id, familyId, userId]
     );
@@ -76,7 +78,7 @@ const getEvent = async (req, res) => {
        FROM event_attendees ea
        JOIN users           u  ON ea.user_id = u.id
        LEFT JOIN family_members fm ON u.id = fm.user_id AND fm.family_id = $2
-       WHERE ea.event_id = $1
+       WHERE ea.event_id = $1 AND ea.status != 'declined'
        ORDER BY u.first_name`,
       [id, familyId]
     );

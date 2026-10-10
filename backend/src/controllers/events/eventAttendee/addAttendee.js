@@ -20,9 +20,14 @@ const addAttendee = async (req, res) => {
     const result = await pool.query(
       `INSERT INTO event_attendees (event_id, user_id, status)
        VALUES ($1, $2, $3)
+       ON CONFLICT (event_id, user_id) DO UPDATE SET status = EXCLUDED.status
+         WHERE event_attendees.status = 'declined'
        RETURNING *`,
       [id, user_id, status]
     );
+    if (result.rows.length === 0) {
+      return errorResponse(res, 400, 'User is already an attendee');
+    }
 
     // Notify the new attendee (skip if they're the creator — they added themselves)
     if (!isCreator) {
