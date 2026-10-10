@@ -209,3 +209,151 @@ button.group-back:hover {
   .group-event-date { color: #aeaeb2; }
   .group-skeleton, .group-hero-icon--skeleton { background: linear-gradient(90deg, #2c2c2e 25%, #3a3a3c 50%, #2c2c2e 75%); background-size: 200% 100%; }
 }
+
+/* ── Cards & sections (same layout as the app's group screen) ── */
+.group-card {
+  background: #ffffff;
+  border-radius: 18px;
+  box-shadow: 0 2px 12px rgba(0, 0, 0, 0.05);
+  overflow: hidden;
+}
+.group-code-card { padding: 16px 18px; margin-bottom: 8px; }
+.group-section-label {
+  font-size: 12px;
+  font-weight: 700;
+  letter-spacing: 0.6px;
+  text-transform: uppercase;
+  color: #8e8e93;
+}
+.group-code-row {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  margin-top: 10px;
+}
+.group-code {
+  font-size: 24px;
+  font-weight: 800;
+  letter-spacing: 3px;
+  color: #1d1d1f;
+  font-variant-numeric: tabular-nums;
+}
+button.group-copy {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  border: none;
+  border-radius: 12px;
+  background: rgba(26, 143, 168, 0.1);
+  color: #1a8fa8;
+  font-size: 14px;
+  font-weight: 600;
+  padding: 9px 14px;
+  cursor: pointer;
+  font-family: inherit;
+  box-shadow: none;
+}
+.group-section-title {
+  font-size: 13px;
+  font-weight: 700;
+  letter-spacing: 0.4px;
+  text-transform: uppercase;
+  color: #8e8e93;
+  margin: 24px 4px 8px;
+}
+
+.group-member {
+  display: flex;
+  align-items: center;
+  gap: 14px;
+  padding: 12px 18px;
+  border-bottom: 1px solid #f0f0f5;
+}
+.group-member:last-child { border-bottom: none; }
+.group-member-info { flex: 1; min-width: 0; }
+.group-member-name {
+  font-size: 15px;
+  font-weight: 600;
+  color: #1d1d1f;
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+.group-member-email {
+  font-size: 13px;
+  color: #8e8e93;
+  margin-top: 2px;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+.group-you {
+  font-size: 10px;
+  font-weight: 700;
+  color: #8e8e93;
+  background: #f2f2f7;
+  border-radius: 6px;
+  padding: 2px 6px;
+  text-transform: uppercase;
+}
+.group-role {
+  font-size: 12px;
+  font-weight: 600;
+  color: #1a8fa8;
+  background: rgba(26, 143, 168, 0.1);
+  border-radius: 10px;
+  padding: 4px 10px;
+  flex-shrink: 0;
+}
+button.group-remove {
+  border: none;
+  background: none;
+  color: #c7c7cc;
+  cursor: pointer;
+  padding: 6px;
+  border-radius: 8px;
+  box-shadow: none;
+}
+button.group-remove:hover { color: #ff3b30; background: #fff0f0; }
+.group-confirm { display: inline-flex; gap: 6px; flex-shrink: 0; }
+.group-confirm button {
+  border: none;
+  border-radius: 10px;
+  font-size: 12px;
+  font-weight: 600;
+  padding: 6px 10px;
+  cursor: pointer;
+  font-family: inherit;
+  box-shadow: none;
+}
+.group-confirm-yes { background: #ff3b30; color: #fff; }
+.group-confirm-no { background: #f2f2f7; color: #1d1d1f; }
+
+.group-empty { padding: 28px 18px; }
+
+/* Rows roll in one after another — the app's treadmill feel, kept gentle */
+.group-roll {
+  animation: group-roll-in 0.45s cubic-bezier(0.2, 0.8, 0.2, 1) both;
+  animation-delay: calc(var(--i, 0) * 55ms);
+  transform-origin: center top;
+}
+@keyframes group-roll-in {
+  from { opacity: 0; transform: perspective(600px) rotateX(-55deg) translateY(-6px); }
+  to   { opacity: 1; transform: perspective(600px) rotateX(0) translateY(0); }
+}
+@media (prefers-reduced-motion: reduce) {
+  .group-roll { animation: none; }
+}
+
+@media (max-width: 767px) {
+  .group-header { padding: 16px; }
+  .group-content { padding: 16px; }
+  .group-code { font-size: 20px; letter-spacing: 2px; }
+}
+
+@media (prefers-color-scheme: dark) {
+  .group-card { background: #1c1c1e; box-shadow: none; }
+  .group-code, .group-member-name { color: #f2f2f7; }
+  .group-member { border-bottom-color: #2c2c2e; }
+  .group-you, .group-confirm-no { background: #2c2c2e; color: #aeaeb2; }
+}
