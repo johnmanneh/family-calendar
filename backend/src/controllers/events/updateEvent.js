@@ -1,3 +1,4 @@
+const { canEditEvent } = require('../../utils/access');
 const pool = require("../../config/db");
 const {
   successResponse,
@@ -42,6 +43,12 @@ const updateEvent = async (req, res) => {
         404,
         "Event not found or you are not authorized to update it"
       );
+    }
+
+    // F-01: knowing an event's id is not permission — only its creator may change it.
+    // Same 404 as "not found" so ids can't be probed.
+    if (!canEditEvent(userId, event.rows[0])) {
+      return errorResponse(res, 404, "Event not found or you are not authorized to update it");
     }
 
     const updatedEvent = await pool.query(

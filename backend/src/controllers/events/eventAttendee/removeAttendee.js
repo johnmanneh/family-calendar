@@ -1,10 +1,18 @@
 const pool = require('../../../config/db');
 const { successResponse, errorResponse } = require('../../../utils/response/responseHandlers');
+const access = require('../../../utils/access');
 
 const removeAttendee = async (req, res) => {
   const { id, userId } = req.params; // event_id, user_id
 
   try {
+    // F-03: the creator removes anyone; an attendee may only remove themselves
+    const event = await access.loadEvent(id);
+    const isSelf = Number(userId) === Number(req.user.id);
+    if (!event || (!access.canEditEvent(req.user.id, event) && !isSelf)) {
+      return errorResponse(res, 404, 'Event not found');
+    }
+
     const result = await pool.query(
       `DELETE FROM event_attendees 
        WHERE event_id = $1 AND user_id = $2

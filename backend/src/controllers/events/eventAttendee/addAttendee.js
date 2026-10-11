@@ -1,12 +1,22 @@
 const pool = require('../../../config/db');
 const { successResponse, errorResponse } = require('../../../utils/response/responseHandlers');
 const notifyUser = require('../../../utils/notifyUser');
+const access = require('../../../utils/access');
 
 const addAttendee = async (req, res) => {
   const { id } = req.params; // event_id
   const { user_id } = req.body;
 
   try {
+    // F-03: only the event's creator adds people, and only people they may invite
+    const event = await access.loadEvent(id);
+    if (!event || !access.canEditEvent(req.user.id, event)) {
+      return errorResponse(res, 404, 'Event not found');
+    }
+    if (!(await access.canInvite(req.user.id, event, user_id))) {
+      return errorResponse(res, 403, 'You can only invite your family or people from your groups');
+    }
+
     // If the attendee is the event creator, auto-accept
     const eventRes = await pool.query(
       'SELECT created_by FROM events WHERE id = $1',

@@ -29,9 +29,15 @@ const getGroupEvents = async (req, res) => {
        LEFT JOIN event_attendees ea ON e.id = ea.event_id AND ea.status = 'accepted'
        LEFT JOIN users att_u ON ea.user_id = att_u.id
        WHERE eg.group_id = $1
+         -- F-02: private events never show on the group page to people not involved
+         AND (
+           e.is_private = false OR e.created_by = $2
+           OR EXISTS (SELECT 1 FROM event_attendees x
+                      WHERE x.event_id = e.id AND x.user_id = $2 AND x.status <> 'declined')
+         )
        GROUP BY e.id, u.first_name
        ORDER BY e.start_date ASC`,
-      [groupId]
+      [groupId, userId]
     );
 
     return successResponse(res, 200, 'Group events retrieved', { events: result.rows });

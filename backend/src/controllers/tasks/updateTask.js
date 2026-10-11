@@ -1,4 +1,5 @@
 const pool = require('../../config/db');
+const access = require('../../utils/access');
 const { successResponse, errorResponse } = require('../../utils/response/responseHandlers');
 const { broadcast } = require('../../utils/sseClients');
 
@@ -12,12 +13,20 @@ const updateTask = async (req, res) => {
   try {
     // Verify the task exists and the user is the creator
     const taskRes = await pool.query(
-      `SELECT id, created_by FROM tasks WHERE id = $1`,
+      `SELECT id, created_by, event_id FROM tasks WHERE id = $1`,
       [taskId]
     );
     if (taskRes.rowCount === 0) return errorResponse(res, 404, 'Task not found');
 
     const task = taskRes.rows[0];
+
+    // F-03: reassigning keeps the task inside the event / family
+    if (assigned_to !== undefined && assigned_to !== null && assigned_to !== '') {
+      const ok = task.event_id
+        ? await access.canAssignOnEvent(await access.loadEvent(task.event_id), assigned_to)
+        : await access.sharesFamily(userId, assigned_to);
+      if (!ok) return errorResponse(res, 403, 'You can only assign tasks to your family');
+    }
     if (Number(task.created_by) !== Number(userId)) {
       return errorResponse(res, 403, 'Only the task creator can edit it');
     }

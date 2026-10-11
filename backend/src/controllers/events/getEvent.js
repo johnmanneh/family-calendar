@@ -1,3 +1,4 @@
+const { eventAccess, busyView } = require('../../utils/access');
 const pool = require('../../config/db');
 const { successResponse, errorResponse } = require('../../utils/response/responseHandlers');
 
@@ -6,6 +7,14 @@ const getEvent = async (req, res) => {
   const { id } = req.params;
 
   try {
+    // F-02: same visibility rules as the calendar list — private stays "Busy",
+    // outer circle / other families get a plain 404
+    const access = await eventAccess(userId, id);
+    if (access.level === 'none') return errorResponse(res, 404, 'Event not found');
+    if (access.level === 'busy') {
+      return successResponse(res, 200, 'Event retrieved successfully', { event: busyView(access.event) });
+    }
+
     const familyMember = await pool.query(
       `SELECT fm.family_id FROM family_members fm
        WHERE fm.user_id = $1

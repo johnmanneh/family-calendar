@@ -1,4 +1,5 @@
 const pool = require('../../config/db');
+const access = require('../../utils/access');
 const { successResponse, errorResponse } = require('../../utils/response/responseHandlers');
 
 const createStandaloneTask = async (req, res) => {
@@ -10,6 +11,12 @@ const createStandaloneTask = async (req, res) => {
   }
 
   try {
+
+    // F-03: standalone tasks go to yourself or someone in your family
+    if (!(await access.sharesFamily(userId, assigned_to))) {
+      return errorResponse(res, 403, 'You can only assign tasks to your family');
+    }
+
     const result = await pool.query(
       `INSERT INTO tasks (title, assigned_to, due_date, position, is_standalone, created_by)
        VALUES ($1, $2, $3, $4, true, $5)

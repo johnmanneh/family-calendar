@@ -1,4 +1,5 @@
 const pool = require('../../config/db');
+const access = require('../../utils/access');
 const { successResponse, errorResponse } = require('../../utils/response/responseHandlers');
 const { broadcast } = require('../../utils/sseClients');
 const sendPush = require('../../utils/sendPush');
@@ -17,6 +18,16 @@ const addTask = async (req, res) => {
   const status = (!assigned_to || Number(assigned_to) === Number(created_by)) ? 'accepted' : 'pending';
 
   try {
+
+    // F-03: tasks are added by the event's creator, to people on the event or in its family
+    const event = await access.loadEvent(id);
+    if (!event || !access.canEditEvent(created_by, event)) {
+      return errorResponse(res, 404, 'Event not found');
+    }
+    if (!(await access.canAssignOnEvent(event, assigned_to))) {
+      return errorResponse(res, 403, 'You can only assign people on this event or in its family');
+    }
+
     const result = await pool.query(
       `INSERT INTO tasks (event_id, assigned_to, title, position, created_by, status)
        VALUES ($1, $2, $3, $4, $5, $6)

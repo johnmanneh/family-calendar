@@ -1,9 +1,15 @@
 const pool = require('../../config/db');
+const access = require('../../utils/access');
 const { successResponse, errorResponse } = require('../../utils/response/responseHandlers');
 
 const getTasks = async (req, res) => {
   const { id } = req.params;
   try {
+
+    // F-02/F-03: tasks are event details — only for people who see the event in full
+    const { level } = await access.eventAccess(req.user.id, id);
+    if (level !== 'full') return errorResponse(res, 404, 'Event not found');
+
     const result = await pool.query(
       `SELECT t.id, t.title, t.position, t.created_at,
               t.status, t.counter_offer, t.last_counter_by, t.created_by, t.due_date,
@@ -12,7 +18,8 @@ const getTasks = async (req, res) => {
               st.id as sub_task_id, st.title as sub_task_title
        FROM tasks t
        JOIN users u ON t.assigned_to = u.id
-       JOIN family_members fm ON u.id = fm.user_id
+       JOIN events ev ON ev.id = t.event_id
+       LEFT JOIN family_members fm ON fm.user_id = u.id AND fm.family_id = ev.family_id
        LEFT JOIN sub_tasks st ON t.id = st.task_id
        WHERE t.event_id = $1
        ORDER BY t.created_at ASC, st.created_at ASC`,

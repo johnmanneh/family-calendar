@@ -1,4 +1,5 @@
 const pool = require('../../../config/db');
+const access = require('../../../utils/access');
 const { successResponse, errorResponse } = require('../../../utils/response/responseHandlers');
 
 
@@ -13,6 +14,14 @@ const addSubTask = async (req, res) => {
   const userId = req.user.id;
 
   try {
+
+    // F-03: subtasks by the task's creator, its assignee, or the event's creator
+    const t = await access.taskAccess(userId, taskId);
+    if (!t.task || !(t.isTaskCreator || t.isAssignee || t.isEventCreator)
+        || (t.task.event_id && Number(t.task.event_id) !== Number(req.params.id))) {
+      return errorResponse(res, 404, 'Task not found');
+    }
+
     const result = await pool.query(
       `INSERT INTO sub_tasks (task_id, title)
        VALUES ($1, $2)

@@ -1,11 +1,16 @@
 const pool = require('../../../config/db');
 const { successResponse, errorResponse } = require('../../../utils/response/responseHandlers');
+const access = require('../../../utils/access');
 
 
 const getAttendees = async (req, res) => {
   const { id } = req.params; // event_id
 
   try {
+    // F-02/F-03: attendees are event details — only for people who see the event in full
+    const { level } = await access.eventAccess(req.user.id, id);
+    if (level !== 'full') return errorResponse(res, 404, 'Event not found');
+
     const result = await pool.query(
       `SELECT u.id, u.first_name, u.last_name, fm.color, ea.status
        FROM event_attendees ea
