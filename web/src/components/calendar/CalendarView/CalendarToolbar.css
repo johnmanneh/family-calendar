@@ -72,8 +72,11 @@
   white-space: nowrap;
 }
 
-.calendar-toolbar-chip:hover {
-  background: #e5e7eb;
+/* Hover only on devices that really hover — on phones :hover sticks after a tap */
+@media (hover: hover) {
+  .calendar-toolbar-chip:hover {
+    background: #e5e7eb;
+  }
 }
 
 .calendar-toolbar-chip-active {
@@ -146,3 +149,26 @@
   .calendar-toolbar-chips::-webkit-scrollbar { display: none; }
   .calendar-toolbar-chip { flex-shrink: 0; }
 }
+
+
+/* The selected chip always wins — over hover, focus and the dark-mode chip
+   colours (those selectors are more specific than .calendar-toolbar-chip-active) */
+.calendar-toolbar-chip.calendar-toolbar-chip-active,
+.calendar-toolbar-chip.calendar-toolbar-chip-active:hover,
+.calendar-toolbar-chip.calendar-toolbar-chip-active:focus,
+:root .calendar-toolbar-chip.calendar-toolbar-chip-active,
+:root[data-theme="dark"] .calendar-toolbar-chip.calendar-toolbar-chip-active,
+:root[data-theme="dark"] .calendar-toolbar-chip.calendar-toolbar-chip-active:hover {
+  background: #1a8fa8;
+  border-color: #1a8fa8;
+  color: #fff;
+}
+@media (prefers-color-scheme: dark) {
+  :root:not([data-theme="light"]) .calendar-toolbar-chip.calendar-toolbar-chip-active,
+  :root:not([data-theme="light"]) .calendar-toolbar-chip.calendar-toolbar-chip-active:hover {
+    background: #1a8fa8;
+    border-color: #1a8fa8;
+    color: #fff;
+  }
+}
+.calendar-toolbar-chip { -webkit-tap-highlight-color: transparent; }
