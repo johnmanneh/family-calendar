@@ -20,13 +20,13 @@ const getMemberEvents = async (req, res) => {
     const result = await pool.query(
       `SELECT e.id, e.title, e.start_date, e.end_date, e.is_all_day,
               e.color, e.category, e.location, e.priority, e.status,
-              e.is_private, e.created_by,
+              e.is_private, e.created_by, e.owner_id,
               EXISTS (SELECT 1 FROM event_attendees v
                       WHERE v.event_id = e.id AND v.user_id = $2 AND v.status = 'accepted') AS viewer_attends
        FROM events e
        WHERE e.family_id = ANY($3::int[])
          AND (
-           e.created_by = $1
+           COALESCE(e.owner_id, e.created_by) = $1   -- events on their calendar
            OR EXISTS (SELECT 1 FROM event_attendees a
                       WHERE a.event_id = e.id AND a.user_id = $1 AND a.status = 'accepted')
          )
@@ -37,7 +37,7 @@ const getMemberEvents = async (req, res) => {
     );
 
     const events = result.rows.map(e => {
-      const canSee = !e.is_private || Number(e.created_by) === viewerId || e.viewer_attends;
+      const canSee = !e.is_private || Number(e.created_by) === viewerId || Number(e.owner_id) === viewerId || e.viewer_attends;
       const { viewer_attends, ...ev } = e;
       if (canSee) return { ...ev, is_busy: false };
       return {

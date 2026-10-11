@@ -1,3 +1,4 @@
+const { canDeleteEvent } = require('../../utils/access');
 const pool = require('../../config/db');
 const { successResponse, errorResponse } = require('../../utils/response/responseHandlers');
 const { broadcast } = require('../../utils/sseClients');
@@ -9,11 +10,11 @@ const deleteEvent = async (req, res) => {
   try {
     // Check event exists and belongs to user
     const event = await pool.query(
-      'SELECT * FROM events WHERE id = $1 AND created_by = $2',
-      [id, userId]
+      'SELECT * FROM events WHERE id = $1',
+      [id]
     );
 
-    if (event.rows.length === 0) {
+    if (event.rows.length === 0 || !(await canDeleteEvent(userId, event.rows[0]))) {
       return errorResponse(res, 404, 'Event not found or you are not authorized to delete it');
     }
 

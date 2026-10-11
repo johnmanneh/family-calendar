@@ -9,7 +9,7 @@ const removeAttendee = async (req, res) => {
     // F-03: the creator removes anyone; an attendee may only remove themselves
     const event = await access.loadEvent(id);
     const isSelf = Number(userId) === Number(req.user.id);
-    if (!event || (!access.canEditEvent(req.user.id, event) && !isSelf)) {
+    if (!event || (!(await access.canEditEvent(req.user.id, event)) && !isSelf)) {
       return errorResponse(res, 404, 'Event not found');
     }
 

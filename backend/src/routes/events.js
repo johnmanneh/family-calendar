@@ -19,12 +19,14 @@ const getMyTasks = require('../controllers/tasks/getMyTasks');
 const getPendingEventInvitations = require('../controllers/events/getPendingEventInvitations');
 const respondToEventInvitation = require('../controllers/events/respondToEventInvitation');
 const getAvailability = require('../controllers/events/getAvailability');
+const getEventTargets = require('../controllers/events/getEventTargets');
 
 //Events
 router.get("/", verifyToken, getEvents);
 router.get('/my-tasks', verifyToken, getMyTasks);
 router.get('/invitations', verifyToken, getPendingEventInvitations);
 router.post('/availability', verifyToken, getAvailability);
+router.get('/targets', verifyToken, getEventTargets);
 router.put('/invitations/:id', verifyToken, respondToEventInvitation);
 router.get("/:id", verifyToken, getEvent);
 router.post("/create", verifyToken, createEvent);

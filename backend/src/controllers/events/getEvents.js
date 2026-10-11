@@ -257,7 +257,7 @@ const getEvents = async (req, res) => {
                 p.user_id AS owner_id, u.first_name, u.last_name, u.color AS owner_color
          FROM events e
          JOIN (
-           SELECT id AS event_id, created_by AS user_id FROM events
+           SELECT id AS event_id, COALESCE(owner_id, created_by) AS user_id FROM events  -- whose calendar
            UNION
            SELECT event_id, user_id FROM event_attendees WHERE status = 'accepted'
          ) p ON p.event_id = e.id

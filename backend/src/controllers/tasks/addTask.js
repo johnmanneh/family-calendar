@@ -21,7 +21,7 @@ const addTask = async (req, res) => {
 
     // F-03: tasks are added by the event's creator, to people on the event or in its family
     const event = await access.loadEvent(id);
-    if (!event || !access.canEditEvent(created_by, event)) {
+    if (!event || !(await access.canEditEvent(created_by, event))) {
       return errorResponse(res, 404, 'Event not found');
     }
     if (!(await access.canAssignOnEvent(event, assigned_to))) {

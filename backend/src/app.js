@@ -44,9 +44,15 @@ app.get('/', (req, res) => {
 });
 
 const PORT = process.env.PORT || 8000;
-// Bring the database up to what this code needs, then start serving
-require('./utils/ensureSchema')().finally(() => {
-  app.listen(PORT, () => {
-    console.log(`Server running on port ${PORT}`);
+// Apply pending database migrations, then start serving. If a migration fails
+// the server does not start, so the previous deployment keeps running.
+require('./db/migrate')()
+  .then(() => {
+    app.listen(PORT, () => {
+      console.log(`Server running on port ${PORT}`);
+    });
+  })
+  .catch(err => {
+    console.error(err.message);
+    process.exit(1);
   });
-});

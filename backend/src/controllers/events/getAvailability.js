@@ -104,7 +104,7 @@ const getAvailability = async (req, res) => {
               p.user_id, e.id, e.start_date, e.end_date, e.is_all_day, e.recurrence, e.recurrence_end_date
        FROM events e
        JOIN (
-         SELECT id AS event_id, created_by AS user_id FROM events
+         SELECT id AS event_id, COALESCE(owner_id, created_by) AS user_id FROM events  -- whose calendar
          UNION
          SELECT event_id, user_id FROM event_attendees WHERE status = 'accepted'
        ) p ON p.event_id = e.id

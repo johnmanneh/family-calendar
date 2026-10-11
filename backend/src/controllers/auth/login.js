@@ -20,7 +20,8 @@ const login = async (req, res) => {
       [email]
     );
     //    
-    if (user.rows.length === 0) {
+    // Child profiles (no login) can never authenticate
+    if (user.rows.length === 0 || user.rows[0].is_managed || !user.rows[0].password) {
       return errorResponse(res, 400, 'Invalid credentials');
     }
     //

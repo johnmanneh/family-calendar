@@ -45,9 +45,10 @@ const updateEvent = async (req, res) => {
       );
     }
 
-    // F-01: knowing an event's id is not permission — only its creator may change it.
+    // F-01: knowing an event's id is not permission — owner, creator on own calendar,
+    // child manager or a delegate with edit permission (utils/access.js).
     // Same 404 as "not found" so ids can't be probed.
-    if (!canEditEvent(userId, event.rows[0])) {
+    if (!(await canEditEvent(userId, event.rows[0]))) {
       return errorResponse(res, 404, "Event not found or you are not authorized to update it");
     }
 

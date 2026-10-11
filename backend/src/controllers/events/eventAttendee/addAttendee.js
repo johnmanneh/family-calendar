@@ -10,7 +10,7 @@ const addAttendee = async (req, res) => {
   try {
     // F-03: only the event's creator adds people, and only people they may invite
     const event = await access.loadEvent(id);
-    if (!event || !access.canEditEvent(req.user.id, event)) {
+    if (!event || !(await access.canEditEvent(req.user.id, event))) {
       return errorResponse(res, 404, 'Event not found');
     }
     if (!(await access.canInvite(req.user.id, event, user_id))) {
@@ -25,7 +25,10 @@ const addAttendee = async (req, res) => {
     const isCreator = eventRes.rows.length > 0 &&
       Number(eventRes.rows[0].created_by) === Number(user_id);
 
-    const status = isCreator ? 'accepted' : 'pending';
+    // A child profile can't answer an invitation — the parent adding them decides
+    const target = await pool.query('SELECT is_managed FROM users WHERE id = $1', [user_id]);
+    const isChild = !!target.rows[0]?.is_managed;
+    const status = (isCreator || isChild) ? 'accepted' : 'pending';
 
     const result = await pool.query(
       `INSERT INTO event_attendees (event_id, user_id, status)
@@ -40,7 +43,7 @@ const addAttendee = async (req, res) => {
     }
 
     // Notify the new attendee (skip if they're the creator — they added themselves)
-    if (!isCreator) {
+    if (!isCreator && !isChild) {
       const eventDetail = await pool.query(
         `SELECT e.title, u.first_name, u.last_name
          FROM events e
