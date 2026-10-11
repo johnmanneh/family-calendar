@@ -167,13 +167,18 @@ function EventRow({ event, navigation, eventTasks, showDate }) {
     <View style={styles.eventCard}>
       {/* Main event tap target */}
       <TouchableOpacity
-        style={styles.eventRow}
-        onPress={() => navigation.navigate('EventDetails', { eventId: event.id })}
-        activeOpacity={0.75}
+        style={[styles.eventRow, event.is_busy && { opacity: 0.6 }]}
+        // Busy blocks (someone else's booked time) only show when — not what
+        onPress={event.is_busy ? undefined : () => navigation.navigate('EventDetails', { eventId: event.id })}
+        activeOpacity={event.is_busy ? 1 : 0.75}
+        disabled={event.is_busy}
       >
         <View style={[styles.eventStripe, { backgroundColor: color }]} />
         <View style={styles.eventBody}>
-          <Text style={styles.eventTitle} numberOfLines={1}>{event.title}</Text>
+          <Text style={styles.eventTitle} numberOfLines={1}>
+            {event.is_busy ? <Ionicons name="lock-closed-outline" size={13} /> : null}
+            {event.is_busy ? ' ' : ''}{event.title}
+          </Text>
           <Text style={styles.eventTime}>
             {dateLabel ? `${dateLabel} · ` : ''}{timeDisplay}
           </Text>

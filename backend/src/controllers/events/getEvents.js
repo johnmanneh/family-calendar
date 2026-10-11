@@ -230,7 +230,68 @@ const getEvents = async (req, res) => {
       }));
     }
 
-    const allEvents = [...familyEvents, ...groupEvents]
+    // ── Busy blocks ──────────────────────────────────────────────────────
+    // People you share a group with (outside your family): their booked times
+    // show as grey "Busy · Sarah" blocks — time only, never what it is — so you
+    // can see when they're free, like an Outlook calendar.
+    const shownIds = new Set([...familyEvents, ...groupEvents].map(e => Number(e.id)));
+    const busyBlocks = [];
+    const coMembers = await pool.query(
+      `SELECT other.user_id, array_agg(DISTINCT mine.group_id) AS group_ids
+       FROM group_members mine
+       JOIN group_members other ON other.group_id = mine.group_id AND other.user_id <> $1
+       WHERE mine.user_id = $1
+         AND NOT EXISTS (
+           SELECT 1 FROM family_members a JOIN family_members b ON b.family_id = a.family_id
+           WHERE a.user_id = $1 AND b.user_id = other.user_id
+         )
+       GROUP BY other.user_id`,
+      [userId]
+    );
+    if (coMembers.rows.length > 0) {
+      const groupsByUser = {};
+      coMembers.rows.forEach(r => { groupsByUser[r.user_id] = r.group_ids.map(Number); });
+      const busyRes = await pool.query(
+        `SELECT DISTINCT ON (e.id)
+                e.id, e.start_date, e.end_date, e.is_all_day, e.recurrence, e.recurrence_end_date,
+                p.user_id AS owner_id, u.first_name, u.last_name, u.color AS owner_color
+         FROM events e
+         JOIN (
+           SELECT id AS event_id, created_by AS user_id FROM events
+           UNION
+           SELECT event_id, user_id FROM event_attendees WHERE status = 'accepted'
+         ) p ON p.event_id = e.id
+         JOIN users u ON u.id = p.user_id
+         WHERE p.user_id = ANY($1::int[])
+           AND COALESCE(e.status, 'confirmed') <> 'cancelled'
+           AND (
+             e.recurrence IS NOT NULL AND (e.recurrence_end_date IS NULL OR e.recurrence_end_date >= NOW() - interval '30 days')
+             OR COALESCE(e.end_date, e.start_date) >= NOW() - interval '30 days'
+           )
+         ORDER BY e.id, p.user_id`,
+        [Object.keys(groupsByUser).map(Number)]
+      );
+      busyRes.rows
+        .filter(r => !shownIds.has(Number(r.id)))
+        .forEach(r => busyBlocks.push({
+          id: r.id,
+          start_date: r.start_date,
+          end_date: r.end_date,
+          is_all_day: r.is_all_day,
+          recurrence: r.recurrence,
+          recurrence_end_date: r.recurrence_end_date,
+          title: `Busy · ${r.first_name}`,
+          color: '#b0b0b8',
+          is_busy: true,
+          is_private: false,
+          created_by: r.owner_id,
+          attendees: [{ id: r.owner_id, first_name: r.first_name, last_name: r.last_name, color: r.owner_color || '#8e8e93' }],
+          group_ids: groupsByUser[r.owner_id] || [],
+          from_group: true,
+        }));
+    }
+
+    const allEvents = [...familyEvents, ...groupEvents, ...busyBlocks]
       .sort((a, b) => new Date(a.start_date) - new Date(b.start_date));
 
     return successResponse(res, 200, 'Events retrieved successfully', {

@@ -192,7 +192,7 @@ const PhoneCalendar = ({ events, onOpen, onAdd }) => {
                   <span className="pcal-ev-time">{time}</span>
                   <span className="pcal-ev-title">
                     {(e.is_private || e.is_busy) && <Icon name="lock" size={12} />}
-                    {e.is_busy ? "Busy" : e.title}
+                    {e.is_busy ? (e.title || "Busy") : e.title}
                   </span>
                   {!e.is_busy && (e.location || e.from_group || (e.group_ids || []).length > 0) && (
                     <span className="pcal-ev-meta">

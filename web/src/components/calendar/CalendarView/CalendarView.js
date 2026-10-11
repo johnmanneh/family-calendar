@@ -148,7 +148,7 @@ const CalendarView = ({ showSearch = true, autoFocusSearch = false }) => {
         <div className="fc-event-custom fc-event-busy">
           <div className="fc-event-main-row">
             {timeText && <span className="fc-event-time-custom">{timeText}</span>}
-            <span className="fc-event-title-custom"><Icon name="lock" size={11} /> Busy</span>
+            <span className="fc-event-title-custom"><Icon name="lock" size={11} /> {event.title || "Busy"}</span>
           </div>
         </div>
       );

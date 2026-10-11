@@ -138,7 +138,8 @@ export default function DayViewScreen({ route, navigation }) {
                     <TouchableOpacity
                       key={ev.id}
                       style={[styles.allDayChip, { backgroundColor: ev.color || '#1a8fa8' }]}
-                      onPress={() => navigation.navigate('EventDetails', { eventId: ev.id })}
+                      onPress={ev.is_busy ? undefined : () => navigation.navigate('EventDetails', { eventId: ev.id })}
+                      disabled={!!ev.is_busy}
                     >
                       <Text style={styles.allDayChipText} numberOfLines={1}>{ev.title}</Text>
                     </TouchableOpacity>
@@ -196,7 +197,8 @@ export default function DayViewScreen({ route, navigation }) {
                         backgroundColor: color + '22',
                         borderLeftColor: color,
                       }]}
-                      onPress={() => navigation.navigate('EventDetails', { eventId: ev.id })}
+                      onPress={ev.is_busy ? undefined : () => navigation.navigate('EventDetails', { eventId: ev.id })}
+                      disabled={!!ev.is_busy}
                       activeOpacity={0.8}
                     >
                       <Text style={[styles.eventTitle, { color }]} numberOfLines={1}>{ev.title}</Text>
