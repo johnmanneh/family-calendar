@@ -16,6 +16,7 @@ import PendingScreen from './src/screens/PendingScreen';
 import MemberProfileScreen from './src/screens/MemberProfileScreen';
 import EventFormScreen from './src/screens/EventFormScreen';
 import TaskFormScreen from './src/screens/TaskFormScreen';
+import ScanScreen from './src/screens/ScanScreen';
 import GroupsScreen from './src/screens/GroupsScreen';
 import DayViewScreen from './src/screens/DayViewScreen';
 import FamilyScreen from './src/screens/FamilyScreen';
@@ -53,6 +54,7 @@ function AppNavigator() {
             <Stack.Screen name="MemberProfile" component={MemberProfileScreen} />
             <Stack.Screen name="EventForm" component={EventFormScreen} />
             <Stack.Screen name="TaskForm" component={TaskFormScreen} />
+            <Stack.Screen name="Scan" component={ScanScreen} />
             <Stack.Screen name="Groups" component={GroupsScreen} />
             <Stack.Screen name="DayView" component={DayViewScreen} />
             <Stack.Screen name="Family" component={FamilyScreen} />

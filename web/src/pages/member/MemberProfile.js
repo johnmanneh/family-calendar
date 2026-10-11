@@ -8,6 +8,8 @@ import { MEMBER_COLORS } from "./MemberColors";
 import Button from "../../components/common/Button/Button";
 import Avatar from "../../components/common/Avatar/Avatar";
 import Icon from "../../components/common/Icon/Icon";
+import CalendarAccessCard from "../../components/family/CalendarAccessCard";
+import ChildManageCard from "../../components/family/ChildManageCard";
 
 import "./MemberProfile.css";
 
@@ -282,8 +284,9 @@ const MemberProfile = () => {
           <div className="member-hero-info">
             <h1>
               {member.first_name} {member.last_name}
+              {member.is_managed && <span className="member-child-badge">Child</span>}
             </h1>
-            <p>{member.role}</p>
+            <p>{member.is_managed ? "No login · managed by parents" : member.role}</p>
           </div>
         </div>
 
@@ -347,9 +350,21 @@ const MemberProfile = () => {
                 See all {member.first_name}'s events ›
               </button>
             </div>
+
+            {/* Child profile: managers (who added them) and family admins */}
+            {member.is_managed && (isAdmin || Number(member.managed_by) === Number(user?.id)) && (
+              <ChildManageCard
+                child={member}
+                onSaved={fetchFamily}
+                onRemoved={async () => { await fetchFamily(); navigate("/dashboard"); }}
+              />
+            )}
           </div>
         ) : (
           <div className="member-settings">
+            {/* Who can add to my calendar — own profile only */}
+            {isOwnProfile && <CalendarAccessCard members={members} meId={user?.id} />}
+
             {/* Photo Card — own profile only */}
             {isOwnProfile && (
               <div className="member-card">

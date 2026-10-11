@@ -8,7 +8,7 @@
     "start": "node src/app.js",
     "dev": "nodemon src/app.js",
     "migrate": "node src/db/migrateCli.js",
-    "test:security": "node tests/security.test.js && node tests/delegation.test.js"
+    "test:security": "node tests/security.test.js && node tests/delegation.test.js && node tests/scan.test.js"
   },
   "keywords": [],
   "author": "",

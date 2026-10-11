@@ -14,6 +14,7 @@ const taskRoutes = require('./routes/tasks');
 const groupRoutes = require('./routes/groups');
 const streamRoutes = require('./routes/stream');
 const notificationRoutes = require('./routes/notifications');
+const scanRoutes = require('./routes/scan');
 const chatRoutes         = require('./routes/chat');
 const joinRoutes         = require('./routes/join');
 
@@ -36,6 +37,7 @@ app.use('/api/stream', streamRoutes);
 app.use('/api/notifications', notificationRoutes);
 app.use('/api/chat',          chatRoutes);
 app.use('/api/join',          joinRoutes);
+app.use('/api/scan',          scanRoutes);
 
 
 // Health check

@@ -12,6 +12,7 @@ import { useUI } from "../../../context/UIContext";
 import { useTheme } from "../../../context/ThemeContext";
 import { useFamily } from "../../../context/FamilyContext";
 import Icon from "../../common/Icon/Icon";
+import ScanModal from "../../scan/ScanModal";
 
 import "./Sidebar.css";
 
@@ -23,6 +24,7 @@ const Sidebar = () => {
   const { colorScheme, toggleTheme } = useTheme();
   const { family } = useFamily();
   const personal = !!family?.is_personal;
+  const [scanOpen, setScanOpen] = useState(false);
   const isDark = colorScheme === "dark";
 
   const handleLogout = () => {
@@ -54,6 +56,8 @@ const Sidebar = () => {
           <div className="sidebar-divider" />
         </>
       )}
+      <button className="sidebar-scan" onClick={() => setScanOpen(true)}>🌸 Scan a schedule</button>
+      <ScanModal open={scanOpen} onClose={() => setScanOpen(false)} />
       <div className="sidebar-bottom">
         <button className="sidebar-theme" onClick={toggleTheme} aria-label="Toggle dark mode">
           <Icon name={isDark ? "sun" : "moon"} size={15} />

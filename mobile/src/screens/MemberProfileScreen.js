@@ -23,6 +23,8 @@ import TopCard from '../components/ui/TopCard';
 import ListCard, { SectionHeader } from '../components/ui/ListCard';
 import TreadmillList from '../components/TreadmillList';
 import { RollInGroup } from '../components/RollIn';
+import CalendarAccessSection from '../components/family/CalendarAccessSection';
+import ChildManageSection from '../components/family/ChildManageSection';
 import { useStyles } from '../styles/MemberProfileScreen.styles';
 import { useTranslation } from 'react-i18next';
 
@@ -145,6 +147,7 @@ const TASK_BADGE = {
 // ─── Settings tab ────────────────────────────────────────────────────────────
 
 function SettingsTab({ member, user, family, fetchFamily, onAvatarChange, navigation }) {
+  const { members: familyMembers } = useFamily();
   const styles = useStyles();
   const { t }  = useTranslation();
   const { logout } = useAuth();
@@ -447,6 +450,9 @@ function SettingsTab({ member, user, family, fetchFamily, onAvatarChange, naviga
         )}
       </View>
 
+      {/* ── Who can add to my calendar ── */}
+      {family && !family.is_personal && <CalendarAccessSection members={familyMembers} meId={user?.id} />}
+
       {/* ── Danger zone ── */}
       <Text style={[styles.settingsSectionHeader, { marginTop: 32 }]}>{t('common.danger_zone')}</Text>
       <View style={styles.settingsCard}>
@@ -612,6 +618,7 @@ export default function MemberProfileScreen({ route, navigation }) {
         <Avatar member={displayMember} size={80} />
         <Text style={styles.memberName}>{displayName}</Text>
         {member?.relationship ? <Text style={styles.memberRelationship}>{member.relationship}</Text> : null}
+        {member?.is_managed ? <Text style={[styles.memberRelationship, { color: '#f48c06' }]}>{t('child.badge_long')}</Text> : null}
       </View>
 
       </TopCard>
@@ -675,8 +682,18 @@ export default function MemberProfileScreen({ route, navigation }) {
             <Ionicons name="chevron-forward" size={16} color="#1a8fa8" />
           </TouchableOpacity>
 
+          {/* Child profile — whoever added them, or a family admin */}
+          {member?.is_managed && (isAdmin || Number(member.managed_by) === Number(user?.id)) && (
+            <ChildManageSection
+              child={member}
+              onSaved={fetchFamily}
+              onRemoved={async () => { await fetchFamily(); navigation.goBack(); }}
+              onScan={() => navigation.navigate('Scan', { ownerId: member.id })}
+            />
+          )}
+
           {/* Circle control — admins only */}
-          {isAdmin && (
+          {isAdmin && !member?.is_managed && (
             <AdminCircleControl
               memberId={memberId}
               currentCircle={member?.circle_type}

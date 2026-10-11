@@ -1668,3 +1668,19 @@
   :root:not([data-theme="light"]) .sidebar-me-btn:not(.primary) { background: #2c2c2e; color: #f2f2f7; }
 }
 :root[data-theme="dark"] .sidebar-me-btn:not(.primary) { background: #2c2c2e; color: #f2f2f7; }
+
+/* ── Child profiles ── */
+.sidebar-member-child {
+  font-size: 9px; font-weight: 700; color: #f48c06; background: rgba(244,140,6,0.12);
+  border-radius: 6px; padding: 1px 5px; text-transform: uppercase;
+}
+.sidebar-add-child {
+  margin-top: 10px; border: 1px dashed #c7c7cc; background: transparent; color: #8e8e93;
+  border-radius: 10px; padding: 7px 10px; font-size: 12px; font-weight: 600; cursor: pointer;
+  font-family: inherit; width: 100%;
+}
+.sidebar-add-child:hover { color: #1a8fa8; border-color: #1a8fa8; }
+.sidebar-scan {
+  margin: 12px 16px 0; width: calc(100% - 32px); border: none; border-radius: 10px; padding: 10px;
+  background: rgba(232,97,140,0.12); color: #e8618c; font-size: 13px; font-weight: 700; cursor: pointer; font-family: inherit;
+}

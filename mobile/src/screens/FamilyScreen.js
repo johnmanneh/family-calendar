@@ -14,6 +14,7 @@ import { SafeAreaView } from 'react-native-safe-area-context';
 import { Ionicons } from '@expo/vector-icons';
 import { useTranslation } from 'react-i18next';
 import { RollInGroup } from '../components/RollIn';
+import AddChildSection from '../components/family/AddChildSection';
 import { useAuth } from '../context/AuthContext';
 import { useFamily } from '../context/FamilyContext';
 import API, { SERVER_URL } from '../api/axios';
@@ -59,6 +60,7 @@ function MemberRow({ member, isMe, navigation }) {
         <Text style={styles.memberName}>
           {name}{isMe ? '  (You)' : ''}
         </Text>
+        {member.is_managed ? <Text style={{ fontSize: 11, color: '#f48c06', fontWeight: '700', marginTop: 2 }}>{t('child.badge')}</Text> : null}
       </View>
 
       {/* Role badge */}
@@ -267,6 +269,9 @@ export default function FamilyScreen({ navigation }) {
           ))}
           </RollInGroup>
         </View>
+
+        {/* Children without their own login */}
+        <AddChildSection onAdded={fetchFamily} />
 
         {/* Danger zone — switching family takes you out of this one, so it lives here */}
         {family && (

@@ -1446,6 +1446,7 @@ export default function HomeScreen({ navigation, route }) {
         onClose={() => setRadialVisible(false)}
         onNewEvent={() => navigation.navigate('EventForm')}
         onNewTask={() => navigation.navigate('TaskForm')}
+        onScan={() => navigation.navigate('Scan')}
       />
 
     </View>

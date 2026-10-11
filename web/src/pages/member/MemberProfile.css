@@ -584,3 +584,39 @@
   font-weight: 600;
   margin: 8px 0 0;
 }
+
+/* ── Who can add to my calendar ── */
+.access-list { display: flex; flex-direction: column; gap: 10px; }
+.access-row { display: flex; align-items: center; gap: 10px; }
+.access-name { flex: 1; font-size: 14px; font-weight: 600; color: #1d1d1f; }
+.access-toggles { display: flex; gap: 6px; }
+.access-chip {
+  border: 1px solid #d1d1d6; background: #fff; color: #636366; border-radius: 14px;
+  padding: 5px 10px; font-size: 12px; font-weight: 600; cursor: pointer; font-family: inherit;
+}
+.access-chip.on { background: #1a8fa8; border-color: #1a8fa8; color: #fff; }
+
+/* ── Child profile ── */
+.child-save, .child-remove, .child-cancel, .child-remove-outline {
+  border: none; border-radius: 10px; padding: 10px 16px; font-size: 14px; font-weight: 600;
+  cursor: pointer; font-family: inherit; margin-top: 8px;
+}
+.child-save { background: #1a8fa8; color: #fff; }
+.child-remove { background: #ff3b30; color: #fff; }
+.child-cancel { background: #f2f2f7; color: #1d1d1f; }
+.child-remove-outline { background: transparent; color: #ff3b30; border: 1px solid #ff3b30; }
+.child-confirm { display: flex; gap: 8px; }
+.member-child-badge {
+  display: inline-block; margin-left: 8px; font-size: 11px; font-weight: 700; color: #f48c06;
+  background: rgba(244,140,6,0.12); border-radius: 8px; padding: 2px 8px; vertical-align: middle;
+}
+@media (prefers-color-scheme: dark) {
+  :root:not([data-theme="light"]) .access-name { color: #f2f2f7; }
+  :root:not([data-theme="light"]) .access-chip:not(.on), :root:not([data-theme="light"]) .child-cancel { background: #2c2c2e; border-color: #3a3a3c; color: #aeaeb2; }
+}
+:root[data-theme="dark"] .access-name { color: #f2f2f7; }
+:root[data-theme="dark"] .access-chip:not(.on), :root[data-theme="dark"] .child-cancel { background: #2c2c2e; border-color: #3a3a3c; color: #aeaeb2; }
+.child-scan {
+  width: 100%; border: none; border-radius: 12px; padding: 12px; background: #e8618c; color: #fff;
+  font-size: 15px; font-weight: 600; cursor: pointer; font-family: inherit; margin-bottom: 12px;
+}

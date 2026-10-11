@@ -27,6 +27,8 @@ const TYPE_CONFIG = {
   counter_accepted: { icon: 'thumbs-up-outline',        color: '#34c759' },
   event_invited:    { icon: 'calendar-outline',         color: '#1a8fa8' },
   event_shared:     { icon: 'people-outline',           color: '#7b61ff' },
+  event_added_for_you: { icon: 'calendar-number-outline', color: '#f48c06' },
+  calendar_access:  { icon: 'key-outline',              color: '#34c759' },
 };
 
 // ─── Time ago helper ─────────────────────────────────────────────────────────

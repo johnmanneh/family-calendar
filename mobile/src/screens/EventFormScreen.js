@@ -199,6 +199,14 @@ export default function EventFormScreen({ route, navigation }) {
   // with that group (no copy), e.g. "Big Family" so grandma sees it too.
   // Only the event's creator may share it (the server enforces this as well).
   const [myGroups, setMyGroups] = useState([]);
+  // Whose calendar (new events only): you, a child you manage, or someone who
+  // lets you add to theirs. The server re-checks on save.
+  const [targets, setTargets] = useState([]);
+  const [ownerId, setOwnerId] = useState(route.params?.ownerId ? Number(route.params.ownerId) : null);
+  useEffect(() => {
+    if (isEdit) return;
+    API.get('/events/targets').then(res => setTargets(res.data.targets || [])).catch(() => setTargets([]));
+  }, [isEdit]);
   const [groupPeople, setGroupPeople] = useState([]);
   const attendeeOptions = [
     ...members,
@@ -338,7 +346,7 @@ export default function EventFormScreen({ route, navigation }) {
         await syncGroups(event.id);
       } else {
         // ── Create event ──────────────────────────────────────────────────
-        const res = await API.post('/events/create', eventPayload);
+        const res = await API.post('/events/create', ownerId ? { ...eventPayload, owner_id: ownerId } : eventPayload);
         const newId = res.data.event.id;
 
         await syncGroups(newId);
@@ -537,6 +545,34 @@ export default function EventFormScreen({ route, navigation }) {
             ))}
           </View>
         </View>
+
+        {/* ── Create event for ── */}
+        {!isEdit && targets.length > 1 && (
+          <View style={styles.card}>
+            <Text style={styles.fieldLabel}>{t('events.create_for')}</Text>
+            <View style={styles.categoryGrid}>
+              {targets.map(tg => {
+                const on = tg.is_self ? !ownerId : Number(ownerId) === Number(tg.id);
+                const c = tg.color || '#1a8fa8';
+                return (
+                  <TouchableOpacity
+                    key={tg.id}
+                    style={[styles.categoryChip, on && { borderColor: c, backgroundColor: c + '22' }]}
+                    onPress={() => setOwnerId(tg.is_self ? null : Number(tg.id))}
+                  >
+                    <View style={{ width: 8, height: 8, borderRadius: 4, backgroundColor: c }} />
+                    <Text style={styles.categoryLabel}>{tg.is_self ? t('events.my_calendar') : tg.first_name}</Text>
+                  </TouchableOpacity>
+                );
+              })}
+            </View>
+            {ownerId ? (
+              <Text style={[styles.categoryLabel, { marginTop: 8 }]}>
+                {t('events.adding_to', { name: targets.find(x => Number(x.id) === Number(ownerId))?.first_name || '' })}
+              </Text>
+            ) : null}
+          </View>
+        )}
 
         {/* ── Who's attending ── */}
         <View style={styles.card}>

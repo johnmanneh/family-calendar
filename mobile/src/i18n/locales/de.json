@@ -134,7 +134,10 @@
     "add_to_your_calendar": "Zu deinem Kalender hinzufügen?",
     "busy": "Belegt",
     "busy_note_one": "{{names}} hat zu dieser Zeit schon etwas.",
-    "busy_note_other": "{{names}} haben zu dieser Zeit schon etwas."
+    "busy_note_other": "{{names}} haben zu dieser Zeit schon etwas.",
+    "create_for": "Termin für",
+    "my_calendar": "Mein Kalender",
+    "adding_to": "Du trägst das in den Kalender von {{name}} ein."
   },
   "tasks": {
     "new_task": "Neue Aufgabe",
@@ -285,5 +288,52 @@
     "joined_family": "Du bist jetzt in {{name}}",
     "joined_group": "Du bist der Gruppe {{name}} beigetreten",
     "stay_connected_hint": "Tipp: Um mit deiner alten Familie verbunden zu bleiben, erstellt gemeinsam eine Gruppe."
+  },
+  "access": {
+    "title": "Wer darf in meinen Kalender eintragen",
+    "hint": "Erlaube jemandem, Termine in deinem Kalender hinzuzufügen, zu ändern oder zu löschen. Sehen kann die Person trotzdem nur, was dein Privatsphäre-Kreis erlaubt.",
+    "add": "Hinzufügen",
+    "edit": "Ändern",
+    "delete": "Löschen"
+  },
+  "child": {
+    "add": "Kind hinzufügen",
+    "add_hint": "Für Kinder ohne eigenes Handy. Du und die Familien-Admins verwalten den Kalender.",
+    "first_name": "Vorname",
+    "last_name": "Nachname",
+    "badge": "Kind",
+    "badge_long": "Kind · von den Eltern verwaltet",
+    "profile": "Kinderprofil",
+    "managed_hint": "{{name}} meldet sich nicht an — du und die Familien-Admins verwalten diesen Kalender.",
+    "remove": "Entfernen",
+    "remove_profile": "Profil entfernen",
+    "remove_title": "{{name}} entfernen?",
+    "remove_confirm": "Das entfernt das Profil von {{name}} und die Termine in diesem Kalender. Das kann nicht rückgängig gemacht werden."
+  },
+  "scan": {
+    "title": "Plan scannen",
+    "lead": "Fotografiere einen Kindergarten- oder Schulplan – eine oder zwei Wochen. Du prüfst alles, bevor es eingetragen wird.",
+    "take_photo": "Foto aufnehmen",
+    "choose_photo": "Aus Galerie wählen",
+    "privacy": "Das Foto wird einmal gelesen, um die Termine zu finden, und nicht gespeichert.",
+    "allow_photos": "Erlaube den Zugriff auf Fotos, um einen Plan zu scannen.",
+    "reading": "Plan wird gelesen…",
+    "saving": "Termine werden eingetragen…",
+    "nothing_found": "Keine Termine auf diesem Foto gefunden. Versuch ein schärferes, gerades Foto.",
+    "add_to": "Eintragen für",
+    "label": "Kategorie",
+    "label_kindergarten": "Kindergarten",
+    "label_school": "Schule",
+    "label_none": "Keine",
+    "found_one": "{{count}} Eintrag gefunden",
+    "found_other": "{{count}} Einträge gefunden",
+    "check_date": "Bitte dieses Datum prüfen",
+    "add_n_one": "{{count}} Termin eintragen",
+    "add_n_other": "{{count}} Termine eintragen",
+    "added_one": "{{count}} Termin eingetragen.",
+    "added_other": "{{count}} Termine eingetragen.",
+    "skipped_one": "{{count}} war schon vorhanden.",
+    "skipped_other": "{{count}} waren schon vorhanden.",
+    "scan_for": "Plan für {{name}} scannen"
   }
 }

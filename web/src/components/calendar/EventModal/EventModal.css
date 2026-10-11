@@ -486,3 +486,14 @@
 }
 .modal-attendee.busy.selected .modal-attendee-busy { color: #ff3b30; }
 .modal-busy-note { font-size: 12px; color: #ff3b30; margin-top: 6px; }
+
+/* Create event for */
+.modal-owner-chips { display: flex; flex-wrap: wrap; gap: 8px; }
+.modal-owner-chip {
+  display: inline-flex; align-items: center; gap: 6px; border: 1px solid #d1d1d6; background: #fff;
+  color: #1d1d1f; border-radius: 16px; padding: 6px 12px; font-size: 13px; font-weight: 600;
+  cursor: pointer; font-family: inherit;
+}
+.modal-owner-chip.on { border-color: var(--chip); background: color-mix(in srgb, var(--chip) 14%, transparent); }
+.modal-owner-dot { width: 8px; height: 8px; border-radius: 50%; background: var(--chip); }
+.modal-owner-note { font-size: 12px; color: #8e8e93; margin-top: 6px; }

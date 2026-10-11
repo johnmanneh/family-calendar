@@ -133,7 +133,10 @@
     "add_to_your_calendar": "Add it to your calendar?",
     "busy": "Busy",
     "busy_note_one": "{{names}} is busy at this time.",
-    "busy_note_other": "{{names}} are busy at this time."
+    "busy_note_other": "{{names}} are busy at this time.",
+    "create_for": "Create event for",
+    "my_calendar": "My calendar",
+    "adding_to": "You're adding this to {{name}}'s calendar."
   },
   "tasks": {
     "new_task": "New Task",
@@ -284,5 +287,52 @@
     "joined_family": "You are now in {{name}}",
     "joined_group": "You joined the group {{name}}",
     "stay_connected_hint": "Tip: to stay connected with your old family, create a group together."
+  },
+  "access": {
+    "title": "Who can add to my calendar",
+    "hint": "Let someone add, change or remove events on your calendar. They still only see what your privacy circle allows.",
+    "add": "Add",
+    "edit": "Edit",
+    "delete": "Delete"
+  },
+  "child": {
+    "add": "Add child",
+    "add_hint": "For children without their own phone. You and the family admins manage their calendar.",
+    "first_name": "First name",
+    "last_name": "Last name",
+    "badge": "Child",
+    "badge_long": "Child · managed by parents",
+    "profile": "Child profile",
+    "managed_hint": "{{name}} doesn't sign in — you and the family admins manage this calendar.",
+    "remove": "Remove",
+    "remove_profile": "Remove profile",
+    "remove_title": "Remove {{name}}?",
+    "remove_confirm": "This removes {{name}}'s profile and the events on their calendar. It can't be undone."
+  },
+  "scan": {
+    "title": "Scan schedule",
+    "lead": "Take a photo of a kindergarten or school plan — one or two weeks. You check everything before it is added.",
+    "take_photo": "Take photo",
+    "choose_photo": "Choose from gallery",
+    "privacy": "The photo is read once to find the dates and is not stored.",
+    "allow_photos": "Allow access to photos to scan a schedule.",
+    "reading": "Reading the schedule…",
+    "saving": "Adding events…",
+    "nothing_found": "No dates found on this photo. Try a sharper, straight photo.",
+    "add_to": "Add to",
+    "label": "Label",
+    "label_kindergarten": "Kindergarten",
+    "label_school": "School",
+    "label_none": "No label",
+    "found_one": "{{count}} entry found",
+    "found_other": "{{count}} entries found",
+    "check_date": "Please check this date",
+    "add_n_one": "Add {{count}} event",
+    "add_n_other": "Add {{count}} events",
+    "added_one": "{{count}} event added.",
+    "added_other": "{{count}} events added.",
+    "skipped_one": "{{count}} was already there.",
+    "skipped_other": "{{count}} were already there.",
+    "scan_for": "Scan schedule for {{name}}"
   }
 }

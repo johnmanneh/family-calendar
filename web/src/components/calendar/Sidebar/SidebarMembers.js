@@ -1,4 +1,5 @@
-import React from "react";
+import React, { useState } from "react";
+import API from "../../../api/axios";
 import { useFamily } from "../../../context/FamilyContext";
 import { useAuth } from "../../../context/AuthContext";
 import { formatDate } from "../../../utils/dateUtils";
@@ -10,7 +11,24 @@ import { useNavigate } from "react-router-dom";
 import "./Sidebar.css";
 
 const SidebarMembers = () => {
-  const { members } = useFamily();
+  const { members, fetchFamily } = useFamily();
+  // Add a child profile (no login) — inline, right under the members
+  const [addingChild, setAddingChild] = useState(false);
+  const [childName, setChildName] = useState("");
+  const [childError, setChildError] = useState("");
+  const addChild = async e => {
+    e.preventDefault();
+    if (!childName.trim()) return;
+    setChildError("");
+    try {
+      await API.post("/family/children", { first_name: childName.trim() });
+      await fetchFamily();
+      setChildName("");
+      setAddingChild(false);
+    } catch (err) {
+      setChildError(err.response?.data?.message || "Could not add child");
+    }
+  };
   const { user } = useAuth();
   const { getMemberTask } = useEvents();
   const navigate = useNavigate();
@@ -65,6 +83,7 @@ const SidebarMembers = () => {
                 <span className="sidebar-member-bubble-name">
                   {member.first_name}
                 </span>
+                {member.is_managed && <span className="sidebar-member-child">Child</span>}
                 {member.relationship && (
                   <span className="sidebar-member-relationship">{member.relationship}</span>
                 )}
@@ -87,6 +106,25 @@ const SidebarMembers = () => {
             </div>
           ))}
         </div>
+        {addingChild ? (
+          <form className="sidebar-group-form" onSubmit={addChild}>
+            <input
+              autoFocus
+              className="sidebar-group-input"
+              placeholder="Child's first name"
+              value={childName}
+              maxLength={100}
+              onChange={e => setChildName(e.target.value)}
+            />
+            {childError && <p className="sidebar-group-error">{childError}</p>}
+            <div className="sidebar-group-form-row">
+              <button type="submit" className="sidebar-group-btn-confirm">Add</button>
+              <button type="button" className="sidebar-group-btn-cancel" onClick={() => { setAddingChild(false); setChildName(""); setChildError(""); }}>Cancel</button>
+            </div>
+          </form>
+        ) : (
+          <button className="sidebar-add-child" onClick={() => setAddingChild(true)}>+ Add child</button>
+        )}
       </div>
 
       {/* Member tasks — only shown when viewing someone else */}

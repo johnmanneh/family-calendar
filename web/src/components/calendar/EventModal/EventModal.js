@@ -34,6 +34,16 @@ const EventModal = () => {
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState("");
 
+  // Whose calendar? You, a child you manage, or someone who lets you add to theirs.
+  // (Presentation only — the server re-checks on save.)
+  const [targets, setTargets] = useState([]);
+  useEffect(() => {
+    if (!isEventModalOpen || isEditMode) { setTargets([]); return; }
+    API.get("/events/targets")
+      .then(res => setTargets(res.data.targets || []))
+      .catch(() => setTargets([]));
+  }, [isEventModalOpen, isEditMode]);
+
   // People you share a group with (outside your family) can be invited too
   const [groupPeople, setGroupPeople] = useState([]);
   useEffect(() => {
@@ -319,6 +329,35 @@ const EventModal = () => {
               ))}
             </select>
           </div>
+          {/* Create event for — only when you may add to someone else's calendar */}
+          {!isEditMode && targets.length > 1 && (
+            <div className="modal-field">
+              <label>Create event for</label>
+              <div className="modal-owner-chips">
+                {targets.map(t => {
+                  const on = Number(formData.owner_id || targets[0].id) === Number(t.id);
+                  return (
+                    <button
+                      type="button"
+                      key={t.id}
+                      className={`modal-owner-chip${on ? " on" : ""}`}
+                      style={{ "--chip": t.color || "#1a8fa8" }}
+                      onClick={() => setFormData({ ...formData, owner_id: t.is_self ? undefined : t.id })}
+                    >
+                      <span className="modal-owner-dot" />
+                      {t.is_self ? "My calendar" : t.first_name}
+                    </button>
+                  );
+                })}
+              </div>
+              {formData.owner_id && (
+                <p className="modal-owner-note">
+                  You're adding this to {targets.find(t => Number(t.id) === Number(formData.owner_id))?.first_name}'s calendar.
+                </p>
+              )}
+            </div>
+          )}
+
           {/* Who's attending */}
           <div className="modal-field">
             <label>Who's attending?</label>

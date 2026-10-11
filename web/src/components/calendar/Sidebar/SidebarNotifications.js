@@ -14,6 +14,8 @@ const TYPE_CONFIG = {
   counter_accepted: { icon: 'thumbsUp',    color: '#34c759' },
   event_invited:    { icon: 'calendar',    color: '#1a8fa8' },
   event_shared:     { icon: 'users',       color: '#7b61ff' },
+  event_added_for_you: { icon: 'calendar', color: '#f48c06' },
+  calendar_access:  { icon: 'lock',        color: '#34c759' },
 };
 
 function timeAgo(dateStr) {

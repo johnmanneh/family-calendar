@@ -45,15 +45,17 @@ const ROLL   = 55;       // degrees of treadmill roll while a card comes out
 const BACKDROP_FADE = 0.78;  // how much the list behind fades (1 = hidden)
 
 const ITEMS = [
-  // Seasons: autumn leaf for events, winter snow for tasks (Ionicons outline,
-  // same icon family as the rest of the app)
-  { id: 'event', label: 'New Event', icon: 'leaf-outline', stripe: '#f48c06', angle: 196 },
-  { id: 'task',  label: 'New Task',  icon: 'snow-outline', stripe: '#4facfe', angle: 246 },
+  // Four seasons: autumn leaf = event, winter snow = task, spring flower = scan,
+  // and the summer sun is the button itself. Each card has its own distance (r)
+  // so the crescent climbs up the screen without running off the right edge.
+  { id: 'event', label: 'New Event',     icon: 'leaf-outline',   stripe: '#f48c06', angle: 195, r: 125 },
+  { id: 'task',  label: 'New Task',      icon: 'snow-outline',   stripe: '#4facfe', angle: 230, r: 130 },
+  { id: 'scan',  label: 'Scan schedule', icon: 'flower-outline', stripe: '#e8618c', angle: 250, r: 200 },
 ];
 
 const toRad = d => (d * Math.PI) / 180;
 
-export default function RadialMenu({ visible, fabCenter, onClose, onNewEvent, onNewTask }) {
+export default function RadialMenu({ visible, fabCenter, onClose, onNewEvent, onNewTask, onScan }) {
   const insets = useSafeAreaInsets();
   const c = useThemeColors();
   const { width: SW, height: SH } = Dimensions.get('window');
@@ -114,6 +116,7 @@ export default function RadialMenu({ visible, fabCenter, onClose, onNewEvent, on
     animateClose(() => {
       if (item.id === 'event') onNewEvent();
       if (item.id === 'task')  onNewTask();
+      if (item.id === 'scan')  onScan?.();
     });
   };
 
@@ -140,8 +143,8 @@ export default function RadialMenu({ visible, fabCenter, onClose, onNewEvent, on
       {/* Crescent of cards */}
       {ITEMS.map((item, i) => {
         const r  = rolls[i];
-        const dx = ARC_R * Math.cos(toRad(item.angle));
-        const dy = ARC_R * Math.sin(toRad(item.angle));
+        const dx = (item.r || ARC_R) * Math.cos(toRad(item.angle));
+        const dy = (item.r || ARC_R) * Math.sin(toRad(item.angle));
         const isPressed = pressed === item.id;
         return (
           <Animated.View
