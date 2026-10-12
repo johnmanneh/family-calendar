@@ -72,8 +72,8 @@ function clean(raw, tz) {
   return { title, all_day: false, start_date: start.toISOString(), end_date: end.toISOString(), notes, evidence, ambiguous };
 }
 
-async function readWithGemini(imageB64, mediaType, today, tz) {
-  const key = process.env.GEMINI_API_KEY;
+async function readWithGroq(imageB64, mediaType, today, tz) {
+  const key = process.env.GROQ_API_KEY;
   if (!key) { const e = new Error('not configured'); e.status = 503; throw e; }
 
   const system = [
@@ -96,34 +96,39 @@ async function readWithGemini(imageB64, mediaType, today, tz) {
     'Keep titles in the language of the sheet.',
   ].join('\n');
 
-  const model = process.env.GEMINI_MODEL || 'gemini-3.8-flash';
-  const url = `https://generativelanguage.googleapis.com/v1beta/models/${model}:generateContent?key=${key}`;
+  const model = process.env.GROQ_MODEL || 'meta-llama/llama-4-scout-17b-16e-instruct';
 
-  const resp = await fetch(url, {
+  const resp = await fetch('https://api.groq.com/openai/v1/chat/completions', {
     method: 'POST',
-    headers: { 'content-type': 'application/json' },
+    headers: {
+      'content-type': 'application/json',
+      'authorization': `Bearer ${key}`,
+    },
     body: JSON.stringify({
-      systemInstruction: { parts: [{ text: system }] },
-      contents: [{
-        role: 'user',
-        parts: [
-          { inline_data: { mime_type: mediaType, data: imageB64 } },
-          { text: rules },
-        ],
-      }],
-      generationConfig: { maxOutputTokens: 4000 },
+      model,
+      max_tokens: 4000,
+      messages: [
+        { role: 'system', content: system },
+        {
+          role: 'user',
+          content: [
+            { type: 'image_url', image_url: { url: `data:${mediaType};base64,${imageB64}` } },
+            { type: 'text', text: rules },
+          ],
+        },
+      ],
     }),
   });
 
   if (!resp.ok) {
     let body = '';
     try { body = await resp.text(); } catch {}
-    console.error(`Gemini error ${resp.status}:`, body);
+    console.error(`Groq error ${resp.status}:`, body);
     const e = new Error(`AI service error ${resp.status}`); e.status = 502; throw e;
   }
 
   const data = await resp.json();
-  const text = (data.candidates?.[0]?.content?.parts || []).filter(p => p.text).map(p => p.text).join('');
+  const text = data.choices?.[0]?.message?.content || '';
   const json = text.slice(text.indexOf('{'), text.lastIndexOf('}') + 1);
   try { return JSON.parse(json); } catch { const e = new Error('unreadable'); e.status = 422; throw e; }
 }
@@ -142,7 +147,7 @@ const extract = [receive, async (req, res) => {
     if (!req.file) return errorResponse(res, 400, 'Please add a photo (JPG, PNG or WEBP)');
 
     const tz = validTz(req.body.tz || 'Europe/Zurich');
-    const result = await readWithGemini(req.file.buffer.toString('base64'), req.file.mimetype, todayIn(tz), tz);
+    const result = await readWithGroq(req.file.buffer.toString('base64'), req.file.mimetype, todayIn(tz), tz);
     const events = (Array.isArray(result.events) ? result.events : [])
       .slice(0, MAX_EVENTS).map(e => clean(e, tz)).filter(Boolean)
       .sort((a, b) => String(a.start_date).localeCompare(String(b.start_date)));
