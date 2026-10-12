@@ -96,7 +96,7 @@ async function readWithGroq(imageB64, mediaType, today, tz) {
     'Keep titles in the language of the sheet.',
   ].join('\n');
 
-  const model = process.env.GROQ_MODEL || 'meta-llama/llama-4-scout-17b-16e-instruct';
+  const model = process.env.GROQ_MODEL || 'llama-4-scout-17b-16e-instruct';
 
   const resp = await fetch('https://api.groq.com/openai/v1/chat/completions', {
     method: 'POST',
