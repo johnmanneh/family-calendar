@@ -74,6 +74,7 @@ function clean(raw, tz) {
 
 async function readWithClaude(imageB64, mediaType, today, tz) {
   const key = process.env.ANTHROPIC_API_KEY;
+  console.log('readWithClaude called, key present:', !!key);
   if (!key) { const e = new Error('not configured'); e.status = 503; throw e; }
 
   const system = [
@@ -104,7 +105,7 @@ async function readWithClaude(imageB64, mediaType, today, tz) {
       'anthropic-version': '2023-06-01',
     },
     body: JSON.stringify({
-      model: process.env.ANTHROPIC_MODEL || 'claude-sonnet-5-5',
+      model: process.env.ANTHROPIC_MODEL || 'claude-sonnet-4-6',
       max_tokens: 4000,
       system,
       messages: [{
@@ -117,6 +118,9 @@ async function readWithClaude(imageB64, mediaType, today, tz) {
     }),
   });
   if (!resp.ok) {
+    let body = '';
+    try { body = await resp.text(); } catch {}
+    console.error(`Anthropic error ${resp.status}:`, body);
     const e = new Error(`AI service error ${resp.status}`); e.status = 502; throw e;
   }
   const data = await resp.json();
