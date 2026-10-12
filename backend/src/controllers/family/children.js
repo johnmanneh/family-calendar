@@ -3,6 +3,7 @@ const { successResponse, errorResponse } = require('../../utils/response/respons
 const { managesChild } = require('../../utils/access');
 const { broadcast } = require('../../utils/sseClients');
 const { receiveAvatar, storeAvatar, deleteAvatar } = require('../../utils/avatarStore');
+const { recolorEvents, currentColors } = require('../../utils/recolorEvents');
 
 /**
  * Child profiles — family members without a login (managed by parents).
@@ -81,7 +82,10 @@ const updateChild = async (req, res) => {
       [first ?? null, last !== undefined, last ?? null, id]
     );
     if (req.body.color) {
+      const before = await currentColors(id);
       await pool.query('UPDATE family_members SET color = $1 WHERE user_id = $2', [req.body.color, id]);
+      await pool.query('UPDATE users SET color = $1 WHERE id = $2 AND is_managed', [req.body.color, id]);
+      await recolorEvents(id, before, req.body.color);   // the child's events follow the new colour
     }
     return successResponse(res, 200, 'Child updated');
   } catch (error) {

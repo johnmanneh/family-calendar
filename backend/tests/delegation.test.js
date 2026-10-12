@@ -96,10 +96,21 @@ const expect=(label, got, want)=>{ const ok = want instanceof Function ? want(go
   expect('Saved on Leon', (await q('SELECT avatar_url FROM users WHERE id=$1',[leo])).rows[0].avatar_url, `https://img.test/avatar-${leo}.jpg`);
   expect('Mallory\'s own avatar untouched', (await q('SELECT avatar_url FROM users WHERE id=4')).rows[0].avatar_url, null);
 
+  console.log('\n— child colour → events follow');
+  await q(`INSERT INTO events (title,start_date,end_date,family_id,created_by,owner_id,color) VALUES ('Leo default','2026-11-20','2026-11-20',1,2,$1,'#f48c06'),('Leo custom','2026-11-21','2026-11-21',1,2,$1,'#123456')`,[leo]);
+  await q(`UPDATE family_members SET color='#f48c06' WHERE user_id=$1`,[leo]);
+  expect('John recolours Leon', (await call(C('family/children').updateChild,{user:as(2),params:{id:leo},body:{color:'#3478f6'}})).c, 200);
+  const cols=Object.fromEntries((await q(`SELECT title,color FROM events WHERE title LIKE 'Leo %'`)).rows.map(r=>[r.title,r.color]));
+  expect('event in the old colour follows', cols['Leo default'], '#3478f6');
+  expect('custom-coloured event keeps its colour', cols['Leo custom'], '#123456');
+  await q(`UPDATE family_members SET color='#22aa66' WHERE user_id=$1`,[leo]); await q(`UPDATE events SET color='#f48c06' WHERE title='Leo default'`);
+  await q(require('fs').readFileSync(__dirname+'/../src/db/migrations/V005__child_events_follow_child_color.sql','utf8'));
+  expect('V005 moves default-orange child events to the child colour', (await q(`SELECT color FROM events WHERE title='Leo default'`)).rows[0].color, '#22aa66');
+
   console.log('\n— remove child');
   expect('Oma removes Leon', (await call(C('family/children').removeChild,{user:as(3),params:{id:leo}})).c, 404);
   r=await call(C('family/children').removeChild,{user:as(2),params:{id:leo}});
-  expect('John removes Leon (deletes owned events)', [r.c, r.b.deleted_events], [200, 1]);
+  expect('John removes Leon (deletes owned events)', [r.c, r.b.deleted_events], [200, 3]);
   expect('Leon gone', (await q('SELECT 1 FROM users WHERE id=$1',[leo])).rows.length, 0);
 
   console.log(`\n${pass} passed, ${fail} failed`); process.exit(fail?1:0);

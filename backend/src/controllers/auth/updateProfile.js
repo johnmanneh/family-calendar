@@ -1,5 +1,6 @@
 const pool = require('../../config/db');
 const { successResponse, errorResponse } = require('../../utils/response/responseHandlers');
+const { recolorEvents, currentColors } = require('../../utils/recolorEvents');
 
 const updateProfile = async (req, res) => {
   const userId = req.user.id;
@@ -24,10 +25,12 @@ const updateProfile = async (req, res) => {
   values.push(userId);
 
   try {
+    const before = color !== undefined ? await currentColors(userId) : null;
     const result = await pool.query(
       `UPDATE users SET ${fields.join(', ')} WHERE id = $${index} RETURNING id, first_name, last_name, email, age, address, occupation, color`,
       values
     );
+    if (before) await recolorEvents(userId, before, color);   // my events follow my new colour
     return successResponse(res, 200, 'Profile updated successfully', {
       user: result.rows[0]
     });
