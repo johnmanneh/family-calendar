@@ -79,6 +79,10 @@
   }
 }
 
+.calendar-toolbar-chip-kid {
+  display: inline-flex; align-items: center; gap: 6px; padding-left: 3px; font-weight: 600;
+}
+.calendar-toolbar-chip-avatar { font-size: 9px !important; }
 .calendar-toolbar-chip-active {
   background: #1a8fa8;
   border-color: #1a8fa8;

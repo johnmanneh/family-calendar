@@ -2,14 +2,16 @@ import React from 'react';
 import { useUI } from '../../../context/UIContext';
 import { CATEGORIES } from '../Sidebar/Categories';
 import Icon from '../../common/Icon/Icon';
+import Avatar from '../../common/Avatar/Avatar';
 import './CalendarToolbar.css';
 
 // showSearch: on phones the search bar + category chips only appear after tapping 🔍
-const CalendarToolbar = ({ scope = 'all', setScope, groups = [], showSearch = true, autoFocusSearch = false }) => {
+const CalendarToolbar = ({ scope = 'all', setScope, groups = [], kids = [], showSearch = true, autoFocusSearch = false }) => {
   const { searchQuery, setSearchQuery, selectedCategory, setSelectedCategory } = useUI();
 
-  // Nothing to show (phone, search closed, no groups) → no empty bar
-  if (!showSearch && !(groups.length > 0 && setScope)) return null;
+  const hasScopes = setScope && (groups.length > 0 || kids.length > 0);
+  // Nothing to show (phone, search closed, no groups/kids) → no empty bar
+  if (!showSearch && !hasScopes) return null;
 
   return (
     <div className="calendar-toolbar">
@@ -36,19 +38,21 @@ const CalendarToolbar = ({ scope = 'all', setScope, groups = [], showSearch = tr
       </div>
       )}
 
-      {/* Scope chips — only for people in a group: All · Family · <groups> */}
-      {groups.length > 0 && setScope && (
+      {/* Scope chips: All · each child · Family · <groups> — kids come first */}
+      {hasScopes && (
         <div className="calendar-toolbar-chips calendar-toolbar-scope">
           {[
             { key: 'all', label: 'All' },
+            ...kids.map(k => ({ key: `kid:${k.id}`, label: k.first_name, kid: k })),
             { key: 'family', label: 'Family' },
             ...groups.map(g => ({ key: Number(g.id), label: g.name, isGroup: true })),
           ].map(chip => (
             <button
               key={String(chip.key)}
-              className={`calendar-toolbar-chip${scope === chip.key ? ' calendar-toolbar-chip-active' : ''}`}
+              className={`calendar-toolbar-chip${chip.kid ? ' calendar-toolbar-chip-kid' : ''}${scope === chip.key ? ' calendar-toolbar-chip-active' : ''}`}
               onClick={() => setScope(chip.key)}
             >
+              {chip.kid && <Avatar member={chip.kid} size={20} className="calendar-toolbar-chip-avatar" />}
               {chip.isGroup && <Icon name="users" size={12} style={{ marginRight: 4 }} />}
               {chip.label}
             </button>

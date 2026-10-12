@@ -399,6 +399,8 @@ export default function HomeScreen({ navigation, route }) {
         ...members.filter(m => Number(m.id) !== Number(user.id)),
       ]
     : members;
+  // Children get their own chips right after "All"
+  const kids = members.filter(m => m.is_managed);
 
   const [events, setEvents] = useState([]);
   const [tasks, setTasks] = useState([]);
@@ -417,6 +419,10 @@ export default function HomeScreen({ navigation, route }) {
   // Scope chips: 'all' | 'family' | <groupId>. Only shown when the user is in a group.
   const [myGroups, setMyGroups] = useState([]);
   const [scope, setScope] = useState('all');
+  // A removed child profile can't stay selected
+  useEffect(() => {
+    if (String(scope).startsWith('kid:') && !kids.some(k => `kid:${k.id}` === scope)) setScope('all');
+  }, [members]);
   const [pendingCount, setPendingCount] = useState(0);
   const [notifUnread,  setNotifUnread]  = useState(0);
   const [chatUnread,   setChatUnread]   = useState(0);
@@ -921,6 +927,11 @@ export default function HomeScreen({ navigation, route }) {
   const scopeFiltered =
     scope === 'all'    ? events :
     scope === 'family' ? events.filter(e => !e.from_group) :
+    String(scope).startsWith('kid:') ? events.filter(e => {
+      const kid = Number(String(scope).slice(4));
+      return Number(e.owner_id) === kid ||
+        (e.attendees || []).some(a => Number(a.user_id ?? a.id) === kid);
+    }) :
     events.filter(e => (e.group_ids || []).map(Number).includes(Number(scope)));
 
   const memberFiltered = selectedMember
@@ -1216,8 +1227,8 @@ export default function HomeScreen({ navigation, route }) {
         </View>
       )}
 
-      {/* ── Scope chips: All · Family · <groups> — only for people in a group ── */}
-      {myGroups.length > 0 && (
+      {/* ── Scope chips: All · each child · Family · <groups> — kids come first ── */}
+      {(myGroups.length > 0 || kids.length > 0) && (
         <ScrollView
           horizontal
           showsHorizontalScrollIndicator={false}
@@ -1226,6 +1237,7 @@ export default function HomeScreen({ navigation, route }) {
         >
           {[
             { key: 'all',    label: t('home.filter_all') },
+            ...kids.map(k => ({ key: `kid:${k.id}`, label: k.first_name, kid: k })),
             { key: 'family', label: t('home.filter_family') },
             ...myGroups.map(g => ({ key: Number(g.id), label: g.name, isGroup: true })),
           ].map(chip => {
@@ -1236,6 +1248,18 @@ export default function HomeScreen({ navigation, route }) {
                 style={[styles.scopeChip, active && styles.scopeChipActive]}
                 onPress={() => setScope(chip.key)}
               >
+                {chip.kid && (
+                  chip.kid.avatar_url ? (
+                    <Image
+                      source={{ uri: chip.kid.avatar_url.startsWith('http') ? chip.kid.avatar_url : `${SERVER_URL}${chip.kid.avatar_url}` }}
+                      style={{ width: 20, height: 20, borderRadius: 10, marginLeft: -6, marginRight: 6 }}
+                    />
+                  ) : (
+                    <View style={{ width: 20, height: 20, borderRadius: 10, marginLeft: -6, marginRight: 6, backgroundColor: chip.kid.color || '#f48c06', alignItems: 'center', justifyContent: 'center' }}>
+                      <Text style={{ color: '#fff', fontSize: 9, fontWeight: '700' }}>{(chip.kid.first_name || '?')[0]}</Text>
+                    </View>
+                  )
+                )}
                 {chip.isGroup && (
                   <Ionicons name="people" size={12} color={active ? '#fff' : '#8e8e93'} style={{ marginRight: 4 }} />
                 )}

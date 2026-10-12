@@ -10,6 +10,7 @@ import { useUI } from "../../../context/UIContext";
 import CalendarToolbar from "./CalendarToolbar";
 import { useGroups } from "../../../context/GroupContext";
 import { useAuth } from "../../../context/AuthContext";
+import { useFamily } from "../../../context/FamilyContext";
 import Icon from "../../common/Icon/Icon";
 import useIsPhone from "../../../hooks/useIsPhone";
 import PhoneCalendar from "./PhoneCalendar";
@@ -50,12 +51,16 @@ const CalendarView = ({ showSearch = true, autoFocusSearch = false }) => {
   const { groups } = useGroups();
   const isPhone = useIsPhone();
   const { user } = useAuth();
+  const { members = [] } = useFamily();
+  // Children first: their calendars get their own chips right after "All"
+  const kids = members.filter(m => m.is_managed);
 
-  // Scope: 'all' (family + groups) · 'family' · <groupId>  — same as the mobile chips
+  // Scope: 'all' (family + groups) · 'kid:<id>' · 'family' · <groupId>
   const [scope, setScope] = useState('all');
   useEffect(() => {
     if (typeof scope === 'number' && !groups.some(g => Number(g.id) === scope)) setScope('all');
-  }, [groups]);
+    if (typeof scope === 'string' && scope.startsWith('kid:') && !kids.some(k => `kid:${k.id}` === scope)) setScope('all');
+  }, [groups, members]);
 
   useEffect(() => {
     fetchEvents();
@@ -64,6 +69,11 @@ const CalendarView = ({ showSearch = true, autoFocusSearch = false }) => {
   const scopeFiltered =
     scope === 'all'    ? events :
     scope === 'family' ? events.filter(e => !e.from_group) :
+    String(scope).startsWith('kid:') ? events.filter(e => {
+      const kid = Number(String(scope).slice(4));
+      return Number(e.owner_id) === kid ||
+        (e.attendees || []).some(a => Number(a.id ?? a.user_id) === kid);
+    }) :
     events.filter(e => (e.group_ids || []).map(Number).includes(Number(scope)));
 
   const memberFiltered = selectedMember
@@ -233,7 +243,7 @@ const CalendarView = ({ showSearch = true, autoFocusSearch = false }) => {
   if (isPhone) {
     return (
       <div className="calendar-view calendar-view--phone">
-        <CalendarToolbar scope={scope} setScope={setScope} groups={groups} showSearch={showSearch} autoFocusSearch={autoFocusSearch} />
+        <CalendarToolbar scope={scope} setScope={setScope} groups={groups} kids={kids} showSearch={showSearch} autoFocusSearch={autoFocusSearch} />
         <PhoneCalendar events={visibleEvents} onOpen={openFromPhone} onAdd={openNewEvent} />
       </div>
     );
@@ -241,7 +251,7 @@ const CalendarView = ({ showSearch = true, autoFocusSearch = false }) => {
 
   return (
     <div className="calendar-view">
-      <CalendarToolbar scope={scope} setScope={setScope} groups={groups} showSearch={showSearch} autoFocusSearch={autoFocusSearch} />
+      <CalendarToolbar scope={scope} setScope={setScope} groups={groups} kids={kids} showSearch={showSearch} autoFocusSearch={autoFocusSearch} />
       <FullCalendar
         plugins={[dayGridPlugin, timeGridPlugin, listPlugin, interactionPlugin, rrulePlugin]}
         eventSources={[{ events: calendarEvents }]}
