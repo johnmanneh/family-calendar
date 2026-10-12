@@ -6,9 +6,9 @@
  * event cards in the home list — rounded, white, coloured stripe — so the menu
  * feels like part of the app, not a separate gadget.
  *
- *   New Event — autumn orange stripe   (bottom of the crescent)
- *   New Task  — winter blue stripe     (middle)
- *   Scan      — spring green stripe    (top of the crescent)
+ *   New Event — calendar +, autumn orange   (bottom of the crescent)
+ *   New Task  — checklist, winter blue      (middle)
+ *   Scan      — scan frame, spring green   (top of the crescent)
  *   ☀️ Sun    — tap to close
  *
  * Opening/closing uses the treadmill roll (rotateX) like the list and drawer.
@@ -25,12 +25,12 @@ import {
   Dimensions,
   Easing,
 } from 'react-native';
-import { Ionicons } from '@expo/vector-icons';
+import { Ionicons, MaterialCommunityIcons } from '@expo/vector-icons';
 import { LinearGradient } from 'expo-linear-gradient';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { useThemeColors } from '../theme';
 import { TILT_DIR } from './TreadmillList';
-import SpringFlower, { SPRING } from './icons/SpringFlower';
+import { SPRING, SPRING_DARK } from './icons/SpringFlower';
 
 // ── FAB constants (must match HomeScreen.styles.js) ──────────────────────────
 const FAB_RIGHT  = 24;
@@ -50,11 +50,12 @@ const ROLL   = 55;       // degrees of treadmill roll while a card comes out
 const BACKDROP_FADE = 0.78;  // how much the list behind fades (1 = hidden)
 
 const ITEMS = [
-  // Four seasons: autumn leaf = event, winter snow = task, spring flower = scan,
+  // Icons say what the action does; the seasons live in the colours:
+  // autumn orange = event, winter blue = task, spring green = scan,
   // and the summer sun is the button itself.
-  { id: 'event', label: 'New Event',     icon: 'leaf-outline', stripe: '#f48c06', dx: -126, dy: -8 },
-  { id: 'task',  label: 'New Task',      icon: 'snow-outline', stripe: '#4facfe', dx: -104, dy: -8 - STEP },
-  { id: 'scan',  label: 'Scan schedule', flower: true,         stripe: SPRING,    dx: -74,  dy: -8 - STEP * 2 },
+  { id: 'event', label: 'New Event',     icon: 'calendar-plus',      stripe: '#f48c06', ink: '#e07b00',   dx: -126, dy: -8 },
+  { id: 'task',  label: 'New Task',      icon: 'format-list-checks', stripe: '#4facfe', ink: '#2f86e0',   dx: -104, dy: -8 - STEP },
+  { id: 'scan',  label: 'Scan schedule', icon: 'line-scan',          stripe: SPRING,    ink: SPRING_DARK, dx: -74,  dy: -8 - STEP * 2 },
 ];
 
 export default function RadialMenu({ visible, fabCenter, onClose, onNewEvent, onNewTask, onScan }) {
@@ -180,9 +181,7 @@ export default function RadialMenu({ visible, fabCenter, onClose, onNewEvent, on
               <View style={[StyleSheet.absoluteFill, { backgroundColor: item.stripe + '14' }]} />
               <View style={[s.stripe, { backgroundColor: item.stripe }]} />
               <View style={[s.iconCircle, { backgroundColor: item.stripe + '22' }]}>
-                {item.flower
-                  ? <SpringFlower size={26} />
-                  : <Ionicons name={item.icon} size={22} color={item.stripe} />}
+                <MaterialCommunityIcons name={item.icon} size={20} color={item.ink} />
               </View>
               <Text style={[s.label, { color: c.text }]} numberOfLines={1}>{item.label}</Text>
             </Pressable>
@@ -241,7 +240,7 @@ const s = StyleSheet.create({
     paddingLeft: 14, paddingRight: 14,
   },
   stripe: { position: 'absolute', left: 0, top: 0, bottom: 0, width: 5 },
-  iconCircle: { width: 32, height: 32, borderRadius: 16, alignItems: 'center', justifyContent: 'center' },
+  iconCircle: { width: 34, height: 34, borderRadius: 11, alignItems: 'center', justifyContent: 'center' },   // soft rounded square
   label: { fontSize: 15, fontWeight: '700', letterSpacing: -0.2, flexShrink: 1 },
 
   sunWrap: {
