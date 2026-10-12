@@ -229,9 +229,15 @@ POST   /api/chat                     (send message — body: { body }; broadcast
 SSE
 GET    /api/stream                   (persistent SSE connection — token via ?token= query param)
 
+SCAN
+POST   /api/scan                    (multipart — photo → AI suggestions, nothing saved)
+POST   /api/scan/import             (JSON — saves approved events; skips duplicates)
+
 STATIC
 GET    /uploads/avatars/:filename    (served directly by Express)
 ```
+
+See `docs/SCAN.md` for full scan feature documentation (AI provider, endpoints, security).
 
 ---
 
