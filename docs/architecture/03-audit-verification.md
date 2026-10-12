@@ -1,82 +1,100 @@
-# Fault Audit — Verification Status
+# Fault Audit — Verified Status
 
-Date: 2026-10-11 · Verified against the current `master` branch source (backend/src) · Companion to `02-fault-audit.md`
+Date verified: 2026-10-12  
+Verified against: live Railway DB + `master` branch source code  
+Companion to: `02-fault-audit.md`
 
-Legend: **Fixed** = confirmed in code and fixed + tested · **Confirmed** = present, not fixed yet · **Not present** · **Needs decision** = product choice required before building
+Legend:
+- **Done** — code exists AND DB schema matches AND migration file exists
+- **Code done / no migration** — logic is in the codebase and on Railway, but no SQL migration file exists locally (local dev DB is out of sync)
+- **Partial** — some work done, gaps remain
+- **Not started** — nothing implemented
+- **Not applicable** — relates to a future feature not yet built
+
+---
 
 ## Fault register
 
 | ID | Finding | Status | Notes |
 |---|---|---|---|
-| F-01 | `PUT /api/events/:id` had no authorization | **Fixed** | Loaded event must belong to the caller (creator). Update query never touches `family_id`/`created_by`. 404 for both "missing" and "not yours". |
-| F-02 | Private details leak via detail / group paths | **Fixed** | `GET /events/:id` now uses the shared visibility contract (inner → "Busy" placeholder only; extended/outer/other families → 404). Group page drops private events for people not involved. Attendee & task lists require full visibility. |
-| F-03 | Attendee / task / subtask endpoints lacked scope checks | **Fixed** | Add/remove attendees: event creator (attendees may remove themselves); invitees must be family or share a group. Tasks: event creator adds, assignee must be on the event or in its family; delete = task or event creator; subtasks verify parent task/event and role; standalone tasks only to own family. |
-| F-04 | `users` = person + login | **Fixed** | `users` stays the person table; email/password nullable; `is_managed` + `managed_by`; DB check constraint `users_login_shape` (child profiles can never hold credentials, adults must); login refuses profiles without a login. Linking later = filling credentials on the same row (history kept) — UI not built yet. |
-| F-05 | Owner vs creator conflated | **Fixed** | `events.owner_id` (backfilled = `created_by`); creator kept in `created_by`. Visibility, Busy, availability and member profiles use the owner; edit/delete via `canEditEvent`/`canDeleteEvent`. |
-| F-06 | Permission semantics | **Fixed** | `calendar_permissions(owner_user_id, delegate_user_id, can_create/edit/delete)`, unique + not-self constraints, same-family checked at request time. |
-| F-07 | Central helper misuse risk | **Addressed** | Narrow async checks in `utils/access.js`, fail closed on unknown actions/ids; tests prove use on every route. |
-| F-08 | Account linking / lifecycle | **Partly** | Removing a child (manager/admin, confirmed) deletes its owned events; account deletion keeps events (owner/creator set NULL). Linking a child to a login: not built yet. |
-| F-09 | Revocation | **Fixed** | Revoke = immediate on next request; events stay; creator attribution kept; former delegate can't edit events they created on that calendar. |
-| F-10 | Group vs family vs attendee visibility | **Partly addressed** | Matrix below is now the contract in `utils/access.js` and `getEvents`. |
-| F-11 | Private-event contract | **Partly addressed** | Detail, group, attendees, tasks aligned; search/notifications still to review (no search endpoint exists server-side). |
-| F-12 | `ensureSchema` as migration mechanism | **Fixed** | `db/migrate.js`: versioned files, per-file transaction, checksum history, advisory lock; server won't start on a failed migration. `npm run migrate`. Back up before V003 on production. |
-| F-13 | Constraints & indexes | **Confirmed (partial)** | `event_attendees` unique(event_id,user_id) exists; no index review yet. |
-| F-14 | Schedule scan trust | **Fixed** | Permission checked before the AI call and again at save; photo untrusted, never stored/logged; output validated (dates, times, lengths, max 60); review before save; duplicates skipped (retry-safe). |
-| F-15 | Timezone / all-day / recurrence | **Partly addressed** | Timed events stored as UTC instants; all-day = date at midnight; DST-safe availability expansion. All-day still stored as timestamp (not DATE). |
-| F-16 | Concurrent edits / idempotency | **Confirmed** | No version check or idempotency keys. |
-| F-17 | Audit history | **Confirmed** | Only `created_by` / `updated_by`. |
-| F-18 | Response shape / error leaks | **Partly addressed** | Denials use 404 for invisible objects; many endpoints still return raw rows (`SELECT e.*`). |
-| F-19 | Web/mobile drift | **Confirmed** | Clients hide Edit/Delete for non-creators; server is now authoritative for these routes. |
-| F-20 | Security test matrix | **Extended** | `npm run test:security` → security (46), delegation (41), scan (19) suites. |
-| F-21 | Operational hardening | **Confirmed (to review)** | `cors()` open to all origins; no rate limiting; avatars on ephemeral disk. |
+| F-01 | `PUT /api/events/:id` had no authorization | **Code done / no migration** | `canEditEvent()` in `utils/access.js` is called in `updateEvent.js`. Works on Railway. No migration for `events.owner_id` exists locally. |
+| F-02 | Private details leak via detail / group paths | **Code done / no migration** | `eventAccess()` + `busyView()` used in `getEvent.js`. Works on Railway. Depends on `events.owner_id` — no migration. |
+| F-03 | Attendee / task / subtask endpoints lacked scope | **Partial** | `canInvite()`, `canAssignOnEvent()`, `taskAccess()` exist in `access.js`. Needs verification that every attendee/task controller actually calls them. |
+| F-04 | `users` conflates person and login identity | **Code done / no migration** | `users.is_managed` + `users.managed_by` exist on Railway with correct check constraint. No migration file locally. |
+| F-05 | Owner vs creator conflated on events | **Code done / no migration** | `events.owner_id` column exists on Railway, backfilled, indexed + FK. No migration file locally. |
+| F-06 | Permission semantics ambiguous | **Code done / no migration** | `calendar_permissions` table exists on Railway with correct columns, constraints + indexes. No migration file locally. |
+| F-07 | Central auth helper used inconsistently | **Done** | `utils/access.js` exists. Fails closed on unknown actions. Used in `updateEvent.js`, `getEvent.js`. |
+| F-08 | Account linking / profile lifecycle | **Not started** | No UI or endpoint for linking a login to a managed child profile. |
+| F-09 | Revocation behavior | **Done** | `canManageCalendar()` checks live DB on every request — revoke is immediate. No cached permissions. |
+| F-10 | Group vs family vs attendee visibility | **Partial** | Visibility contract exists in `access.js`. Not verified across every read path (notifications, member profile events). |
+| F-11 | Private-event policy not one testable contract | **Partial** | Contract is defined in `access.js`. Not yet applied to notifications payload or member profile event list. |
+| F-12 | `ensureSchema.js` as unsafe migration mechanism | **Not applicable** | Project uses numbered SQL migration files — no `ensureSchema.js` exists. Not a risk. |
+| F-13 | DB constraints and indexes missing | **Partial** | `calendar_permissions` has proper constraints. `events.owner_id` has FK + index. `event_attendees` unique(event_id, user_id) exists. Full index audit not done. |
+| F-14 | Schedule scan trusts AI output | **Not applicable** | Schedule scan feature does not exist yet. |
+| F-15 | Timezone / all-day / recurrence inconsistency | **Partial** | Timed events stored UTC. All-day stored as timestamp (not DATE type). DST edge cases not tested. |
+| F-16 | Concurrent edits / duplicate submissions | **Not started** | No version field or idempotency keys. Two users editing the same event simultaneously will silently overwrite. |
+| F-17 | Audit history underspecified | **Not started** | Only `created_by` / `updated_by` on events. No audit log table. |
+| F-18 | API responses leak private info / raw rows | **Partial** | 404 used for invisible objects (good). Many endpoints still return `SELECT e.*` raw rows instead of explicit field allowlists. |
+| F-19 | Web and mobile clients can drift | **Partial** | Server is now authoritative for edit/delete. Mobile screens still call API directly (bypassing context layer — separate cleanup task). |
+| F-20 | No security-focused test matrix | **Not started** | No test files exist. No `npm run test:security`. |
+| F-21 | Operational hardening not reviewed | **Confirmed gaps** | CORS open to all origins. No rate limiting. Avatars stored on ephemeral Railway disk (wiped on each deploy — known bug, fix = Cloudinary). |
 
-## Visibility contract (implemented in `utils/access.js`)
+---
+
+## The single biggest issue
+
+**DB schema changes were applied directly to Railway without creating migration files.**
+
+The following exist in the Railway database but have NO corresponding migration file in `backend/src/config/migrations/`:
+
+| Schema change | Expected migration |
+|---|---|
+| `events.owner_id` column + FK + index | `030_add_events_owner_id.sql` |
+| `users.is_managed` + `users.managed_by` + check constraint | `031_add_users_managed.sql` |
+| `calendar_permissions` table + constraints + indexes | `032_create_calendar_permissions.sql` |
+
+**Impact:** Local dev DB is out of sync with Railway. Anyone setting up locally or if Railway is ever rebuilt will be missing these tables/columns and the app will break.
+
+**Fix:** Write the three migration files to match exactly what's on Railway — no changes to the data, just documenting what already exists.
+
+---
+
+## Visibility contract (as implemented in `utils/access.js`)
 
 | Viewer | Non-private event | Private event |
 |---|---|---|
-| Creator | full | full |
-| Invited / accepted attendee | full | full |
+| Creator / owner | full | full |
+| Accepted/pending attendee | full | full |
 | Family — inner circle | full | **Busy** (time only) |
 | Family — extended circle | full | hidden (404) |
 | Family — outer circle | hidden | hidden |
-| Member of a group it's shared into | full | hidden |
-| Group co-member (event not shared) | Busy block in calendar only | Busy block only |
+| Group member (event shared in) | full | hidden |
 | Anyone else | hidden (404) | hidden (404) |
 
-## Route authorization matrix
+---
 
-| Route | Auth | Scope | Rule now |
-|---|---|---|---|
-| `GET /events` | ✔ | server-derived family + groups | visibility contract |
-| `GET /events/:id` | ✔ | loaded event | contract; Busy placeholder or 404 |
-| `POST /events/create` | ✔ | caller's family (server) | — |
-| `PUT /events/:id` | ✔ | loaded event | creator only (**fixed**) |
-| `DELETE /events/:id` | ✔ | loaded event | creator only (already) |
-| `POST /events/:id/attendees` | ✔ | loaded event | creator; invitee family/group (**fixed**) |
-| `DELETE /events/:id/attendees/:userId` | ✔ | loaded event | creator or self (**fixed**) |
-| `GET /events/:id/attendees` | ✔ | loaded event | full visibility (**fixed**) |
-| `POST /events/:id/tasks` | ✔ | loaded event | creator; assignee on event/family (**fixed**) |
-| `GET /events/:id/tasks` | ✔ | loaded event | full visibility (**fixed**) |
-| `DELETE /events/:id/tasks/:taskId`, `DELETE /tasks/:taskId` | ✔ | loaded task | task or event creator (**fixed**) |
-| subtasks add / get / delete | ✔ | loaded task (+ parent check) | creator/assignee/event creator; view = task visibility (**fixed**) |
-| `POST /tasks/standalone`, `PATCH /tasks/:taskId` | ✔ | caller's family | assignee in family (**fixed**) |
-| task respond / complete / due-date / acknowledge | ✔ | loaded task | assignee/creator checks (already) |
-| `POST /events/availability` | ✔ | family/group of caller | busy/free only |
-| `GET /groups/:id/events` | ✔ | group membership | private filtered (**fixed**) |
-| groups members / delete / remove member | ✔ | group membership/admin | already |
-| `share` / `unshare` | ✔ | loaded event + group | creator + member (already) |
-| family color / circle / relationship | ✔ | caller / admin's family | already |
-| notifications, chat | ✔ | caller | already |
+## Open items by priority
 
-## Decisions taken (2026-10-11)
+**P0 — Fix before going live**
+- Write migration files for `owner_id`, `is_managed/managed_by`, `calendar_permissions` (local dev broken without these)
+- Fix avatars on ephemeral disk → Cloudinary
+- Verify F-03: confirm every attendee/task controller calls `access.js` checks
 
-All six recommendations in `00-architecture-handoff.md` §6 were confirmed: children are managed by whoever added them + family admins; delegates edit/delete only non-private events (unless they created them); no private-details permission; revoke keeps events and attribution; removing a child deletes its events; owners are notified when someone adds to their calendar. Scan: Vormittag 08:00–11:45, Nachmittag 13:30–15:30.
+**P1 — Fix soon**
+- Apply visibility contract to notifications payload (F-11)
+- Apply visibility contract to member profile event list (F-10)
+- Add CORS restriction to known origins (F-21)
+- Add rate limiting to auth endpoints (F-21)
 
-## Production setup
+**P2 — Plan for later**
+- Account linking UI for child profiles (F-08)
+- Explicit field allowlists on API responses instead of `SELECT *` (F-18)
+- Timezone: change all-day events to DATE type (F-15)
+- Concurrency: `updated_at` version check on event update (F-16)
+- Security test suite (F-20)
 
-1. **Back up the database**, then deploy — the server applies V001–V003 on start (or run `npm run migrate`).
-2. Add `ANTHROPIC_API_KEY` in Railway → backend service → Variables (optional `ANTHROPIC_MODEL`, default `claude-sonnet-5-5`). Without it, scanning answers "Scanning isn't set up yet".
-
-## Open decisions (from 02-fault-audit §8)
-
-Remaining open: account linking for child profiles, timezone authority per event (F-15), concurrency/version checks (F-16), audit log (F-17), response DTOs (F-18), operational hardening (F-21).
+**Future feature (not started)**
+- Child profile creation UI (F-04)
+- Calendar delegation UI — grant/revoke permissions (F-06)
+- Schedule scan — photo → AI → review → save (F-14)
+- Audit log table (F-17)

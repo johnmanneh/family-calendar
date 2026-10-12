@@ -1,6 +1,6 @@
 Feature Handoff: Family Profiles, Delegated Calendar Management, and Event Privacy
 
-Status: Product/implementation handoff
+Status: FUTURE ROADMAP — not started. DB schema groundwork exists on Railway. No UI, routes, or endpoints built yet.
 Scope: Family settings, member profiles, calendar permissions, event creation, privacy, and backend authorization
 Existing stack: React frontend, Express backend, PostgreSQL database
 

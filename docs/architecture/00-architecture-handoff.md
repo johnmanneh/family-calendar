@@ -1,6 +1,6 @@
 # When — Architecture Handoff: Child Profiles, Delegated Calendars, Privacy, Schedule Scan
 
-Status: design reviewed against the current code — nothing implemented yet
+Status: FUTURE ROADMAP — design reviewed, partial DB schema applied to Railway (owner_id, is_managed, calendar_permissions), UI and endpoints not built yet
 Stack: Expo/React Native (`mobile/`), React CRA + FullCalendar (`web/`), Node/Express + PostgreSQL on Railway (`backend/`)
 
 ---
