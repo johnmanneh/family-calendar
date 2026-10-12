@@ -9,7 +9,7 @@
  *   New Event — calendar +, autumn orange   (bottom of the crescent)
  *   New Task  — checklist, winter blue      (middle)
  *   Scan      — scan frame, spring green   (top of the crescent)
- *   ☀️ Sun    — tap to close
+ *   ✕ Close  — warm sun-coloured disc, tap to cancel
  *
  * Opening/closing uses the treadmill roll (rotateX) like the list and drawer.
  */
@@ -203,7 +203,7 @@ export default function RadialMenu({ visible, fabCenter, onClose, onNewEvent, on
           },
         ]}
       >
-        {/* Sun button: warm gradient disc + clean sun icon (same icon family as the app) */}
+        {/* Close button: warm sun-coloured disc with an ✕ — tap to cancel */}
         <Pressable onPress={() => animateClose()} style={({ pressed: p }) => [s.sun, p && { transform: [{ scale: 0.92 }] }]}>
           <LinearGradient
             colors={['#ffd60a', '#f7b32b', '#f48c06']}
@@ -211,7 +211,7 @@ export default function RadialMenu({ visible, fabCenter, onClose, onNewEvent, on
             end={{ x: 0.9, y: 1 }}
             style={s.sunDisc}
           >
-            <Ionicons name="sunny" size={26} color="#fff" />
+            <Ionicons name="close" size={28} color="#fff" />
           </LinearGradient>
         </Pressable>
       </Animated.View>
