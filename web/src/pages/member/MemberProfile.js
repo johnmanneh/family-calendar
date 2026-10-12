@@ -10,6 +10,7 @@ import Avatar from "../../components/common/Avatar/Avatar";
 import Icon from "../../components/common/Icon/Icon";
 import CalendarAccessCard from "../../components/family/CalendarAccessCard";
 import ChildManageCard from "../../components/family/ChildManageCard";
+import shrinkImage from "../../utils/shrinkImage";
 
 import "./MemberProfile.css";
 
@@ -201,27 +202,6 @@ const MemberProfile = () => {
     setAvatarPreview(URL.createObjectURL(file));
   };
 
-  // Phone photos are often several MB — shrink to a 512px JPEG before upload
-  const shrinkImage = (file) => new Promise((resolve) => {
-    const img = new Image();
-    const url = URL.createObjectURL(file);
-    img.onload = () => {
-      const max = 512;
-      const scale = Math.min(1, max / Math.max(img.width, img.height));
-      const canvas = document.createElement("canvas");
-      canvas.width = Math.round(img.width * scale);
-      canvas.height = Math.round(img.height * scale);
-      canvas.getContext("2d").drawImage(img, 0, 0, canvas.width, canvas.height);
-      URL.revokeObjectURL(url);
-      canvas.toBlob(
-        blob => resolve(blob ? new File([blob], "avatar.jpg", { type: "image/jpeg" }) : file),
-        "image/jpeg",
-        0.85
-      );
-    };
-    img.onerror = () => { URL.revokeObjectURL(url); resolve(file); };
-    img.src = url;
-  });
 
   const handleAvatarUpload = async () => {
     if (!avatarFile) return;

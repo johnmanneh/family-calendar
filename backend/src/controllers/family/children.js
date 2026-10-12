@@ -2,6 +2,7 @@ const pool = require('../../config/db');
 const { successResponse, errorResponse } = require('../../utils/response/responseHandlers');
 const { managesChild } = require('../../utils/access');
 const { broadcast } = require('../../utils/sseClients');
+const { receiveAvatar, storeAvatar, deleteAvatar } = require('../../utils/avatarStore');
 
 /**
  * Child profiles — family members without a login (managed by parents).
@@ -10,6 +11,7 @@ const { broadcast } = require('../../utils/sseClients');
  *   POST   /api/family/children        { first_name, last_name?, color? }
  *   PUT    /api/family/children/:id    { first_name?, last_name?, color? }
  *   DELETE /api/family/children/:id    → removes the profile and the events it owns
+ *   POST   /api/family/children/:id/avatar  (multipart field `avatar`) → photo
  */
 
 const COLOR = /^#[0-9a-fA-F]{6}$/;
@@ -110,6 +112,7 @@ const removeChild = async (req, res) => {
     await client.query('DELETE FROM users WHERE id = $1 AND is_managed', [id]);
     await client.query('COMMIT');
     if (fam) broadcast(fam.id, 'event_update', {});
+    deleteAvatar(id);
     return successResponse(res, 200, 'Child removed', { deleted_events: ids.length });
   } catch (error) {
     await client.query('ROLLBACK').catch(() => {});
@@ -120,4 +123,35 @@ const removeChild = async (req, res) => {
   }
 };
 
-module.exports = { createChild, updateChild, removeChild };
+// Photo for a child profile — only its managers (creator / family admins)
+const uploadChildAvatar = [
+  async (req, res, next) => {
+    // Check permission before reading the file
+    try {
+      if (!/^\d+$/.test(req.params.id) || !(await managesChild(req.user.id, req.params.id))) {
+        return errorResponse(res, 404, 'Child not found');
+      }
+      next();
+    } catch (error) {
+      console.error('uploadChildAvatar check error:', error.message);
+      return errorResponse(res, 500, 'Server error');
+    }
+  },
+  receiveAvatar,
+  async (req, res) => {
+    if (!req.file) return errorResponse(res, 400, 'No file uploaded');
+    const { id } = req.params;
+    try {
+      const avatarUrl = await storeAvatar(id, req.file.buffer);
+      await pool.query('UPDATE users SET avatar_url = $1 WHERE id = $2 AND is_managed', [avatarUrl, id]);
+      const fam = await myFamily(req.user.id);
+      if (fam) broadcast(fam.id, 'event_update', {});
+      return successResponse(res, 200, 'Photo updated', { avatar_url: avatarUrl });
+    } catch (error) {
+      console.error('uploadChildAvatar error:', error.message);
+      return errorResponse(res, 500, 'Failed to save photo');
+    }
+  },
+];
+
+module.exports = { createChild, updateChild, removeChild, uploadChildAvatar };

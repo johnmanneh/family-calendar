@@ -1,10 +1,12 @@
-import React, { useState } from "react";
+import React, { useRef, useState } from "react";
 import API from "../../api/axios";
 import Icon from "../common/Icon/Icon";
 import { MEMBER_COLORS } from "../../pages/member/MemberColors";
 import ScanModal from "../scan/ScanModal";
+import Avatar from "../common/Avatar/Avatar";
+import shrinkImage from "../../utils/shrinkImage";
 
-// Manage a child profile (no login): name, colour, remove.
+// Manage a child profile (no login): photo, name, colour, remove.
 const ChildManageCard = ({ child, onSaved, onRemoved }) => {
   const [first, setFirst] = useState(child.first_name || "");
   const [last, setLast] = useState(child.last_name || "");
@@ -13,6 +15,34 @@ const ChildManageCard = ({ child, onSaved, onRemoved }) => {
   const [confirm, setConfirm] = useState(false);
   const [msg, setMsg] = useState("");
   const [scanOpen, setScanOpen] = useState(false);
+  const [preview, setPreview] = useState(null);
+  const [photoBusy, setPhotoBusy] = useState(false);
+  const [photoMsg, setPhotoMsg] = useState("");
+  const fileRef = useRef(null);
+
+  // Pick → upload straight away (no extra Save step)
+  const pickPhoto = async (e) => {
+    const file = e.target.files?.[0];
+    e.target.value = "";
+    if (!file) return;
+    if (!file.type.startsWith("image/")) { setPhotoMsg("Please choose an image"); return; }
+    setPreview(URL.createObjectURL(file));
+    setPhotoBusy(true);
+    setPhotoMsg("");
+    try {
+      const small = await shrinkImage(file);
+      const form = new FormData();
+      form.append("avatar", small);
+      await API.post(`/family/children/${child.id}/avatar`, form);
+      setPhotoMsg("Saved");
+      onSaved?.();
+    } catch (err) {
+      setPreview(null);
+      setPhotoMsg(err.response?.data?.message || "Could not upload photo");
+    } finally {
+      setPhotoBusy(false);
+    }
+  };
 
   const save = async () => {
     if (!first.trim()) return;
@@ -42,6 +72,21 @@ const ChildManageCard = ({ child, onSaved, onRemoved }) => {
     <>
       <button className="child-scan" onClick={() => setScanOpen(true)}>🌸 Scan schedule for {child.first_name}</button>
       <ScanModal open={scanOpen} onClose={() => setScanOpen(false)} ownerId={child.id} />
+      <div className="member-card">
+        <h3 className="member-card-title"><Icon name="camera" size={15} /> Photo</h3>
+        <p className="member-settings-hint">Shows on {child.first_name}'s profile and in the family list.</p>
+        <div className="member-photo-row">
+          {preview
+            ? <img src={preview} alt="" className="member-photo-preview" />
+            : <Avatar member={child} size={64} className="member-photo-preview" />}
+          <button className="member-photo-pick" onClick={() => fileRef.current?.click()} disabled={photoBusy}>
+            {photoBusy ? "Uploading…" : child.avatar_url || preview ? "Change photo" : "Choose photo"}
+          </button>
+          <input ref={fileRef} type="file" accept="image/*" style={{ display: "none" }} onChange={pickPhoto} />
+        </div>
+        {photoMsg && <p className={photoMsg === "Saved" ? "member-saved" : "member-error"}>{photoMsg}</p>}
+      </div>
+
       <div className="member-card">
         <h3 className="member-card-title"><Icon name="user" size={15} /> Child profile</h3>
         <p className="member-settings-hint">

@@ -240,9 +240,10 @@ function SettingsTab({ member, user, family, fetchFamily, onAvatarChange, naviga
     if (result.canceled) return;
 
     const asset = result.assets[0];
-    const ext   = asset.uri.split('.').pop().toLowerCase();
+    let ext     = (asset.uri.split('.').pop() || 'jpg').toLowerCase();
+    if (ext === 'jpg') ext = 'jpeg'; // server accepts image/jpeg, not image/jpg
     const form  = new FormData();
-    form.append('avatar', { uri: asset.uri, name: `avatar.${ext}`, type: `image/${ext}` });
+    form.append('avatar', { uri: asset.uri, name: `avatar.${ext}`, type: asset.mimeType || `image/${ext}` });
 
     setAvatarUploading(true);
     try {

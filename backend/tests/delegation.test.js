@@ -5,6 +5,9 @@ process.env.TZ='UTC';
 // after loading src/config/migrations/000_initial_schema.sql into it.
 if (!process.env.TEST_DATABASE_URL) { console.error('Set TEST_DATABASE_URL to an empty test database'); process.exit(1); }
 process.env.DATABASE_URL = process.env.TEST_DATABASE_URL;
+// Stand-in for Cloudinary: no network in tests; multer is skipped, req.file is set directly
+const avatarPath=require.resolve('../src/utils/avatarStore');
+require.cache[avatarPath]={id:avatarPath,filename:avatarPath,loaded:true,exports:{receiveAvatar:(req,res,next)=>next(),storeAvatar:async id=>`https://img.test/avatar-${id}.jpg`,deleteAvatar:async()=>{}}};
 const pool=require('../src/config/db'); const migrate=require('../src/db/migrate');
 const C=n=>require('../src/controllers/'+n);
 const call=(fn,req)=>new Promise(r=>{const res={status(c){this.c=c;return this},json(b){r({c:this.c||200,b})}}; Promise.resolve(fn({params:{},body:{},...req},res)).catch(e=>r({c:'THROW',b:e.message}));});
@@ -78,6 +81,20 @@ const expect=(label, got, want)=>{ const ok = want instanceof Function ? want(go
   expect('Leon busy at swim time, John (creator) not', (await av(1,[2,leo])).b.busy, [leo]);
   const me=(await call(C('family/getMemberEvents'),{user:as(1),params:{userId:leo}})).b.events||[];
   expect('Leon\'s profile shows Swimming', me.map(e=>e.title), ['Swimming']);
+
+  console.log('\n— child photo');
+  const chain=(steps,req)=>new Promise(r=>{const res={status(c){this.c=c;return this},json(b){r({c:this.c||200,b})}}; const full={params:{},body:{},...req}; let i=0; const next=()=>{const f=steps[i++]; if(!f) return r({c:'END'}); Promise.resolve(f(full,res,next)).catch(e=>r({c:'THROW',b:e.message}));}; next();});
+  const up=C('family/children').uploadChildAvatar, img={buffer:Buffer.from('x'),mimetype:'image/jpeg'};
+  expect('Mallory uploads Leon\'s photo', (await chain(up,{user:as(4),params:{id:String(leo)},file:img})).c, 404);
+  expect('Oma uploads Leon\'s photo', (await chain(up,{user:as(3),params:{id:String(leo)},file:img})).c, 404);
+  expect('Bad id', (await chain(up,{user:as(2),params:{id:'1 OR 1=1'},file:img})).c, 404);
+  expect('Adult (not a child) id', (await chain(up,{user:as(2),params:{id:'1'},file:img})).c, 404);
+  expect('No file', (await chain(up,{user:as(2),params:{id:String(leo)}})).c, 400);
+  r=await chain(up,{user:as(2),params:{id:String(leo)},file:img});
+  expect('John (manager) uploads Leon\'s photo', [r.c, r.b.avatar_url], [200, `https://img.test/avatar-${leo}.jpg`]);
+  expect('Sarah (admin) uploads Leon\'s photo', (await chain(up,{user:as(1),params:{id:String(leo)},file:img})).c, 200);
+  expect('Saved on Leon', (await q('SELECT avatar_url FROM users WHERE id=$1',[leo])).rows[0].avatar_url, `https://img.test/avatar-${leo}.jpg`);
+  expect('Mallory\'s own avatar untouched', (await q('SELECT avatar_url FROM users WHERE id=4')).rows[0].avatar_url, null);
 
   console.log('\n— remove child');
   expect('Oma removes Leon', (await call(C('family/children').removeChild,{user:as(3),params:{id:leo}})).c, 404);

@@ -308,7 +308,12 @@
     "remove": "Entfernen",
     "remove_profile": "Profil entfernen",
     "remove_title": "{{name}} entfernen?",
-    "remove_confirm": "Das entfernt das Profil von {{name}} und die Termine in diesem Kalender. Das kann nicht rückgängig gemacht werden."
+    "remove_confirm": "Das entfernt das Profil von {{name}} und die Termine in diesem Kalender. Das kann nicht rückgängig gemacht werden.",
+    "photo": "Foto",
+    "photo_hint": "Wird in {{name}}s Profil und in der Familienliste angezeigt.",
+    "change_photo": "Foto ändern",
+    "choose_photo": "Foto auswählen",
+    "uploading": "Wird hochgeladen…"
   },
   "scan": {
     "title": "Plan scannen",

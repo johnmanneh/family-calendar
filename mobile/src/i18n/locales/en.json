@@ -307,7 +307,12 @@
     "remove": "Remove",
     "remove_profile": "Remove profile",
     "remove_title": "Remove {{name}}?",
-    "remove_confirm": "This removes {{name}}'s profile and the events on their calendar. It can't be undone."
+    "remove_confirm": "This removes {{name}}'s profile and the events on their calendar. It can't be undone.",
+    "photo": "Photo",
+    "photo_hint": "Shows on {{name}}'s profile and in the family list.",
+    "change_photo": "Change photo",
+    "choose_photo": "Choose photo",
+    "uploading": "Uploading…"
   },
   "scan": {
     "title": "Scan schedule",
