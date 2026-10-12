@@ -72,9 +72,8 @@ function clean(raw, tz) {
   return { title, all_day: false, start_date: start.toISOString(), end_date: end.toISOString(), notes, evidence, ambiguous };
 }
 
-async function readWithClaude(imageB64, mediaType, today, tz) {
-  const key = process.env.ANTHROPIC_API_KEY;
-  console.log('readWithClaude called, key present:', !!key);
+async function readWithGemini(imageB64, mediaType, today, tz) {
+  const key = process.env.GEMINI_API_KEY;
   if (!key) { const e = new Error('not configured'); e.status = 503; throw e; }
 
   const system = [
@@ -97,34 +96,34 @@ async function readWithClaude(imageB64, mediaType, today, tz) {
     'Keep titles in the language of the sheet.',
   ].join('\n');
 
-  const resp = await fetch('https://api.anthropic.com/v1/messages', {
+  const model = process.env.GEMINI_MODEL || 'gemini-2.0-flash';
+  const url = `https://generativelanguage.googleapis.com/v1beta/models/${model}:generateContent?key=${key}`;
+
+  const resp = await fetch(url, {
     method: 'POST',
-    headers: {
-      'content-type': 'application/json',
-      'x-api-key': key,
-      'anthropic-version': '2023-06-01',
-    },
+    headers: { 'content-type': 'application/json' },
     body: JSON.stringify({
-      model: process.env.ANTHROPIC_MODEL || 'claude-sonnet-4-6',
-      max_tokens: 4000,
-      system,
-      messages: [{
+      systemInstruction: { parts: [{ text: system }] },
+      contents: [{
         role: 'user',
-        content: [
-          { type: 'image', source: { type: 'base64', media_type: mediaType, data: imageB64 } },
-          { type: 'text', text: rules },
+        parts: [
+          { inline_data: { mime_type: mediaType, data: imageB64 } },
+          { text: rules },
         ],
       }],
+      generationConfig: { maxOutputTokens: 4000 },
     }),
   });
+
   if (!resp.ok) {
     let body = '';
     try { body = await resp.text(); } catch {}
-    console.error(`Anthropic error ${resp.status}:`, body);
+    console.error(`Gemini error ${resp.status}:`, body);
     const e = new Error(`AI service error ${resp.status}`); e.status = 502; throw e;
   }
+
   const data = await resp.json();
-  const text = (data.content || []).filter(b => b.type === 'text').map(b => b.text).join('');
+  const text = (data.candidates?.[0]?.content?.parts || []).filter(p => p.text).map(p => p.text).join('');
   const json = text.slice(text.indexOf('{'), text.lastIndexOf('}') + 1);
   try { return JSON.parse(json); } catch { const e = new Error('unreadable'); e.status = 422; throw e; }
 }
@@ -143,7 +142,7 @@ const extract = [receive, async (req, res) => {
     if (!req.file) return errorResponse(res, 400, 'Please add a photo (JPG, PNG or WEBP)');
 
     const tz = validTz(req.body.tz || 'Europe/Zurich');
-    const result = await readWithClaude(req.file.buffer.toString('base64'), req.file.mimetype, todayIn(tz), tz);
+    const result = await readWithGemini(req.file.buffer.toString('base64'), req.file.mimetype, todayIn(tz), tz);
     const events = (Array.isArray(result.events) ? result.events : [])
       .slice(0, MAX_EVENTS).map(e => clean(e, tz)).filter(Boolean)
       .sort((a, b) => String(a.start_date).localeCompare(String(b.start_date)));
