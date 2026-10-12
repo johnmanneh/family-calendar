@@ -617,7 +617,7 @@
 :root[data-theme="dark"] .access-name { color: #f2f2f7; }
 :root[data-theme="dark"] .access-chip:not(.on), :root[data-theme="dark"] .child-cancel { background: #2c2c2e; border-color: #3a3a3c; color: #aeaeb2; }
 .child-scan {
-  width: 100%; border: none; border-radius: 12px; padding: 12px; background: #4a9a3b; color: #fff;
+  width: 100%; border: none; border-radius: 12px; padding: 12px; background: #166534; color: #fff;
   display: flex; align-items: center; justify-content: center; gap: 8px;
   font-size: 15px; font-weight: 600; cursor: pointer; font-family: inherit; margin-bottom: 12px;
 }

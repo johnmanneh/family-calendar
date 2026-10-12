@@ -155,7 +155,7 @@ const ScanModal = ({ open, onClose, ownerId: initialOwner }) => {
             <p className="scan-section">Label</p>
             <div className="scan-chips">
               {["Kindergarten", "School", ""].map(l => (
-                <button key={l || "none"} className={`scan-chip${label === l ? " on" : ""}`} style={{ "--chip": "#4a9a3b" }}
+                <button key={l || "none"} className={`scan-chip${label === l ? " on" : ""}`} style={{ "--chip": "#166534" }}
                   onClick={() => setLabel(l)}>{l || "No label"}</button>
               ))}
             </div>

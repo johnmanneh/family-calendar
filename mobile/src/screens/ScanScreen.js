@@ -125,15 +125,15 @@ export default function ScanScreen({ navigation, route }) {
 
       {stage === 'pick' && (
         <View style={s.center}>
-          <View style={s.flower}><MaterialCommunityIcons name="line-scan" size={44} color={GREEN} /></View>
+          <View style={s.flower}><MaterialCommunityIcons name="line-scan" size={44} color={c.spring} /></View>
           <Text style={s.lead}>{t('scan.lead')}</Text>
           <TouchableOpacity style={s.primary} onPress={() => pick('camera')}>
             <Ionicons name="camera-outline" size={18} color="#fff" />
             <Text style={s.primaryText}>{t('scan.take_photo')}</Text>
           </TouchableOpacity>
           <TouchableOpacity style={s.secondary} onPress={() => pick('library')}>
-            <Ionicons name="images-outline" size={18} color={GREEN} />
-            <Text style={s.secondaryText}>{t('scan.choose_photo')}</Text>
+            <Ionicons name="images-outline" size={18} color={c.spring} />
+            <Text style={[s.secondaryText, { color: c.spring }]}>{t('scan.choose_photo')}</Text>
           </TouchableOpacity>
           <Text style={s.small}>{t('scan.privacy')}</Text>
         </View>
@@ -142,7 +142,7 @@ export default function ScanScreen({ navigation, route }) {
       {(stage === 'reading' || stage === 'saving') && (
         <View style={s.center}>
           {photo ? <Image source={{ uri: photo }} style={s.preview} /> : null}
-          <ActivityIndicator color={GREEN} size="large" style={{ marginTop: 20 }} />
+          <ActivityIndicator color={c.spring} size="large" style={{ marginTop: 20 }} />
           <Text style={s.lead}>{stage === 'reading' ? t('scan.reading') : t('scan.saving')}</Text>
         </View>
       )}
@@ -186,11 +186,11 @@ export default function ScanScreen({ navigation, route }) {
               {items.map(it => (
                 <View key={it.key} style={[s.card, !it.on && { opacity: 0.45 }]}>
                   <TouchableOpacity onPress={() => update(it.key, { on: !it.on })} style={s.check}>
-                    <Ionicons name={it.on ? 'checkmark-circle' : 'ellipse-outline'} size={24} color={it.on ? GREEN : c.textMuted} />
+                    <Ionicons name={it.on ? 'checkmark-circle' : 'ellipse-outline'} size={24} color={it.on ? c.spring : c.textMuted} />
                   </TouchableOpacity>
                   <View style={{ flex: 1 }}>
                     <TextInput style={s.title} value={it.title} onChangeText={v => update(it.key, { title: v })} maxLength={120} />
-                    <Text style={s.when}>{fmt(it)}</Text>
+                    <Text style={[s.when, { color: c.spring }]}>{fmt(it)}</Text>
                     {it.notes ? <Text style={s.notes} numberOfLines={2}>{it.notes}</Text> : null}
                     {it.ambiguous ? (
                       <Text style={s.warn}><Ionicons name="alert-circle-outline" size={12} /> {t('scan.check_date')}</Text>

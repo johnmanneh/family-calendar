@@ -181,7 +181,7 @@ export default function RadialMenu({ visible, fabCenter, onClose, onNewEvent, on
               <View style={[StyleSheet.absoluteFill, { backgroundColor: item.stripe + '14' }]} />
               <View style={[s.stripe, { backgroundColor: item.stripe }]} />
               <View style={[s.iconCircle, { backgroundColor: item.stripe + '22' }]}>
-                <MaterialCommunityIcons name={item.icon} size={20} color={item.ink} />
+                <MaterialCommunityIcons name={item.icon} size={20} color={item.id === 'scan' ? c.spring : item.ink} />
               </View>
               <Text style={[s.label, { color: c.text }]} numberOfLines={1}>{item.label}</Text>
             </Pressable>

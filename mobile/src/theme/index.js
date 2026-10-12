@@ -28,6 +28,7 @@ export const LIGHT = {
   textMuted: '#aeaeb2',   // placeholder, muted labels
   icon:      '#8e8e93',   // inactive icons
   bubble:    '#e9e9eb',   // incoming chat bubble
+  spring:    '#166534',   // scan green (icons/text on light backgrounds)
 };
 
 export const DARK = {
@@ -41,6 +42,7 @@ export const DARK = {
   textMuted: '#636366',
   icon:      '#636366',
   bubble:    '#3a3a3c',
+  spring:    '#6ee7a0',   // scan green, lighter for dark backgrounds
 };
 
 /** Hook — returns the correct palette for the current system theme. */
