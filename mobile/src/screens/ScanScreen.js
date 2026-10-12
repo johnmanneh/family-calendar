@@ -12,11 +12,13 @@ import { RollInGroup } from '../components/RollIn';
 import { useColorScheme } from '../context/ThemeContext';
 import { LIGHT, DARK } from '../theme';
 
-// ─── Scan a schedule (🌸 in the sun menu, or "Scan schedule" on a child's profile)
+// ─── Scan a schedule (spring flower in the sun menu, or "Scan schedule" on a child's profile)
 // 1. photo  →  2. the server reads it (nothing saved)  →  3. you review, pick
 // whose calendar, and tap Add. Only then are events created.
 
-const PINK = '#e8618c';
+import SpringFlower, { SPRING, SPRING_DARK } from '../components/icons/SpringFlower';
+const GREEN = SPRING_DARK;   // buttons, ticks, text
+const TINT = SPRING;        // soft backgrounds
 
 function fmt(e) {
   if (e.all_day) {
@@ -122,14 +124,14 @@ export default function ScanScreen({ navigation, route }) {
 
       {stage === 'pick' && (
         <View style={s.center}>
-          <View style={s.flower}><Ionicons name="flower-outline" size={44} color={PINK} /></View>
+          <View style={s.flower}><SpringFlower size={56} /></View>
           <Text style={s.lead}>{t('scan.lead')}</Text>
           <TouchableOpacity style={s.primary} onPress={() => pick('camera')}>
             <Ionicons name="camera-outline" size={18} color="#fff" />
             <Text style={s.primaryText}>{t('scan.take_photo')}</Text>
           </TouchableOpacity>
           <TouchableOpacity style={s.secondary} onPress={() => pick('library')}>
-            <Ionicons name="images-outline" size={18} color={PINK} />
+            <Ionicons name="images-outline" size={18} color={GREEN} />
             <Text style={s.secondaryText}>{t('scan.choose_photo')}</Text>
           </TouchableOpacity>
           <Text style={s.small}>{t('scan.privacy')}</Text>
@@ -139,7 +141,7 @@ export default function ScanScreen({ navigation, route }) {
       {(stage === 'reading' || stage === 'saving') && (
         <View style={s.center}>
           {photo ? <Image source={{ uri: photo }} style={s.preview} /> : null}
-          <ActivityIndicator color={PINK} size="large" style={{ marginTop: 20 }} />
+          <ActivityIndicator color={GREEN} size="large" style={{ marginTop: 20 }} />
           <Text style={s.lead}>{stage === 'reading' ? t('scan.reading') : t('scan.saving')}</Text>
         </View>
       )}
@@ -172,7 +174,7 @@ export default function ScanScreen({ navigation, route }) {
             <View style={s.chips}>
               {['Kindergarten', 'School', ''].map(l => (
                 <TouchableOpacity key={l || 'none'} onPress={() => setLabel(l)}
-                  style={[s.chip, label === l && { borderColor: PINK, backgroundColor: PINK + '22' }]}>
+                  style={[s.chip, label === l && { borderColor: GREEN, backgroundColor: TINT + '26' }]}>
                   <Text style={s.chipText}>{l ? t(`scan.label_${l.toLowerCase()}`) : t('scan.label_none')}</Text>
                 </TouchableOpacity>
               ))}
@@ -183,7 +185,7 @@ export default function ScanScreen({ navigation, route }) {
               {items.map(it => (
                 <View key={it.key} style={[s.card, !it.on && { opacity: 0.45 }]}>
                   <TouchableOpacity onPress={() => update(it.key, { on: !it.on })} style={s.check}>
-                    <Ionicons name={it.on ? 'checkmark-circle' : 'ellipse-outline'} size={24} color={it.on ? PINK : c.textMuted} />
+                    <Ionicons name={it.on ? 'checkmark-circle' : 'ellipse-outline'} size={24} color={it.on ? GREEN : c.textMuted} />
                   </TouchableOpacity>
                   <View style={{ flex: 1 }}>
                     <TextInput style={s.title} value={it.title} onChangeText={v => update(it.key, { title: v })} maxLength={120} />
@@ -214,13 +216,13 @@ const makeStyles = c => StyleSheet.create({
   back: { width: 40, padding: 4 },
   headerTitle: { fontSize: 17, fontWeight: '600', color: c.text },
   center: { flex: 1, alignItems: 'center', justifyContent: 'center', padding: 24 },
-  flower: { width: 88, height: 88, borderRadius: 44, backgroundColor: PINK + '1f', alignItems: 'center', justifyContent: 'center', marginBottom: 16 },
+  flower: { width: 88, height: 88, borderRadius: 44, backgroundColor: TINT + '24', alignItems: 'center', justifyContent: 'center', marginBottom: 16 },
   lead: { fontSize: 15, color: c.textSub, textAlign: 'center', marginVertical: 14, lineHeight: 21 },
   small: { fontSize: 12, color: c.textMuted, textAlign: 'center', marginTop: 18, lineHeight: 17 },
-  primary: { flexDirection: 'row', gap: 8, alignItems: 'center', justifyContent: 'center', backgroundColor: PINK, borderRadius: 14, paddingVertical: 14, paddingHorizontal: 22, alignSelf: 'stretch' },
+  primary: { flexDirection: 'row', gap: 8, alignItems: 'center', justifyContent: 'center', backgroundColor: GREEN, borderRadius: 14, paddingVertical: 14, paddingHorizontal: 22, alignSelf: 'stretch' },
   primaryText: { color: '#fff', fontSize: 16, fontWeight: '600' },
-  secondary: { flexDirection: 'row', gap: 8, alignItems: 'center', justifyContent: 'center', borderColor: PINK, borderWidth: 1.5, borderRadius: 14, paddingVertical: 13, alignSelf: 'stretch', marginTop: 10 },
-  secondaryText: { color: PINK, fontSize: 16, fontWeight: '600' },
+  secondary: { flexDirection: 'row', gap: 8, alignItems: 'center', justifyContent: 'center', borderColor: GREEN, borderWidth: 1.5, borderRadius: 14, paddingVertical: 13, alignSelf: 'stretch', marginTop: 10 },
+  secondaryText: { color: GREEN, fontSize: 16, fontWeight: '600' },
   preview: { width: 160, height: 120, borderRadius: 12 },
   section: { fontSize: 13, fontWeight: '600', color: c.textMuted, textTransform: 'uppercase', letterSpacing: 0.5, marginTop: 14, marginBottom: 8 },
   chips: { flexDirection: 'row', flexWrap: 'wrap', gap: 8 },
@@ -230,7 +232,7 @@ const makeStyles = c => StyleSheet.create({
   card: { flexDirection: 'row', gap: 10, backgroundColor: c.surface, borderRadius: 14, padding: 12, marginBottom: 8 },
   check: { paddingTop: 2 },
   title: { fontSize: 15, fontWeight: '600', color: c.text, padding: 0 },
-  when: { fontSize: 13, color: PINK, fontWeight: '600', marginTop: 3 },
+  when: { fontSize: 13, color: GREEN, fontWeight: '600', marginTop: 3 },
   notes: { fontSize: 12, color: c.textSub, marginTop: 3 },
   warn: { fontSize: 12, color: '#ff9500', marginTop: 4 },
   footer: { position: 'absolute', left: 0, right: 0, bottom: 0, padding: 16, paddingBottom: 28, flexDirection: 'row', backgroundColor: c.bg },

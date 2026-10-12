@@ -4,6 +4,7 @@ import * as ImagePicker from 'expo-image-picker';
 import { useTranslation } from 'react-i18next';
 import API from '../../api/axios';
 import { useFamilyStyles, CHILD_COLORS } from './familyStyles';
+import SpringFlower, { SPRING_DARK } from '../icons/SpringFlower';
 
 // Manage a child profile (no login): photo, name, colour, remove
 export default function ChildManageSection({ child, onSaved, onRemoved, onScan }) {
@@ -101,8 +102,9 @@ export default function ChildManageSection({ child, onSaved, onRemoved, onScan }
   return (
     <>
       {onScan ? (
-        <TouchableOpacity style={[s.primary, { backgroundColor: '#e8618c', marginTop: 20 }]} onPress={onScan}>
-          <Text style={s.primaryText}>🌸  {t('scan.scan_for', { name: child.first_name })}</Text>
+        <TouchableOpacity style={[s.primary, { backgroundColor: SPRING_DARK, marginTop: 20, flexDirection: 'row', alignItems: 'center', justifyContent: 'center', gap: 8 }]} onPress={onScan}>
+          <View style={{ width: 28, height: 28, borderRadius: 14, backgroundColor: '#fff', alignItems: 'center', justifyContent: 'center' }}><SpringFlower size={22} /></View>
+          <Text style={s.primaryText}>{t('scan.scan_for', { name: child.first_name })}</Text>
         </TouchableOpacity>
       ) : null}
       <Text style={s.header}>{t('child.photo')}</Text>

@@ -13,6 +13,7 @@ import { useTheme } from "../../../context/ThemeContext";
 import { useFamily } from "../../../context/FamilyContext";
 import Icon from "../../common/Icon/Icon";
 import ScanModal from "../../scan/ScanModal";
+import SpringFlower from "../../common/SpringFlower/SpringFlower";
 
 import "./Sidebar.css";
 
@@ -56,7 +57,7 @@ const Sidebar = () => {
           <div className="sidebar-divider" />
         </>
       )}
-      <button className="sidebar-scan" onClick={() => setScanOpen(true)}>🌸 Scan a schedule</button>
+      <button className="sidebar-scan" onClick={() => setScanOpen(true)}><SpringFlower size={20} /> Scan a schedule</button>
       <ScanModal open={scanOpen} onClose={() => setScanOpen(false)} />
       <div className="sidebar-bottom">
         <button className="sidebar-theme" onClick={toggleTheme} aria-label="Toggle dark mode">

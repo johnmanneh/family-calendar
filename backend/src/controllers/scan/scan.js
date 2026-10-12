@@ -200,7 +200,7 @@ const importEvents = async (req, res) => {
       const ev = await client.query(
         `INSERT INTO events (title, notes, start_date, end_date, is_all_day, family_id, created_by, owner_id, category, status, priority, color)
          VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, 'confirmed', 'medium', $10) RETURNING id`,
-        [it.title, it.notes, it.start, it.end, it.all_day, familyId, actor, owner, category, '#e8618c']
+        [it.title, it.notes, it.start, it.end, it.all_day, familyId, actor, owner, category, '#66bb55']
       );
       if (owner !== actor) {
         await client.query(

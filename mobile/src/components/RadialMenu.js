@@ -1,13 +1,14 @@
 /**
  * RadialMenu.js — WHEN sun menu
  *
- * Tap the + and it turns into the ☀️ sun. Two buttons roll out of it along a
+ * Tap the + and it turns into the ☀️ sun. Three cards roll out of it along a
  * crescent (an arc up-left of the sun). They use the same card form as the
  * event cards in the home list — rounded, white, coloured stripe — so the menu
  * feels like part of the app, not a separate gadget.
  *
- *   New Event — autumn orange stripe   (lower point of the crescent)
- *   New Task  — winter blue stripe     (upper point of the crescent)
+ *   New Event — autumn orange stripe   (bottom of the crescent)
+ *   New Task  — winter blue stripe     (middle)
+ *   Scan      — spring green stripe    (top of the crescent)
  *   ☀️ Sun    — tap to close
  *
  * Opening/closing uses the treadmill roll (rotateX) like the list and drawer.
@@ -29,6 +30,7 @@ import { LinearGradient } from 'expo-linear-gradient';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { useThemeColors } from '../theme';
 import { TILT_DIR } from './TreadmillList';
+import SpringFlower, { SPRING } from './icons/SpringFlower';
 
 // ── FAB constants (must match HomeScreen.styles.js) ──────────────────────────
 const FAB_RIGHT  = 24;
@@ -37,23 +39,23 @@ const FAB_SIZE   = 48;
 const SUN_R      = FAB_SIZE / 2;
 
 // ── Crescent geometry ────────────────────────────────────────────────────────
-// Angles: 0° = right, 90° = down (screen coordinates). 180°–270° = up-left.
-const ARC_R  = 128;      // distance from the sun centre to each card centre
-const CARD_W = 158;
+// Each card is placed by its centre offset (dx, dy) from the sun's centre.
+// Even vertical rhythm (STEP) and a smooth curve: the higher the card, the
+// closer it leans in towards the sun — a clean crescent that never runs off
+// the right edge.
+const CARD_W = 178;
 const CARD_H = 58;
+const STEP   = 72;       // vertical distance between card centres (14px gap)
 const ROLL   = 55;       // degrees of treadmill roll while a card comes out
 const BACKDROP_FADE = 0.78;  // how much the list behind fades (1 = hidden)
 
 const ITEMS = [
   // Four seasons: autumn leaf = event, winter snow = task, spring flower = scan,
-  // and the summer sun is the button itself. Each card has its own distance (r)
-  // so the crescent climbs up the screen without running off the right edge.
-  { id: 'event', label: 'New Event',     icon: 'leaf-outline',   stripe: '#f48c06', angle: 195, r: 125 },
-  { id: 'task',  label: 'New Task',      icon: 'snow-outline',   stripe: '#4facfe', angle: 230, r: 130 },
-  { id: 'scan',  label: 'Scan schedule', icon: 'flower-outline', stripe: '#e8618c', angle: 250, r: 200 },
+  // and the summer sun is the button itself.
+  { id: 'event', label: 'New Event',     icon: 'leaf-outline', stripe: '#f48c06', dx: -126, dy: -8 },
+  { id: 'task',  label: 'New Task',      icon: 'snow-outline', stripe: '#4facfe', dx: -104, dy: -8 - STEP },
+  { id: 'scan',  label: 'Scan schedule', flower: true,         stripe: SPRING,    dx: -74,  dy: -8 - STEP * 2 },
 ];
-
-const toRad = d => (d * Math.PI) / 180;
 
 export default function RadialMenu({ visible, fabCenter, onClose, onNewEvent, onNewTask, onScan }) {
   const insets = useSafeAreaInsets();
@@ -143,8 +145,9 @@ export default function RadialMenu({ visible, fabCenter, onClose, onNewEvent, on
       {/* Crescent of cards */}
       {ITEMS.map((item, i) => {
         const r  = rolls[i];
-        const dx = (item.r || ARC_R) * Math.cos(toRad(item.angle));
-        const dy = (item.r || ARC_R) * Math.sin(toRad(item.angle));
+        // keep the card fully on screen (12px margin) on narrow phones
+        const dx = Math.min(item.dx, SW - 12 - CARD_W / 2 - fabCX);
+        const dy = item.dy;
         const isPressed = pressed === item.id;
         return (
           <Animated.View
@@ -177,7 +180,9 @@ export default function RadialMenu({ visible, fabCenter, onClose, onNewEvent, on
               <View style={[StyleSheet.absoluteFill, { backgroundColor: item.stripe + '14' }]} />
               <View style={[s.stripe, { backgroundColor: item.stripe }]} />
               <View style={[s.iconCircle, { backgroundColor: item.stripe + '22' }]}>
-                <Ionicons name={item.icon} size={22} color={item.stripe} />
+                {item.flower
+                  ? <SpringFlower size={26} />
+                  : <Ionicons name={item.icon} size={22} color={item.stripe} />}
               </View>
               <Text style={[s.label, { color: c.text }]} numberOfLines={1}>{item.label}</Text>
             </Pressable>
