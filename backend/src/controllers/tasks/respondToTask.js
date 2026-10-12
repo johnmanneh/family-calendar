@@ -3,6 +3,7 @@ const { successResponse, errorResponse } = require('../../utils/response/respons
 const { broadcast } = require('../../utils/sseClients');
 const sendPush = require('../../utils/sendPush');
 const insertNotification = require('../../utils/insertNotification');
+const { taskAccess } = require('../../utils/access');
 
 const respondToTask = async (req, res) => {
   const userId = req.user.id;
@@ -19,15 +20,12 @@ const respondToTask = async (req, res) => {
   }
 
   try {
-    // Fetch task to validate it's this user's turn
-    const taskRes = await pool.query(
-      `SELECT assigned_to, created_by, status, last_counter_by, counter_offer FROM tasks WHERE id = $1`,
-      [taskId]
-    );
-
-    if (taskRes.rowCount === 0) return errorResponse(res, 404, 'Task not found');
-
-    const task = taskRes.rows[0];
+    // Verify the user can see this task (family/event scope check)
+    const access = await taskAccess(userId, taskId);
+    if (!access.task || !access.canView) {
+      return errorResponse(res, 404, 'Task not found');
+    }
+    const task = access.task;
     const isAssignee = Number(task.assigned_to) === Number(userId);
     const isCreator  = Number(task.created_by)  === Number(userId);
 

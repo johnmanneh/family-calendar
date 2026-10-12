@@ -1,12 +1,19 @@
 const pool = require('../../config/db');
 const { successResponse, errorResponse } = require('../../utils/response/responseHandlers');
 const { broadcast } = require('../../utils/sseClients');
+const { taskAccess } = require('../../utils/access');
 
 const completeTask = async (req, res) => {
   const { taskId } = req.params;
   const userId = req.user.id;
 
   try {
+    // Verify the user can see this task and is the assignee
+    const { task, canView, isAssignee } = await taskAccess(userId, taskId);
+    if (!task || !canView || !isAssignee) {
+      return errorResponse(res, 404, 'Task not found');
+    }
+
     const result = await pool.query(
       `UPDATE tasks SET completed = true
        WHERE id = $1 AND assigned_to = $2
