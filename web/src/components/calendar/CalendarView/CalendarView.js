@@ -68,7 +68,8 @@ const CalendarView = ({ showSearch = true, autoFocusSearch = false }) => {
 
   const memberFiltered = selectedMember
     ? scopeFiltered.filter(event => {
-        const isCreator = Number(event.created_by) === Number(selectedMember.id);
+        const isCreator = Number(event.created_by) === Number(selectedMember.id) ||
+          Number(event.owner_id) === Number(selectedMember.id);   // whose calendar (e.g. a child's)
         const isAttendee = (event.attendees || []).some(
           a => Number(a.id) === Number(selectedMember.id)
         );

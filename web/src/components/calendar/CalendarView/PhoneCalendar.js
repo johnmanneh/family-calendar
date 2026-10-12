@@ -92,6 +92,61 @@ const PhoneCalendar = ({ events, onOpen, onAdd }) => {
 
   const dayList = byDay[dayKey(selected)] || [];
 
+  // Coming up: next events after the selected day (60 days, max 20), so the
+  // All / Family / group chips always show something even on an empty day.
+  const upcoming = useMemo(() => {
+    const from = new Date(selected.getFullYear(), selected.getMonth(), selected.getDate() + 1);
+    const to = new Date(from.getTime() + 60 * DAY_MS);
+    const list = [];
+    events.forEach(e => occurrences(e, from, to).forEach(o => { if (o.start >= from) list.push({ e, ...o }); }));
+    return list.sort((a, b) => a.start - b.start).slice(0, 20);
+  }, [events, selected]);
+
+  const renderCard = ({ e, start, end }, refDay, showDate) => {
+    const color = e.is_busy ? "#b0b0b8" : e.color || "#1a8fa8";
+    const multiDay = !sameDay(start, end) && !e.is_all_day;
+    let time = e.is_all_day
+      ? "All day"
+      : multiDay
+        ? (sameDay(start, refDay) ? `from ${fmtTime(start)}` : sameDay(end, refDay) ? `until ${fmtTime(end)}` : "All day")
+        : `${fmtTime(start)}${end > start ? ` – ${fmtTime(end)}` : ""}`;
+    if (showDate) time = `${start.toLocaleDateString("en-GB", { weekday: "short", day: "numeric", month: "short" })} · ${time}`;
+    const attendees = e.attendees || [];
+    return (
+      <button
+        key={`${showDate ? "u" : "d"}-${e.id}-${start.getTime()}`}
+        className={`pcal-event${e.is_busy ? " is-busy" : ""}`}
+        style={{ "--ev": color }}
+        onClick={() => !e.is_busy && onOpen(e, start, end)}
+      >
+        <span className="pcal-bar" />
+        <span className="pcal-ev-body">
+          <span className="pcal-ev-time">{time}</span>
+          <span className="pcal-ev-title">
+            {(e.is_private || e.is_busy) && <Icon name="lock" size={12} />}
+            {e.is_busy ? (e.title || "Busy") : e.title}
+          </span>
+          {!e.is_busy && (e.location || e.from_group || (e.group_ids || []).length > 0) && (
+            <span className="pcal-ev-meta">
+              {e.location && <><Icon name="mapPin" size={11} /> {e.location}</>}
+              {(e.group_ids || []).length > 0 && <><Icon name="users" size={11} /> Group</>}
+            </span>
+          )}
+        </span>
+        {!e.is_busy && attendees.length > 0 && (
+          <span className="pcal-avatars">
+            {attendees.slice(0, 3).map(a => (
+              <span key={a.id} className="pcal-avatar" style={{ background: a.color || "#1a8fa8" }}>
+                {(a.first_name || "?")[0]}{(a.last_name || "")[0] || ""}
+              </span>
+            ))}
+            {attendees.length > 3 && <span className="pcal-avatar more">+{attendees.length - 3}</span>}
+          </span>
+        )}
+      </button>
+    );
+  };
+
   const go = delta => setMonth(m => new Date(m.getFullYear(), m.getMonth() + delta, 1));
   const goToday = () => { setMonth(new Date(today.getFullYear(), today.getMonth(), 1)); setSelected(today); };
   const pick = d => {
@@ -171,51 +226,18 @@ const PhoneCalendar = ({ events, onOpen, onAdd }) => {
             <span>Nothing planned — tap to add</span>
           </button>
         ) : (
-          dayList.map(({ e, start, end }) => {
-            const color = e.is_busy ? "#b0b0b8" : e.color || "#1a8fa8";
-            const multiDay = !sameDay(start, end) && !e.is_all_day;
-            const time = e.is_all_day
-              ? "All day"
-              : multiDay
-                ? (sameDay(start, selected) ? `from ${fmtTime(start)}` : sameDay(end, selected) ? `until ${fmtTime(end)}` : "All day")
-                : `${fmtTime(start)}${end > start ? ` – ${fmtTime(end)}` : ""}`;
-            const attendees = e.attendees || [];
-            return (
-              <button
-                key={`${e.id}-${start.getTime()}`}
-                className={`pcal-event${e.is_busy ? " is-busy" : ""}`}
-                style={{ "--ev": color }}
-                onClick={() => !e.is_busy && onOpen(e, start, end)}
-              >
-                <span className="pcal-bar" />
-                <span className="pcal-ev-body">
-                  <span className="pcal-ev-time">{time}</span>
-                  <span className="pcal-ev-title">
-                    {(e.is_private || e.is_busy) && <Icon name="lock" size={12} />}
-                    {e.is_busy ? (e.title || "Busy") : e.title}
-                  </span>
-                  {!e.is_busy && (e.location || e.from_group || (e.group_ids || []).length > 0) && (
-                    <span className="pcal-ev-meta">
-                      {e.location && <><Icon name="mapPin" size={11} /> {e.location}</>}
-                      {(e.group_ids || []).length > 0 && <><Icon name="users" size={11} /> Group</>}
-                    </span>
-                  )}
-                </span>
-                {!e.is_busy && attendees.length > 0 && (
-                  <span className="pcal-avatars">
-                    {attendees.slice(0, 3).map(a => (
-                      <span key={a.id} className="pcal-avatar" style={{ background: a.color || "#1a8fa8" }}>
-                        {(a.first_name || "?")[0]}{(a.last_name || "")[0] || ""}
-                      </span>
-                    ))}
-                    {attendees.length > 3 && <span className="pcal-avatar more">+{attendees.length - 3}</span>}
-                  </span>
-                )}
-              </button>
-            );
-          })
+          dayList.map(item => renderCard(item, selected, false))
         )}
       </div>
+
+      {upcoming.length > 0 && (
+        <>
+          <div className="pcal-dayhead"><span>Coming up</span></div>
+          <div className="pcal-list">
+            {upcoming.map(item => renderCard(item, item.start, true))}
+          </div>
+        </>
+      )}
     </div>
   );
 };
