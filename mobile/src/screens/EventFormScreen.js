@@ -116,11 +116,12 @@ function DateRow({ label, date, allDay, pickerKey, openPicker, setOpenPicker, on
           value={date}
           mode={allDay ? 'date' : 'datetime'}
           display={Platform.OS === 'ios' ? 'inline' : 'default'}
-          onChange={(_, selected) => {
-            // Android fires onChange and immediately closes; iOS stays open
+          onValueChange={(selected) => {
+            // Android closes on confirm; iOS stays open while scrolling
             if (Platform.OS === 'android') setOpenPicker(null);
             if (selected) onChange(selected);
           }}
+          onDismiss={() => setOpenPicker(null)}
           style={styles.picker}
         />
       )}
