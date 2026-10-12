@@ -77,7 +77,8 @@
     "counter": "Gegenangebot",
     "ongoing": "In Bearbeitung",
     "filter_all": "Alle",
-    "filter_family": "Familie"
+    "filter_family": "Familie",
+    "coming_up": "Demnächst"
   },
   "events": {
     "new_event": "Neuer Termin",

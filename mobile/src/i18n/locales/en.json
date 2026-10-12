@@ -76,7 +76,8 @@
     "counter": "Counter",
     "ongoing": "Ongoing",
     "filter_all": "All",
-    "filter_family": "Family"
+    "filter_family": "Family",
+    "coming_up": "Coming up"
   },
   "events": {
     "new_event": "New Event",

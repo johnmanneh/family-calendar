@@ -926,6 +926,7 @@ export default function HomeScreen({ navigation, route }) {
   const memberFiltered = selectedMember
     ? scopeFiltered.filter(
         (e) =>
+          Number(e.owner_id ?? e.created_by) === Number(selectedMember) ||
           Number(e.created_by) === Number(selectedMember) ||
           (e.attendees && e.attendees.some((a) => Number(a.user_id) === Number(selectedMember)))
       )
@@ -968,6 +969,19 @@ export default function HomeScreen({ navigation, route }) {
     return list;
   })();
 
+  // Coming up: the next events in the current scope (All / Family / a group /
+  // a person), so choosing a chip always shows something useful even when the
+  // selected day itself is empty.
+  const upcomingEvents = (() => {
+    if (isSearchActive) return [];
+    const from = new Date(selectedDate); from.setHours(23, 59, 59, 999);
+    const until = new Date(from); until.setDate(until.getDate() + 60);
+    return memberFiltered
+      .filter(e => { const d = new Date(e.start_date); return d > from && d <= until; })
+      .sort((a, b) => new Date(a.start_date) - new Date(b.start_date))
+      .slice(0, 20);
+  })();
+
   // Combined list:
   //   Events section  → each event card also shows its linked tasks inline
   //   Tasks section   → ALL tasks (event-linked + standalone) so they're always visible
@@ -981,6 +995,16 @@ export default function HomeScreen({ navigation, route }) {
       showDate: isSearchActive,  // pass flag so EventRow can show the date
       eventTasks: memberFilteredTasks.filter(t => Number(t.event_id) === Number(e.id)),
       key: `e-${e.id}`,
+    })),
+    ...(upcomingEvents.length > 0
+      ? [{ type: 'sectionHeader', title: t('home.coming_up'), key: 'sh-upcoming' }]
+      : []),
+    ...upcomingEvents.map(e => ({
+      type: 'event',
+      data: e,
+      showDate: true,
+      eventTasks: memberFilteredTasks.filter(t => Number(t.event_id) === Number(e.id)),
+      key: `u-${e.id}`,
     })),
     ...(memberFilteredTasks.length > 0
       ? [{ type: 'sectionHeader', title: t('home.tasks'), key: 'sh-tasks' }]
