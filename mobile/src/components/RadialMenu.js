@@ -9,7 +9,7 @@
  *   New Event — calendar +, autumn orange   (bottom of the crescent)
  *   New Task  — checklist, winter blue      (middle)
  *   Scan      — scan frame, spring green   (top of the crescent)
- *   ✕ Close  — warm sun-coloured disc, tap to cancel
+ *   ✕ Close  — the teal + rotates into an ✕, tap to cancel
  *
  * Opening/closing uses the treadmill roll (rotateX) like the list and drawer.
  */
@@ -26,7 +26,6 @@ import {
   Easing,
 } from 'react-native';
 import { Ionicons, MaterialCommunityIcons } from '@expo/vector-icons';
-import { LinearGradient } from 'expo-linear-gradient';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { useThemeColors } from '../theme';
 import { TILT_DIR } from './TreadmillList';
@@ -196,23 +195,17 @@ export default function RadialMenu({ visible, fabCenter, onClose, onNewEvent, on
           {
             left: fabCX - SUN_R, top: fabCY - SUN_R,
             transform: [
-              { scale: sun.interpolate({ inputRange: [0, 1], outputRange: [0.6, 1] }) },
-              { rotate: sun.interpolate({ inputRange: [0, 1], outputRange: ['-90deg', '0deg'] }) },
+              // the + itself turns into an ✕ (quarter-turn of 45°)
+              { rotate: sun.interpolate({ inputRange: [0, 1], outputRange: ['0deg', '45deg'] }) },
             ],
-            opacity: sun,
           },
         ]}
       >
-        {/* Close button: warm sun-coloured disc with an ✕ — tap to cancel */}
+        {/* Same teal button as the + — the plus rotates into an ✕. Tap = cancel */}
         <Pressable onPress={() => animateClose()} style={({ pressed: p }) => [s.sun, p && { transform: [{ scale: 0.92 }] }]}>
-          <LinearGradient
-            colors={['#ffd60a', '#f7b32b', '#f48c06']}
-            start={{ x: 0.2, y: 0.1 }}
-            end={{ x: 0.9, y: 1 }}
-            style={s.sunDisc}
-          >
-            <Ionicons name="close" size={28} color="#fff" />
-          </LinearGradient>
+          <View style={s.sunDisc}>
+            <Ionicons name="add" size={26} color="#fff" />
+          </View>
         </Pressable>
       </Animated.View>
     </Modal>
@@ -247,14 +240,14 @@ const s = StyleSheet.create({
     position: 'absolute',
     width: SUN_R * 2, height: SUN_R * 2,
     borderRadius: SUN_R,
-    // warm glow instead of a dark shadow
-    shadowColor: '#f48c06', shadowOpacity: 0.55, shadowRadius: 12,
-    shadowOffset: { width: 0, height: 3 }, elevation: 10,
+    // same shadow as the + button
+    shadowColor: '#000', shadowOpacity: 0.25, shadowRadius: 8,
+    shadowOffset: { width: 0, height: 4 }, elevation: 10,
   },
   sun: { flex: 1, borderRadius: SUN_R },
   sunDisc: {
     flex: 1, borderRadius: SUN_R,
     alignItems: 'center', justifyContent: 'center',
-    borderWidth: 2, borderColor: 'rgba(255,255,255,0.65)',   // soft rim so it reads as a button
+    backgroundColor: '#1a8fa8',   // same teal as the + button
   },
 });
