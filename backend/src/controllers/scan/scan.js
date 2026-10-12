@@ -96,7 +96,7 @@ async function readWithGemini(imageB64, mediaType, today, tz) {
     'Keep titles in the language of the sheet.',
   ].join('\n');
 
-  const model = process.env.GEMINI_MODEL || 'gemini-2.0-flash';
+  const model = process.env.GEMINI_MODEL || 'gemini-2.5-flash';
   const url = `https://generativelanguage.googleapis.com/v1beta/models/${model}:generateContent?key=${key}`;
 
   const resp = await fetch(url, {
