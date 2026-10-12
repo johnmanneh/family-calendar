@@ -2,6 +2,12 @@ const { eventAccess, busyView } = require('../../utils/access');
 const pool = require('../../config/db');
 const { successResponse, errorResponse } = require('../../utils/response/responseHandlers');
 
+const normAllDay = (e) => {
+  if (!e.is_all_day) return e;
+  const toDate = (d) => d ? new Date(d).toISOString().slice(0, 10) : d;
+  return { ...e, start_date: toDate(e.start_date), end_date: toDate(e.end_date) };
+};
+
 const getEvent = async (req, res) => {
   const userId = req.user.id;
   const { id } = req.params;
@@ -140,13 +146,13 @@ const getEvent = async (req, res) => {
     });
 
     return successResponse(res, 200, 'Event retrieved successfully', {
-      event: {
+      event: normAllDay({
         ...event,
         attendees: attendeesResult.rows,
         tasks:     Object.values(tasksMap),
         group_ids: groupsResult.rows.map(r => Number(r.group_id)),
         from_group: fromGroup,
-      },
+      }),
     });
 
   } catch (error) {

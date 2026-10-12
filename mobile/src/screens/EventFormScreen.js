@@ -73,6 +73,17 @@ function toDateOnly(date) {
   return `${date.getFullYear()}-${pad(date.getMonth() + 1)}-${pad(date.getDate())}`;
 }
 
+// Safely parse a date string into a JS Date using LOCAL time for date-only strings.
+// new Date("2026-10-12") is UTC midnight — wrong day in negative UTC offsets.
+function parseDateSafe(dateStr) {
+  if (!dateStr) return new Date();
+  if (/^\d{4}-\d{2}-\d{2}$/.test(dateStr)) {
+    const [y, m, d] = dateStr.split('-').map(Number);
+    return new Date(y, m - 1, d);
+  }
+  return new Date(dateStr);
+}
+
 // Human-readable label shown on the date/time row buttons
 function formatDisplay(date, allDay) {
   if (allDay) {
@@ -147,7 +158,7 @@ export default function EventFormScreen({ route, navigation }) {
   }
 
   const start = isEdit
-    ? new Date(event.start_date)
+    ? parseDateSafe(event.start_date)
     : buildStartFromPrefill();
 
   const [formData, setFormData] = useState({
@@ -165,9 +176,9 @@ export default function EventFormScreen({ route, navigation }) {
   });
 
   const [startDate, setStartDate]   = useState(start);
-  const [endDate, setEndDate]       = useState(isEdit ? new Date(event.end_date) : defaultEnd(start));
+  const [endDate, setEndDate]       = useState(isEdit ? parseDateSafe(event.end_date) : defaultEnd(start));
   const [recurrenceEnd, setRecurrenceEnd] = useState(
-    isEdit && event.recurrence_end_date ? new Date(event.recurrence_end_date) : new Date()
+    isEdit && event.recurrence_end_date ? parseDateSafe(event.recurrence_end_date) : new Date()
   );
 
   // Which date picker is currently visible

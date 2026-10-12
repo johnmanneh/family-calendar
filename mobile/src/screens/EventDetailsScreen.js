@@ -24,7 +24,13 @@ import TopCard from '../components/ui/TopCard';
 // ─── Helpers ────────────────────────────────────────────────────────────────
 
 function formatDate(dateStr) {
-  return new Date(dateStr).toLocaleDateString(undefined, {
+  if (!dateStr) return '';
+  // Date-only strings ("YYYY-MM-DD") must be parsed as LOCAL midnight, not UTC.
+  // new Date("2026-10-12") treats it as UTC midnight → shows Oct 11 in UTC+2.
+  const d = /^\d{4}-\d{2}-\d{2}$/.test(dateStr)
+    ? (() => { const [y, m, day] = dateStr.split('-').map(Number); return new Date(y, m - 1, day); })()
+    : new Date(dateStr);
+  return d.toLocaleDateString(undefined, {
     weekday: 'long', day: 'numeric', month: 'long', year: 'numeric',
   });
 }

@@ -1,6 +1,16 @@
 const pool = require('../../config/db');
 const { successResponse, errorResponse } = require('../../utils/response/responseHandlers');
 
+// All-day events: return a plain YYYY-MM-DD string instead of a UTC timestamp.
+// A UTC timestamp like "2026-10-12T00:00:00Z" becomes Oct 11 at 10 pm in UTC+2,
+// so the client renders it on the wrong day. A date-only string has no time
+// component, so no timezone shift can happen.
+const normAllDay = (e) => {
+  if (!e.is_all_day) return e;
+  const toDate = (d) => d ? new Date(d).toISOString().slice(0, 10) : d;
+  return { ...e, start_date: toDate(e.start_date), end_date: toDate(e.end_date) };
+};
+
 const getEvents = async (req, res) => {
   const userId = req.user.id;
 
@@ -143,7 +153,7 @@ const getEvents = async (req, res) => {
       const isMember = isCreator || isAttendee;
 
       if (event.is_private && !isMember) {
-        return {
+        return normAllDay({
           id: event.id,
           family_id: event.family_id,
           created_by: event.created_by,
@@ -157,10 +167,10 @@ const getEvents = async (req, res) => {
           is_private: true,
           is_busy: true,
           attendees: (event.attendees || []).map(a => ({ id: a.id }))
-        };
+        });
       }
 
-      return { ...event, is_busy: false };
+      return normAllDay({ ...event, is_busy: false });
     });
 
     // ── Groups ───────────────────────────────────────────────────────────
@@ -232,7 +242,7 @@ const getEvents = async (req, res) => {
          GROUP BY e.id, u.first_name, uu.first_name`,
         [missingIds, userId]
       );
-      groupEvents = extra.rows.map(e => ({
+      groupEvents = extra.rows.map(e => normAllDay({
         ...e,
         is_busy: false,
         group_ids: groupIdsByEvent[e.id] || [],
@@ -283,7 +293,7 @@ const getEvents = async (req, res) => {
       );
       busyRes.rows
         .filter(r => !shownIds.has(Number(r.id)))
-        .forEach(r => busyBlocks.push({
+        .forEach(r => busyBlocks.push(normAllDay({
           id: r.id,
           start_date: r.start_date,
           end_date: r.end_date,
@@ -298,7 +308,7 @@ const getEvents = async (req, res) => {
           attendees: [{ id: r.owner_id, first_name: r.first_name, last_name: r.last_name, color: r.owner_color || '#8e8e93' }],
           group_ids: groupsByUser[r.owner_id] || [],
           from_group: true,
-        }));
+        })));
     }
 
     const allEvents = [...familyEvents, ...groupEvents, ...busyBlocks]
