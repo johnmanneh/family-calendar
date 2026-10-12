@@ -4,11 +4,14 @@
   "description": "",
   "main": "index.js",
   "scripts": {
-    "test": "echo \"Error: no test specified\" && exit 1",
+    "test": "jest --forceExit",
     "start": "node src/app.js",
     "dev": "nodemon src/app.js",
-    "migrate": "node src/db/migrateCli.js",
-    "test:security": "node tests/security.test.js && node tests/delegation.test.js && node tests/scan.test.js"
+    "migrate": "node src/db/migrateCli.js"
+  },
+  "jest": {
+    "testEnvironment": "node",
+    "testMatch": ["**/__tests__/**/*.test.js"]
   },
   "keywords": [],
   "author": "",
