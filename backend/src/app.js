@@ -20,7 +20,14 @@ const joinRoutes         = require('./routes/join');
 
 const app = express();
 
-app.use(cors());
+app.use(cors({
+  origin: [
+    'https://its4us.app',
+    'https://www.its4us.app',
+    'http://localhost:3000',
+  ],
+  credentials: true,
+}));
 app.use(express.json());
 
 // Serve uploaded avatars

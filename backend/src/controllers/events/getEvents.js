@@ -38,11 +38,21 @@ const getEvents = async (req, res) => {
 
     let events;
 
+    // Explicit column list — never expose columns added by future migrations automatically
+    const eventCols = `
+      e.id, e.title, e.description, e.start_date, e.end_date, e.family_id,
+      e.created_by, e.created_at, e.location, e.is_all_day,
+      e.recurrence, e.recurrence_end_date, e.reminder, e.second_reminder,
+      e.color, e.category, e.priority, e.url, e.notes, e.travel_time,
+      e.video_call_link, e.status, e.updated_by, e.updated_at, e.is_private,
+      e.owner_id
+    `;
+
     if (circleType === 'inner') {
       // Inner circle: sees ALL family events EXCEPT ones they've been specifically
       // invited to but not yet accepted — those stay in pending until accepted
       events = await pool.query(
-        `SELECT e.*,
+        `SELECT ${eventCols},
           u.first_name as created_by_name,
           uu.first_name as updated_by_name,
           ${attendeeAgg}
@@ -62,7 +72,7 @@ const getEvents = async (req, res) => {
          )
          GROUP BY e.id, u.first_name, uu.first_name
          UNION ALL
-         SELECT e.*,
+         SELECT ${eventCols},
           u.first_name as created_by_name,
           uu.first_name as updated_by_name,
           ${attendeeAgg}
@@ -81,7 +91,7 @@ const getEvents = async (req, res) => {
     } else if (circleType === 'extended') {
       // Extended circle: sees all non-private events except ones pending their acceptance
       events = await pool.query(
-        `SELECT e.*,
+        `SELECT ${eventCols},
           u.first_name as created_by_name,
           uu.first_name as updated_by_name,
           ${attendeeAgg}
@@ -107,7 +117,7 @@ const getEvents = async (req, res) => {
     } else {
       // Outer circle: sees only events they created or are an accepted attendee of
       events = await pool.query(
-        `SELECT e.*,
+        `SELECT ${eventCols},
           u.first_name as created_by_name,
           uu.first_name as updated_by_name,
           ${attendeeAgg}
@@ -192,7 +202,7 @@ const getEvents = async (req, res) => {
     let groupEvents = [];
     if (missingIds.length > 0) {
       const extra = await pool.query(
-        `SELECT e.*,
+        `SELECT ${eventCols},
           u.first_name as created_by_name,
           uu.first_name as updated_by_name,
           COALESCE(
