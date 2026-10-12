@@ -17,7 +17,9 @@ const Avatar = ({ member, size = 40, className = "", style = {} }) => {
   if (!member) return null;
 
   const initials = `${member.first_name?.[0] ?? ""}${member.last_name?.[0] ?? ""}`;
-  const photoUrl = member.avatar_url ? `${BACKEND_URL}${member.avatar_url}` : null;
+  const photoUrl = member.avatar_url
+    ? (member.avatar_url.startsWith('http') ? member.avatar_url : `${BACKEND_URL}${member.avatar_url}`)
+    : null;
 
   const baseStyle = {
     width: size,
