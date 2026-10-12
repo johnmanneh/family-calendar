@@ -17,7 +17,7 @@ import { LIGHT, DARK } from '../theme';
 // whose calendar, and tap Add. Only then are events created.
 
 import { MaterialCommunityIcons } from '@expo/vector-icons';
-import { SPRING, SPRING_DARK } from '../components/icons/scanColors';
+import { SPRING, SPRING_DARK, SPRING_BUTTON } from '../components/icons/scanColors';
 const GREEN = SPRING_DARK;   // buttons, ticks, text
 const TINT = SPRING;        // soft backgrounds
 
@@ -220,9 +220,9 @@ const makeStyles = c => StyleSheet.create({
   flower: { width: 88, height: 88, borderRadius: 26, backgroundColor: TINT + '24', alignItems: 'center', justifyContent: 'center', marginBottom: 16 },
   lead: { fontSize: 15, color: c.textSub, textAlign: 'center', marginVertical: 14, lineHeight: 21 },
   small: { fontSize: 12, color: c.textMuted, textAlign: 'center', marginTop: 18, lineHeight: 17 },
-  primary: { flexDirection: 'row', gap: 8, alignItems: 'center', justifyContent: 'center', backgroundColor: GREEN, borderRadius: 14, paddingVertical: 14, paddingHorizontal: 22, alignSelf: 'stretch' },
+  primary: { flexDirection: 'row', gap: 8, alignItems: 'center', justifyContent: 'center', backgroundColor: SPRING_BUTTON, borderRadius: 14, paddingVertical: 14, paddingHorizontal: 22, alignSelf: 'stretch' },
   primaryText: { color: '#fff', fontSize: 16, fontWeight: '600' },
-  secondary: { flexDirection: 'row', gap: 8, alignItems: 'center', justifyContent: 'center', borderColor: GREEN, borderWidth: 1.5, borderRadius: 14, paddingVertical: 13, alignSelf: 'stretch', marginTop: 10 },
+  secondary: { flexDirection: 'row', gap: 8, alignItems: 'center', justifyContent: 'center', borderColor: SPRING_BUTTON, borderWidth: 1.5, borderRadius: 14, paddingVertical: 13, alignSelf: 'stretch', marginTop: 10 },
   secondaryText: { color: GREEN, fontSize: 16, fontWeight: '600' },
   preview: { width: 160, height: 120, borderRadius: 12 },
   section: { fontSize: 13, fontWeight: '600', color: c.textMuted, textTransform: 'uppercase', letterSpacing: 0.5, marginTop: 14, marginBottom: 8 },

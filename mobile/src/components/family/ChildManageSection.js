@@ -5,7 +5,7 @@ import { useTranslation } from 'react-i18next';
 import API from '../../api/axios';
 import { useFamilyStyles, CHILD_COLORS } from './familyStyles';
 import { MaterialCommunityIcons } from '@expo/vector-icons';
-import { SPRING_DARK } from '../icons/scanColors';
+import { SPRING_BUTTON } from '../icons/scanColors';
 
 // Manage a child profile (no login): photo, name, colour, remove
 export default function ChildManageSection({ child, onSaved, onRemoved, onScan }) {
@@ -103,7 +103,7 @@ export default function ChildManageSection({ child, onSaved, onRemoved, onScan }
   return (
     <>
       {onScan ? (
-        <TouchableOpacity style={[s.primary, { backgroundColor: SPRING_DARK, marginTop: 20, flexDirection: 'row', alignItems: 'center', justifyContent: 'center', gap: 8 }]} onPress={onScan}>
+        <TouchableOpacity style={[s.primary, { backgroundColor: SPRING_BUTTON, marginTop: 20, flexDirection: 'row', alignItems: 'center', justifyContent: 'center', gap: 8 }]} onPress={onScan}>
           <MaterialCommunityIcons name="line-scan" size={20} color="#fff" />
           <Text style={s.primaryText}>{t('scan.scan_for', { name: child.first_name })}</Text>
         </TouchableOpacity>
