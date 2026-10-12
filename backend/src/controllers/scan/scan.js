@@ -196,6 +196,15 @@ const importEvents = async (req, res) => {
     if (!fam.rows.length) return errorResponse(res, 403, "You can't add events to this calendar");
     const familyId = fam.rows[0].family_id;
 
+    // Scanned events take the colour of the calendar they go to (e.g. the child's colour)
+    const col = await client.query(
+      `SELECT COALESCE(fm.color, u.color) AS color FROM users u
+       LEFT JOIN family_members fm ON fm.user_id = u.id AND fm.family_id = $2
+       WHERE u.id = $1`,
+      [owner, familyId]
+    );
+    const color = /^#[0-9a-fA-F]{6}$/.test(col.rows[0]?.color || '') ? col.rows[0].color : '#1a8fa8';
+
     await client.query('BEGIN');
     let created = 0, skipped = 0;
     for (const it of items) {
@@ -208,7 +217,7 @@ const importEvents = async (req, res) => {
       const ev = await client.query(
         `INSERT INTO events (title, notes, start_date, end_date, is_all_day, family_id, created_by, owner_id, category, status, priority, color)
          VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, 'confirmed', 'medium', $10) RETURNING id`,
-        [it.title, it.notes, it.start, it.end, it.all_day, familyId, actor, owner, category, '#166534']
+        [it.title, it.notes, it.start, it.end, it.all_day, familyId, actor, owner, category, color]
       );
       if (owner !== actor) {
         await client.query(
