@@ -359,6 +359,7 @@ export default function EventFormScreen({ route, navigation }) {
         start_date: formData.is_all_day ? toDateOnly(startDate) : toISOLocal(startDate),
         end_date:   formData.is_all_day ? toDateOnly(endDate)   : toISOLocal(endDate),
         recurrence_end_date: formData.recurrence ? toDateOnly(recurrenceEnd) : null,
+        updated_at: isEdit ? (event.updated_at ?? null) : undefined,
       };
 
       // Only require a title — assigned_to can be null ("Anyone")

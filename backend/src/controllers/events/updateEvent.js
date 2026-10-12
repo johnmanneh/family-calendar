@@ -28,7 +28,8 @@ const updateEvent = async (req, res) => {
     notes,
     travel_time,
     video_call_link,
-    status
+    status,
+    updated_at: clientVersion,
   } = req.body;
 
   try {
@@ -50,6 +51,17 @@ const updateEvent = async (req, res) => {
     // Same 404 as "not found" so ids can't be probed.
     if (!(await canEditEvent(userId, event.rows[0]))) {
       return errorResponse(res, 404, "Event not found or you are not authorized to update it");
+    }
+
+    // F-16: optimistic concurrency — if the client sends the version it last saw,
+    // reject the update if someone else saved in the meantime.
+    if (clientVersion) {
+      const dbVersion = event.rows[0].updated_at;
+      const clientMs  = new Date(clientVersion).getTime();
+      const dbMs      = dbVersion ? new Date(dbVersion).getTime() : null;
+      if (dbMs !== null && clientMs !== dbMs) {
+        return errorResponse(res, 409, 'This event was updated by someone else. Please reload and try again.');
+      }
     }
 
     const updatedEvent = await pool.query(

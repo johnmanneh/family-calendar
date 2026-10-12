@@ -136,7 +136,8 @@ const EventModal = () => {
       const fixedFormData = {
         ...formData,
         start_date: formatDateTime(formData.start_date),
-        end_date: formatDateTime(formData.end_date)
+        end_date: formatDateTime(formData.end_date),
+        updated_at: selectedEvent?.extendedProps?.updated_at ?? null,
       };
       //
       //updateEvent
