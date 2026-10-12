@@ -12,7 +12,7 @@ import {
 } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { Ionicons } from '@expo/vector-icons';
-import DateTimePicker from '@react-native-community/datetimepicker';
+import DateTimePicker, { DateTimePickerAndroid } from '@react-native-community/datetimepicker';
 import { useTranslation } from 'react-i18next';
 import API from '../api/axios';
 import { useFamily } from '../context/FamilyContext';
@@ -100,28 +100,56 @@ function DateRow({ label, date, allDay, pickerKey, openPicker, setOpenPicker, on
   const styles = useStyles();
   const isOpen = openPicker === pickerKey;
 
+  // Android v9+: use the imperative API — the inline component crashes internally
+  const openAndroid = () => {
+    DateTimePickerAndroid.open({
+      value: date,
+      mode: 'date',
+      onChange: (e, selectedDate) => {
+        if (e.type === 'dismissed' || !selectedDate) return;
+        if (allDay) {
+          onChange(selectedDate);
+        } else {
+          // For datetime: chain into time picker after date is confirmed
+          DateTimePickerAndroid.open({
+            value: selectedDate,
+            mode: 'time',
+            onChange: (e2, selectedTime) => {
+              if (e2.type === 'dismissed' || !selectedTime) return;
+              onChange(selectedTime);
+            },
+          });
+        }
+      },
+    });
+  };
+
   return (
     <View style={styles.dateRow}>
       <Text style={styles.dateLabel}>{label}</Text>
       <TouchableOpacity
         style={styles.dateBtn}
-        onPress={() => setOpenPicker(isOpen ? null : pickerKey)}
+        onPress={() => {
+          if (Platform.OS === 'android') {
+            openAndroid();
+          } else {
+            setOpenPicker(isOpen ? null : pickerKey);
+          }
+        }}
       >
         <Text style={styles.dateBtnText}>{formatDisplay(date, allDay)}</Text>
         <Ionicons name="chevron-down" size={14} color="#888" />
       </TouchableOpacity>
 
-      {isOpen && (
+      {/* iOS only — Android uses the imperative API above */}
+      {Platform.OS === 'ios' && isOpen && (
         <DateTimePicker
           value={date}
           mode={allDay ? 'date' : 'datetime'}
-          display={Platform.OS === 'ios' ? 'inline' : 'default'}
-          onValueChange={(selected) => {
-            // Android closes on confirm; iOS stays open while scrolling
-            if (Platform.OS === 'android') setOpenPicker(null);
+          display="inline"
+          onChange={(_, selected) => {
             if (selected) onChange(selected);
           }}
-          onDismiss={() => setOpenPicker(null)}
           style={styles.picker}
         />
       )}
