@@ -102,26 +102,31 @@ function DateRow({ label, date, allDay, pickerKey, openPicker, setOpenPicker, on
 
   // Android v9+: use the imperative API — the inline component crashes internally
   const openAndroid = () => {
-    DateTimePickerAndroid.open({
-      value: date,
-      mode: 'date',
-      onChange: (e, selectedDate) => {
-        if (e.type === 'dismissed' || !selectedDate) return;
-        if (allDay) {
-          onChange(selectedDate);
-        } else {
-          // For datetime: chain into time picker after date is confirmed
-          DateTimePickerAndroid.open({
-            value: selectedDate,
-            mode: 'time',
-            onChange: (e2, selectedTime) => {
-              if (e2.type === 'dismissed' || !selectedTime) return;
-              onChange(selectedTime);
-            },
-          });
-        }
-      },
-    });
+    try {
+      DateTimePickerAndroid.open({
+        value: date instanceof Date ? date : new Date(),
+        mode: 'date',
+        onValueChange: (selectedDate) => {
+          if (!selectedDate) return;
+          if (allDay) {
+            onChange(selectedDate);
+          } else {
+            // For datetime: chain into time picker after date is confirmed
+            DateTimePickerAndroid.open({
+              value: selectedDate,
+              mode: 'time',
+              onValueChange: (selectedTime) => {
+                if (selectedTime) onChange(selectedTime);
+              },
+              onDismiss: () => {},
+            });
+          }
+        },
+        onDismiss: () => {},
+      });
+    } catch (e) {
+      console.warn('DateTimePicker native module unavailable — rebuild required:', e.message);
+    }
   };
 
   return (
