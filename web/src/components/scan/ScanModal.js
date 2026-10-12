@@ -2,7 +2,6 @@ import React, { useEffect, useRef, useState } from "react";
 import API from "../../api/axios";
 import Icon from "../common/Icon/Icon";
 import { useEvents } from "../../context/EventContext";
-import SpringFlower from "../common/SpringFlower/SpringFlower";
 import "./ScanModal.css";
 
 // Scan a schedule: photo → the server reads it (nothing saved) → review,
@@ -109,7 +108,7 @@ const ScanModal = ({ open, onClose, ownerId: initialOwner }) => {
     <div className="modal-overlay" onClick={onClose}>
       <div className="modal-container scan-modal" onClick={e => e.stopPropagation()}>
         <div className="modal-header">
-          <h2><SpringFlower size={26} /> Scan schedule</h2>
+          <h2><span className="scan-badge"><Icon name="scan" size={18} /></span> Scan schedule</h2>
           <button className="modal-close" onClick={onClose}>✕</button>
         </div>
 
@@ -117,7 +116,7 @@ const ScanModal = ({ open, onClose, ownerId: initialOwner }) => {
 
         {stage === "pick" && (
           <div className="scan-pick">
-            <SpringFlower size={64} />
+            <span className="scan-hero"><Icon name="scan" size={36} /></span>
             <p>Take or choose a photo of a kindergarten or school plan — one or two weeks. You check everything before it's added.</p>
             <button className="scan-primary" onClick={() => fileRef.current?.click()}>
               <Icon name="camera" size={16} /> Choose photo

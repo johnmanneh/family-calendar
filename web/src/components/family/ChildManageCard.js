@@ -3,7 +3,6 @@ import API from "../../api/axios";
 import Icon from "../common/Icon/Icon";
 import { MEMBER_COLORS } from "../../pages/member/MemberColors";
 import ScanModal from "../scan/ScanModal";
-import SpringFlower from "../common/SpringFlower/SpringFlower";
 import Avatar from "../common/Avatar/Avatar";
 import shrinkImage from "../../utils/shrinkImage";
 
@@ -71,7 +70,7 @@ const ChildManageCard = ({ child, onSaved, onRemoved }) => {
 
   return (
     <>
-      <button className="child-scan" onClick={() => setScanOpen(true)}><span className="child-scan-icon"><SpringFlower size={20} /></span> Scan schedule for {child.first_name}</button>
+      <button className="child-scan" onClick={() => setScanOpen(true)}><Icon name="scan" size={18} /> Scan schedule for {child.first_name}</button>
       <ScanModal open={scanOpen} onClose={() => setScanOpen(false)} ownerId={child.id} />
       <div className="member-card">
         <h3 className="member-card-title"><Icon name="camera" size={15} /> Photo</h3>

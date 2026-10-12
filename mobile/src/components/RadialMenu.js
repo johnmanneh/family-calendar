@@ -30,7 +30,7 @@ import { LinearGradient } from 'expo-linear-gradient';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { useThemeColors } from '../theme';
 import { TILT_DIR } from './TreadmillList';
-import { SPRING, SPRING_DARK } from './icons/SpringFlower';
+import { SPRING, SPRING_DARK } from './icons/scanColors';
 
 // ── FAB constants (must match HomeScreen.styles.js) ──────────────────────────
 const FAB_RIGHT  = 24;

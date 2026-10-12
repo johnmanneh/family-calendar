@@ -12,11 +12,12 @@ import { RollInGroup } from '../components/RollIn';
 import { useColorScheme } from '../context/ThemeContext';
 import { LIGHT, DARK } from '../theme';
 
-// ─── Scan a schedule (spring flower in the sun menu, or "Scan schedule" on a child's profile)
+// ─── Scan a schedule (scan frame in the sun menu, or "Scan schedule" on a child's profile)
 // 1. photo  →  2. the server reads it (nothing saved)  →  3. you review, pick
 // whose calendar, and tap Add. Only then are events created.
 
-import SpringFlower, { SPRING, SPRING_DARK } from '../components/icons/SpringFlower';
+import { MaterialCommunityIcons } from '@expo/vector-icons';
+import { SPRING, SPRING_DARK } from '../components/icons/scanColors';
 const GREEN = SPRING_DARK;   // buttons, ticks, text
 const TINT = SPRING;        // soft backgrounds
 
@@ -124,7 +125,7 @@ export default function ScanScreen({ navigation, route }) {
 
       {stage === 'pick' && (
         <View style={s.center}>
-          <View style={s.flower}><SpringFlower size={56} /></View>
+          <View style={s.flower}><MaterialCommunityIcons name="line-scan" size={44} color={GREEN} /></View>
           <Text style={s.lead}>{t('scan.lead')}</Text>
           <TouchableOpacity style={s.primary} onPress={() => pick('camera')}>
             <Ionicons name="camera-outline" size={18} color="#fff" />
@@ -216,7 +217,7 @@ const makeStyles = c => StyleSheet.create({
   back: { width: 40, padding: 4 },
   headerTitle: { fontSize: 17, fontWeight: '600', color: c.text },
   center: { flex: 1, alignItems: 'center', justifyContent: 'center', padding: 24 },
-  flower: { width: 88, height: 88, borderRadius: 44, backgroundColor: TINT + '24', alignItems: 'center', justifyContent: 'center', marginBottom: 16 },
+  flower: { width: 88, height: 88, borderRadius: 26, backgroundColor: TINT + '24', alignItems: 'center', justifyContent: 'center', marginBottom: 16 },
   lead: { fontSize: 15, color: c.textSub, textAlign: 'center', marginVertical: 14, lineHeight: 21 },
   small: { fontSize: 12, color: c.textMuted, textAlign: 'center', marginTop: 18, lineHeight: 17 },
   primary: { flexDirection: 'row', gap: 8, alignItems: 'center', justifyContent: 'center', backgroundColor: GREEN, borderRadius: 14, paddingVertical: 14, paddingHorizontal: 22, alignSelf: 'stretch' },
