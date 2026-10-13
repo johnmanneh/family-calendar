@@ -1,3 +1,19 @@
+        {/* ── Actions ── Edit · Delete for whoever may change the event.
+            Others (and views from a profile) see no buttons, just Back. */}
+        {!readOnly && isMine && (
+          <View style={styles.actions}>
+            <TouchableOpacity
+              style={styles.editBtn}
+              onPress={() => navigation.navigate('EventForm', { event })}
+            >
+              <Text style={styles.editBtnText}>{t('common.edit')}</Text>
+            </TouchableOpacity>
+            <TouchableOpacity style={styles.deleteBtn} onPress={handleDelete}>
+              <Text style={styles.deleteBtnText}>{t('common.delete')}</Text>
+            </TouchableOpacity>
+          </View>
+        )}
+
 import React, { useState, useEffect, useCallback } from 'react';
 import {
   View,
@@ -13,7 +29,6 @@ import {
 } from 'react-native';
 import { SafeAreaView, useSafeAreaInsets } from 'react-native-safe-area-context';
 import { Ionicons } from '@expo/vector-icons';
-import * as Calendar from 'expo-calendar';
 import { useTranslation } from 'react-i18next';
 import API from '../api/axios';
 import { useAuth } from '../context/AuthContext';
@@ -363,40 +378,6 @@ export default function EventDetailsScreen({ route, navigation }) {
         },
       ]
     );
-  };
-
-  const handleExportToCalendar = async () => {
-    try {
-      const { status } = await Calendar.requestCalendarPermissionsAsync();
-      if (status !== 'granted') {
-        Alert.alert(t('common.permission_needed'), t('events.calendar_permission'));
-        return;
-      }
-
-      // Find a writable calendar — prefer the device default
-      const calendars = await Calendar.getCalendarsAsync(Calendar.EntityTypes.EVENT);
-      const target =
-        calendars.find(c => c.isPrimary && c.allowsModifications) ||
-        calendars.find(c => c.allowsModifications);
-
-      if (!target) {
-        Alert.alert(t('events.no_calendar'), t('events.no_calendar_detail'));
-        return;
-      }
-
-      await Calendar.createEventAsync(target.id, {
-        title:       event.title,
-        startDate:   new Date(event.start_date),
-        endDate:     event.end_date ? new Date(event.end_date) : new Date(event.start_date),
-        allDay:      !!event.is_all_day,
-        location:    event.location || undefined,
-        notes:       event.notes    || undefined,
-      });
-
-      Alert.alert(t('events.added_to_calendar'), t('events.added_to_calendar_detail', { title: event.title }));
-    } catch (err) {
-      Alert.alert(t('common.error'), t('events.could_not_add_to_calendar'));
-    }
   };
 
   // Re-fetch when returning from EventFormScreen so edits show immediately
@@ -767,9 +748,6 @@ export default function EventDetailsScreen({ route, navigation }) {
                 <Text style={styles.editBtnText}>{t('common.edit')}</Text>
               </TouchableOpacity>
             )}
-            <TouchableOpacity style={styles.exportBtn} onPress={handleExportToCalendar}>
-              <Text style={styles.exportBtnText}>{t('events.add_to_calendar')}</Text>
-            </TouchableOpacity>
             {isMine && (
               <TouchableOpacity style={styles.deleteBtn} onPress={handleDelete}>
                 <Text style={styles.deleteBtnText}>{t('common.delete')}</Text>
