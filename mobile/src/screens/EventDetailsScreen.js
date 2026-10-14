@@ -1,19 +1,3 @@
-        {/* ── Actions ── Edit · Delete for whoever may change the event.
-            Others (and views from a profile) see no buttons, just Back. */}
-        {!readOnly && isMine && (
-          <View style={styles.actions}>
-            <TouchableOpacity
-              style={styles.editBtn}
-              onPress={() => navigation.navigate('EventForm', { event })}
-            >
-              <Text style={styles.editBtnText}>{t('common.edit')}</Text>
-            </TouchableOpacity>
-            <TouchableOpacity style={styles.deleteBtn} onPress={handleDelete}>
-              <Text style={styles.deleteBtnText}>{t('common.delete')}</Text>
-            </TouchableOpacity>
-          </View>
-        )}
-
 import React, { useState, useEffect, useCallback } from 'react';
 import {
   View,
@@ -734,25 +718,19 @@ export default function EventDetailsScreen({ route, navigation }) {
 
         </View>
 
-        {/* ── Actions ──
-            Creator:        Edit · + Calendar · Delete
-            Everyone else:  + Calendar (copy it to their phone's calendar)
-            From a profile: nothing — view only, just Back */}
-        {!readOnly && (
+        {/* ── Actions ── Edit · Delete for whoever may change the event.
+            Others (and views from a profile) see no buttons, just Back. */}
+        {!readOnly && isMine && (
           <View style={styles.actions}>
-            {isMine && (
-              <TouchableOpacity
-                style={styles.editBtn}
-                onPress={() => navigation.navigate('EventForm', { event })}
-              >
-                <Text style={styles.editBtnText}>{t('common.edit')}</Text>
-              </TouchableOpacity>
-            )}
-            {isMine && (
-              <TouchableOpacity style={styles.deleteBtn} onPress={handleDelete}>
-                <Text style={styles.deleteBtnText}>{t('common.delete')}</Text>
-              </TouchableOpacity>
-            )}
+            <TouchableOpacity
+              style={styles.editBtn}
+              onPress={() => navigation.navigate('EventForm', { event })}
+            >
+              <Text style={styles.editBtnText}>{t('common.edit')}</Text>
+            </TouchableOpacity>
+            <TouchableOpacity style={styles.deleteBtn} onPress={handleDelete}>
+              <Text style={styles.deleteBtnText}>{t('common.delete')}</Text>
+            </TouchableOpacity>
           </View>
         )}
 
