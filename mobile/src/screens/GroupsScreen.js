@@ -298,7 +298,7 @@ export default function GroupsScreen({ navigation }) {
       <TopCard>
         <View style={styles.header}>
           <TouchableOpacity style={styles.backBtn} onPress={() => navigation.goBack()}>
-            <Ionicons name="chevron-back" size={24} color="#1d1d1f" />
+            <Ionicons name="chevron-back" size={24} color="#1a8fa8" />
           </TouchableOpacity>
           <Text style={styles.headerTitle}>{t('groups.title')}</Text>
           <View style={styles.headerActions}>

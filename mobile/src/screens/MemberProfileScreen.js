@@ -608,7 +608,7 @@ export default function MemberProfileScreen({ route, navigation }) {
       {/* ── Header ── */}
       <View style={styles.header}>
         <TouchableOpacity style={styles.backBtn} onPress={() => navigation.goBack()}>
-          <Ionicons name="chevron-back" size={24} color="#1d1d1f" />
+          <Ionicons name="chevron-back" size={24} color="#1a8fa8" />
         </TouchableOpacity>
         <Text style={styles.headerTitle}>{t('profile.title')}</Text>
         <View style={styles.headerSpacer} />

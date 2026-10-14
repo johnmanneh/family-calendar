@@ -41,7 +41,7 @@ export default function ResetPasswordScreen({ route, navigation }) {
         <ScrollView contentContainerStyle={styles.scroll} keyboardShouldPersistTaps="handled">
 
           <TouchableOpacity style={styles.backBtn} onPress={() => navigation.goBack()}>
-            <Ionicons name="chevron-back" size={24} color="#1d1d1f" />
+            <Ionicons name="chevron-back" size={24} color="#1a8fa8" />
           </TouchableOpacity>
 
           <Text style={styles.title}>Set new password</Text>

@@ -5,8 +5,8 @@ import {
   TouchableOpacity,
   PanResponder,
   Dimensions,
-  useColorScheme,
 } from 'react-native';
+import { useColorScheme } from '../context/ThemeContext';
 import { LIGHT, DARK } from '../theme';
 
 const SCREEN_WIDTH = Dimensions.get('window').width;

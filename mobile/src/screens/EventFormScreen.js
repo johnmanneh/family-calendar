@@ -444,7 +444,7 @@ export default function EventFormScreen({ route, navigation }) {
       <TopCard>
         <View style={styles.header}>
           <TouchableOpacity style={styles.backBtn} onPress={() => navigation.goBack()}>
-            <Ionicons name="chevron-back" size={24} color="#1d1d1f" />
+            <Ionicons name="chevron-back" size={24} color="#1a8fa8" />
           </TouchableOpacity>
           <Text style={styles.headerTitle}>{isEdit ? t('events.edit_event') : t('events.new_event')}</Text>
           {/* Save button on the right */}
