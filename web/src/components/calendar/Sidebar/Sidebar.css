@@ -430,6 +430,11 @@
   opacity: 1 !important;
 }
 
+/* Touch screens can't hover — keep the delete button visible there */
+@media (hover: none) {
+  .sidebar-group-delete-btn { opacity: 0.5; }
+}
+
 .sidebar-group-delete-confirm {
   padding: 6px 4px 4px 48px;
 }

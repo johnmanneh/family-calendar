@@ -387,3 +387,25 @@ button.group-remove:hover { color: #ff3b30; background: #fff0f0; }
 :root[data-theme="dark"] .group-member { border-bottom-color: #2c2c2e; }
 
 :root[data-theme="dark"] .group-you, :root[data-theme="dark"] .group-confirm-no { background: #2c2c2e; color: #aeaeb2; }
+
+/* ── Danger zone (admin: delete group) ── */
+.group-danger-title { color: #ff3b30; }
+.group-danger-btn {
+  width: 100%; display: flex; align-items: center; justify-content: center; gap: 8px;
+  background: transparent; color: #ff3b30; border: 1.5px solid #ff3b30; border-radius: 14px;
+  padding: 13px; font-size: 15px; font-weight: 600; cursor: pointer; font-family: inherit;
+}
+.group-danger-confirm { padding: 16px; }
+.group-danger-confirm p { margin: 0 0 12px; font-size: 14px; line-height: 1.4; }
+.group-danger-actions { display: flex; gap: 8px; }
+.group-danger-yes, .group-danger-cancel {
+  border: none; border-radius: 10px; padding: 10px 16px; font-size: 14px; font-weight: 600;
+  cursor: pointer; font-family: inherit;
+}
+.group-danger-yes { background: #ff3b30; color: #fff; }
+.group-danger-cancel { background: #f2f2f7; color: #1d1d1f; }
+.group-danger-yes:disabled, .group-danger-cancel:disabled { opacity: 0.6; cursor: default; }
+@media (prefers-color-scheme: dark) {
+  :root:not([data-theme="light"]) .group-danger-cancel { background: #2c2c2e; color: #f2f2f7; }
+}
+:root[data-theme="dark"] .group-danger-cancel { background: #2c2c2e; color: #f2f2f7; }

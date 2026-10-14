@@ -11,7 +11,7 @@ import "./GroupPage.css";
 // Same layout as the app's group screen: share code · members · events
 const GroupPage = () => {
   const { groupId } = useParams();
-  const { groups, fetchGroupEvents } = useGroups();
+  const { groups, fetchGroupEvents, deleteGroup } = useGroups();
   const { user } = useAuth();
   const navigate = useNavigate();
 
@@ -21,6 +21,8 @@ const GroupPage = () => {
   const [error, setError] = useState("");
   const [copied, setCopied] = useState(false);
   const [confirmRemove, setConfirmRemove] = useState(null);
+  const [confirmDelete, setConfirmDelete] = useState(false);
+  const [deleting, setDeleting] = useState(false);
 
   const group = groups.find(g => Number(g.id) === parseInt(groupId));
   const isAdmin = group?.role === "admin";
@@ -190,6 +192,42 @@ const GroupPage = () => {
               </div>
             ))}
           </div>
+        )}
+
+        {/* ── Danger zone: delete the group (admin only), same as the app ── */}
+        {isAdmin && (
+          <>
+            <p className="group-section-title group-danger-title">Danger zone</p>
+            {confirmDelete ? (
+              <div className="group-card group-danger-confirm">
+                <p>Delete "{group.name}"? Members are removed and events are no longer shared with this group. This can't be undone.</p>
+                <div className="group-danger-actions">
+                  <button
+                    className="group-danger-yes"
+                    disabled={deleting}
+                    onClick={async () => {
+                      setDeleting(true);
+                      setError("");
+                      try {
+                        await deleteGroup(group.id);
+                        navigate("/dashboard");
+                      } catch (err) {
+                        setError(err.response?.data?.message || "Could not delete the group");
+                        setDeleting(false);
+                      }
+                    }}
+                  >
+                    {deleting ? "Deleting…" : "Yes, delete"}
+                  </button>
+                  <button className="group-danger-cancel" disabled={deleting} onClick={() => setConfirmDelete(false)}>Cancel</button>
+                </div>
+              </div>
+            ) : (
+              <button className="group-danger-btn" onClick={() => setConfirmDelete(true)}>
+                <Icon name="trash" size={15} /> Delete group
+              </button>
+            )}
+          </>
         )}
       </div>
     </div>
