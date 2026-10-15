@@ -239,6 +239,7 @@ GET    /uploads/avatars/:filename    (served directly by Express)
 
 See `docs/SCAN.md` for full scan feature documentation (AI provider, endpoints, security).
 Planned: PDF and email import into the same review flow — see `docs/architecture/04-document-email-import.md`.
+Planned: single-event sharing, driver/bring-list fields and RSVP — see `docs/architecture/05-event-sharing-logistics.md`.
 
 ---
 
