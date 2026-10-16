@@ -70,7 +70,7 @@ const Register = () => {
               </linearGradient>
             </defs>
             <rect x="10" y="8" width="140" height="3" rx="2" fill="url(#lineGrad)"/>
-            <text x="80" y="42" fontSize="29" fontWeight="900" fill="#1d1d1f" textAnchor="middle" fontFamily="Inter" letterSpacing="-1.2">it’s for us</text>
+            <text x="80" y="42" fontSize="29" fontWeight="900" fill="currentColor" textAnchor="middle" fontFamily="Inter" letterSpacing="-1.2">it’s for us</text>
             <rect x="10" y="52" width="140" height="3" rx="2" fill="url(#lineGrad)"/>
             <line x1="30" y1="55" x2="30" y2="72" stroke="#d2d2d7" strokeWidth="1.5"/>
             <line x1="63" y1="55" x2="63" y2="72" stroke="#d2d2d7" strokeWidth="1.5"/>
