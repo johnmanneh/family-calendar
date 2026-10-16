@@ -8,12 +8,12 @@ import { View, Text, TouchableOpacity, StyleSheet } from 'react-native';
 
 const BRAND_DOT = '#005CFD';   // the blue dot from the app icon
 
-// Same look as the other header icons (search, chat, bell): thin grey
-// outline frame, grey text, no fill, no shadow. Only the brand dot is blue.
+// Clean wordmark: no frame, no fill — just the grey text (same grey as the
+// header icons) and the blue brand dot, blending into the header.
 const ICON_GREY = '#8e8e93';
 
 export default function AppIconButton({ onPress, size = 42 }) {
-  const fs  = size * 0.31;     // text fills the tile, like the app icon
+  const fs  = size * 0.36;     // three lines fill the header height
   const lh  = fs * 1.15;       // full line height, so letter tops aren't clipped (iOS)
   const pull = -fs * 0.36;     // …then overlap the lines to keep them tight
   const dot = fs * 0.36;       // clearly visible blue dot
@@ -23,10 +23,7 @@ export default function AppIconButton({ onPress, size = 42 }) {
   return (
     <TouchableOpacity onPress={onPress} accessibilityRole="button" accessibilityLabel="Menu"
       hitSlop={{ top: 8, bottom: 8, left: 8, right: 8 }} style={{ padding: 4 }}>
-      <View style={[styles.tile, {
-        width: size, height: size, borderRadius: size * 0.24,
-        borderColor: ICON_GREY,
-      }]}>
+      <View style={[styles.tile, { height: size }]}>
         <Text style={[styles.word, word]}>it{'\u2019'}s</Text>
         <Text style={[styles.word, word, next]}>for</Text>
         <View style={[styles.lastLine, next]}>
@@ -42,7 +39,6 @@ export default function AppIconButton({ onPress, size = 42 }) {
 const styles = StyleSheet.create({
   tile: {
     alignItems: 'flex-start', justifyContent: 'center',
-    paddingLeft: '14%', borderWidth: 1.6, backgroundColor: 'transparent',
   },
   word: { fontWeight: '800', letterSpacing: -0.5, includeFontPadding: false },
   lastLine: { flexDirection: 'row', alignItems: 'flex-end' },
