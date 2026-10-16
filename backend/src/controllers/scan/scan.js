@@ -98,7 +98,10 @@ async function readWithGroq(imageB64, mediaType, today, tz) {
 
   const model = process.env.GROQ_MODEL || 'qwen/qwen3.8-27b';
 
-  const resp = await fetch('https://api.groq.com/openai/v1/chat/completions', {
+  // Groq's free tier allows only ~1000 output tokens per minute for this model,
+  // so two scans close together hit a 429. Wait as long as Groq says (retry-after,
+  // capped at 15 s) and try once more before giving up.
+  const call = () => fetch('https://api.groq.com/openai/v1/chat/completions', {
     method: 'POST',
     headers: {
       'content-type': 'application/json',
@@ -120,6 +123,17 @@ async function readWithGroq(imageB64, mediaType, today, tz) {
     }),
   });
 
+  let resp = await call();
+  if (resp.status === 429) {
+    const wait = Math.min(15, Math.max(1, Number(resp.headers.get('retry-after')) || 5));
+    await new Promise(r => setTimeout(r, wait * 1000));
+    resp = await call();
+  }
+
+  if (resp.status === 429) {
+    console.error('Groq rate limit (429) after retry');
+    const e = new Error('rate limited'); e.status = 429; throw e;
+  }
   if (!resp.ok) {
     let body = '';
     try { body = await resp.text(); } catch {}
@@ -156,6 +170,7 @@ const extract = [receive, async (req, res) => {
   } catch (err) {
     if (err.status === 503) return errorResponse(res, 503, "Scanning isn't set up yet");
     if (err.status === 422) return errorResponse(res, 422, "Couldn't read a schedule from this photo");
+    if (err.status === 429) return errorResponse(res, 429, 'Too many scans right now — please try again in a minute');
     if (err.status === 502) return errorResponse(res, 502, 'The reading service is busy — please try again');
     console.error('scan extract error:', err.message);   // never logs the photo or its text
     return errorResponse(res, 500, 'Server error');

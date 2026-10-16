@@ -62,6 +62,16 @@ let pass=0, fail=0; const expect=(l,g,w)=>{const ok=JSON.stringify(g)===JSON.str
   r=await run(importEvents,{user:{id:1},body:{owner_id:4,tz:'Europe/Zurich',events:chosen}});
   expect('retry creates no duplicates', [r.b.created, r.b.skipped], [0, chosen.length]);
   expect('John (no manage right on Leo? Leo managed by Sarah, John not admin)', (await run(importEvents,{user:{id:2},body:{owner_id:4,events:chosen}})).c, 403);
+  // Rate limit (429): retried once after retry-after; a second 429 gives a clear message
+  const realFetch = global.fetch; let calls = 0;
+  const h429 = { status: 429, ok: false, headers: { get: () => '1' }, text: async () => 'rate' };
+  global.fetch = async (u, o) => (++calls === 1 ? h429 : realFetch(u, o));
+  r = await run(extract,{user:{id:1},file,body:{}});
+  expect('429 once → retried and succeeds', [r.c, calls], [200, 2]);
+  calls = 0; global.fetch = async () => { calls++; return h429; };
+  r = await run(extract,{user:{id:1},file,body:{}});
+  expect('429 twice → friendly message, no third call', [r.c, r.b.message, calls], [429, 'Too many scans right now — please try again in a minute', 2]);
+  global.fetch = realFetch;
   delete process.env.GROQ_API_KEY;
   expect('no API key → clear message', (await run(extract,{user:{id:1},file,body:{}})).b.message, "Scanning isn't set up yet");
   console.log(`\n${pass} passed, ${fail} failed`); process.exit(fail?1:0);
