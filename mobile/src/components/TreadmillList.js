@@ -56,7 +56,11 @@ function TreadmillCell({ children, style, onLayout, ...rest }) {
   // Only roll when the list really scrolls. If everything fits on screen there's
   // nothing to roll under the FAB — and a stale/tiny viewport measurement (e.g.
   // after filters change the list, or the keyboard was up) can't tip rows flat.
-  const scrollable = ctx && ctx.viewportH >= 120 && ctx.contentH > ctx.viewportH + 1;
+  // contentH includes the extra bottom padding we add for the FAB; leave it out,
+  // otherwise a short list (e.g. one event + one task) counts as "scrollable" and
+  // its last row tilts under the + even though the list isn't full.
+  const realContentH = ctx ? ctx.contentH - (FAB_LINE + ROLL_ZONE + ctx.bottomInset) : 0;
+  const scrollable = ctx && ctx.viewportH >= 120 && realContentH > ctx.viewportH + 1;
   if (ctx && layout && scrollable) {
     const { y, height: h } = layout;
 
