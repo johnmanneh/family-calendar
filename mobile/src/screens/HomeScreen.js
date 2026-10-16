@@ -29,6 +29,12 @@ import WeekStrip from '../components/WeekStrip';
 import MonthCalendar from '../components/MonthCalendar';
 import RadialMenu from '../components/RadialMenu';
 import TreadmillList from '../components/TreadmillList';
+import AppIconButton from '../components/AppIconButton';
+
+// Home header look. 'logo' = app icon top-left (opens the menu), no title.
+// 'classic' = gradient menu bars + "it's for us" title in the middle.
+// Change this one word to switch back.
+const HEADER_STYLE = 'logo';
 import { useStyles } from '../styles/HomeScreen.styles';
 import parseVoiceInput from '../utils/parseVoiceInput';
 import API, { SERVER_URL } from '../api/axios';
@@ -1118,6 +1124,9 @@ export default function HomeScreen({ navigation, route }) {
       {/* ── Header ── */}
       <View style={styles.header}>
 
+        {HEADER_STYLE === 'logo' ? (
+          <AppIconButton onPress={drawer.open} />
+        ) : (<>
         {/* Left — gradient hamburger */}
         <TouchableOpacity style={styles.iconBtn} onPress={drawer.open}>
           <View style={styles.hamburger}>
@@ -1134,6 +1143,7 @@ export default function HomeScreen({ navigation, route }) {
         <View style={styles.headerTitleWrap} pointerEvents="none">
           <Text style={styles.headerTitleText}>it's for us</Text>
         </View>
+        </>)}
 
         {/* Right — search + chat + bell */}
         <View style={styles.headerRight}>
