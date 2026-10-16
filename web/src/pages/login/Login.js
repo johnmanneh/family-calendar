@@ -172,7 +172,7 @@ const Login = () => {
         </div>
 
         <AuthLink
-          text="New to it's for us?"
+          text="New here?"
           linkText="Create account →"
           linkUrl="/register"
         />
