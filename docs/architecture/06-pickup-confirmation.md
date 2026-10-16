@@ -44,19 +44,30 @@ They can cancel at any time before "Picked up" (emergencies). No reason field.
 
 ## 4. What the family sees
 
-One status chip on the event card, day list and event screen. Icons are from the icon set the app
-already uses (MaterialCommunityIcons on mobile, matching SVGs added to the web `Icon` component),
-not emoji.
+One status chip on the event card, day list and event screen.
 
-| Status | Icon | Colour | Text |
-|---|---|---|---|
-| Asked | `clock-outline` | grey #8E8E93 | Asked · Oma |
-| Going | `account-check` | teal #1a8fa8 | Oma's going |
-| Picked up | `check-circle` | green #3B8456 | Picked up 12:08 |
-| Pickup needed | `alert-circle` | red #D93025 | Pickup needed + **Ask someone else** |
+**Icons: the app's standard set only, no new style and no emoji.** Mobile uses Ionicons
+(outline variants, as everywhere else in the app); web uses the shared `Icon` component
+(`web/src/components/common/Icon/Icon.js`, same thin outline look). Almost all icons below are
+already in use; the only addition is a `clock` icon for the web `Icon` component, drawn in the
+same outline style.
 
-Buttons for the pickup person use the same icons: `check` (Yes, I'll go), `close` (Can't),
-`human-male-child` (Picked up), `alert-octagon-outline` (Can't make it anymore).
+| Status | Mobile (Ionicons) | Web (`Icon`) | Colour | Text |
+|---|---|---|---|---|
+| Asked | `time-outline` | `clock` (new) | grey #8E8E93 | Asked · Oma |
+| Going | `thumbs-up-outline` | `thumbsUp` | teal #1a8fa8 | Oma's going |
+| Picked up | `checkmark-circle-outline` | `checkCircle` | green #3B8456 | Picked up 12:08 |
+| Pickup needed | `warning-outline` | `alert` | red #D93025 | Pickup needed |
+
+Buttons use the same icons, so a button and the status it leads to always match:
+
+| Button | Mobile (Ionicons) | Web (`Icon`) |
+|---|---|---|
+| Yes, I'll go | `thumbs-up-outline` | `thumbsUp` |
+| Can't / Can't make it anymore | `close-circle-outline` | `xCircle` |
+| Picked up | `checkmark-circle-outline` | `checkCircle` |
+| Ask someone else | `swap-horizontal-outline` | `swap` |
+| Pickup people list | `people-outline` | `users` |
 
 **Notifications** to every parent/manager of the child, one per status change:
 - "Oma is going to pick up Emmanuel (12:00)"
