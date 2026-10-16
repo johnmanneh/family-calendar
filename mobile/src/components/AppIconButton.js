@@ -9,9 +9,13 @@ import { useColorScheme } from '../context/ThemeContext';
 
 const BRAND_DOT = '#005CFD';   // the blue dot from the app icon
 
-export default function AppIconButton({ onPress, size = 36 }) {
+// Outline style to match the header icons (search, chat, bell): thin grey
+// rounded frame, no fill, no shadow.
+const ICON_GREY = '#8e8e93';
+
+export default function AppIconButton({ onPress, size = 42 }) {
   const dark = useColorScheme() === 'dark';
-  const fs  = size * 0.34;     // text fills the tile, like the app icon
+  const fs  = size * 0.31;     // text fills the tile, like the app icon
   const lh  = fs * 1.15;       // full line height, so letter tops aren't clipped (iOS)
   const pull = -fs * 0.36;     // …then overlap the lines to keep them tight
   const dot = fs * 0.36;       // clearly visible blue dot
@@ -23,8 +27,7 @@ export default function AppIconButton({ onPress, size = 36 }) {
       hitSlop={{ top: 8, bottom: 8, left: 8, right: 8 }} style={{ padding: 4 }}>
       <View style={[styles.tile, {
         width: size, height: size, borderRadius: size * 0.24,
-        backgroundColor: dark ? '#2c2c2e' : '#fff',
-        borderColor: dark ? '#3a3a3c' : 'rgba(0,0,0,0.06)',
+        borderColor: ICON_GREY,
       }]}>
         <Text style={[styles.word, word]}>it{'\u2019'}s</Text>
         <Text style={[styles.word, word, next]}>for</Text>
@@ -41,9 +44,7 @@ export default function AppIconButton({ onPress, size = 36 }) {
 const styles = StyleSheet.create({
   tile: {
     alignItems: 'flex-start', justifyContent: 'center',
-    paddingLeft: '13%', borderWidth: StyleSheet.hairlineWidth,
-    shadowColor: '#000', shadowOpacity: 0.12, shadowRadius: 4,
-    shadowOffset: { width: 0, height: 2 }, elevation: 3,
+    paddingLeft: '14%', borderWidth: 1.6, backgroundColor: 'transparent',
   },
   word: { fontWeight: '900', letterSpacing: -0.5, includeFontPadding: false },
   lastLine: { flexDirection: 'row', alignItems: 'flex-end' },
