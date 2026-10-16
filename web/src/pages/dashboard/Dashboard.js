@@ -61,13 +61,13 @@ const Dashboard = () => {
 
   return (
     <div className={`dashboard${isPhone ? " dashboard--phone" : ""}`}>
-      {/* Phone header: ☰ · WHEN */}
+      {/* Phone header: stacked "it's / for / us." wordmark (opens the menu) · icons.
+          Same design as the mobile app: no frame, dark text, blue brand dot. */}
       {isPhone && (
         <header className="dashboard-phone-header">
-          <button className="dashboard-phone-menu" onClick={() => setDrawerOpen(true)} aria-label="Menu">
-            <span /><span /><span />
+          <button className="dashboard-phone-logo" onClick={() => setDrawerOpen(true)} aria-label="Menu">
+            <span>it’s</span><span>for</span><span>us<i className="dashboard-phone-dot" /></span>
           </button>
-          <span className="dashboard-phone-title">WHEN</span>
           <div className="dashboard-phone-actions">
             <button className={`dashboard-phone-icon${searchOpen ? " active" : ""}`} onClick={toggleSearch} aria-label="Search">
               <Icon name="search" size={21} />

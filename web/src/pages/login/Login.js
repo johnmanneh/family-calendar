@@ -63,18 +63,18 @@ const Login = () => {
               fill="url(#lineGrad)"
             />
 
-            {/* WHEN text */}
+            {/* Wordmark */}
             <text
               x="80"
               y="42"
-              fontSize="36"
+              fontSize="29"
               fontWeight="900"
               fill="currentColor"
               textAnchor="middle"
               fontFamily="Inter"
-              letterSpacing="-2"
+              letterSpacing="-1.2"
             >
-              WHEN
+              it’s for us
             </text>
 
             {/* Bottom line — same width as top */}

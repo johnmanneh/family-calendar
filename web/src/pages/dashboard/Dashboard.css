@@ -35,21 +35,25 @@
     box-shadow: 0 2px 8px rgba(0,0,0,0.06);
     flex-shrink: 0;
   }
-  .dashboard-phone-title { font-size: 20px; font-weight: 900; letter-spacing: -1px; }
-  .dashboard-phone-menu {
-    width: 40px; height: 40px; border: none; background: none; cursor: pointer;
-    display: flex; flex-direction: column; justify-content: center; gap: 5px; padding: 8px;
+  /* Wordmark button — matches the mobile app header */
+  .dashboard-phone-logo {
+    height: 40px; border: none; background: none; cursor: pointer; padding: 0 4px;
+    display: flex; flex-direction: column; justify-content: center; align-items: flex-start;
+    color: var(--text-primary, #1d1d1f);
+    font-size: 13px; font-weight: 800; letter-spacing: -0.4px; line-height: 0.92;
+    -webkit-tap-highlight-color: transparent;
   }
-  .dashboard-phone-menu span {
-    display: block; height: 2px; border-radius: 2px;
-    background: linear-gradient(90deg, #56e39f, #4facfe, #f857a6, #f48c06);
+  .dashboard-phone-logo span { display: flex; align-items: flex-end; }
+  .dashboard-phone-dot {
+    width: 4.5px; height: 4.5px; border-radius: 50%; background: #005CFD;
+    margin: 0 0 2px 1.5px; display: inline-block;
   }
 
   .dashboard-phone-actions { display: flex; align-items: center; gap: 2px; }
   .dashboard-phone-icon {
     position: relative; width: 40px; height: 40px;
     display: flex; align-items: center; justify-content: center;
-    border: none; background: none; color: #1d1d1f; cursor: pointer; border-radius: 12px;
+    border: none; background: none; color: var(--text-primary, #1d1d1f); cursor: pointer; border-radius: 12px;
   }
   .dashboard-phone-icon.active { color: #1a8fa8; }
   .dashboard-phone-badge {
