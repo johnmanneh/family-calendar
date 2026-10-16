@@ -35,7 +35,16 @@ import AppIconButton from '../components/AppIconButton';
 // 'classic' = gradient menu bars + "it's for us" title in the middle.
 // Change this one word to switch back.
 const HEADER_STYLE = 'logo';
+
+// Header icons (search, chat, bell): with the 'logo' header they use the same
+// dark text colour as the logo so the whole top row matches; 'classic' keeps grey.
+function useHeaderIconColor() {
+  const dark = useColorScheme() === 'dark';
+  if (HEADER_STYLE !== 'logo') return '#8e8e93';
+  return dark ? '#ffffff' : '#1d1d1f';
+}
 import { useStyles } from '../styles/HomeScreen.styles';
+import { useColorScheme } from '../context/ThemeContext';
 import parseVoiceInput from '../utils/parseVoiceInput';
 import API, { SERVER_URL } from '../api/axios';
 import { useFocusEffect } from '@react-navigation/native';
@@ -393,6 +402,7 @@ const CATEGORIES = [
 export default function HomeScreen({ navigation, route }) {
   const { t } = useTranslation();
   const styles = useStyles();
+  const headerIconColor = useHeaderIconColor();
   const insets = useSafeAreaInsets();
   const { logout, user } = useAuth();
   const { members } = useFamily();
@@ -1155,7 +1165,7 @@ export default function HomeScreen({ navigation, route }) {
             <Ionicons
               name={searchVisible ? 'search' : 'search-outline'}
               size={22}
-              color={searchVisible ? '#1a8fa8' : '#8e8e93'}
+              color={searchVisible ? '#1a8fa8' : headerIconColor}
             />
           </TouchableOpacity>
 
@@ -1167,7 +1177,7 @@ export default function HomeScreen({ navigation, route }) {
             <Ionicons
               name={chatUnread > 0 ? 'chatbubble' : 'chatbubble-outline'}
               size={22}
-              color={chatUnread > 0 ? '#1a8fa8' : '#8e8e93'}
+              color={chatUnread > 0 ? '#1a8fa8' : headerIconColor}
             />
             {chatUnread > 0 && (
               <View style={styles.badge}>
@@ -1189,7 +1199,7 @@ export default function HomeScreen({ navigation, route }) {
                 <Ionicons
                   name={totalCount > 0 ? 'notifications' : 'notifications-outline'}
                   size={22}
-                  color={totalCount > 0 ? '#1a8fa8' : '#8e8e93'}
+                  color={totalCount > 0 ? '#1a8fa8' : headerIconColor}
                 />
                 {totalCount > 0 && (
                   <View style={styles.badge}>

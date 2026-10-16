@@ -12,7 +12,7 @@ const BRAND_DOT = '#005CFD';   // the blue dot from the app icon
 
 // Clean wordmark: no frame, no fill — just the text (normal text colour,
 // white in dark mode) and the blue brand dot, blending into the header.
-export default function AppIconButton({ onPress, size = 42 }) {
+export default function AppIconButton({ onPress, size = 36 }) {
   const fs  = size * 0.36;     // three lines fill the header height
   const lh  = fs * 1.15;       // full line height, so letter tops aren't clipped (iOS)
   // …then pull the lines a little closer (not touching). Android adds more
