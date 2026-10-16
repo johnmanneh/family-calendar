@@ -4,7 +4,8 @@
  * when HEADER_STYLE is 'logo' in HomeScreen).
  */
 import React from 'react';
-import { View, Text, TouchableOpacity, StyleSheet } from 'react-native';
+import { View, Text, TouchableOpacity, StyleSheet, Platform } from 'react-native';
+import { useTranslation } from 'react-i18next';
 import { useColorScheme } from '../context/ThemeContext';
 
 const BRAND_DOT = '#005CFD';   // the blue dot from the app icon
@@ -15,8 +16,11 @@ const BRAND_DOT = '#005CFD';   // the blue dot from the app icon
 export default function AppIconButton({ onPress, size = 42 }) {
   const fs  = size * 0.36;     // three lines fill the header height
   const lh  = fs * 1.15;       // full line height, so letter tops aren't clipped (iOS)
-  const pull = -fs * 0.26;     // …then pull the lines a little closer (not touching)
+  // …then pull the lines a little closer (not touching). Android adds more
+  // space above letters than iOS, so it needs a bigger pull to look the same.
+  const pull = -fs * (Platform.OS === 'android' ? 0.42 : 0.26);
   const dot = fs * 0.36;       // clearly visible blue dot
+  const { t } = useTranslation();
   const textColor = useColorScheme() === 'dark' ? '#fff' : '#1d1d1f';
   const word = { fontSize: fs, lineHeight: lh, color: textColor };
   const next = { marginTop: pull };
@@ -27,7 +31,7 @@ export default function AppIconButton({ onPress, size = 42 }) {
     transform: [{ translateY: fs * 0.06 }],
   };
   return (
-    <TouchableOpacity onPress={onPress} accessibilityRole="button" accessibilityLabel="Menu"
+    <TouchableOpacity onPress={onPress} accessibilityRole="button" accessibilityLabel={t('common.menu')}
       hitSlop={{ top: 8, bottom: 8, left: 8, right: 8 }} style={{ padding: 4 }}>
       <View style={[styles.tile, { height: size }]}>
         {['it\u2019s', 'for', 'us'].map((w, i) => (
@@ -35,7 +39,9 @@ export default function AppIconButton({ onPress, size = 42 }) {
             {/* Menu line: same length and gap on every row, centred on the
                 lowercase letters (x-height), so the three lines read as ☰ */}
             <View style={[styles.line, line]} />
-            <Text style={[styles.word, word]}>{w}</Text>
+            {/* allowFontScaling off: the logo must not grow with the phone's
+                large-text setting, or it overflows the header */}
+            <Text style={[styles.word, word]} allowFontScaling={false}>{w}</Text>
             {i === 2 && (
               <View style={{ width: dot, height: dot, borderRadius: dot / 2, backgroundColor: BRAND_DOT,
                 marginLeft: dot * 0.25, alignSelf: 'flex-end', marginBottom: lh * 0.24 }} />

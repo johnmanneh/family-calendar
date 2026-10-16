@@ -1,5 +1,6 @@
 {
   "common": {
+    "menu": "Menú",
     "ok": "Aceptar",
     "cancel": "Cancelar",
     "delete": "Eliminar",
