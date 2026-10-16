@@ -34,12 +34,12 @@ const forgotPassword = async (req, res) => {
       try {
         await sendEmail(
           email.trim(),
-          'Reset your When password',
+          "Reset your it's for us password",
           `
           <div style="font-family: sans-serif; max-width: 480px; margin: 0 auto; padding: 32px;">
             <h2 style="color: #1a8fa8;">Reset your password</h2>
             <p>Hi ${firstName},</p>
-            <p>We received a request to reset the password for your <strong>When</strong> account.</p>
+            <p>We received a request to reset the password for your <strong>it's for us</strong> account.</p>
             <p>Click the button below — the link is valid for <strong>1 hour</strong>.</p>
             <a href="${resetUrl}"
                style="display:inline-block;margin:24px 0;padding:14px 28px;background:#1a8fa8;color:#fff;border-radius:8px;text-decoration:none;font-weight:600;">
@@ -49,7 +49,7 @@ const forgotPassword = async (req, res) => {
               If you didn't request this, you can safely ignore this email.
               Your password will not change.
             </p>
-            <p style="color:#888;font-size:12px;">— The When team</p>
+            <p style="color:#888;font-size:12px;">— The it's for us team</p>
           </div>
           `
         );

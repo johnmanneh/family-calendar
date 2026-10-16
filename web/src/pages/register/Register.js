@@ -166,7 +166,7 @@ const Register = () => {
             )}
           </div>
 
-          <Button type="submit" text="Join When →" loading={loading} />
+          <Button type="submit" text="Join it's for us →" loading={loading} />
         </form>
 
         <p className="login-tag">Exclusively for your family ♥</p>
