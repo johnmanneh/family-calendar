@@ -7,6 +7,13 @@
   font-size: 15px; font-weight: 600; cursor: pointer; font-family: inherit; margin-top: 8px;
 }
 .scan-primary:disabled { opacity: 0.5; cursor: default; }
+.scan-secondary {
+  display: inline-flex; align-items: center; justify-content: center; gap: 8px; width: 100%;
+  background: transparent; color: #166534; border: 1.5px solid #3B8456; border-radius: 12px; padding: 12px;
+  font-size: 15px; font-weight: 600; cursor: pointer; font-family: inherit;
+}
+@media (prefers-color-scheme: dark) { :root:not([data-theme="light"]) .scan-secondary { color: #6ee7a0; border-color: #6ee7a0; } }
+:root[data-theme="dark"] .scan-secondary { color: #6ee7a0; border-color: #6ee7a0; }
 .scan-spinner { width: 34px; height: 34px; border-radius: 50%; border: 3px solid rgba(22,101,52,0.2); border-top-color: #166534; animation: scan-spin 0.9s linear infinite; }
 @keyframes scan-spin { to { transform: rotate(360deg); } }
 .scan-done { font-size: 16px; font-weight: 600; color: #1d1d1f; }

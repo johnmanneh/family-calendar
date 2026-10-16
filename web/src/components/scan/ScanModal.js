@@ -39,6 +39,7 @@ const fmt = e => {
 const ScanModal = ({ open, onClose, ownerId: initialOwner }) => {
   const { fetchEvents } = useEvents();
   const fileRef = useRef(null);
+  const galleryRef = useRef(null);
   const [stage, setStage] = useState("pick");
   const [items, setItems] = useState([]);
   const [targets, setTargets] = useState([]);
@@ -118,10 +119,17 @@ const ScanModal = ({ open, onClose, ownerId: initialOwner }) => {
           <div className="scan-pick">
             <span className="scan-hero"><Icon name="scan" size={36} /></span>
             <p>Take or choose a photo of a kindergarten or school plan — one or two weeks. You check everything before it's added.</p>
+            {/* Two inputs like the mobile app: capture="environment" opens the
+                camera straight away on phones (and hides the gallery), so the
+                gallery needs its own input without capture. */}
             <button className="scan-primary" onClick={() => fileRef.current?.click()}>
-              <Icon name="camera" size={16} /> Choose photo
+              <Icon name="camera" size={16} /> Take photo
+            </button>
+            <button className="scan-secondary" onClick={() => galleryRef.current?.click()}>
+              <Icon name="image" size={16} /> Choose from gallery
             </button>
             <input ref={fileRef} type="file" accept="image/*" capture="environment" hidden onChange={onFile} />
+            <input ref={galleryRef} type="file" accept="image/*" hidden onChange={onFile} />
             <p className="scan-small">The photo is read once to find the dates and is not stored.</p>
           </div>
         )}
