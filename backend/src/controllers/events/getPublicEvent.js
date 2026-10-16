@@ -6,6 +6,10 @@ const { successResponse, errorResponse } = require('../../utils/response/respons
 
 module.exports = async (req, res) => {
   const { token } = req.params;
+  // Tokens are 64 hex characters — reject anything else without a DB lookup
+  if (typeof token !== 'string' || !/^[a-f0-9]{64}$/.test(token)) {
+    return errorResponse(res, 404, 'This link is not valid');
+  }
 
   try {
     // 1. Look up the share record — must exist, not revoked, not expired
@@ -50,6 +54,7 @@ module.exports = async (req, res) => {
          e.notes,
          e.category,
          e.url,
+         e.is_private,
          u.first_name || ' ' || u.last_name AS organiser
        FROM events e
        JOIN users u ON u.id = e.created_by
@@ -57,7 +62,8 @@ module.exports = async (req, res) => {
       [share.event_id]
     );
 
-    if (eventResult.rows.length === 0) {
+    // An event made private after it was shared must not show any more
+    if (eventResult.rows.length === 0 || eventResult.rows[0].is_private) {
       return errorResponse(res, 404, 'This event is no longer available');
     }
 

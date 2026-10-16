@@ -10,12 +10,19 @@ module.exports = async (req, res) => {
   const eventId = Number(req.params.id);
   const userId  = Number(req.user.id);
 
-  const {
-    show_notes    = true,
-    show_location = true,
-    allow_rsvp    = false,
-    expires_days  = 7   // default: link expires 7 days after the event
-  } = req.body || {};
+  const body = req.body || {};
+  // Booleans only — anything else falls back to the default
+  const bool = (v, dflt) => (typeof v === 'boolean' ? v : dflt);
+  const show_notes    = bool(body.show_notes, true);
+  const show_location = bool(body.show_location, true);
+  const allow_rsvp    = bool(body.allow_rsvp, false);
+  // Link lifetime in days: whole number between 1 and 365, default 7.
+  // A bad value (text, negative, huge) used to crash the insert.
+  let expires_days = Math.round(Number(body.expires_days ?? 7));
+  if (!Number.isFinite(expires_days)) expires_days = 7;
+  expires_days = Math.min(365, Math.max(1, expires_days));
+
+  if (!Number.isInteger(eventId)) return errorResponse(res, 404, 'Event not found');
 
   try {
     // 1. Load the event — confirm it exists and belongs to this user
@@ -40,14 +47,32 @@ module.exports = async (req, res) => {
       return errorResponse(res, 400, 'Private events cannot be shared');
     }
 
-    // 4. Generate a secure random token (64 hex chars = 32 bytes)
+    // 4. Reuse a link that is still valid with the same settings, so tapping
+    //    Share again doesn't create a new link every time
+    const existing = await pool.query(
+      `SELECT id, token, expires_at, show_notes, show_location, allow_rsvp
+         FROM event_shares
+        WHERE event_id = $1 AND created_by = $2 AND revoked_at IS NULL
+          AND (expires_at IS NULL OR expires_at > NOW() + INTERVAL '1 day')
+          AND show_notes = $3 AND show_location = $4 AND allow_rsvp = $5
+        ORDER BY created_at DESC LIMIT 1`,
+      [eventId, userId, show_notes, show_location, allow_rsvp]
+    );
+    if (existing.rows.length) {
+      const share = existing.rows[0];
+      return successResponse(res, 200, 'Share link', {
+        share: { ...share, url: `https://its4us.app/e/${share.token}` },
+      });
+    }
+
+    // 5. Generate a secure random token (64 hex chars = 32 bytes)
     const token = crypto.randomBytes(32).toString('hex');
 
-    // 5. Calculate expiry: expires_days after NOW (not after the event date)
+    // 6. Calculate expiry: expires_days after NOW (not after the event date)
     const expiresAt = new Date();
     expiresAt.setDate(expiresAt.getDate() + Number(expires_days));
 
-    // 6. Insert the share record
+    // 7. Insert the share record
     const insertResult = await pool.query(
       `INSERT INTO event_shares
          (event_id, token, created_by, expires_at, show_notes, show_location, allow_rsvp)
@@ -58,7 +83,7 @@ module.exports = async (req, res) => {
 
     const share = insertResult.rows[0];
 
-    // 7. Build the public URL
+    // 8. Build the public URL
     const shareUrl = `https://its4us.app/e/${share.token}`;
 
     return successResponse(res, 201, 'Share link created', {
