@@ -104,6 +104,8 @@ const make = c => StyleSheet.create({
   },
   editBtn: { flex: 1, backgroundColor: c.surface, borderRadius: 12, padding: 14, alignItems: 'center' },
   editBtnText: { fontSize: 14, fontWeight: '600', color: c.text },
+  shareBtn: { flex: 1, backgroundColor: c.surface, borderRadius: 12, padding: 14, alignItems: 'center' },
+  shareBtnText: { fontSize: 14, fontWeight: '600', color: '#1a8fa8' },
   deleteBtn: { flex: 1, backgroundColor: c.surface, borderRadius: 12, padding: 14, alignItems: 'center' },
   deleteBtnText: { fontSize: 14, fontWeight: '600', color: '#ff3b30' },
 

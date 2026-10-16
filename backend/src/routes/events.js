@@ -20,6 +20,7 @@ const getPendingEventInvitations = require('../controllers/events/getPendingEven
 const respondToEventInvitation = require('../controllers/events/respondToEventInvitation');
 const getAvailability = require('../controllers/events/getAvailability');
 const getEventTargets = require('../controllers/events/getEventTargets');
+const createEventShare = require('../controllers/events/createEventShare');
 
 //Events
 router.get("/", verifyToken, getEvents);
@@ -32,6 +33,7 @@ router.get("/:id", verifyToken, getEvent);
 router.post("/create", verifyToken, createEvent);
 router.put("/:id", verifyToken, updateEvent);
 router.delete("/:id", verifyToken, deleteEvent);
+router.post("/:id/share", verifyToken, createEventShare);
 
 //Attendee
 router.post("/:id/attendees", verifyToken, addAttendee);

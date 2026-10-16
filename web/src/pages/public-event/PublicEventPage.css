@@ -1,0 +1,128 @@
+/* ── Public event page ───────────────────────────────────────────────────── */
+/* Shown to anyone who opens a share link — no login required.               */
+
+.pe-page {
+  min-height: 100vh;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  padding: 40px 16px 60px;
+  background: #f2f2f7;
+  font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
+}
+
+/* Brand wordmark */
+.pe-brand {
+  font-size: 18px;
+  font-weight: 700;
+  color: #1a8fa8;
+  letter-spacing: -0.3px;
+  margin-bottom: 32px;
+}
+
+/* Loading / error / expired states */
+.pe-state {
+  text-align: center;
+  margin-top: 48px;
+  color: #8e8e93;
+}
+
+.pe-state--warn .pe-state-title {
+  font-size: 18px;
+  font-weight: 600;
+  color: #1d1d1f;
+  margin: 0 0 6px;
+}
+
+.pe-state--warn .pe-state-sub {
+  font-size: 14px;
+  color: #8e8e93;
+  margin: 0;
+}
+
+/* Event card */
+.pe-card {
+  width: 100%;
+  max-width: 480px;
+  background: #ffffff;
+  border-radius: 16px;
+  padding: 24px 20px;
+  box-shadow: 0 1px 4px rgba(0, 0, 0, 0.08);
+}
+
+.pe-title {
+  font-size: 22px;
+  font-weight: 700;
+  color: #1d1d1f;
+  margin: 0 0 4px;
+  line-height: 1.2;
+}
+
+.pe-organiser {
+  font-size: 13px;
+  color: #8e8e93;
+  margin: 0 0 16px;
+}
+
+.pe-divider {
+  height: 1px;
+  background: #e5e5ea;
+  margin: 16px 0;
+}
+
+/* Info rows */
+.pe-row {
+  display: flex;
+  gap: 12px;
+  padding: 8px 0;
+  border-bottom: 1px solid #f2f2f7;
+}
+
+.pe-row:last-child {
+  border-bottom: none;
+}
+
+.pe-row--notes {
+  align-items: flex-start;
+}
+
+.pe-label {
+  flex: 0 0 72px;
+  font-size: 12px;
+  font-weight: 600;
+  color: #8e8e93;
+  text-transform: uppercase;
+  letter-spacing: 0.4px;
+  padding-top: 1px;
+}
+
+.pe-value {
+  flex: 1;
+  font-size: 14px;
+  color: #1d1d1f;
+  line-height: 1.4;
+}
+
+/* Footer */
+.pe-footer {
+  margin-top: 28px;
+  font-size: 12px;
+  color: #aeaeb2;
+}
+
+.pe-footer-link {
+  color: #1a8fa8;
+  text-decoration: none;
+}
+
+/* Dark mode */
+@media (prefers-color-scheme: dark) {
+  .pe-page     { background: #1c1c1e; }
+  .pe-card     { background: #2c2c2e; box-shadow: none; }
+  .pe-title    { color: #ffffff; }
+  .pe-value    { color: #ebebf5; }
+  .pe-divider  { background: #3a3a3c; }
+  .pe-row      { border-bottom-color: #3a3a3c; }
+  .pe-row:last-child { border-bottom: none; }
+  .pe-state--warn .pe-state-title { color: #ffffff; }
+}

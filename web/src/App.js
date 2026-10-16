@@ -9,6 +9,7 @@ import GroupPage from './pages/group/GroupPage';
 import PrivateRoute from './components/common/PrivateRoute';
 import ForgotPassword from './pages/forgot-password/ForgotPassword';
 import ResetPassword from './pages/reset-password/ResetPassword';
+import PublicEventPage from './pages/public-event/PublicEventPage';
 import './App.css';
 
 
@@ -25,6 +26,7 @@ function App() {
           <Route path="/dashboard" element={<PrivateRoute><Dashboard /></PrivateRoute>} />
           <Route path="/profile/:userId" element={<PrivateRoute><MemberProfile /></PrivateRoute>} />
           <Route path="/group/:groupId" element={<PrivateRoute><GroupPage /></PrivateRoute>} />
+          <Route path="/e/:token" element={<PublicEventPage />} />
         </Routes>
       </Router>
     </AppProviders>

@@ -1132,7 +1132,7 @@ export default function HomeScreen({ navigation, route }) {
             hamburger and swallowing its taps (style.pointerEvents on Text
             isn't honoured there). */}
         <View style={styles.headerTitleWrap} pointerEvents="none">
-          <Text style={styles.headerTitleText}>WHEN</Text>
+          <Text style={styles.headerTitleText}>it's for us</Text>
         </View>
 
         {/* Right — search + chat + bell */}

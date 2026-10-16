@@ -10,6 +10,7 @@ import {
   Alert,
   Modal,
   FlatList,
+  Share,
 } from 'react-native';
 import { SafeAreaView, useSafeAreaInsets } from 'react-native-safe-area-context';
 import { Ionicons } from '@expo/vector-icons';
@@ -362,6 +363,17 @@ export default function EventDetailsScreen({ route, navigation }) {
         },
       ]
     );
+  };
+
+  const handleShare = async () => {
+    try {
+      const res = await API.post(`/events/${eventId}/share`);
+      const url = res.data.share?.url;
+      if (!url) return;
+      await Share.share({ message: url });
+    } catch (err) {
+      Alert.alert(t('common.error'), err.response?.data?.message || t('common.something_went_wrong'));
+    }
   };
 
   // Re-fetch when returning from EventFormScreen so edits show immediately
@@ -728,6 +740,11 @@ export default function EventDetailsScreen({ route, navigation }) {
             >
               <Text style={styles.editBtnText}>{t('common.edit')}</Text>
             </TouchableOpacity>
+            {!event.is_private && (
+              <TouchableOpacity style={styles.shareBtn} onPress={handleShare}>
+                <Text style={styles.shareBtnText}>{t('common.share')}</Text>
+              </TouchableOpacity>
+            )}
             <TouchableOpacity style={styles.deleteBtn} onPress={handleDelete}>
               <Text style={styles.deleteBtnText}>{t('common.delete')}</Text>
             </TouchableOpacity>

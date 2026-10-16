@@ -418,6 +418,15 @@
   background: #e8e8ed;
 }
 
+.event-action-btn.share {
+  background: #ffffff;
+  color: #1a8fa8;
+}
+
+.event-action-btn.share:hover {
+  background: rgba(26, 143, 168, 0.08);
+}
+
 .event-action-btn.delete {
   background: #ffffff;
   color: #ff3b30;
@@ -453,6 +462,8 @@
   :root:not([data-theme="light"]) .event-details-subtask-add input::placeholder { color: #3a3a3c; }
   :root:not([data-theme="light"]) .event-action-btn.edit { background: #2c2c2e; color: #fff; }
   :root:not([data-theme="light"]) .event-action-btn.edit:hover { background: #3a3a3c; }
+  :root:not([data-theme="light"]) .event-action-btn.share { background: #2c2c2e; color: #1a8fa8; }
+  :root:not([data-theme="light"]) .event-action-btn.share:hover { background: rgba(26,143,168,0.15); }
   :root:not([data-theme="light"]) .event-action-btn.delete { background: #2c2c2e; }
   :root:not([data-theme="light"]) .event-action-btn.delete:hover { background: rgba(255,59,48,0.12); }
 }
@@ -498,6 +509,10 @@
 :root[data-theme="dark"] .event-action-btn.edit { background: #2c2c2e; color: #fff; }
 
 :root[data-theme="dark"] .event-action-btn.edit:hover { background: #3a3a3c; }
+
+:root[data-theme="dark"] .event-action-btn.share { background: #2c2c2e; color: #1a8fa8; }
+
+:root[data-theme="dark"] .event-action-btn.share:hover { background: rgba(26,143,168,0.15); }
 
 :root[data-theme="dark"] .event-action-btn.delete { background: #2c2c2e; }
 

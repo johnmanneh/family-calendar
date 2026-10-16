@@ -14,6 +14,7 @@ const notificationRoutes = require('./routes/notifications');
 const scanRoutes = require('./routes/scan');
 const chatRoutes = require('./routes/chat');
 const joinRoutes = require('./routes/join');
+const publicRoutes = require('./routes/public');
 
 function createApp() {
   const app = express();
@@ -37,6 +38,7 @@ function createApp() {
   app.use('/api/chat', chatRoutes);
   app.use('/api/join', joinRoutes);
   app.use('/api/scan', scanRoutes);
+  app.use('/api/public', publicRoutes);
 
   app.get('/', (req, res) => res.json({ message: 'Family Calendar API is running' }));
 

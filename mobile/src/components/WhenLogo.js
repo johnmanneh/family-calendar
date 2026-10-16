@@ -20,7 +20,7 @@ export default function WhenLogo({ compact = false }) {
         style={compact ? styles.barCompact : styles.bar}
       />
 
-      <Text style={compact ? styles.textCompact : styles.text}>WHEN</Text>
+      <Text style={compact ? styles.textCompact : styles.text}>it's for us</Text>
 
       <LinearGradient
         colors={GRADIENT_COLORS}

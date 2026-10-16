@@ -182,6 +182,17 @@ export const EventProvider = ({ children }) => {
   };
   //
   //
+  const shareEvent = async (eventId, options = {}) => {
+    try {
+      const res = await API.post(`/events/${eventId}/share`, options);
+      return res.data.share;
+    } catch (err) {
+      setError(err.response?.data?.message || 'Failed to create share link');
+      return null;
+    }
+  };
+  //
+  //
   const updateEvent = async (eventId, eventData) => {
     try {
       await API.put(`/events/${eventId}`, sanitizeData(eventData));
@@ -497,6 +508,7 @@ export const EventProvider = ({ children }) => {
         createEvent,
         createStandaloneTask,
         deleteEvent,
+        shareEvent,
         updateEvent,
         deleteTask,
         updateTaskDueDate,

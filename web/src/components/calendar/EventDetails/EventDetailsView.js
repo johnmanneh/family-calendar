@@ -18,6 +18,7 @@ const EventDetailsView = () => {
     attendees,
     tasks,
     deleteEvent,
+    shareEvent,
     deleteTask,
     fetchTasks,
     addSubTask, deleteSubTask,
@@ -62,6 +63,20 @@ const EventDetailsView = () => {
 
   const handleDelete = async () => { await deleteEvent(selectedEvent.id); };
   const handleEdit = () => openEditEvent();
+
+  const [shareCopied, setShareCopied] = React.useState(false);
+  const handleShare = async () => {
+    const share = await shareEvent(selectedEvent.id);
+    if (!share) return;
+    try {
+      await navigator.clipboard.writeText(share.url);
+      setShareCopied(true);
+      setTimeout(() => setShareCopied(false), 2500);
+    } catch {
+      // clipboard blocked — just show the URL in a prompt as fallback
+      window.prompt('Copy this link:', share.url);
+    }
+  };
 
   const handleAddSubTask = async taskId => {
     const title = subTaskInputs[taskId];
@@ -323,6 +338,11 @@ const EventDetailsView = () => {
       ) : isMine && !hideActions && (
         <div className="event-details-actions">
           <button className="event-action-btn edit" onClick={handleEdit}>Edit</button>
+          {!selectedEvent.extendedProps?.is_private && (
+            <button className="event-action-btn share" onClick={handleShare}>
+              {shareCopied ? 'Copied!' : 'Share'}
+            </button>
+          )}
           <button className="event-action-btn delete" onClick={handleDelete}>Delete</button>
         </div>
       )}
