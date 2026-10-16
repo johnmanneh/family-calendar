@@ -12,10 +12,12 @@ const BRAND_DOT = '#005CFD';   // the blue dot from the app icon
 export default function AppIconButton({ onPress, size = 36 }) {
   const dark = useColorScheme() === 'dark';
   const fs  = size * 0.34;     // text fills the tile, like the app icon
-  const lh  = fs * 0.86;       // lines sit close together
+  const lh  = fs * 1.15;       // full line height, so letter tops aren't clipped (iOS)
+  const pull = -fs * 0.36;     // …then overlap the lines to keep them tight
   const dot = fs * 0.36;       // clearly visible blue dot
   const textColor = dark ? '#fff' : '#111';
   const word = { fontSize: fs, lineHeight: lh, color: textColor };
+  const next = { marginTop: pull };
   return (
     <TouchableOpacity onPress={onPress} accessibilityRole="button" accessibilityLabel="Menu"
       hitSlop={{ top: 8, bottom: 8, left: 8, right: 8 }} style={{ padding: 4 }}>
@@ -25,11 +27,11 @@ export default function AppIconButton({ onPress, size = 36 }) {
         borderColor: dark ? '#3a3a3c' : 'rgba(0,0,0,0.06)',
       }]}>
         <Text style={[styles.word, word]}>it{'\u2019'}s</Text>
-        <Text style={[styles.word, word]}>for</Text>
-        <View style={styles.lastLine}>
+        <Text style={[styles.word, word, next]}>for</Text>
+        <View style={[styles.lastLine, next]}>
           <Text style={[styles.word, word]}>us</Text>
           <View style={{ width: dot, height: dot, borderRadius: dot / 2, backgroundColor: BRAND_DOT,
-            marginLeft: dot * 0.25, marginBottom: lh * 0.14 }} />
+            marginLeft: dot * 0.25, marginBottom: lh * 0.24 }} />
         </View>
       </View>
     </TouchableOpacity>
