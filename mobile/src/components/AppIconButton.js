@@ -10,8 +10,7 @@ import { useColorScheme } from '../context/ThemeContext';
 
 const BRAND_DOT = '#005CFD';   // the blue dot from the app icon
 
-// Clean wordmark with three short menu lines in front (so it still reads as
-// the menu button): no frame, no fill — just the lines, the text (normal text colour,
+// Clean wordmark: no frame, no fill — just the text (normal text colour,
 // white in dark mode) and the blue brand dot, blending into the header.
 export default function AppIconButton({ onPress, size = 42 }) {
   const fs  = size * 0.36;     // three lines fill the header height
@@ -24,21 +23,12 @@ export default function AppIconButton({ onPress, size = 42 }) {
   const textColor = useColorScheme() === 'dark' ? '#fff' : '#1d1d1f';
   const word = { fontSize: fs, lineHeight: lh, color: textColor };
   const next = { marginTop: pull };
-  const line = {
-    width: fs * 0.8, height: Math.max(2, fs * 0.13), borderRadius: fs,
-    marginRight: fs * 0.32,
-    // centre of the lowercase letters sits slightly below the line-box centre
-    transform: [{ translateY: fs * 0.06 }],
-  };
   return (
     <TouchableOpacity onPress={onPress} accessibilityRole="button" accessibilityLabel={t('common.menu')}
       hitSlop={{ top: 8, bottom: 8, left: 8, right: 8 }} style={{ padding: 4 }}>
       <View style={[styles.tile, { height: size }]}>
         {['it\u2019s', 'for', 'us'].map((w, i) => (
           <View key={w} style={[styles.row, i > 0 && next]}>
-            {/* Menu line: same length and gap on every row, centred on the
-                lowercase letters (x-height), so the three lines read as ☰ */}
-            <View style={[styles.line, line]} />
             {/* allowFontScaling off: the logo must not grow with the phone's
                 large-text setting, or it overflows the header */}
             <Text style={[styles.word, word]} allowFontScaling={false}>{w}</Text>
@@ -59,5 +49,4 @@ const styles = StyleSheet.create({
   },
   word: { fontWeight: '800', letterSpacing: -0.5, includeFontPadding: false },
   row:  { flexDirection: 'row', alignItems: 'center' },
-  line: { backgroundColor: '#8e8e93' },   // same grey as the header icons
 });
