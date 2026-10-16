@@ -5,21 +5,19 @@
  */
 import React from 'react';
 import { View, Text, TouchableOpacity, StyleSheet } from 'react-native';
-import { useColorScheme } from '../context/ThemeContext';
 
 const BRAND_DOT = '#005CFD';   // the blue dot from the app icon
 
-// Outline style to match the header icons (search, chat, bell): thin grey
-// rounded frame, no fill, no shadow.
+// Same look as the other header icons (search, chat, bell): thin grey
+// outline frame, grey text, no fill, no shadow. Only the brand dot is blue.
 const ICON_GREY = '#8e8e93';
 
 export default function AppIconButton({ onPress, size = 42 }) {
-  const dark = useColorScheme() === 'dark';
   const fs  = size * 0.31;     // text fills the tile, like the app icon
   const lh  = fs * 1.15;       // full line height, so letter tops aren't clipped (iOS)
   const pull = -fs * 0.36;     // …then overlap the lines to keep them tight
   const dot = fs * 0.36;       // clearly visible blue dot
-  const textColor = dark ? '#fff' : '#111';
+  const textColor = ICON_GREY;
   const word = { fontSize: fs, lineHeight: lh, color: textColor };
   const next = { marginTop: pull };
   return (
@@ -46,6 +44,6 @@ const styles = StyleSheet.create({
     alignItems: 'flex-start', justifyContent: 'center',
     paddingLeft: '14%', borderWidth: 1.6, backgroundColor: 'transparent',
   },
-  word: { fontWeight: '900', letterSpacing: -0.5, includeFontPadding: false },
+  word: { fontWeight: '800', letterSpacing: -0.5, includeFontPadding: false },
   lastLine: { flexDirection: 'row', alignItems: 'flex-end' },
 });
