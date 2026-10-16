@@ -15,7 +15,7 @@ module.exports = async (req, res) => {
     show_location = true,
     allow_rsvp    = false,
     expires_days  = 7   // default: link expires 7 days after the event
-  } = req.body;
+  } = req.body || {};
 
   try {
     // 1. Load the event — confirm it exists and belongs to this user
