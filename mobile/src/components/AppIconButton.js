@@ -5,19 +5,18 @@
  */
 import React from 'react';
 import { View, Text, TouchableOpacity, StyleSheet } from 'react-native';
+import { useColorScheme } from '../context/ThemeContext';
 
 const BRAND_DOT = '#005CFD';   // the blue dot from the app icon
 
-// Clean wordmark: no frame, no fill — just the grey text (same grey as the
-// header icons) and the blue brand dot, blending into the header.
-const ICON_GREY = '#8e8e93';
-
+// Clean wordmark: no frame, no fill — just the text (normal text colour,
+// white in dark mode) and the blue brand dot, blending into the header.
 export default function AppIconButton({ onPress, size = 42 }) {
   const fs  = size * 0.36;     // three lines fill the header height
   const lh  = fs * 1.15;       // full line height, so letter tops aren't clipped (iOS)
-  const pull = -fs * 0.36;     // …then overlap the lines to keep them tight
+  const pull = -fs * 0.26;     // …then pull the lines a little closer (not touching)
   const dot = fs * 0.36;       // clearly visible blue dot
-  const textColor = ICON_GREY;
+  const textColor = useColorScheme() === 'dark' ? '#fff' : '#1d1d1f';
   const word = { fontSize: fs, lineHeight: lh, color: textColor };
   const next = { marginTop: pull };
   return (
