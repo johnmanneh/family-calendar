@@ -32,6 +32,7 @@
 | `group_invitations` | id, group_id, user_id, invited_by, status (pending/accepted/denied), created_at |
 | `tasks` | id, event_id, assigned_to, title, position, is_standalone, due_date, completed, created_by, created_at, status, counter_offer, creator_acknowledged, last_counter_by, assignee_acknowledged |
 | `sub_tasks` | id, task_id, title, created_at |
+| `event_shares` | id, event_id, token, created_by, expires_at, revoked_at, show_notes, show_location, allow_rsvp, created_at |
 
 ### Migrations
 
@@ -64,6 +65,7 @@
 | `025_create_notifications.sql` | notifications table (id, user_id, type, title, body, data JSONB, is_read, created_at) |
 | `026_create_messages.sql` | messages table (id, family_id, user_id, body, created_at) for family chat |
 | `028_merge_solo_families.sql` | data migration — merges solo families when a user joins a larger one |
+| `033_create_event_shares.sql` | event_shares table — token, expiry, revoked_at, show_notes, show_location, allow_rsvp |
 
 ### Grant Permissions (run after every migration)
 ```sql
@@ -109,6 +111,8 @@ backend/src/
 │   │   ├── getEvent.js             (allows access if event is in user's family OR shared into a group they're in;
 │   │   │                            resolves family by member count DESC — multi-family safe)
 │   │   ├── deleteEvent.js          (broadcasts event_update)
+│   │   ├── createEventShare.js     (POST /:id/share — creator only, private events blocked; crypto.randomBytes(32) token; default 7-day expiry; req.body || {} guards empty mobile POST)
+│   │   ├── getPublicEvent.js       (GET /api/public/events/:token — no auth; checks revoked_at + expires_at; returns minimal fields only, respects show_notes/show_location)
 │   │   └── eventAttendee/
 │   │       ├── addAttendee.js
 │   │       ├── removeAttendee.js
@@ -210,6 +214,9 @@ DELETE /api/groups/:id/members/:userId (NEW — admin only, cannot remove self o
 POST   /api/groups/events/:id/share
 DELETE /api/groups/events/:id/share/:groupId
 
+PUBLIC (no auth)
+GET    /api/public/events/:token          (fetch shared event by token — returns minimal fields, respects show_notes/show_location)
+
 JOIN (unified)
 POST   /api/join                      (NEW — single endpoint: joins family or group by invite code)
 
@@ -239,7 +246,7 @@ GET    /uploads/avatars/:filename    (served directly by Express)
 
 See `docs/SCAN.md` for full scan feature documentation (AI provider, endpoints, security).
 Planned: PDF and email import into the same review flow — see `docs/architecture/04-document-email-import.md`.
-Planned: single-event sharing, driver/bring-list fields and RSVP — see `docs/architecture/05-event-sharing-logistics.md`.
+Single-event sharing live — see step 32 in Completed Steps.
 
 ---
 
@@ -260,6 +267,8 @@ web/src/
 │   ├── login/Login.js
 │   ├── register/Register.js        (create/join family inline)
 │   ├── dashboard/Dashboard.js
+│   ├── public-event/
+│   │   └── PublicEventPage.js      (/e/:token — no auth; fetches GET /api/public/events/:token; loading/ok/expired/not_found states)
 │   └── member/
 │       ├── MemberProfile.js        (photo upload, color picker, circle toggle, profile info)
 │       └── MemberColors.js         (18 colors)
@@ -592,6 +601,14 @@ export const CATEGORIES = [
 | — | `ListCard` — reusable list row: coloured left stripe, title + subtitle, optional badge pill or right slot; pressable or static | ✅ Done |
 | — | `SectionHeader` — uppercase spaced label exported from ListCard; theme-aware muted colour | ✅ Done |
 | — | GroupsScreen header migrated to use `<TopCard>` — consistent floating card style across screens | ✅ Done |
+| 32 | 🔗 Single event sharing — share link for any non-private event | ✅ Done |
+| — | Migration 033: `event_shares` table (token, expires_at, revoked_at, show_notes, show_location, allow_rsvp) | ✅ Done |
+| — | `POST /api/events/:id/share` — creator only, private events blocked, 64-char secure token via `crypto.randomBytes(32)`, 7-day default expiry | ✅ Done |
+| — | `GET /api/public/events/:token` — no auth, validates expiry + revoked_at, returns minimal fields (no IDs or emails) | ✅ Done |
+| — | Web: Share button in EventDetailsView (creator + non-private only) — copies URL to clipboard, "Copied!" feedback for 2.5s | ✅ Done |
+| — | Web: `/e/:token` public page — standalone React route, no login required, handles loading/expired/not-found states | ✅ Done |
+| — | Mobile: Share button in EventDetailsScreen (creator + non-private only) — opens native iOS/Android share sheet via `Share.share()` | ✅ Done |
+| — | Bug fix: `req.body \|\| {}` guards against empty POST from mobile (axios omits Content-Type when no body passed) | ✅ Done |
 
 ---
 
@@ -684,3 +701,4 @@ Mutation happens
 | Backend changes not live on mobile | Mobile hits Railway (production) — always push to GitHub to deploy; local changes have no effect |
 | Duplicate API calls on page load | `fetchEvents` previously fetched tasks/notifications inline — now removed, SSE handles those |
 | SSE stale closure (wrong event's tasks fetched) | Use `selectedEventRef.current` inside SSE handler, not `selectedEvent` directly |
+| `req.body` undefined in controller | Mobile `API.post(url)` with no body → axios omits `Content-Type: application/json` → `express.json()` skips parsing → `req.body` is undefined. Fix: `const { x = default } = req.body \|\| {}` |
