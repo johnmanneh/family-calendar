@@ -7,6 +7,7 @@ const leaveFamily = require('../controllers/family/leaveFamily');
 const renameFamily = require('../controllers/family/renameFamily');
 const { createChild, updateChild, removeChild, uploadChildAvatar } = require('../controllers/family/children');
 const { getPermissions, setPermission } = require('../controllers/family/permissions');
+const { listPickupPeople, addPickupPerson, updatePickupPerson, removePickupPerson } = require('../controllers/family/pickupPeople');
 const getFamily = require('../controllers/family/getFamily');
 const updateMemberColor = require('../controllers/family/updateMemberColor');
 const updateMemberCircle = require('../controllers/family/updateMemberCircle');
@@ -29,6 +30,11 @@ router.put('/permissions', verifyToken, setPermission);
 router.put('/member/color', verifyToken, updateMemberColor);
 router.put('/member/circle', verifyToken, updateMemberCircle);
 router.put('/member/relationship', verifyToken, updateMemberRelationship);
+
+router.get('/pickup-people', verifyToken, listPickupPeople);
+router.post('/pickup-people', verifyToken, addPickupPerson);
+router.patch('/pickup-people/:id', verifyToken, updatePickupPerson);
+router.delete('/pickup-people/:id', verifyToken, removePickupPerson);
 
 router.get('/members/:userId/events', verifyToken, getMemberEvents);
 router.get('/members/:userId/tasks', verifyToken, getMemberTasks);
