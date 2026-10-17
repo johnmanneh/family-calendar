@@ -133,3 +133,29 @@ Key functions:
 ## Express Trust Proxy
 
 Railway runs behind a load balancer. `app.set('trust proxy', 1)` is set in `createApp.js` so that `express-rate-limit` can read the real client IP from the `X-Forwarded-For` header correctly.
+
+---
+
+## Groq rate limits (to do before launch)
+
+**Problem (seen 17 Oct 2026):** the free (`on_demand`) tier allows only about **1,000 output tokens
+per minute** for `qwen/qwen3.8-27b`. One scan used 783, so a second scan a minute later got
+HTTP 429 (`rate_limit_exceeded`). A full two-week plan with many entries can need more than
+1,000 output tokens by itself.
+
+**Done:** the server retries once after Groq's `retry-after` (max 15 s) and otherwise answers
+429 "Too many scans right now — please try again in a minute" (commit 64d6a19, tested in
+`tests/scan.test.js`).
+
+**Planned, in this order (John: "we will do it later"):**
+
+1. **Fewer tokens per scan** (no cost): shorten the AI answer to only the fields the app uses —
+   drop or shorten `evidence`, keep `notes` short, compact JSON, lower `max_tokens`, and make
+   sure the model doesn't spend output tokens on hidden reasoning. Measure the tokens per scan
+   before and after (estimate: 30–50% fewer, not measured yet).
+2. **Groq Developer plan before launch** (the real fix): add a card in the Groq console under
+   Settings → Billing. Much higher limits, pay per use (check Groq's pricing page for current
+   rates). This is the cost the scan packs (3 free, then paid — see the scan-packs plan) cover.
+   Check the exact limits under Settings → Limits afterwards.
+3. **Backup model** (later, once there are real users): if Groq answers 429 or is down, try a
+   second AI service automatically. Needs a second account and API key.
