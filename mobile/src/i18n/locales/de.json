@@ -182,6 +182,7 @@
     "empty": "Noch keine Benachrichtigungen"
   },
   "chat": {
+    "title_named": "{{name}} Chat",
     "title": "Familienchat",
     "empty": "Noch keine Nachrichten — sag Hallo 👋",
     "placeholder": "Nachricht…",

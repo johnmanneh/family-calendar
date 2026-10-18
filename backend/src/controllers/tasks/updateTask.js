@@ -1,4 +1,5 @@
 const pool = require('../../config/db');
+const { ACTIVE_FAMILY_ORDER } = require('../../utils/activeFamily');
 const access = require('../../utils/access');
 const { successResponse, errorResponse } = require('../../utils/response/responseHandlers');
 const { broadcast } = require('../../utils/sseClients');
@@ -51,7 +52,7 @@ const updateTask = async (req, res) => {
 
     // Broadcast to family
     const memberRes = await pool.query(
-      `SELECT family_id FROM family_members WHERE user_id = $1 LIMIT 1`,
+      `SELECT fm.family_id FROM family_members fm WHERE fm.user_id = $1 ORDER BY ${ACTIVE_FAMILY_ORDER} LIMIT 1`,
       [userId]
     );
     if (memberRes.rowCount > 0) {

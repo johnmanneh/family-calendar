@@ -54,6 +54,14 @@ const expect=(label, got, want)=>{ const ok = want instanceof Function ? want(go
   expect("events list (B active) has B's event", titles.includes('Zoo'), true);
   expect("…and not A's event, even accepted as attendee", titles.includes('A party'), false);
 
+  // Chat follows the active family (it used to take an arbitrary family)
+  await q(`INSERT INTO messages (family_id,user_id,body) VALUES (1,2,'hello from A')`);
+  r=await call(C('chat/sendMessage'),{user:john,body:{body:'hi Oma'}});
+  expect('chat message → saved in the active family', (await q("SELECT family_id FROM messages WHERE body='hi Oma'")).rows[0]?.family_id, 2);
+  expect('…and the broadcast says which family', r.b.message?.family_id, 2);
+  r=await call(C('chat/getMessages'),{user:john});
+  expect("chat history shows only the active family's messages", (r.b.messages||[]).map(m=>m.body).join(','), 'hi Oma');
+
   // Switch active to A → new child goes to A
   await q('UPDATE family_members SET is_active=false WHERE user_id=1');
   await q('UPDATE family_members SET is_active=true WHERE user_id=1 AND family_id=1');

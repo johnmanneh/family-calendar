@@ -2,6 +2,7 @@ import React, { useState, useEffect, useRef, useCallback } from 'react';
 import { useEvents } from '../../../context/EventContext';
 import { useAuth } from '../../../context/AuthContext';
 import { useUI } from '../../../context/UIContext';
+import { useFamily } from '../../../context/FamilyContext';
 import { parseDateMentions } from '../../../utils/parseDateMentions';
 import './Sidebar.css';
 
@@ -23,6 +24,7 @@ function initials(msg) {
 // startOpen: used by the phone layout, where the chat icon opens this as a full sheet
 const SidebarChat = ({ startOpen = false }) => {
   const { fetchMessages, sendMessage, onChatMessage } = useEvents();
+  const { family } = useFamily();
   const { user } = useAuth();
   const { openNewEvent } = useUI();
 
@@ -46,12 +48,14 @@ const SidebarChat = ({ startOpen = false }) => {
       load();
       setChatUnread(0);
     }
-  }, [open, load]);
+  }, [open, load, family?.id]);   // reload when switching family
 
   // Register SSE callback — appends incoming messages live
   // Also increments unread badge when panel is closed and message is from someone else
   useEffect(() => {
     onChatMessage((msg) => {
+      // Live updates arrive for all your families — only this family's chat counts
+      if (msg.family_id && family?.id && Number(msg.family_id) !== Number(family.id)) return;
       setMessages(prev => {
         if (prev.some(m => m.id === msg.id)) return prev;
         return [...prev, msg];
@@ -60,7 +64,7 @@ const SidebarChat = ({ startOpen = false }) => {
         setChatUnread(prev => prev + 1);
       }
     });
-  }, [onChatMessage, open, user]);
+  }, [onChatMessage, open, user, family?.id]);
 
   // Scroll to bottom whenever messages change (and panel is open)
   useEffect(() => {
@@ -102,7 +106,7 @@ const SidebarChat = ({ startOpen = false }) => {
         onClick={() => setOpen(o => !o)}
       >
         <span className="sidebar-chat-label">
-          <Icon name="chat" size={14} /> Family Chat
+          <Icon name="chat" size={14} /> {family?.name && !family?.is_personal ? `${family.name} chat` : 'Family Chat'}
           {chatUnread > 0 && (
             <span className="sidebar-notifications-badge">
               {chatUnread > 99 ? '99+' : chatUnread}

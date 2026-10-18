@@ -181,6 +181,7 @@
     "empty": "No notifications yet"
   },
   "chat": {
+    "title_named": "{{name}} chat",
     "title": "Family Chat",
     "empty": "No messages yet — say hi 👋",
     "placeholder": "Message…",

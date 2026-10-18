@@ -112,7 +112,7 @@ const Dashboard = () => {
         <div className="dashboard-sheet">
           <div className="dashboard-sheet-header">
             <button className="dashboard-details-back" onClick={() => setSheet(null)}>← Back</button>
-            <span className="dashboard-sheet-title">{sheet === "chat" ? "Family Chat" : "Notifications"}</span>
+            <span className="dashboard-sheet-title">{sheet === "chat" ? (family?.name && !family?.is_personal ? `${family.name} chat` : "Family Chat") : "Notifications"}</span>
             <span style={{ width: 60 }} />
           </div>
           <div className="dashboard-sheet-body" onClick={e => {

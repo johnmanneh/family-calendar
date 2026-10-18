@@ -16,6 +16,7 @@ import { useTranslation } from 'react-i18next';
 import API, { SERVER_URL } from '../api/axios';
 import { useAuth } from '../context/AuthContext';
 import { useSSE } from '../context/SSEContext';
+import { useFamily } from '../context/FamilyContext';
 import { parseDateMentions } from '../utils/parseDateMentions';
 import { useStyles } from '../styles/ChatScreen.styles';
 
@@ -97,6 +98,7 @@ export default function ChatScreen({ navigation }) {
   const styles          = useStyles();
   const { user }        = useAuth();
   const { lastChatMsg } = useSSE();
+  const { family }      = useFamily();
 
   const [messages, setMessages] = useState([]);
   const [draft,    setDraft]    = useState('');
@@ -121,6 +123,8 @@ export default function ChatScreen({ navigation }) {
   // Live updates via SSE — append incoming message, dedup by id
   useEffect(() => {
     if (!lastChatMsg) return;
+    // Live updates arrive for all your families — only show this family's
+    if (lastChatMsg.family_id && family?.id && Number(lastChatMsg.family_id) !== Number(family.id)) return;
     setMessages(prev => {
       if (prev.some(m => m.id === lastChatMsg.id)) return prev;
       return [...prev, lastChatMsg];
@@ -161,7 +165,9 @@ export default function ChatScreen({ navigation }) {
           <TouchableOpacity style={styles.backBtn} onPress={() => navigation.goBack()}>
             <Ionicons name="chevron-back" size={24} color="#1a8fa8" />
           </TouchableOpacity>
-          <Text style={styles.headerTitle}>{t('chat.title')}</Text>
+          <Text style={styles.headerTitle} numberOfLines={1}>
+            {family?.name && !family?.is_personal ? t('chat.title_named', { name: family.name }) : t('chat.title')}
+          </Text>
           <View style={styles.headerSpacer} />
         </View>
       </TopCard>

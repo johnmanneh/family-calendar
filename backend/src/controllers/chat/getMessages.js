@@ -1,4 +1,5 @@
 const pool = require('../../config/db');
+const { ACTIVE_FAMILY_ORDER } = require('../../utils/activeFamily');
 const { successResponse, errorResponse } = require('../../utils/response/responseHandlers');
 
 // GET /api/chat — last 50 messages for the user's family, oldest-first for display
@@ -8,7 +9,7 @@ const getMessages = async (req, res) => {
   try {
     // Resolve the user's family_id
     const familyRes = await pool.query(
-      `SELECT family_id FROM family_members WHERE user_id = $1 LIMIT 1`,
+      `SELECT fm.family_id FROM family_members fm WHERE fm.user_id = $1 ORDER BY ${ACTIVE_FAMILY_ORDER} LIMIT 1`,
       [userId]
     );
     if (!familyRes.rows.length) {

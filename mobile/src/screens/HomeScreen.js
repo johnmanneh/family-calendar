@@ -960,6 +960,7 @@ export default function HomeScreen({ navigation, route }) {
   useEffect(() => {
     if (!lastChatMsg) return;
     if (Number(lastChatMsg.user_id) === Number(user?.id)) return;
+    if (lastChatMsg.family_id && family?.id && Number(lastChatMsg.family_id) !== Number(family.id)) return;
     setChatUnread(prev => prev + 1);
   }, [lastChatMsg]);
 

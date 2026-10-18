@@ -1,4 +1,5 @@
 const pool = require('../../config/db');
+const { ACTIVE_FAMILY_ORDER } = require('../../utils/activeFamily');
 const { broadcast } = require('../../utils/sseClients');
 const { successResponse, errorResponse } = require('../../utils/response/responseHandlers');
 
@@ -14,7 +15,7 @@ const sendMessage = async (req, res) => {
   try {
     // Resolve family
     const familyRes = await pool.query(
-      `SELECT family_id FROM family_members WHERE user_id = $1 LIMIT 1`,
+      `SELECT fm.family_id FROM family_members fm WHERE fm.user_id = $1 ORDER BY ${ACTIVE_FAMILY_ORDER} LIMIT 1`,
       [userId]
     );
     if (!familyRes.rows.length) {
@@ -50,6 +51,7 @@ const sendMessage = async (req, res) => {
       last_name:  sender.last_name,
       avatar_url: sender.avatar_url,
       color:      sender.color,
+      family_id:  familyId,   // clients ignore messages from their other families
     };
 
     broadcast(familyId, 'chat_message', payload);
