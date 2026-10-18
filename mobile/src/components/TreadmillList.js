@@ -45,14 +45,26 @@ const TOP_TILT    = `${ 60 * TILT_DIR}deg`;   // top edge recedes
 
 const TreadmillContext = createContext(null);
 
+// Neutral style with the same transform shape as the rolling styles, so switching
+// between them always overwrites every value on the native view.
+const FLAT = {
+  opacity: 1,
+  transform: [{ perspective: 700 }, { rotateX: '0deg' }, { scale: 1 }],
+};
+
 // Each FlatList cell. FlatList passes `onLayout` and `style`; we must forward
 // them. layout.y is the row's offset inside the scroll content.
 function TreadmillCell({ children, style, onLayout, ...rest }) {
   const ctx = useContext(TreadmillContext);
   const [layout, setLayout] = useState(null);
 
-  let topStyle = null;      // outer view: rolls away at the TOP edge
-  let bottomStyle = null;   // inner view: rolls under the FAB at the BOTTOM
+  // Start flat and fully visible. These are explicit values, never null: once a
+  // native-driven tilt has been applied, dropping the style does NOT reset the
+  // view on the phone — it keeps the last tilt. That's why short lists stayed
+  // tilted even though they weren't scrollable (they were, for a split second,
+  // while the list was still measuring itself at start-up).
+  let topStyle = FLAT;      // outer view: rolls away at the TOP edge
+  let bottomStyle = FLAT;   // inner view: rolls under the FAB at the BOTTOM
   // Only roll when the list really scrolls. If everything fits on screen there's
   // nothing to roll under the FAB — and a stale/tiny viewport measurement (e.g.
   // after filters change the list, or the keyboard was up) can't tip rows flat.
