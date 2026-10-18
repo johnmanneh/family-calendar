@@ -37,7 +37,7 @@ const createEvent = async (req, res) => {
     const familyMember = await pool.query(
       `SELECT fm.family_id FROM family_members fm
        WHERE fm.user_id = $1
-       ORDER BY (SELECT COUNT(*) FROM family_members WHERE family_id = fm.family_id) DESC
+       ORDER BY fm.is_active DESC, (SELECT COUNT(*) FROM family_members WHERE family_id = fm.family_id) DESC
        LIMIT 1`,
       [userId]
     );

@@ -9,6 +9,8 @@ const { createChild, updateChild, removeChild, uploadChildAvatar } = require('..
 const { getPermissions, setPermission } = require('../controllers/family/permissions');
 const { listPickupPeople, addPickupPerson, updatePickupPerson, removePickupPerson } = require('../controllers/family/pickupPeople');
 const getFamily = require('../controllers/family/getFamily');
+const getAllFamilies = require('../controllers/family/getAllFamilies');
+const setActiveFamily = require('../controllers/family/setActiveFamily');
 const updateMemberColor = require('../controllers/family/updateMemberColor');
 const updateMemberCircle = require('../controllers/family/updateMemberCircle');
 const updateMemberRelationship = require('../controllers/family/updateMemberRelationship');
@@ -20,6 +22,8 @@ router.post('/create', verifyToken, createFamily);
 router.post('/join', verifyToken, joinFamily);
 router.delete('/leave', verifyToken, leaveFamily);
 router.get('/', verifyToken, getFamily);
+router.get('/all', verifyToken, getAllFamilies);
+router.patch('/active', verifyToken, setActiveFamily);
 router.put('/name', verifyToken, renameFamily);
 router.post('/children', verifyToken, createChild);
 router.put('/children/:id', verifyToken, updateChild);
