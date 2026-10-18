@@ -11,4 +11,3 @@ CREATE UNIQUE INDEX IF NOT EXISTS family_members_one_active_per_user
   ON family_members (user_id)
   WHERE is_active = true;
 
-GRANT ALL PRIVILEGES ON TABLE family_members TO family_admin;
