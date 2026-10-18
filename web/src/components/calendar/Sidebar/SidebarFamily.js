@@ -157,12 +157,19 @@ const SidebarFamily = () => {
         Share this code to add people: <strong>{family.invite_code}</strong>
       </p>
 
-      {/* Join another family */}
-      {mode === "join" ? form("Family or group code", "Join", true) : mode !== "rename" && (
-        <button className="sidebar-family-switch" onClick={() => open("join")}>
-          <Icon name="logIn" size={13} /> Join another family
-        </button>
-      )}
+      {/* Join or create another family */}
+      {mode === "join" ? form("Family or group code", "Join", true)
+        : mode === "create" ? form("Family name, e.g. Grandparents", "Create")
+        : mode !== "rename" && (
+          <>
+            <button className="sidebar-family-switch" onClick={() => open("join")}>
+              <Icon name="logIn" size={13} /> Join another family
+            </button>
+            <button className="sidebar-family-switch" onClick={() => open("create")}>
+              <Icon name="users" size={13} /> Create another family
+            </button>
+          </>
+        )}
 
       {/* Leave — shown for all non-admin members */}
       {!isAdmin && mode === null && (

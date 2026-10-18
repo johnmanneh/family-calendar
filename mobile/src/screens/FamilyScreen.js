@@ -89,6 +89,7 @@ export default function FamilyScreen({ navigation }) {
   const [nameInput, setNameInput] = useState('');
   const [renaming,  setRenaming]  = useState(false);
   const [busy,      setBusy]      = useState(false);
+  const [creating,  setCreating]  = useState(false);   // "Create a family" form when already in one
   const personal = !!family?.is_personal;
 
   const saveName = async (kind) => {
@@ -100,6 +101,7 @@ export default function FamilyScreen({ navigation }) {
       else await API.put('/family/name', { name });
       await fetchFamily();
       setRenaming(false);
+      setCreating(false);
       setNameInput('');
     } catch (err) {
       Alert.alert(t('common.error'), err.response?.data?.message || t('common.something_went_wrong'));
@@ -293,54 +295,37 @@ export default function FamilyScreen({ navigation }) {
           </TouchableOpacity>
         </View>
 
-        {/* My Families — all families the user belongs to */}
+        {/* My families — switch between them (leaving is in the danger zone below) */}
         {families.length > 0 && (
           <>
-            <Text style={[styles.sectionHeader, { marginTop: 32 }]}>My Families</Text>
-            {families.map(f => {
-              const isActive = Number(f.id) === Number(family?.id);
-              const memberInFamily = members.find(m => Number(m.id) === Number(user?.id));
-              const isFamilyOwner = isActive
-                ? myMembership?.role === 'admin'
-                : f.role === 'admin';
-
-              return (
-                <View key={f.id} style={[styles.card, { marginBottom: 10 }]}>
-                  <View style={{ flexDirection: 'row', alignItems: 'center', marginBottom: 8 }}>
-                    <Text style={[styles.familyName, { flex: 1 }]}>{f.name}</Text>
-                    {isActive && (
-                      <View style={{ backgroundColor: '#1a8fa8', borderRadius: 10, paddingHorizontal: 8, paddingVertical: 2 }}>
-                        <Text style={{ color: '#fff', fontSize: 11, fontWeight: '700' }}>Active</Text>
-                      </View>
-                    )}
-                  </View>
-
-                  {!isActive && (
-                    <TouchableOpacity
-                      style={styles.switchBtn}
-                      onPress={async () => { await switchFamily(f.id); await fetchFamily(); }}
-                    >
-                      <Ionicons name="swap-horizontal-outline" size={16} color="#1a8fa8" />
-                      <Text style={styles.switchBtnText}>Switch to {f.name}</Text>
-                    </TouchableOpacity>
-                  )}
-
-                  {!f.is_personal && (
-                    <>
-                      {!isActive && <View style={[styles.divider, { marginVertical: 10 }]} />}
-                      <TouchableOpacity
-                        style={[styles.leaveBtn, leaving && { opacity: 0.5 }]}
-                        onPress={() => handleLeave(f, isFamilyOwner)}
-                        disabled={leaving}
-                      >
-                        <Ionicons name="exit-outline" size={16} color="#ff3b30" />
-                        <Text style={styles.leaveBtnText}>Leave {f.name}</Text>
-                      </TouchableOpacity>
-                    </>
-                  )}
-                </View>
-              );
-            })}
+            <Text style={[styles.sectionHeader, { marginTop: 32 }]}>{t('family.my_families')}</Text>
+            <View style={styles.card}>
+              {families.map((f, i) => {
+                const isActive = Number(f.id) === Number(family?.id);
+                return (
+                  <React.Fragment key={f.id}>
+                    <View style={{ flexDirection: 'row', alignItems: 'center', paddingVertical: 6 }}>
+                      <Text style={[styles.familyName, { flex: 1, fontSize: 17 }]}>{f.name}</Text>
+                      {isActive ? (
+                        <View style={{ backgroundColor: '#1a8fa8', borderRadius: 10, paddingHorizontal: 8, paddingVertical: 2 }}>
+                          <Text style={{ color: '#fff', fontSize: 11, fontWeight: '700' }}>{t('family.active')}</Text>
+                        </View>
+                      ) : (
+                        <TouchableOpacity
+                          onPress={async () => { await switchFamily(f.id); await fetchFamily(); }}
+                          style={{ flexDirection: 'row', alignItems: 'center', gap: 4 }}
+                          hitSlop={8}
+                        >
+                          <Ionicons name="swap-horizontal-outline" size={16} color="#1a8fa8" />
+                          <Text style={styles.switchBtnText}>{t('family.switch')}</Text>
+                        </TouchableOpacity>
+                      )}
+                    </View>
+                    {i < families.length - 1 && <View style={[styles.divider, { marginVertical: 6 }]} />}
+                  </React.Fragment>
+                );
+              })}
+            </View>
           </>
         )}
 
@@ -350,7 +335,72 @@ export default function FamilyScreen({ navigation }) {
             <Ionicons name="enter-outline" size={16} color="#1a8fa8" />
             <Text style={styles.switchBtnText}>{t('family.join_with_code')}</Text>
           </TouchableOpacity>
+
+          {creating ? (
+            <View style={{ marginTop: 12 }}>
+              <Text style={[styles.leaveDescription, { marginBottom: 8 }]}>{t('family.create_hint')}</Text>
+              <TextInput
+                style={styles.nameInput}
+                placeholder={t('family.name_placeholder')}
+                placeholderTextColor="#aeaeb2"
+                value={nameInput}
+                onChangeText={setNameInput}
+                maxLength={60}
+                autoFocus
+                returnKeyType="done"
+                onSubmitEditing={() => saveName('create')}
+              />
+              <View style={{ flexDirection: 'row', gap: 8 }}>
+                <TouchableOpacity
+                  style={[styles.primaryBtn, { flex: 1 }, !nameInput.trim() && { opacity: 0.5 }]}
+                  disabled={!nameInput.trim() || busy}
+                  onPress={() => saveName('create')}
+                >
+                  {busy ? <ActivityIndicator color="#fff" /> : (
+                    <Text style={styles.primaryBtnText}>{t('family.create')}</Text>
+                  )}
+                </TouchableOpacity>
+                <TouchableOpacity
+                  style={[styles.switchBtn, { flex: 1 }]}
+                  onPress={() => { setCreating(false); setNameInput(''); }}
+                >
+                  <Text style={styles.switchBtnText}>{t('common.cancel')}</Text>
+                </TouchableOpacity>
+              </View>
+            </View>
+          ) : (
+            <TouchableOpacity style={[styles.switchBtn, { marginTop: 10 }]} onPress={() => { setRenaming(false); setNameInput(''); setCreating(true); }}>
+              <Ionicons name="people-outline" size={16} color="#1a8fa8" />
+              <Text style={styles.switchBtnText}>{t('family.create')}</Text>
+            </TouchableOpacity>
+          )}
         </View>
+
+        {/* Danger zone — leaving a family, kept apart at the very bottom */}
+        {families.some(f => !f.is_personal) && (
+          <>
+            <Text style={[styles.sectionHeader, { marginTop: 32 }]}>{t('common.danger_zone')}</Text>
+            <View style={styles.card}>
+              {families.filter(f => !f.is_personal).map((f, i, list) => {
+                const isActive = Number(f.id) === Number(family?.id);
+                const isFamilyOwner = isActive ? myMembership?.role === 'admin' : f.role === 'admin';
+                return (
+                  <React.Fragment key={f.id}>
+                    <TouchableOpacity
+                      style={[styles.leaveBtn, leaving && { opacity: 0.5 }]}
+                      onPress={() => handleLeave(f, isFamilyOwner)}
+                      disabled={leaving}
+                    >
+                      <Ionicons name="exit-outline" size={16} color="#ff3b30" />
+                      <Text style={styles.leaveBtnText}>{t('family.leave_named', { name: f.name })}</Text>
+                    </TouchableOpacity>
+                    {i < list.length - 1 && <View style={{ height: 10 }} />}
+                  </React.Fragment>
+                );
+              })}
+            </View>
+          </>
+        )}
 
         </>)}
 

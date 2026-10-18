@@ -188,6 +188,12 @@
     "date_hint": "📅 Datum tippen, um Termin hinzuzufügen"
   },
   "family": {
+    "my_families": "Meine Familien",
+    "active": "Aktiv",
+    "switch": "Wechseln",
+    "switch_to": "Zu {{name}} wechseln",
+    "leave_named": "{{name}} verlassen",
+    "create_hint": "Gründe eine weitere Familie, z. B. für Grosseltern oder einen zweiten Haushalt.",
     "title": "Familie",
     "your_family": "Deine Familie",
     "invite_label": "Teile diesen Code, um Personen zu deiner Familie hinzuzufügen",

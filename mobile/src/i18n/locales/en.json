@@ -187,6 +187,12 @@
     "date_hint": "📅 Tap a date to add to calendar"
   },
   "family": {
+    "my_families": "My families",
+    "active": "Active",
+    "switch": "Switch",
+    "switch_to": "Switch to {{name}}",
+    "leave_named": "Leave {{name}}",
+    "create_hint": "Start another family, e.g. for grandparents or a second household.",
     "title": "Family",
     "your_family": "Your Family",
     "invite_label": "Share this code to add people to your family",
