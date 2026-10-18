@@ -26,6 +26,7 @@ import { SafeAreaView, useSafeAreaInsets } from 'react-native-safe-area-context'
 import { Ionicons } from '@expo/vector-icons';
 import { LinearGradient } from 'expo-linear-gradient';
 import DrawerMenu, { useDrawerController, homeRollStyle } from '../components/DrawerMenu';
+import FamilyFilterBar from '../components/FamilyFilterBar';
 import WeekStrip from '../components/WeekStrip';
 import MonthCalendar from '../components/MonthCalendar';
 import RadialMenu from '../components/RadialMenu';
@@ -406,7 +407,7 @@ export default function HomeScreen({ navigation, route }) {
   const headerIconColor = useHeaderIconColor();
   const insets = useSafeAreaInsets();
   const { logout, user } = useAuth();
-  const { members } = useFamily();
+  const { members, families, family, switchFamily } = useFamily();
   const { eventTick, taskTick, notifTick, lastChatMsg } = useSSE();
 
   // Put the logged-in user first, everyone else follows in original order
@@ -1254,6 +1255,13 @@ export default function HomeScreen({ navigation, route }) {
           </Text>
         </View>
       )}
+
+      {/* ── Family filter — only shown when user belongs to 2+ families ── */}
+      <FamilyFilterBar
+        families={families}
+        activeFamilyId={family?.id}
+        onSelect={async (id) => { await switchFamily(id); fetchEvents(); }}
+      />
 
       {/* ── Member bubbles — hidden when no members ── */}
       {sortedMembers.length > 0 && (

@@ -81,7 +81,7 @@ export default function FamilyScreen({ navigation }) {
   const { t } = useTranslation();
   const styles = useStyles();
   const { user, logout } = useAuth();
-  const { family, members, fetchFamily } = useFamily();
+  const { family, families, members, fetchFamily, switchFamily } = useFamily();
 
   const [codeCopied, setCodeCopied] = useState(false);
   const [leaving,    setLeaving]    = useState(false);
@@ -117,8 +117,8 @@ export default function FamilyScreen({ navigation }) {
     setTimeout(() => setCodeCopied(false), 2000);
   };
 
-  const handleLeave = () => {
-    if (isOwner) {
+  const handleLeave = (targetFamily, targetIsOwner) => {
+    if (targetIsOwner) {
       Alert.alert(
         t('family.cannot_leave_title'),
         t('family.cannot_leave_message'),
@@ -128,7 +128,7 @@ export default function FamilyScreen({ navigation }) {
     }
     Alert.alert(
       t('family.leave_title'),
-      t('family.leave_confirm', { name: family?.name }),
+      t('family.leave_confirm', { name: targetFamily?.name }),
       [
         { text: t('common.cancel'), style: 'cancel' },
         {
@@ -137,10 +137,11 @@ export default function FamilyScreen({ navigation }) {
           onPress: async () => {
             setLeaving(true);
             try {
-              await API.delete('/family/leave');
+              await API.delete('/family/leave', { data: { family_id: targetFamily.id } });
               await fetchFamily();
             } catch (err) {
               Alert.alert(t('common.error'), err.response?.data?.message || t('family.could_not_leave'));
+            } finally {
               setLeaving(false);
             }
           },
@@ -292,42 +293,64 @@ export default function FamilyScreen({ navigation }) {
           </TouchableOpacity>
         </View>
 
-        {/* Danger zone — switching family takes you out of this one, so it lives here */}
-        {family && (
+        {/* My Families — all families the user belongs to */}
+        {families.length > 0 && (
           <>
-            <Text style={[styles.sectionHeader, { marginTop: 32 }]}>{t('common.danger_zone')}</Text>
-            <View style={styles.card}>
-              <Text style={styles.leaveDescription}>
-                {t('family.switch_hint', { name: family.name })}
-              </Text>
-              <TouchableOpacity
-                style={styles.switchBtn}
-                onPress={() => navigation.navigate('JoinFamily')}
-              >
-                <Ionicons name="swap-horizontal-outline" size={16} color="#1a8fa8" />
-                <Text style={styles.switchBtnText}>{t('family.switch_family')}</Text>
-              </TouchableOpacity>
+            <Text style={[styles.sectionHeader, { marginTop: 32 }]}>My Families</Text>
+            {families.map(f => {
+              const isActive = Number(f.id) === Number(family?.id);
+              const memberInFamily = members.find(m => Number(m.id) === Number(user?.id));
+              const isFamilyOwner = isActive
+                ? myMembership?.role === 'admin'
+                : f.role === 'admin';
 
-              {/* Leave family — only for non-owners */}
-              {!isOwner && (
-                <>
-                  <View style={[styles.divider, { marginVertical: 14 }]} />
-                  <Text style={styles.leaveDescription}>
-                    {t('family.leave_description', { name: family.name })}
-                  </Text>
-                  <TouchableOpacity
-                    style={[styles.leaveBtn, leaving && { opacity: 0.5 }]}
-                    onPress={handleLeave}
-                    disabled={leaving}
-                  >
-                    <Ionicons name="exit-outline" size={16} color="#ff3b30" />
-                    <Text style={styles.leaveBtnText}>{t('family.leave_btn')}</Text>
-                  </TouchableOpacity>
-                </>
-              )}
-            </View>
+              return (
+                <View key={f.id} style={[styles.card, { marginBottom: 10 }]}>
+                  <View style={{ flexDirection: 'row', alignItems: 'center', marginBottom: 8 }}>
+                    <Text style={[styles.familyName, { flex: 1 }]}>{f.name}</Text>
+                    {isActive && (
+                      <View style={{ backgroundColor: '#1a8fa8', borderRadius: 10, paddingHorizontal: 8, paddingVertical: 2 }}>
+                        <Text style={{ color: '#fff', fontSize: 11, fontWeight: '700' }}>Active</Text>
+                      </View>
+                    )}
+                  </View>
+
+                  {!isActive && (
+                    <TouchableOpacity
+                      style={styles.switchBtn}
+                      onPress={async () => { await switchFamily(f.id); await fetchFamily(); }}
+                    >
+                      <Ionicons name="swap-horizontal-outline" size={16} color="#1a8fa8" />
+                      <Text style={styles.switchBtnText}>Switch to {f.name}</Text>
+                    </TouchableOpacity>
+                  )}
+
+                  {!f.is_personal && (
+                    <>
+                      {!isActive && <View style={[styles.divider, { marginVertical: 10 }]} />}
+                      <TouchableOpacity
+                        style={[styles.leaveBtn, leaving && { opacity: 0.5 }]}
+                        onPress={() => handleLeave(f, isFamilyOwner)}
+                        disabled={leaving}
+                      >
+                        <Ionicons name="exit-outline" size={16} color="#ff3b30" />
+                        <Text style={styles.leaveBtnText}>Leave {f.name}</Text>
+                      </TouchableOpacity>
+                    </>
+                  )}
+                </View>
+              );
+            })}
           </>
         )}
+
+        {/* Join or create another family */}
+        <View style={[styles.card, { marginTop: 10 }]}>
+          <TouchableOpacity style={styles.switchBtn} onPress={() => navigation.navigate('JoinFamily')}>
+            <Ionicons name="enter-outline" size={16} color="#1a8fa8" />
+            <Text style={styles.switchBtnText}>{t('family.join_with_code')}</Text>
+          </TouchableOpacity>
+        </View>
 
         </>)}
 
