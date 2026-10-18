@@ -1,4 +1,5 @@
 const pool = require('../../config/db');
+const { ACTIVE_FAMILY_ORDER } = require('../../utils/activeFamily');
 const { successResponse, errorResponse } = require('../../utils/response/responseHandlers');
 
 const getFamily = async (req, res) => {
@@ -11,7 +12,7 @@ const getFamily = async (req, res) => {
        FROM families f
        JOIN family_members fm ON f.id = fm.family_id
        WHERE fm.user_id = $1
-       ORDER BY fm.is_active DESC, (SELECT COUNT(*) FROM family_members WHERE family_id = f.id) DESC
+       ORDER BY ${ACTIVE_FAMILY_ORDER}
        LIMIT 1`,
       [userId]
     );

@@ -1,4 +1,5 @@
 const pool = require('../../config/db');
+const { ACTIVE_FAMILY_ORDER } = require('../../utils/activeFamily');
 const { successResponse, errorResponse } = require('../../utils/response/responseHandlers');
 
 /** PUT /api/family/name { name } — the family admin renames the family */
@@ -13,7 +14,7 @@ const renameFamily = async (req, res) => {
       `SELECT f.id, fm.role, f.is_personal
        FROM families f JOIN family_members fm ON fm.family_id = f.id
        WHERE fm.user_id = $1
-       ORDER BY (SELECT COUNT(*) FROM family_members WHERE family_id = f.id) DESC LIMIT 1`,
+       ORDER BY ${ACTIVE_FAMILY_ORDER} LIMIT 1`,
       [userId]
     );
     if (!fam.rows.length) return errorResponse(res, 404, 'You are not in a family');

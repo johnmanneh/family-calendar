@@ -1,4 +1,5 @@
 const pool = require('../../config/db');
+const { ACTIVE_FAMILY_ORDER } = require('../../utils/activeFamily');
 const { successResponse, errorResponse } = require('../../utils/response/responseHandlers');
 const { broadcast } = require('../../utils/sseClients');
 const { canManageCalendar } = require('../../utils/access');
@@ -37,7 +38,7 @@ const createEvent = async (req, res) => {
     const familyMember = await pool.query(
       `SELECT fm.family_id FROM family_members fm
        WHERE fm.user_id = $1
-       ORDER BY fm.is_active DESC, (SELECT COUNT(*) FROM family_members WHERE family_id = fm.family_id) DESC
+       ORDER BY ${ACTIVE_FAMILY_ORDER}
        LIMIT 1`,
       [userId]
     );

@@ -1,5 +1,6 @@
 const multer = require('multer');
 const pool = require('../../config/db');
+const { ACTIVE_FAMILY_ORDER } = require('../../utils/activeFamily');
 const { successResponse, errorResponse } = require('../../utils/response/responseHandlers');
 const { canManageCalendar } = require('../../utils/access');
 const { validTz, localToUtc, todayIn } = require('../../utils/time');
@@ -205,7 +206,7 @@ const importEvents = async (req, res) => {
     const fam = await client.query(
       `SELECT fm.family_id FROM family_members fm WHERE fm.user_id = $1
        AND EXISTS (SELECT 1 FROM family_members o WHERE o.family_id = fm.family_id AND o.user_id = $2)
-       ORDER BY (SELECT COUNT(*) FROM family_members WHERE family_id = fm.family_id) DESC LIMIT 1`,
+       ORDER BY ${ACTIVE_FAMILY_ORDER} LIMIT 1`,
       [actor, owner]
     );
     if (!fam.rows.length) return errorResponse(res, 403, "You can't add events to this calendar");

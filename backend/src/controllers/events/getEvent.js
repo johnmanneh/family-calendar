@@ -1,5 +1,6 @@
 const { eventAccess, busyView } = require('../../utils/access');
 const pool = require('../../config/db');
+const { ACTIVE_FAMILY_ORDER } = require('../../utils/activeFamily');
 const { successResponse, errorResponse } = require('../../utils/response/responseHandlers');
 
 const normAllDay = (e) => {
@@ -22,11 +23,13 @@ const getEvent = async (req, res) => {
     }
 
     const familyMember = await pool.query(
+      // The event's own family when the user is in it (they may have opened it
+      // from a notification while another family is active), else the active one
       `SELECT fm.family_id FROM family_members fm
        WHERE fm.user_id = $1
-       ORDER BY (SELECT COUNT(*) FROM family_members WHERE family_id = fm.family_id) DESC
+       ORDER BY (fm.family_id = (SELECT family_id FROM events WHERE id = $2)) DESC, ${ACTIVE_FAMILY_ORDER}
        LIMIT 1`,
-      [userId]
+      [userId, id]
     );
 
     if (familyMember.rows.length === 0) {

@@ -4,18 +4,17 @@ const { addClient, removeClient, addUserClient, removeUserClient } = require('..
 const streamConnect = async (req, res) => {
   const userId = req.user.id;
 
-  // JWT only carries user id — look up family membership
+  // JWT only carries user id — look up ALL the user's families. With several
+  // families, live updates must arrive for each of them (not just the largest),
+  // and switching the active family then needs no reconnect.
   const memberRes = await pool.query(
-    `SELECT fm.family_id FROM family_members fm
-     WHERE fm.user_id = $1
-     ORDER BY (SELECT COUNT(*) FROM family_members WHERE family_id = fm.family_id) DESC
-     LIMIT 1`,
+    'SELECT family_id FROM family_members WHERE user_id = $1',
     [userId]
   );
   if (memberRes.rowCount === 0) {
     return res.status(403).end();
   }
-  const familyId = memberRes.rows[0].family_id;
+  const familyIds = memberRes.rows.map(r => r.family_id);
 
   // SSE headers — keep connection open, disable buffering
   res.setHeader('Content-Type', 'text/event-stream');
@@ -24,7 +23,7 @@ const streamConnect = async (req, res) => {
   res.flushHeaders();
 
   // Register this connection
-  addClient(familyId, res);
+  familyIds.forEach(id => addClient(id, res));
   addUserClient(userId, res);
 
   // Send a heartbeat every 30s to prevent proxy timeouts
@@ -35,7 +34,7 @@ const streamConnect = async (req, res) => {
   // Clean up when the client disconnects
   req.on('close', () => {
     clearInterval(heartbeat);
-    removeClient(familyId, res);
+    familyIds.forEach(id => removeClient(id, res));
     removeUserClient(userId, res);
   });
 };

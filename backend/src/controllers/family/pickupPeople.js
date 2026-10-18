@@ -1,14 +1,15 @@
 const pool = require('../../config/db');
+const { ACTIVE_FAMILY_ORDER } = require('../../utils/activeFamily');
 const { successResponse, errorResponse } = require('../../utils/response/responseHandlers');
 
-// Picks the user's largest family — same helper used in children.js
+// The user's active family (see utils/activeFamily.js)
 async function myFamily(userId) {
   const r = await pool.query(
     `SELECT f.id, f.is_personal, fm.role
      FROM family_members fm
      JOIN families f ON f.id = fm.family_id
      WHERE fm.user_id = $1
-     ORDER BY (SELECT COUNT(*) FROM family_members WHERE family_id = f.id) DESC
+     ORDER BY ${ACTIVE_FAMILY_ORDER}
      LIMIT 1`,
     [userId]
   );

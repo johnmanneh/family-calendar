@@ -1,4 +1,5 @@
 const pool = require('../../config/db');
+const { ACTIVE_FAMILY_ORDER } = require('../../utils/activeFamily');
 const { successResponse, errorResponse } = require('../../utils/response/responseHandlers');
 const { managesChild } = require('../../utils/access');
 const { broadcast } = require('../../utils/sseClients');
@@ -22,7 +23,7 @@ async function myFamily(userId) {
     `SELECT f.id, f.is_personal, fm.role, u.is_managed
      FROM family_members fm JOIN families f ON f.id = fm.family_id JOIN users u ON u.id = fm.user_id
      WHERE fm.user_id = $1
-     ORDER BY (SELECT COUNT(*) FROM family_members WHERE family_id = f.id) DESC LIMIT 1`,
+     ORDER BY ${ACTIVE_FAMILY_ORDER} LIMIT 1`,
     [userId]
   );
   return r.rows[0] || null;
