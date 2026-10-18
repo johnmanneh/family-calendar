@@ -23,7 +23,7 @@
  */
 
 import React, { createContext, useContext, useRef, useState } from 'react';
-import { Animated, Platform } from 'react-native';
+import { Animated, Platform, View } from 'react-native';
 
 // Rows start tilting when they reach the TOP of the + button and are almost
 // gone near the bottom of the list. FAB sits 32pt above the list bottom and is
@@ -145,6 +145,18 @@ export default function TreadmillList({ contentContainerStyle, onScroll, onLayou
 
   return (
     <TreadmillContext.Provider value={{ scrollY, viewportH, contentH, bottomInset }}>
+      {/* The visible height is measured on this plain wrapper View. FlatList's own
+          onLayout didn't always fire again when the list grew (e.g. the top card
+          switching from month to week view at start-up), so viewportH stayed too
+          small and a short list thought its rows were under the + button. */}
+      <View
+        style={{ flex: 1 }}
+        onLayout={(e) => {
+          const h = e.nativeEvent.layout.height;
+          viewH.current = h;
+          setViewportH(h);
+        }}
+      >
       <Animated.FlatList
         {...props}
         CellRendererComponent={TreadmillCell}
@@ -165,12 +177,9 @@ export default function TreadmillList({ contentContainerStyle, onScroll, onLayou
           setContentH(h);
           clampToContent(h);
         }}
-        onLayout={(e) => {
-          onLayout?.(e);
-          viewH.current = e.nativeEvent.layout.height;
-          setViewportH(e.nativeEvent.layout.height);
-        }}
+        onLayout={onLayout}
       />
+      </View>
     </TreadmillContext.Provider>
   );
 }
