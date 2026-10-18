@@ -120,7 +120,11 @@ function TreadmillCell({ children, style, onLayout, ...rest }) {
   }
 
   return (
+    // key: when a row switches between "may roll" and "flat", React builds a
+    // brand-new native view, so no tilt from the rolling state can survive on
+    // the phone (a native-driven transform isn't reliably undone otherwise).
     <Animated.View
+      key={scrollable ? 'roll' : 'flat'}
       {...rest}
       style={[style, topStyle]}
       onLayout={(e) => {
