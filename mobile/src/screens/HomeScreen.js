@@ -1312,12 +1312,17 @@ export default function HomeScreen({ navigation, route }) {
             { key: 'family', label: t('home.filter_family') },
             ...myGroups.map(g => ({ key: Number(g.id), label: g.name, isGroup: true })),
           ].map(chip => {
-            const active = scope === chip.key;
+            // "All" only looks selected when no person filter is on — otherwise
+            // "All" + a selected avatar showed an empty list that looked like everything
+            const active = chip.key === 'all' ? scope === 'all' && !selectedMember : scope === chip.key;
             return (
               <TouchableOpacity
                 key={String(chip.key)}
                 style={[styles.scopeChip, active && styles.scopeChipActive]}
-                onPress={() => setScope(chip.key)}
+                onPress={() => {
+                  setScope(chip.key);
+                  if (chip.key === 'all') setSelectedMember(null);   // All = really everyone
+                }}
               >
                 {chip.kid && (
                   chip.kid.avatar_url ? (
