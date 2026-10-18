@@ -159,3 +159,38 @@ HTTP 429 (`rate_limit_exceeded`). A full two-week plan with many entries can nee
    Check the exact limits under Settings → Limits afterwards.
 3. **Backup model** (later, once there are real users): if Groq answers 429 or is down, try a
    second AI service automatically. Needs a second account and API key.
+
+---
+
+## Idea: read the plan on the phone (privacy first) — not built, test first
+
+Discussed 18 Oct 2026. Goal: the photo stays on the phone by default (good for privacy and the EU),
+and the server AI is only used when the parent agrees.
+
+Background: an app can't use a person's ChatGPT/Gemini/Claude subscription (those are for the chat
+apps only; developer access is a separate, paid account). What an app *can* use for free is the
+phone's own text recognition (iPhone and Android) and, on newer iPhones, Apple's on-device AI
+(Apple Intelligence).
+
+**What the phone does well:** turning printed text into text ("Mo 28.09.", "Herbstferien").
+**What's hard:** the layout — which date belongs to which activity, morning vs afternoon, ranges
+like "bis 18. Oktober". Newer iPhones with Apple Intelligence can probably handle normal plans;
+older iPhones and many Android phones only have text reading, so entries are more likely to be
+missed or mixed up.
+
+**Planned flow:**
+1. The phone reads the plan (on newer iPhones it also sorts the entries with the on-device AI).
+2. The **review screen stays** (it already exists): every entry is checked before saving.
+3. Show what wasn't understood, e.g. "3 lines couldn't be matched to a date" — nothing disappears
+   silently.
+4. If the phone isn't sure: ask "Read this with our server for a better result? The photo is not
+   stored." Only with the parent's OK.
+5. Side effect: when the phone sends only the text (not the photo) to the server, a scan needs far
+   fewer tokens — helps with the Groq limits above.
+
+**Test before building:** 5–10 real plans (Kita, school, club), each read both ways (phone and
+server); count correct, missed and wrong entries. Then decide if phone reading is good enough as
+the default. On-phone reading costs nothing; server scans on Groq's free tier cost no money either
+— do one per minute to stay under the rate limit.
+
+Status: idea only; John decides when to test.
