@@ -52,7 +52,7 @@ const occurrences = (e, from, to) => {
 
 const fmtTime = d => d.toLocaleTimeString("en-GB", { hour: "2-digit", minute: "2-digit" });
 
-const PhoneCalendar = ({ events, onOpen, onAdd }) => {
+const PhoneCalendar = ({ events, onOpen, onAdd, onDayPick, scope = 'all', setScope, groups = [], kids = [] }) => {
   const today = startOfDay(new Date());
   const [month, setMonth] = useState(new Date(today.getFullYear(), today.getMonth(), 1));
   const [selected, setSelected] = useState(today);
@@ -152,6 +152,13 @@ const PhoneCalendar = ({ events, onOpen, onAdd }) => {
   const pick = d => {
     setSelected(d);
     if (d.getMonth() !== month.getMonth()) setMonth(new Date(d.getFullYear(), d.getMonth(), 1));
+    const list = byDay[dayKey(d)] || [];
+    const first = list.find(x => !x.e.is_busy);
+    if (first) {
+      onOpen(first.e, first.start, first.end);
+    } else {
+      onDayPick && onDayPick(d);
+    }
   };
 
   // Swipe the grid left/right to change month

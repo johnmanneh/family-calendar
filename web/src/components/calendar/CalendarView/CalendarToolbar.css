@@ -1,11 +1,45 @@
 .calendar-toolbar {
   display: flex;
   flex-direction: column;
-  gap: 8px;
-  padding: 8px 10px 4px;
+  gap: 6px;
+  padding: 8px 10px 6px;
   background: #fff;
   border-bottom: 1px solid #e5e7eb;
 }
+
+/* Row 1: scope chips + search icon side by side */
+.calendar-toolbar-row1 {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  min-height: 32px;
+}
+.calendar-toolbar-row1 .calendar-toolbar-chips {
+  flex: 1;
+}
+.calendar-toolbar-row1 .calendar-toolbar-search-wrap {
+  flex: 1;
+}
+
+/* Search icon button */
+.calendar-toolbar-search-btn {
+  flex-shrink: 0;
+  width: 32px;
+  height: 32px;
+  border: none;
+  border-radius: 10px;
+  background: #f3f4f6;
+  color: #374151;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  cursor: pointer;
+  transition: background 0.15s;
+}
+@media (hover: hover) {
+  .calendar-toolbar-search-btn:hover { background: #e5e7eb; }
+}
+.calendar-toolbar-search-btn.active { background: #1a8fa8; color: #fff; }
 
 /* ── Search ── */
 .calendar-toolbar-search-wrap {
@@ -94,6 +128,7 @@
     background: #1c1c1e;
     border-bottom-color: #3a3a3c;
   }
+  :root:not([data-theme="light"]) .calendar-toolbar-search-btn { background: #2c2c2e; color: #aeaeb2; }
   :root:not([data-theme="light"]) .calendar-toolbar-search {
     background: #2c2c2e;
     border-color: #3a3a3c;
@@ -117,6 +152,7 @@
     background: #1c1c1e;
     border-bottom-color: #3a3a3c;
   }
+:root[data-theme="dark"] .calendar-toolbar-search-btn { background: #2c2c2e; color: #aeaeb2; }
 
 :root[data-theme="dark"] .calendar-toolbar-search {
     background: #2c2c2e;
@@ -152,6 +188,7 @@
   }
   .calendar-toolbar-chips::-webkit-scrollbar { display: none; }
   .calendar-toolbar-chip { flex-shrink: 0; }
+
 }
 
 
