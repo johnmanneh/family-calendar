@@ -107,7 +107,7 @@ function createApp() {
 
   <h2>9. Contact</h2>
   <p>For any privacy questions or data requests, contact us at:<br />
-  <strong>osmanjohnmanneh@gmail.com</strong></p>
+  <strong>songsanchuan@hotmail.com</strong></p>
 
   <footer>© 2026 It's for us. All rights reserved.</footer>
 </body>
