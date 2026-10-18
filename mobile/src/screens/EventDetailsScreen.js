@@ -81,7 +81,7 @@ function PickupSection({ event, user, members, onRefresh, t, styles }) {
     setLoadingPeople(true);
     try {
       const res = await API.get('/family/pickup-people');
-      setPickupPeople(res.data.data?.people || []);
+      setPickupPeople(res.data.people || []);
     } catch {
       Alert.alert(t('common.error'), t('common.something_went_wrong'));
     } finally {

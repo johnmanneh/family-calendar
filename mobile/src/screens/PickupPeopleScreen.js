@@ -1,4 +1,4 @@
-import React, { useState, useEffect, useCallback } from 'react';
+import React, { useState, useEffect, useCallback, useRef } from 'react';
 import {
   View,
   Text,
@@ -8,6 +8,8 @@ import {
   Alert,
   ActivityIndicator,
   Image,
+  KeyboardAvoidingView,
+  Platform,
 } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { Ionicons } from '@expo/vector-icons';
@@ -135,6 +137,9 @@ export default function PickupPeopleScreen({ navigation }) {
 
   // ── State ──────────────────────────────────────────────────────────────────
   const [people,   setPeople]   = useState([]);
+  const scrollRef = useRef(null);
+  // After the keyboard opens, scroll so the add form (and its button) is visible
+  const scrollToForm = () => setTimeout(() => scrollRef.current?.scrollToEnd({ animated: true }), 250);
   const [loading,  setLoading]  = useState(true);
   const [busy,     setBusy]     = useState(false);
 
@@ -154,7 +159,7 @@ export default function PickupPeopleScreen({ navigation }) {
   const load = useCallback(async () => {
     try {
       const res = await API.get('/family/pickup-people');
-      setPeople(res.data.data?.people || []);
+      setPeople(res.data.people || []);
     } catch (err) {
       Alert.alert(t('common.error'), err.response?.data?.message || t('common.something_went_wrong'));
     } finally {
@@ -267,7 +272,14 @@ export default function PickupPeopleScreen({ navigation }) {
         </View>
       </TopCard>
 
-      <ScrollView contentContainerStyle={styles.content} keyboardShouldPersistTaps="handled">
+      {/* Keyboard pushes the form up so the field you type in stays visible */}
+      <KeyboardAvoidingView style={{ flex: 1 }} behavior={Platform.OS === 'ios' ? 'padding' : 'height'}>
+      <ScrollView
+        ref={scrollRef}
+        contentContainerStyle={styles.content}
+        keyboardShouldPersistTaps="handled"
+        automaticallyAdjustKeyboardInsets
+      >
 
         {/* ── People list ──────────────────────────────────────────────────── */}
         <Text style={styles.sectionHeader}>{t('pickup_people.title')}</Text>
@@ -414,6 +426,7 @@ export default function PickupPeopleScreen({ navigation }) {
                     placeholderTextColor="#aeaeb2"
                     value={addName}
                     onChangeText={setAddName}
+                    onFocus={scrollToForm}
                     autoCapitalize="words"
                   />
                   <TextInput
@@ -423,6 +436,7 @@ export default function PickupPeopleScreen({ navigation }) {
                     value={addPhone}
                     onChangeText={setAddPhone}
                     keyboardType="phone-pad"
+                    onFocus={scrollToForm}
                   />
                   <TouchableOpacity
                     style={[styles.saveBtn, (!addName.trim() || busy) && styles.saveBtnDisabled]}
@@ -443,6 +457,7 @@ export default function PickupPeopleScreen({ navigation }) {
 
         <View style={{ height: 40 }} />
       </ScrollView>
+      </KeyboardAvoidingView>
     </SafeAreaView>
   );
 }

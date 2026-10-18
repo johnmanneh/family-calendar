@@ -26,7 +26,8 @@ const listPickupPeople = async (req, res) => {
 
     const result = await pool.query(
       `SELECT pp.id, pp.user_id, pp.name, pp.phone, pp.sort_order,
-              u.first_name, u.last_name, u.avatar_url, u.color
+              u.first_name AS member_first_name, u.last_name AS member_last_name,
+              u.avatar_url AS member_avatar_url, u.color AS member_color
        FROM pickup_people pp
        LEFT JOIN users u ON u.id = pp.user_id
        WHERE pp.family_id = $1

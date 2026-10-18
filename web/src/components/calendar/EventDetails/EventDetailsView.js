@@ -115,7 +115,7 @@ const EventDetailsView = () => {
     if (pickupPeople.length > 0) return;
     try {
       const res = await API.get('/family/pickup-people');
-      setPickupPeople(res.data.data?.people || []);
+      setPickupPeople(res.data.people || []);
     } catch { /* ignore */ }
   }, [pickupPeople.length]);
 
