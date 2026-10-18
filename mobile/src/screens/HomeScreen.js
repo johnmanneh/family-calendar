@@ -1417,6 +1417,11 @@ export default function HomeScreen({ navigation, route }) {
       ) : (
         <Animated.View style={{ flex: 1, opacity: listAlpha, transform: [{ translateY: listTranslateY }] }}>
         <TreadmillList
+          // New list whenever the filter, chip, day or search changes: the roll
+          // effect measures row positions and content height, and stale numbers
+          // from the previous (longer) list made a short list tilt its last row
+          // under the + button. A fresh list measures from scratch.
+          key={`${scope}|${selectedMember ?? ''}|${selectedDate.toDateString()}|${isSearchActive ? 's' : ''}|${selectedCategory}`}
           bottomInset={insets.bottom}
           data={listData}
           keyExtractor={(item) => item.key}
