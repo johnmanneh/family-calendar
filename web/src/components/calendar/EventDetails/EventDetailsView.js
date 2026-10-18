@@ -95,8 +95,13 @@ const EventDetailsView = () => {
   const pickups     = selectedEvent.extendedProps?.pickups || [];
   const myRole      = members.find(m => Number(m.id) === Number(user?.id))?.role;
   const isManager   = myRole === 'admin' || myRole === 'owner';
+  // Pickup is only for children's events: a child counts when they own the
+  // event or take part in it.
+  const eventPeople = [...(attendees || []), ...(selectedEvent.extendedProps?.attendees || [])];
+  const inEvent = id => Number(selectedEvent.extendedProps?.owner_id) === Number(id) ||
+    eventPeople.some(a => Number(a.user_id ?? a.id) === Number(id));
   const managedChildren = members.filter(m =>
-    m.is_managed && (isManager || Number(m.managed_by) === Number(user?.id))
+    m.is_managed && inEvent(m.id) && (isManager || Number(m.managed_by) === Number(user?.id))
   );
 
   const [showAssignForm,  setShowAssignForm]  = useState(false);

@@ -53,9 +53,13 @@ function PickupSection({ event, user, members, onRefresh, t, styles }) {
   const myRole      = members.find(m => Number(m.id) === Number(user?.id))?.role;
   const isManager   = myRole === 'admin' || myRole === 'owner';
 
-  // Children this user directly manages (managed_by = user.id) OR all children for admins
+  // Pickup is only for children's events: a child counts when they own the
+  // event or take part in it.
+  const inEvent = id => Number(event.owner_id) === Number(id) ||
+    (event.attendees || []).some(a => Number(a.user_id ?? a.id) === Number(id));
+  // Children in this event that this user manages (managed_by = user.id), or all for admins
   const managedChildren = members.filter(m =>
-    m.is_managed && (isManager || Number(m.managed_by) === Number(user?.id))
+    m.is_managed && inEvent(m.id) && (isManager || Number(m.managed_by) === Number(user?.id))
   );
 
   const hasActivePickup = pickups.length > 0;

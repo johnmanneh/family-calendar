@@ -24,13 +24,23 @@ const assignPickup = async (req, res) => {
 
     // 2. Event must exist
     const eventResult = await pool.query(
-      'SELECT id, family_id FROM events WHERE id = $1',
+      'SELECT id, family_id, owner_id, start_date, end_date FROM events WHERE id = $1',
       [eventId]
     );
     if (eventResult.rows.length === 0) {
       return errorResponse(res, 404, 'Event not found');
     }
     const event = eventResult.rows[0];
+
+    // 2b. The child must belong to this event (owner or participant) —
+    //     pickup is only for children's events
+    const childInEvent = Number(event.owner_id) === Number(child_id) || (await pool.query(
+      'SELECT 1 FROM event_attendees WHERE event_id = $1 AND user_id = $2',
+      [eventId, child_id]
+    )).rows.length > 0;
+    if (!childInEvent) {
+      return errorResponse(res, 400, 'This child is not part of this event');
+    }
 
     // 3. Pickup person must belong to this family
     const personResult = await pool.query(
@@ -54,9 +64,13 @@ const assignPickup = async (req, res) => {
     // 5. Token — 64 hex chars (32 random bytes), same pattern as event sharing
     const token = crypto.randomBytes(32).toString('hex');
 
-    // 6. Link expires at end of today so it cannot be reused the next day
-    const expiresAt = new Date();
+    // 6. Link works until the end of the pickup day (the event's day), so it
+    //    can't be reused afterwards. Never earlier than the end of today.
+    //    (Was "end of today": a pickup planned a week ahead expired the same night.)
+    const expiresAt = new Date(event.end_date || event.start_date);
     expiresAt.setHours(23, 59, 59, 999);
+    const endOfToday = new Date(); endOfToday.setHours(23, 59, 59, 999);
+    if (!(expiresAt > endOfToday)) expiresAt.setTime(endOfToday.getTime());
 
     // 7. Insert the new pickup record
     const insertResult = await pool.query(
