@@ -342,5 +342,40 @@
     "skipped_one": "{{count}} was already there.",
     "skipped_other": "{{count}} were already there.",
     "scan_for": "Scan schedule for {{name}}"
+  },
+  "pickup_people": {
+    "title": "Pickup People",
+    "subtitle": "People who can pick up your children",
+    "add_btn": "Add person",
+    "add_family_member": "Family member",
+    "add_external": "Someone else",
+    "name_placeholder": "Name",
+    "phone_placeholder": "Phone number",
+    "family_member_badge": "Family member",
+    "remove_title": "Remove Person",
+    "remove_confirm": "Remove {{name}} from your pickup list?",
+    "remove": "Remove",
+    "empty": "No pickup people yet",
+    "empty_hint": "Add family members or others who can pick up your children.",
+    "save": "Save"
+  },
+  "pickup": {
+    "section_title": "Pickup",
+    "assign_btn": "Assign pickup person",
+    "assigned_to": "Will be picked up by {{name}}",
+    "status_asked": "Awaiting response",
+    "status_going": "Confirmed",
+    "status_picked_up": "Picked up",
+    "status_declined": "Declined",
+    "status_cancelled": "Cancelled",
+    "action_accept": "Accept",
+    "action_decline": "Decline",
+    "action_picked_up": "Picked up",
+    "action_cancel": "Can't make it",
+    "cancel_pickup": "Cancel pickup",
+    "cancel_confirm": "Cancel the pickup arrangement for {{name}}?",
+    "select_child": "Who is being picked up?",
+    "select_person": "Who will pick them up?",
+    "assign": "Assign"
   }
 }

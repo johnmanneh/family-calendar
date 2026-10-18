@@ -252,5 +252,40 @@
     "language": "Langwej",
     "language_subtitle": "Jos di langwej yu laik",
     "device_default": "Divais difoilt"
+  },
+  "pickup_people": {
+    "title": "Pipl we go tek pikin",
+    "subtitle": "Pipl we fit go tek yu pikin dem",
+    "add_btn": "Add pason",
+    "add_family_member": "Famili memba",
+    "add_external": "Anoda pason",
+    "name_placeholder": "Nem",
+    "phone_placeholder": "Fon nɔmba",
+    "family_member_badge": "Famili memba",
+    "remove_title": "Rimov pason",
+    "remove_confirm": "Rimov {{name}} from yu pikin-tek list?",
+    "remove": "Rimov",
+    "empty": "Nɔ pipl yet",
+    "empty_hint": "Add famili memba ɔ ɔda pipl we fit tek yu pikin dem.",
+    "save": "Sev"
+  },
+  "pickup": {
+    "section_title": "Pikin Tek",
+    "assign_btn": "Pik pason for go tek pikin",
+    "assigned_to": "{{name}} go tek am",
+    "status_asked": "Dey wait for ansa",
+    "status_going": "E don konfam",
+    "status_picked_up": "Don tek am",
+    "status_declined": "E rikjus am",
+    "status_cancelled": "Dem kansel am",
+    "action_accept": "Aksep",
+    "action_decline": "Rikjus",
+    "action_picked_up": "Don tek",
+    "action_cancel": "A no fit kam",
+    "cancel_pickup": "Kansel di tek",
+    "cancel_confirm": "Kansel di tek plan fɔ {{name}}?",
+    "select_child": "Usai pikin dey go tek?",
+    "select_person": "U go tek am?",
+    "assign": "Assign"
   }
 }

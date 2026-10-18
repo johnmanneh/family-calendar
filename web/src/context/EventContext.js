@@ -191,6 +191,34 @@ export const EventProvider = ({ children }) => {
       return null;
     }
   };
+
+  const assignPickup = async (eventId, childId, personId) => {
+    try {
+      await API.post(`/events/${eventId}/pickup`, { child_id: childId, person_id: personId });
+      await openEventById(eventId);
+    } catch (err) {
+      setError(err.response?.data?.message || 'Failed to assign pickup');
+    }
+  };
+
+  const cancelPickup = async (eventId) => {
+    try {
+      await API.delete(`/events/${eventId}/pickup`);
+      await openEventById(eventId);
+    } catch (err) {
+      setError(err.response?.data?.message || 'Failed to cancel pickup');
+    }
+  };
+
+  const respondToPickup = async (pickupId, action, eventId) => {
+    try {
+      await API.post(`/pickups/${pickupId}/respond`, { action });
+      await openEventById(eventId);
+    } catch (err) {
+      setError(err.response?.data?.message || 'Failed to respond to pickup');
+    }
+  };
+
   //
   //
   const updateEvent = async (eventId, eventData) => {
@@ -509,6 +537,9 @@ export const EventProvider = ({ children }) => {
         createStandaloneTask,
         deleteEvent,
         shareEvent,
+        assignPickup,
+        cancelPickup,
+        respondToPickup,
         updateEvent,
         deleteTask,
         updateTaskDueDate,

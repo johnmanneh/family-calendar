@@ -252,5 +252,40 @@
     "language": "Язык",
     "language_subtitle": "Выберите предпочитаемый язык",
     "device_default": "По умолчанию устройства"
+  },
+  "pickup_people": {
+    "title": "Люди для забора",
+    "subtitle": "Люди, которые могут забрать ваших детей",
+    "add_btn": "Добавить человека",
+    "add_family_member": "Член семьи",
+    "add_external": "Кто-то другой",
+    "name_placeholder": "Имя",
+    "phone_placeholder": "Номер телефона",
+    "family_member_badge": "Член семьи",
+    "remove_title": "Удалить человека",
+    "remove_confirm": "Удалить {{name}} из списка забора?",
+    "remove": "Удалить",
+    "empty": "Пока нет людей для забора",
+    "empty_hint": "Добавьте членов семьи или других людей, которые могут забрать ваших детей.",
+    "save": "Сохранить"
+  },
+  "pickup": {
+    "section_title": "Забор",
+    "assign_btn": "Назначить человека для забора",
+    "assigned_to": "Заберёт {{name}}",
+    "status_asked": "Ожидание ответа",
+    "status_going": "Подтверждено",
+    "status_picked_up": "Забрали",
+    "status_declined": "Отказано",
+    "status_cancelled": "Отменено",
+    "action_accept": "Принять",
+    "action_decline": "Отказать",
+    "action_picked_up": "Забрал",
+    "action_cancel": "Не смогу прийти",
+    "cancel_pickup": "Отменить забор",
+    "cancel_confirm": "Отменить договорённость о заборе для {{name}}?",
+    "select_child": "Кого забирают?",
+    "select_person": "Кто заберёт?",
+    "assign": "Назначить"
   }
 }

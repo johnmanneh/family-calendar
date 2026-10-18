@@ -252,5 +252,40 @@
     "language": "语言",
     "language_subtitle": "选择您的首选语言",
     "device_default": "设备默认"
+  },
+  "pickup_people": {
+    "title": "接送人员",
+    "subtitle": "可以接送您孩子的人",
+    "add_btn": "添加人员",
+    "add_family_member": "家庭成员",
+    "add_external": "其他人",
+    "name_placeholder": "姓名",
+    "phone_placeholder": "电话号码",
+    "family_member_badge": "家庭成员",
+    "remove_title": "移除人员",
+    "remove_confirm": "从接送列表中移除 {{name}}？",
+    "remove": "移除",
+    "empty": "暂无接送人员",
+    "empty_hint": "添加家庭成员或其他可以接送您孩子的人。",
+    "save": "保存"
+  },
+  "pickup": {
+    "section_title": "接送",
+    "assign_btn": "指定接送人员",
+    "assigned_to": "将由 {{name}} 接送",
+    "status_asked": "等待回应",
+    "status_going": "已确认",
+    "status_picked_up": "已接走",
+    "status_declined": "已拒绝",
+    "status_cancelled": "已取消",
+    "action_accept": "接受",
+    "action_decline": "拒绝",
+    "action_picked_up": "已接走",
+    "action_cancel": "无法前往",
+    "cancel_pickup": "取消接送",
+    "cancel_confirm": "取消 {{name}} 的接送安排？",
+    "select_child": "谁需要被接走？",
+    "select_person": "谁来接？",
+    "assign": "指定"
   }
 }

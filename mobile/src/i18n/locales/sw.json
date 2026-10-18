@@ -252,5 +252,40 @@
     "language": "Lugha",
     "language_subtitle": "Chagua lugha unayoipendelea",
     "device_default": "Chaguo-msingi la kifaa"
+  },
+  "pickup_people": {
+    "title": "Watu wa kuchukua",
+    "subtitle": "Watu wanaoweza kuchukua watoto wako",
+    "add_btn": "Ongeza mtu",
+    "add_family_member": "Mwanafamilia",
+    "add_external": "Mtu mwingine",
+    "name_placeholder": "Jina",
+    "phone_placeholder": "Nambari ya simu",
+    "family_member_badge": "Mwanafamilia",
+    "remove_title": "Ondoa mtu",
+    "remove_confirm": "Ondoa {{name}} kwenye orodha yako?",
+    "remove": "Ondoa",
+    "empty": "Hakuna watu wa kuchukua bado",
+    "empty_hint": "Ongeza wanafamilia au watu wengine wanaoweza kuchukua watoto wako.",
+    "save": "Hifadhi"
+  },
+  "pickup": {
+    "section_title": "Kuchukua",
+    "assign_btn": "Weka mtu wa kuchukua",
+    "assigned_to": "Atachukua na {{name}}",
+    "status_asked": "Inasubiri jibu",
+    "status_going": "Imethibitishwa",
+    "status_picked_up": "Amechukuliwa",
+    "status_declined": "Imekataliwa",
+    "status_cancelled": "Imefutwa",
+    "action_accept": "Kubali",
+    "action_decline": "Kataa",
+    "action_picked_up": "Nimechukua",
+    "action_cancel": "Siwezi kuja",
+    "cancel_pickup": "Futa uchukuzi",
+    "cancel_confirm": "Futa mpango wa kuchukua {{name}}?",
+    "select_child": "Nani atakayechukuliwa?",
+    "select_person": "Nani atakayechukua?",
+    "assign": "Weka"
   }
 }

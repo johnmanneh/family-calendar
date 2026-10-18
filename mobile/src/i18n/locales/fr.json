@@ -252,5 +252,40 @@
     "language": "Langue",
     "language_subtitle": "Choisissez votre langue préférée",
     "device_default": "Par défaut de l'appareil"
+  },
+  "pickup_people": {
+    "title": "Personnes de récupération",
+    "subtitle": "Personnes pouvant récupérer vos enfants",
+    "add_btn": "Ajouter une personne",
+    "add_family_member": "Membre de la famille",
+    "add_external": "Quelqu'un d'autre",
+    "name_placeholder": "Nom",
+    "phone_placeholder": "Numéro de téléphone",
+    "family_member_badge": "Membre de la famille",
+    "remove_title": "Supprimer la personne",
+    "remove_confirm": "Supprimer {{name}} de votre liste de récupération ?",
+    "remove": "Supprimer",
+    "empty": "Aucune personne de récupération",
+    "empty_hint": "Ajoutez des membres de la famille ou d'autres personnes pouvant récupérer vos enfants.",
+    "save": "Enregistrer"
+  },
+  "pickup": {
+    "section_title": "Récupération",
+    "assign_btn": "Assigner une personne",
+    "assigned_to": "Sera récupéré par {{name}}",
+    "status_asked": "En attente de réponse",
+    "status_going": "Confirmé",
+    "status_picked_up": "Récupéré",
+    "status_declined": "Refusé",
+    "status_cancelled": "Annulé",
+    "action_accept": "Accepter",
+    "action_decline": "Refuser",
+    "action_picked_up": "Récupéré",
+    "action_cancel": "Je ne peux pas venir",
+    "cancel_pickup": "Annuler la récupération",
+    "cancel_confirm": "Annuler l'arrangement de récupération pour {{name}} ?",
+    "select_child": "Qui sera récupéré ?",
+    "select_person": "Qui va récupérer ?",
+    "assign": "Assigner"
   }
 }

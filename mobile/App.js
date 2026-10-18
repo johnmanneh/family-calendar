@@ -26,6 +26,7 @@ import LanguageScreen from './src/screens/LanguageScreen';
 import ForgotPasswordScreen from './src/screens/ForgotPasswordScreen';
 import ResetPasswordScreen from './src/screens/ResetPasswordScreen';
 import JoinFamilyScreen from './src/screens/JoinFamilyScreen';
+import PickupPeopleScreen from './src/screens/PickupPeopleScreen';
 
 const Stack = createNativeStackNavigator();
 
@@ -62,6 +63,7 @@ function AppNavigator() {
             <Stack.Screen name="Chat" component={ChatScreen} />
             <Stack.Screen name="Language" component={LanguageScreen} />
             <Stack.Screen name="JoinFamily" component={JoinFamilyScreen} />
+            <Stack.Screen name="PickupPeople" component={PickupPeopleScreen} />
           </>
         ) : (
           <>

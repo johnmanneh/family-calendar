@@ -252,5 +252,40 @@
     "language": "اللغة",
     "language_subtitle": "اختر لغتك المفضلة",
     "device_default": "افتراضي الجهاز"
+  },
+  "pickup_people": {
+    "title": "أشخاص الاستلام",
+    "subtitle": "الأشخاص الذين يمكنهم استلام أطفالك",
+    "add_btn": "إضافة شخص",
+    "add_family_member": "عضو من العائلة",
+    "add_external": "شخص آخر",
+    "name_placeholder": "الاسم",
+    "phone_placeholder": "رقم الهاتف",
+    "family_member_badge": "عضو من العائلة",
+    "remove_title": "إزالة الشخص",
+    "remove_confirm": "هل تريد إزالة {{name}} من قائمة الاستلام؟",
+    "remove": "إزالة",
+    "empty": "لا يوجد أشخاص استلام بعد",
+    "empty_hint": "أضف أعضاء العائلة أو غيرهم ممن يمكنهم استلام أطفالك.",
+    "save": "حفظ"
+  },
+  "pickup": {
+    "section_title": "الاستلام",
+    "assign_btn": "تعيين شخص للاستلام",
+    "assigned_to": "سيستلمه {{name}}",
+    "status_asked": "في انتظار الرد",
+    "status_going": "مؤكد",
+    "status_picked_up": "تم الاستلام",
+    "status_declined": "مرفوض",
+    "status_cancelled": "ملغى",
+    "action_accept": "قبول",
+    "action_decline": "رفض",
+    "action_picked_up": "تم الاستلام",
+    "action_cancel": "لا أستطيع الحضور",
+    "cancel_pickup": "إلغاء الاستلام",
+    "cancel_confirm": "إلغاء ترتيب الاستلام لـ {{name}}؟",
+    "select_child": "من سيتم استلامه؟",
+    "select_person": "من سيستلمه؟",
+    "assign": "تعيين"
   }
 }

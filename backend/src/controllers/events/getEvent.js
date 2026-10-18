@@ -145,6 +145,25 @@ const getEvent = async (req, res) => {
       }
     });
 
+    // ── Active pickups for this event ─────────────────────────────────────
+    const pickupsResult = await pool.query(
+      `SELECT
+         pk.id,
+         pk.status,
+         pk.child_id,
+         ch.first_name                   AS child_name,
+         COALESCE(pp.name, pu.first_name) AS person_name,
+         pp.user_id                       AS person_user_id
+       FROM pickups        pk
+       JOIN users          ch ON ch.id  = pk.child_id
+       JOIN pickup_people  pp ON pp.id  = pk.person_id
+       LEFT JOIN users     pu ON pu.id  = pp.user_id
+       WHERE pk.event_id = $1
+         AND pk.revoked_at IS NULL
+         AND pk.status NOT IN ('declined', 'cancelled')`,
+      [id]
+    );
+
     return successResponse(res, 200, 'Event retrieved successfully', {
       event: normAllDay({
         ...event,
@@ -152,6 +171,7 @@ const getEvent = async (req, res) => {
         tasks:     Object.values(tasksMap),
         group_ids: groupsResult.rows.map(r => Number(r.group_id)),
         from_group: fromGroup,
+        pickups:   pickupsResult.rows,
       }),
     });
 

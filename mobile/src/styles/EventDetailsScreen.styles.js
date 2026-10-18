@@ -172,6 +172,73 @@ const make = c => StyleSheet.create({
     alignItems: 'center',
   },
   modalCloseBtnText: { fontSize: 14, fontWeight: '600', color: c.textSub },
+
+  // ── Pickup section ────────────────────────────────────────────────────────
+  pickupCard: {
+    backgroundColor: c.surface, marginHorizontal: 0, marginBottom: 12,
+    paddingVertical: 12, paddingHorizontal: 20,
+  },
+  pickupSectionLabel: {
+    fontSize: 11, fontWeight: '700', color: c.textMuted,
+    textTransform: 'uppercase', letterSpacing: 0.6, marginBottom: 10,
+  },
+  pickupRow: {
+    flexDirection: 'row', alignItems: 'center', gap: 10, marginBottom: 8,
+  },
+  pickupPersonName: { flex: 1, fontSize: 14, fontWeight: '600', color: c.text },
+  pickupChildName: { fontSize: 12, color: c.textMuted, marginTop: 1 },
+
+  // Status chip — colour changes per status
+  pickupChip: {
+    paddingHorizontal: 8, paddingVertical: 3,
+    borderRadius: 20, alignSelf: 'flex-start',
+  },
+  pickupChipText: { fontSize: 11, fontWeight: '700', letterSpacing: 0.3 },
+
+  // Respond buttons (Accept / Decline / Picked up / Can't make it)
+  pickupActions: { flexDirection: 'row', gap: 8, marginTop: 6 },
+  pickupActionBtn: {
+    flex: 1, paddingVertical: 10, borderRadius: 10,
+    alignItems: 'center', borderWidth: 1,
+  },
+  pickupActionBtnText: { fontSize: 13, fontWeight: '600' },
+
+  // "Assign pickup person" outline button
+  pickupAssignBtn: {
+    flexDirection: 'row', alignItems: 'center', justifyContent: 'center',
+    gap: 6, paddingVertical: 10, paddingHorizontal: 14,
+    borderWidth: 1, borderColor: '#1a8fa8', borderRadius: 10,
+    marginTop: 4,
+  },
+  pickupAssignBtnText: { fontSize: 13, fontWeight: '600', color: '#1a8fa8' },
+
+  // Cancel pickup link
+  pickupCancelLink: { marginTop: 6, alignSelf: 'flex-start' },
+  pickupCancelLinkText: { fontSize: 12, color: '#ff3b30', fontWeight: '500' },
+
+  // Assign modal — two-step sheet (child picker → person picker)
+  assignModalStep: { marginBottom: 8 },
+  assignModalStepLabel: {
+    fontSize: 12, fontWeight: '600', color: c.textMuted,
+    textTransform: 'uppercase', letterSpacing: 0.5, marginBottom: 8,
+  },
+  assignPickRow: {
+    flexDirection: 'row', alignItems: 'center', gap: 10,
+    paddingVertical: 9, borderBottomWidth: 1, borderBottomColor: c.border,
+  },
+  assignPickCircle: {
+    width: 34, height: 34, borderRadius: 17,
+    alignItems: 'center', justifyContent: 'center',
+  },
+  assignPickInitials: { fontSize: 12, fontWeight: '700', color: '#fff' },
+  assignPickName: { flex: 1, fontSize: 14, color: c.text },
+  assignPickCheck: { width: 22, alignItems: 'center' },
+  assignConfirmBtn: {
+    marginTop: 14, backgroundColor: '#1a8fa8',
+    borderRadius: 12, padding: 13, alignItems: 'center',
+  },
+  assignConfirmBtnText: { fontSize: 14, fontWeight: '600', color: '#fff' },
+  assignConfirmBtnDisabled: { opacity: 0.4 },
 });
 
 const lightStyles = make(LIGHT);

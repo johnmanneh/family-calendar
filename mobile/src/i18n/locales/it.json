@@ -252,5 +252,40 @@
     "language": "Lingua",
     "language_subtitle": "Scegli la tua lingua preferita",
     "device_default": "Predefinito del dispositivo"
+  },
+  "pickup_people": {
+    "title": "Persone di ritiro",
+    "subtitle": "Persone che possono ritirare i tuoi figli",
+    "add_btn": "Aggiungi persona",
+    "add_family_member": "Membro della famiglia",
+    "add_external": "Qualcun altro",
+    "name_placeholder": "Nome",
+    "phone_placeholder": "Numero di telefono",
+    "family_member_badge": "Membro della famiglia",
+    "remove_title": "Rimuovi persona",
+    "remove_confirm": "Rimuovere {{name}} dalla lista di ritiro?",
+    "remove": "Rimuovi",
+    "empty": "Nessuna persona di ritiro ancora",
+    "empty_hint": "Aggiungi membri della famiglia o altri che possono ritirare i tuoi figli.",
+    "save": "Salva"
+  },
+  "pickup": {
+    "section_title": "Ritiro",
+    "assign_btn": "Assegna persona di ritiro",
+    "assigned_to": "Verrà ritirato da {{name}}",
+    "status_asked": "In attesa di risposta",
+    "status_going": "Confermato",
+    "status_picked_up": "Ritirato",
+    "status_declined": "Rifiutato",
+    "status_cancelled": "Annullato",
+    "action_accept": "Accetta",
+    "action_decline": "Rifiuta",
+    "action_picked_up": "Ritirato",
+    "action_cancel": "Non posso venire",
+    "cancel_pickup": "Annulla ritiro",
+    "cancel_confirm": "Annullare l'accordo di ritiro per {{name}}?",
+    "select_child": "Chi verrà ritirato?",
+    "select_person": "Chi farà il ritiro?",
+    "assign": "Assegna"
   }
 }

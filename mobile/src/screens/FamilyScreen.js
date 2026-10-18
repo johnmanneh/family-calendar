@@ -273,6 +273,25 @@ export default function FamilyScreen({ navigation }) {
         {/* Children without their own login */}
         <AddChildSection onAdded={fetchFamily} />
 
+        {/* Pickup people */}
+        <Text style={styles.sectionHeader}>{t('pickup_people.title')}</Text>
+        <View style={styles.card}>
+          <TouchableOpacity
+            style={styles.memberRow}
+            onPress={() => navigation.navigate('PickupPeople')}
+            activeOpacity={0.7}
+          >
+            <View style={[styles.memberAvatar, styles.memberAvatarInitials, { backgroundColor: '#1a8fa8' }]}>
+              <Text style={styles.memberAvatarText}>P</Text>
+            </View>
+            <View style={styles.memberBody}>
+              <Text style={styles.memberName}>{t('pickup_people.title')}</Text>
+              <Text style={styles.memberEmail}>{t('pickup_people.subtitle')}</Text>
+            </View>
+            <Ionicons name="chevron-forward" size={16} color="#c7c7cc" />
+          </TouchableOpacity>
+        </View>
+
         {/* Danger zone — switching family takes you out of this one, so it lives here */}
         {family && (
           <>

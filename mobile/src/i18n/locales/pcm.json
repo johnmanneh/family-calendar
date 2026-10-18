@@ -252,5 +252,40 @@
     "language": "Language",
     "language_subtitle": "Jos di language you like",
     "device_default": "Device default"
+  },
+  "pickup_people": {
+    "title": "Pipol wey go carry pikin",
+    "subtitle": "Pipol wey fit carry your pikin",
+    "add_btn": "Add person",
+    "add_family_member": "Family member",
+    "add_external": "Another person",
+    "name_placeholder": "Name",
+    "phone_placeholder": "Phone number",
+    "family_member_badge": "Family member",
+    "remove_title": "Remove person",
+    "remove_confirm": "Remove {{name}} from your pickup list?",
+    "remove": "Remove",
+    "empty": "No pickup person yet",
+    "empty_hint": "Add family members or other people wey fit carry your pikin.",
+    "save": "Save"
+  },
+  "pickup": {
+    "section_title": "Pickup",
+    "assign_btn": "Pick person wey go carry pikin",
+    "assigned_to": "{{name}} go carry am",
+    "status_asked": "Dey wait for answer",
+    "status_going": "Confirmed",
+    "status_picked_up": "Don carry am",
+    "status_declined": "E refuse",
+    "status_cancelled": "Dem cancel am",
+    "action_accept": "Accept",
+    "action_decline": "Decline",
+    "action_picked_up": "Don carry",
+    "action_cancel": "I no fit come",
+    "cancel_pickup": "Cancel pickup",
+    "cancel_confirm": "Cancel the pickup for {{name}}?",
+    "select_child": "Who dem go carry?",
+    "select_person": "Who go carry am?",
+    "assign": "Assign"
   }
 }

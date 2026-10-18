@@ -252,5 +252,40 @@
     "language": "Dil",
     "language_subtitle": "Tercih ettiğiniz dili seçin",
     "device_default": "Cihaz varsayılanı"
+  },
+  "pickup_people": {
+    "title": "Alıcı Kişiler",
+    "subtitle": "Çocuklarınızı alabilecek kişiler",
+    "add_btn": "Kişi ekle",
+    "add_family_member": "Aile üyesi",
+    "add_external": "Başka biri",
+    "name_placeholder": "Ad",
+    "phone_placeholder": "Telefon numarası",
+    "family_member_badge": "Aile üyesi",
+    "remove_title": "Kişiyi kaldır",
+    "remove_confirm": "{{name}} kişisini alma listenizden kaldırmak istiyor musunuz?",
+    "remove": "Kaldır",
+    "empty": "Henüz alıcı kişi yok",
+    "empty_hint": "Çocuklarınızı alabilecek aile üyeleri veya başkalarını ekleyin.",
+    "save": "Kaydet"
+  },
+  "pickup": {
+    "section_title": "Alım",
+    "assign_btn": "Alıcı kişi ata",
+    "assigned_to": "{{name}} tarafından alınacak",
+    "status_asked": "Yanıt bekleniyor",
+    "status_going": "Onaylandı",
+    "status_picked_up": "Alındı",
+    "status_declined": "Reddedildi",
+    "status_cancelled": "İptal edildi",
+    "action_accept": "Kabul et",
+    "action_decline": "Reddet",
+    "action_picked_up": "Aldım",
+    "action_cancel": "Gidemiyorum",
+    "cancel_pickup": "Alımı iptal et",
+    "cancel_confirm": "{{name}} için alım düzenlemesini iptal et?",
+    "select_child": "Kim alınacak?",
+    "select_person": "Kim alacak?",
+    "assign": "Ata"
   }
 }

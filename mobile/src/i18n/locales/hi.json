@@ -252,5 +252,40 @@
     "language": "भाषा",
     "language_subtitle": "अपनी पसंदीदा भाषा चुनें",
     "device_default": "डिवाइस डिफ़ॉल्ट"
+  },
+  "pickup_people": {
+    "title": "पिकअप लोग",
+    "subtitle": "जो लोग आपके बच्चों को ले जा सकते हैं",
+    "add_btn": "व्यक्ति जोड़ें",
+    "add_family_member": "परिवार का सदस्य",
+    "add_external": "कोई और",
+    "name_placeholder": "नाम",
+    "phone_placeholder": "फ़ोन नंबर",
+    "family_member_badge": "परिवार का सदस्य",
+    "remove_title": "व्यक्ति हटाएं",
+    "remove_confirm": "{{name}} को अपनी पिकअप सूची से हटाएं?",
+    "remove": "हटाएं",
+    "empty": "अभी तक कोई पिकअप व्यक्ति नहीं",
+    "empty_hint": "परिवार के सदस्यों या अन्य लोगों को जोड़ें जो आपके बच्चों को ले जा सकते हैं।",
+    "save": "सहेजें"
+  },
+  "pickup": {
+    "section_title": "पिकअप",
+    "assign_btn": "पिकअप व्यक्ति असाइन करें",
+    "assigned_to": "{{name}} द्वारा लिया जाएगा",
+    "status_asked": "जवाब का इंतजार",
+    "status_going": "पुष्टि हुई",
+    "status_picked_up": "ले लिया गया",
+    "status_declined": "अस्वीकृत",
+    "status_cancelled": "रद्द",
+    "action_accept": "स्वीकार करें",
+    "action_decline": "अस्वीकार करें",
+    "action_picked_up": "ले लिया",
+    "action_cancel": "नहीं आ सकता",
+    "cancel_pickup": "पिकअप रद्द करें",
+    "cancel_confirm": "{{name}} के लिए पिकअप व्यवस्था रद्द करें?",
+    "select_child": "किसे लिया जाना है?",
+    "select_person": "कौन लेने जाएगा?",
+    "assign": "असाइन करें"
   }
 }

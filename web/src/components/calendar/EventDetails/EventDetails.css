@@ -436,6 +436,183 @@
   background: rgba(255, 59, 48, 0.08);
 }
 
+/* ── Pickup section ── */
+.event-details-pickup {
+  padding: 10px 20px;
+}
+
+.event-details-pickup-label {
+  font-size: 11px;
+  font-weight: 700;
+  color: #aeaeb2;
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
+  margin-bottom: 8px;
+}
+
+.event-details-pickup-row {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  margin-bottom: 6px;
+}
+
+.event-details-pickup-name {
+  font-size: 14px;
+  font-weight: 500;
+  color: #1d1d1f;
+  flex: 1;
+}
+
+.event-details-pickup-child {
+  font-size: 12px;
+  color: #8e8e93;
+  margin-top: 1px;
+}
+
+/* Status chip */
+.pickup-chip {
+  font-size: 10px;
+  font-weight: 700;
+  letter-spacing: 0.3px;
+  padding: 2px 8px;
+  border-radius: 20px;
+  text-transform: capitalize;
+  flex-shrink: 0;
+}
+
+.pickup-chip.asked     { background: #fff3cd; color: #856404; }
+.pickup-chip.going     { background: #d1f5d3; color: #1a7c30; }
+.pickup-chip.picked_up { background: #d1f5d3; color: #1a7c30; }
+.pickup-chip.declined  { background: #ffeeed; color: #ff3b30; }
+.pickup-chip.cancelled { background: #f2f2f7; color: #8e8e93; }
+
+/* Respond buttons (shown to the pickup person) */
+.pickup-respond-actions {
+  display: flex;
+  gap: 6px;
+  margin-top: 6px;
+  margin-bottom: 4px;
+}
+
+.pickup-respond-btn {
+  flex: 1;
+  padding: 8px 6px;
+  border-radius: 8px;
+  font-size: 12px;
+  font-weight: 600;
+  cursor: pointer;
+  font-family: inherit;
+  border: 1.5px solid transparent;
+  transition: opacity 0.15s;
+}
+
+.pickup-respond-btn:disabled { opacity: 0.45; cursor: default; }
+
+.pickup-respond-btn.primary {
+  background: #1a8fa8;
+  color: #fff;
+  border-color: #1a8fa8;
+}
+
+.pickup-respond-btn.secondary {
+  background: transparent;
+  color: #8e8e93;
+  border-color: #c7c7cc;
+}
+
+.pickup-respond-btn.primary:hover:not(:disabled)   { opacity: 0.85; }
+.pickup-respond-btn.secondary:hover:not(:disabled) { border-color: #8e8e93; }
+
+/* Cancel link */
+.pickup-cancel-link {
+  background: none;
+  border: none;
+  color: #ff3b30;
+  font-size: 12px;
+  font-weight: 500;
+  cursor: pointer;
+  padding: 0;
+  font-family: inherit;
+  margin-top: 4px;
+}
+
+.pickup-cancel-link:hover { text-decoration: underline; }
+
+/* Assign button */
+.pickup-assign-btn {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  background: none;
+  border: 1px solid #1a8fa8;
+  color: #1a8fa8;
+  border-radius: 8px;
+  padding: 6px 12px;
+  font-size: 13px;
+  font-weight: 600;
+  cursor: pointer;
+  font-family: inherit;
+  margin-top: 6px;
+  transition: background 0.15s;
+}
+
+.pickup-assign-btn:hover {
+  background: rgba(26, 143, 168, 0.06);
+}
+
+/* Inline assign form */
+.pickup-assign-form {
+  margin-top: 10px;
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+
+.pickup-assign-form select {
+  width: 100%;
+  padding: 8px 10px;
+  border-radius: 8px;
+  border: 1px solid #d0d0d5;
+  font-size: 13px;
+  color: #1d1d1f;
+  background: #ffffff;
+  font-family: inherit;
+  appearance: auto;
+}
+
+.pickup-assign-form-actions {
+  display: flex;
+  gap: 6px;
+}
+
+.pickup-assign-confirm {
+  flex: 1;
+  padding: 8px;
+  background: #1a8fa8;
+  color: #fff;
+  border: none;
+  border-radius: 8px;
+  font-size: 13px;
+  font-weight: 600;
+  cursor: pointer;
+  font-family: inherit;
+}
+
+.pickup-assign-confirm:disabled { opacity: 0.45; cursor: default; }
+
+.pickup-assign-cancel {
+  padding: 8px 12px;
+  background: none;
+  border: 1px solid #c7c7cc;
+  color: #8e8e93;
+  border-radius: 8px;
+  font-size: 13px;
+  font-weight: 600;
+  cursor: pointer;
+  font-family: inherit;
+}
+
 /* ── Legacy divider (keep for compat) ── */
 .event-details-divider {
   display: none;
@@ -526,3 +703,15 @@
 .event-details-invite-question { font-size: 14px; color: #6e6e73; margin: 4px 0 10px; }
 .event-action-btn.accept { background: #1a8fa8; color: #fff; border-color: #1a8fa8; }
 .event-action-btn:disabled { opacity: 0.5; cursor: default; }
+
+/* ── Pickup dark mode ── */
+:root[data-theme="dark"] .event-details-pickup-name  { color: #fff; }
+:root[data-theme="dark"] .pickup-chip.cancelled       { background: #3a3a3c; color: #8e8e93; }
+:root[data-theme="dark"] .pickup-assign-form select   { background: #2c2c2e; color: #fff; border-color: #48484a; }
+:root[data-theme="dark"] .pickup-assign-cancel        { color: #aeaeb2; border-color: #48484a; }
+@media (prefers-color-scheme: dark) {
+  :root:not([data-theme="light"]) .event-details-pickup-name { color: #fff; }
+  :root:not([data-theme="light"]) .pickup-chip.cancelled      { background: #3a3a3c; color: #8e8e93; }
+  :root:not([data-theme="light"]) .pickup-assign-form select  { background: #2c2c2e; color: #fff; border-color: #48484a; }
+  :root:not([data-theme="light"]) .pickup-assign-cancel       { color: #aeaeb2; border-color: #48484a; }
+}

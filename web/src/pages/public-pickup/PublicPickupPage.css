@@ -1,0 +1,215 @@
+/* ── Public pickup page ───────────────────────────────────────────────────── */
+/* Opened by the pickup person from a link — no login required.               */
+
+.pe-page {
+  min-height: 100vh;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  padding: 40px 16px 60px;
+  background: #f2f2f7;
+  font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
+}
+
+.pe-brand {
+  font-size: 18px;
+  font-weight: 700;
+  color: #1a8fa8;
+  letter-spacing: -0.3px;
+  margin-bottom: 32px;
+}
+
+.pe-state {
+  text-align: center;
+  margin-top: 48px;
+  color: #8e8e93;
+}
+
+.pe-state--warn .pe-state-title {
+  font-size: 18px;
+  font-weight: 600;
+  color: #1d1d1f;
+  margin: 0 0 6px;
+}
+
+.pe-state--warn .pe-state-sub {
+  font-size: 14px;
+  color: #8e8e93;
+  margin: 0;
+}
+
+.pe-card {
+  width: 100%;
+  max-width: 480px;
+  background: #ffffff;
+  border-radius: 16px;
+  padding: 24px 20px;
+  box-shadow: 0 1px 4px rgba(0, 0, 0, 0.08);
+}
+
+.pe-divider {
+  height: 1px;
+  background: #e5e5ea;
+  margin: 16px 0;
+}
+
+.pe-row {
+  display: flex;
+  gap: 12px;
+  padding: 8px 0;
+  border-bottom: 1px solid #f2f2f7;
+}
+
+.pe-row:last-child {
+  border-bottom: none;
+}
+
+.pe-label {
+  flex: 0 0 72px;
+  font-size: 12px;
+  font-weight: 600;
+  color: #8e8e93;
+  text-transform: uppercase;
+  letter-spacing: 0.4px;
+  padding-top: 1px;
+}
+
+.pe-value {
+  flex: 1;
+  font-size: 14px;
+  color: #1d1d1f;
+  line-height: 1.4;
+}
+
+.pe-footer {
+  margin-top: 28px;
+  font-size: 12px;
+  color: #aeaeb2;
+}
+
+.pe-footer-link {
+  color: #1a8fa8;
+  text-decoration: none;
+}
+
+/* ── Pickup-specific elements ─────────────────────────────────────────────── */
+
+/* "You were asked to pick up…" header */
+.pp-intro {
+  font-size: 14px;
+  color: #8e8e93;
+  margin: 0 0 4px;
+}
+
+.pp-child {
+  font-size: 22px;
+  font-weight: 700;
+  color: #1d1d1f;
+  margin: 0 0 4px;
+  line-height: 1.2;
+}
+
+.pp-askedby {
+  font-size: 13px;
+  color: #8e8e93;
+  margin: 0 0 16px;
+}
+
+/* Status chip */
+.pp-status {
+  display: inline-block;
+  padding: 3px 10px;
+  border-radius: 20px;
+  font-size: 12px;
+  font-weight: 700;
+  letter-spacing: 0.3px;
+  margin-bottom: 16px;
+}
+
+.pp-status--asked    { background: #fff3cd; color: #856404; }
+.pp-status--going    { background: #d1f5d3; color: #1a7c30; }
+.pp-status--picked_up { background: #d1f5d3; color: #1a7c30; }
+.pp-status--declined  { background: #ffeeed; color: #ff3b30; }
+.pp-status--cancelled { background: #f2f2f7; color: #8e8e93; }
+
+/* Action buttons */
+.pp-actions {
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+  margin-top: 20px;
+}
+
+.pp-btn {
+  width: 100%;
+  padding: 14px;
+  border-radius: 12px;
+  font-size: 15px;
+  font-weight: 600;
+  cursor: pointer;
+  border: none;
+  transition: opacity 0.15s;
+}
+
+.pp-btn:disabled {
+  opacity: 0.5;
+  cursor: default;
+}
+
+.pp-btn--primary {
+  background: #1a8fa8;
+  color: #ffffff;
+}
+
+.pp-btn--primary:hover:not(:disabled) {
+  opacity: 0.88;
+}
+
+.pp-btn--outline {
+  background: transparent;
+  color: #8e8e93;
+  border: 1.5px solid #c7c7cc;
+}
+
+.pp-btn--outline:hover:not(:disabled) {
+  border-color: #8e8e93;
+}
+
+/* Confirmation state */
+.pp-done {
+  text-align: center;
+  padding: 8px 0;
+}
+
+.pp-done-icon {
+  font-size: 40px;
+  margin-bottom: 12px;
+}
+
+.pp-done-title {
+  font-size: 20px;
+  font-weight: 700;
+  color: #1d1d1f;
+  margin: 0 0 6px;
+}
+
+.pp-done-sub {
+  font-size: 14px;
+  color: #8e8e93;
+  margin: 0;
+}
+
+/* Dark mode */
+@media (prefers-color-scheme: dark) {
+  .pe-page      { background: #1c1c1e; }
+  .pe-card      { background: #2c2c2e; box-shadow: none; }
+  .pe-value     { color: #ebebf5; }
+  .pe-divider   { background: #3a3a3c; }
+  .pe-row       { border-bottom-color: #3a3a3c; }
+  .pe-row:last-child { border-bottom: none; }
+  .pe-state--warn .pe-state-title { color: #ffffff; }
+  .pp-child     { color: #ffffff; }
+  .pp-done-title { color: #ffffff; }
+  .pp-btn--outline { color: #aeaeb2; border-color: #48484a; }
+  .pp-status--cancelled { background: #3a3a3c; }
+}

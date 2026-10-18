@@ -252,5 +252,40 @@
     "language": "언어",
     "language_subtitle": "선호하는 언어를 선택하세요",
     "device_default": "기기 기본값"
+  },
+  "pickup_people": {
+    "title": "픽업 담당자",
+    "subtitle": "자녀를 데려갈 수 있는 사람들",
+    "add_btn": "사람 추가",
+    "add_family_member": "가족 구성원",
+    "add_external": "다른 사람",
+    "name_placeholder": "이름",
+    "phone_placeholder": "전화번호",
+    "family_member_badge": "가족 구성원",
+    "remove_title": "사람 제거",
+    "remove_confirm": "{{name}}을(를) 픽업 목록에서 제거하시겠습니까?",
+    "remove": "제거",
+    "empty": "아직 픽업 담당자가 없습니다",
+    "empty_hint": "자녀를 데려갈 수 있는 가족 구성원이나 다른 사람을 추가하세요.",
+    "save": "저장"
+  },
+  "pickup": {
+    "section_title": "픽업",
+    "assign_btn": "픽업 담당자 지정",
+    "assigned_to": "{{name}}이(가) 픽업할 예정",
+    "status_asked": "응답 대기 중",
+    "status_going": "확인됨",
+    "status_picked_up": "픽업 완료",
+    "status_declined": "거절됨",
+    "status_cancelled": "취소됨",
+    "action_accept": "수락",
+    "action_decline": "거절",
+    "action_picked_up": "픽업 완료",
+    "action_cancel": "못 갈 것 같아요",
+    "cancel_pickup": "픽업 취소",
+    "cancel_confirm": "{{name}}의 픽업 약속을 취소하시겠습니까?",
+    "select_child": "누가 픽업될 예정인가요?",
+    "select_person": "누가 픽업하나요?",
+    "assign": "지정"
   }
 }

@@ -1,8 +1,10 @@
-import React, { useEffect } from "react";
+import React, { useEffect, useState, useCallback } from "react";
 import { useEvents } from "../../../context/EventContext";
 import { formatDate, formatTime } from "../../../utils/dateUtils";
 import { useUI } from "../../../context/UIContext";
 import { useAuth } from "../../../context/AuthContext";
+import { useFamily } from "../../../context/FamilyContext";
+import API from "../../../api/axios";
 
 import StdIcon from "../../common/Icon/Icon";
 import "./EventDetails.css";
@@ -11,14 +13,39 @@ const Icon = ({ children }) => (
   <span className="event-details-icon">{children}</span>
 );
 
+// ── Status chip labels ────────────────────────────────────────────────────────
+const PICKUP_STATUS_LABELS = {
+  asked:      'Awaiting response',
+  going:      'Confirmed',
+  picked_up:  'Picked up',
+  declined:   'Declined',
+  cancelled:  'Cancelled',
+};
+
+// Actions a pickup person can take, keyed by current status
+const PICKUP_RESPOND_ACTIONS = {
+  asked: [
+    { action: 'accept',  label: 'Accept',        primary: true  },
+    { action: 'decline', label: 'Decline',        primary: false },
+  ],
+  going: [
+    { action: 'picked_up', label: 'Picked up',     primary: true  },
+    { action: 'cancel',    label: "Can't make it", primary: false },
+  ],
+};
+
 const EventDetailsView = () => {
   const { user } = useAuth();
+  const { members } = useFamily();
   const {
     selectedEvent,
     attendees,
     tasks,
     deleteEvent,
     shareEvent,
+    assignPickup,
+    cancelPickup,
+    respondToPickup,
     deleteTask,
     fetchTasks,
     addSubTask, deleteSubTask,
@@ -63,6 +90,54 @@ const EventDetailsView = () => {
 
   const handleDelete = async () => { await deleteEvent(selectedEvent.id); };
   const handleEdit = () => openEditEvent();
+
+  // ── Pickup state ───────────────────────────────────────────────────────────
+  const pickups     = selectedEvent.extendedProps?.pickups || [];
+  const myRole      = members.find(m => Number(m.id) === Number(user?.id))?.role;
+  const isManager   = myRole === 'admin' || myRole === 'owner';
+  const managedChildren = members.filter(m =>
+    m.is_managed && (isManager || Number(m.managed_by) === Number(user?.id))
+  );
+
+  const [showAssignForm,  setShowAssignForm]  = useState(false);
+  const [pickupPeople,    setPickupPeople]    = useState([]);
+  const [selectedChild,   setSelectedChild]   = useState('');
+  const [selectedPerson,  setSelectedPerson]  = useState('');
+  const [pickupBusy,      setPickupBusy]      = useState(false);
+
+  // Auto-select child when there's only one
+  useEffect(() => {
+    if (managedChildren.length === 1) setSelectedChild(String(managedChildren[0].id));
+  }, [managedChildren.length]);
+
+  const openAssignForm = useCallback(async () => {
+    setShowAssignForm(true);
+    if (pickupPeople.length > 0) return;
+    try {
+      const res = await API.get('/family/pickup-people');
+      setPickupPeople(res.data.data?.people || []);
+    } catch { /* ignore */ }
+  }, [pickupPeople.length]);
+
+  const handleAssign = async () => {
+    if (!selectedChild || !selectedPerson || pickupBusy) return;
+    setPickupBusy(true);
+    await assignPickup(selectedEvent.id, Number(selectedChild), Number(selectedPerson));
+    setShowAssignForm(false);
+    setSelectedPerson('');
+    setPickupBusy(false);
+  };
+
+  const handleCancelPickup = async () => {
+    if (!window.confirm('Cancel this pickup arrangement?')) return;
+    await cancelPickup(selectedEvent.id);
+  };
+
+  const handleRespond = async (pickupId, action) => {
+    setPickupBusy(true);
+    await respondToPickup(pickupId, action, selectedEvent.id);
+    setPickupBusy(false);
+  };
 
   const [shareCopied, setShareCopied] = React.useState(false);
   const handleShare = async () => {
@@ -203,6 +278,106 @@ const EventDetailsView = () => {
                 )}
               </div>
             ))}
+          </div>
+        </div>
+      )}
+
+      {/* Pickup section — only shown when there are active pickups or manager can assign */}
+      {(pickups.length > 0 || managedChildren.length > 0) && (
+        <div className="event-details-card">
+          <div className="event-details-pickup">
+            <p className="event-details-pickup-label">Pickup</p>
+
+            {pickups.map(pk => {
+              const iAmPerson    = Number(pk.person_user_id) === Number(user?.id);
+              const respondActions = PICKUP_RESPOND_ACTIONS[pk.status] || [];
+              return (
+                <div key={pk.id} style={{ marginBottom: 8 }}>
+                  <div className="event-details-pickup-row">
+                    <div>
+                      <p className="event-details-pickup-name">{pk.person_name}</p>
+                      <p className="event-details-pickup-child">{pk.child_name}</p>
+                    </div>
+                    <span className={`pickup-chip ${pk.status}`}>
+                      {PICKUP_STATUS_LABELS[pk.status] || pk.status}
+                    </span>
+                  </div>
+
+                  {/* Respond buttons — only for the pickup person */}
+                  {iAmPerson && respondActions.length > 0 && (
+                    <div className="pickup-respond-actions">
+                      {respondActions.map(btn => (
+                        <button
+                          key={btn.action}
+                          className={`pickup-respond-btn ${btn.primary ? 'primary' : 'secondary'}`}
+                          onClick={() => handleRespond(pk.id, btn.action)}
+                          disabled={pickupBusy}
+                        >
+                          {btn.label}
+                        </button>
+                      ))}
+                    </div>
+                  )}
+                </div>
+              );
+            })}
+
+            {/* Cancel link — managers only, when a pickup exists */}
+            {pickups.length > 0 && isManager && (
+              <button className="pickup-cancel-link" onClick={handleCancelPickup}>
+                Cancel pickup
+              </button>
+            )}
+
+            {/* Assign / reassign button */}
+            {managedChildren.length > 0 && !showAssignForm && (
+              <button className="pickup-assign-btn" onClick={openAssignForm}>
+                <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round"><path d="M16 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"/><circle cx="8.5" cy="7" r="4"/><line x1="20" y1="8" x2="20" y2="14"/><line x1="23" y1="11" x2="17" y2="11"/></svg>
+                {pickups.length > 0 ? 'Reassign pickup person' : 'Assign pickup person'}
+              </button>
+            )}
+
+            {/* Inline assign form */}
+            {showAssignForm && (
+              <div className="pickup-assign-form">
+                {/* Child picker — hidden when only one child */}
+                {managedChildren.length > 1 && (
+                  <select value={selectedChild} onChange={e => setSelectedChild(e.target.value)}>
+                    <option value="">Who is being picked up?</option>
+                    {managedChildren.map(c => (
+                      <option key={c.id} value={c.id}>{c.first_name}</option>
+                    ))}
+                  </select>
+                )}
+
+                {/* Pickup person picker */}
+                <select value={selectedPerson} onChange={e => setSelectedPerson(e.target.value)}>
+                  <option value="">Who will pick them up?</option>
+                  {pickupPeople.map(pp => {
+                    const name = pp.user_id
+                      ? [pp.member_first_name, pp.member_last_name].filter(Boolean).join(' ')
+                      : pp.name;
+                    return <option key={pp.id} value={pp.id}>{name}</option>;
+                  })}
+                </select>
+
+                <div className="pickup-assign-form-actions">
+                  <button
+                    className="pickup-assign-confirm"
+                    onClick={handleAssign}
+                    disabled={!selectedChild || !selectedPerson || pickupBusy}
+                  >
+                    {pickupBusy ? 'Assigning…' : 'Assign'}
+                  </button>
+                  <button
+                    className="pickup-assign-cancel"
+                    onClick={() => setShowAssignForm(false)}
+                  >
+                    Cancel
+                  </button>
+                </div>
+              </div>
+            )}
           </div>
         </div>
       )}

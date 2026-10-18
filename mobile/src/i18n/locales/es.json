@@ -252,5 +252,40 @@
     "language": "Idioma",
     "language_subtitle": "Elige tu idioma preferido",
     "device_default": "Predeterminado del dispositivo"
+  },
+  "pickup_people": {
+    "title": "Personas de recogida",
+    "subtitle": "Personas que pueden recoger a tus hijos",
+    "add_btn": "Añadir persona",
+    "add_family_member": "Miembro de familia",
+    "add_external": "Alguien más",
+    "name_placeholder": "Nombre",
+    "phone_placeholder": "Número de teléfono",
+    "family_member_badge": "Miembro de familia",
+    "remove_title": "Eliminar persona",
+    "remove_confirm": "¿Eliminar a {{name}} de tu lista de recogida?",
+    "remove": "Eliminar",
+    "empty": "Aún no hay personas de recogida",
+    "empty_hint": "Añade miembros de familia u otras personas que puedan recoger a tus hijos.",
+    "save": "Guardar"
+  },
+  "pickup": {
+    "section_title": "Recogida",
+    "assign_btn": "Asignar persona de recogida",
+    "assigned_to": "Será recogido por {{name}}",
+    "status_asked": "Esperando respuesta",
+    "status_going": "Confirmado",
+    "status_picked_up": "Recogido",
+    "status_declined": "Rechazado",
+    "status_cancelled": "Cancelado",
+    "action_accept": "Aceptar",
+    "action_decline": "Rechazar",
+    "action_picked_up": "Recogido",
+    "action_cancel": "No puedo ir",
+    "cancel_pickup": "Cancelar recogida",
+    "cancel_confirm": "¿Cancelar el acuerdo de recogida para {{name}}?",
+    "select_child": "¿Quién va a ser recogido?",
+    "select_person": "¿Quién va a recoger?",
+    "assign": "Asignar"
   }
 }

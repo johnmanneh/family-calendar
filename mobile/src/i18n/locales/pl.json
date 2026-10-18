@@ -252,5 +252,40 @@
     "language": "Język",
     "language_subtitle": "Wybierz preferowany język",
     "device_default": "Domyślny urządzenia"
+  },
+  "pickup_people": {
+    "title": "Osoby odbierające",
+    "subtitle": "Osoby, które mogą odebrać Twoje dzieci",
+    "add_btn": "Dodaj osobę",
+    "add_family_member": "Członek rodziny",
+    "add_external": "Ktoś inny",
+    "name_placeholder": "Imię i nazwisko",
+    "phone_placeholder": "Numer telefonu",
+    "family_member_badge": "Członek rodziny",
+    "remove_title": "Usuń osobę",
+    "remove_confirm": "Usunąć {{name}} z listy odbierających?",
+    "remove": "Usuń",
+    "empty": "Brak osób odbierających",
+    "empty_hint": "Dodaj członków rodziny lub inne osoby, które mogą odebrać Twoje dzieci.",
+    "save": "Zapisz"
+  },
+  "pickup": {
+    "section_title": "Odbiór",
+    "assign_btn": "Przypisz osobę odbierającą",
+    "assigned_to": "Zostanie odebrany przez {{name}}",
+    "status_asked": "Oczekuje na odpowiedź",
+    "status_going": "Potwierdzone",
+    "status_picked_up": "Odebrane",
+    "status_declined": "Odrzucone",
+    "status_cancelled": "Anulowane",
+    "action_accept": "Akceptuj",
+    "action_decline": "Odrzuć",
+    "action_picked_up": "Odebrane",
+    "action_cancel": "Nie mogę przyjść",
+    "cancel_pickup": "Anuluj odbiór",
+    "cancel_confirm": "Anulować odbiór dla {{name}}?",
+    "select_child": "Kto będzie odbierany?",
+    "select_person": "Kto odbierze?",
+    "assign": "Przypisz"
   }
 }

@@ -343,5 +343,40 @@
     "skipped_one": "{{count}} war schon vorhanden.",
     "skipped_other": "{{count}} waren schon vorhanden.",
     "scan_for": "Plan für {{name}} scannen"
+  },
+  "pickup_people": {
+    "title": "Abholpersonen",
+    "subtitle": "Personen, die Ihre Kinder abholen können",
+    "add_btn": "Person hinzufügen",
+    "add_family_member": "Familienmitglied",
+    "add_external": "Jemand anderes",
+    "name_placeholder": "Name",
+    "phone_placeholder": "Telefonnummer",
+    "family_member_badge": "Familienmitglied",
+    "remove_title": "Person entfernen",
+    "remove_confirm": "{{name}} von der Abholliste entfernen?",
+    "remove": "Entfernen",
+    "empty": "Noch keine Abholpersonen",
+    "empty_hint": "Fügen Sie Familienmitglieder oder andere Personen hinzu, die Ihre Kinder abholen können.",
+    "save": "Speichern"
+  },
+  "pickup": {
+    "section_title": "Abholung",
+    "assign_btn": "Abholperson zuweisen",
+    "assigned_to": "Wird von {{name}} abgeholt",
+    "status_asked": "Wartet auf Antwort",
+    "status_going": "Bestätigt",
+    "status_picked_up": "Abgeholt",
+    "status_declined": "Abgelehnt",
+    "status_cancelled": "Abgesagt",
+    "action_accept": "Annehmen",
+    "action_decline": "Ablehnen",
+    "action_picked_up": "Abgeholt",
+    "action_cancel": "Kann nicht kommen",
+    "cancel_pickup": "Abholung absagen",
+    "cancel_confirm": "Die Abholung für {{name}} absagen?",
+    "select_child": "Wer wird abgeholt?",
+    "select_person": "Wer holt ab?",
+    "assign": "Zuweisen"
   }
 }

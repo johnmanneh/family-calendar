@@ -252,5 +252,40 @@
     "language": "زبان",
     "language_subtitle": "زبان مورد نظر خود را انتخاب کنید",
     "device_default": "پیش‌فرض دستگاه"
+  },
+  "pickup_people": {
+    "title": "افراد دریافت",
+    "subtitle": "افرادی که می‌توانند فرزندان شما را تحویل بگیرند",
+    "add_btn": "افزودن شخص",
+    "add_family_member": "عضو خانواده",
+    "add_external": "شخص دیگری",
+    "name_placeholder": "نام",
+    "phone_placeholder": "شماره تلفن",
+    "family_member_badge": "عضو خانواده",
+    "remove_title": "حذف شخص",
+    "remove_confirm": "آیا می‌خواهید {{name}} را از لیست دریافت حذف کنید؟",
+    "remove": "حذف",
+    "empty": "هنوز هیچ شخصی اضافه نشده",
+    "empty_hint": "اعضای خانواده یا افراد دیگری که می‌توانند فرزندان شما را تحویل بگیرند اضافه کنید.",
+    "save": "ذخیره"
+  },
+  "pickup": {
+    "section_title": "دریافت",
+    "assign_btn": "تخصیص شخص برای دریافت",
+    "assigned_to": "توسط {{name}} دریافت خواهد شد",
+    "status_asked": "در انتظار پاسخ",
+    "status_going": "تأیید شده",
+    "status_picked_up": "دریافت شد",
+    "status_declined": "رد شد",
+    "status_cancelled": "لغو شد",
+    "action_accept": "قبول",
+    "action_decline": "رد",
+    "action_picked_up": "دریافت کردم",
+    "action_cancel": "نمی‌توانم بیایم",
+    "cancel_pickup": "لغو دریافت",
+    "cancel_confirm": "ترتیب دریافت برای {{name}} لغو شود؟",
+    "select_child": "چه کسی دریافت می‌شود؟",
+    "select_person": "چه کسی دریافت می‌کند؟",
+    "assign": "تخصیص"
   }
 }

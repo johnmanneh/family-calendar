@@ -1,5 +1,7 @@
 const pool = require('../../config/db');
 const { successResponse, errorResponse } = require('../../utils/response/responseHandlers');
+const insertNotification = require('../../utils/insertNotification');
+const sendPush = require('../../utils/sendPush');
 
 // Same transition rules as respondToPickup.js — token is the auth here.
 const TRANSITIONS = {
@@ -107,6 +109,64 @@ const respondToPublicPickup = async (req, res) => {
       'UPDATE pickups SET status = $1, status_at = NOW() WHERE id = $2',
       [newStatus, pk.id]
     );
+
+    // Fetch person name + child name for the notification message
+    const infoRes = await pool.query(
+      `SELECT
+         COALESCE(pp.name, u.first_name) AS person_name,
+         ch.first_name                   AS child_name
+       FROM pickups pk
+       JOIN pickup_people pp ON pp.id = pk.person_id
+       LEFT JOIN users u     ON u.id  = pp.user_id
+       JOIN users ch         ON ch.id = pk.child_id
+       WHERE pk.id = $1`,
+      [pk.id]
+    );
+    const { person_name, child_name } = infoRes.rows[0] || {};
+
+    let pushTitle, pushBody, notifType;
+    if (newStatus === 'going') {
+      pushTitle = 'Pickup confirmed';
+      pushBody  = `${person_name} is going to pick up ${child_name}`;
+      notifType = 'pickup_going';
+    } else if (newStatus === 'declined' || newStatus === 'cancelled') {
+      pushTitle = 'Pickup needed';
+      pushBody  = `${person_name} can't pick up ${child_name}`;
+      notifType = 'pickup_needed';
+    } else if (newStatus === 'picked_up') {
+      pushTitle = 'Picked up';
+      pushBody  = `${child_name} has been picked up by ${person_name}`;
+      notifType = 'pickup_done';
+    }
+
+    // Notify all family admins/owners + creator (no logged-in user to exclude)
+    if (pushTitle) {
+      const managersRes = await pool.query(
+        `SELECT DISTINCT u.id, u.push_token
+         FROM pickups pkn
+         JOIN users u ON (
+           u.id = pkn.created_by
+           OR EXISTS (
+             SELECT 1 FROM family_members fm
+             WHERE fm.user_id = u.id
+               AND fm.role IN ('admin', 'owner')
+               AND fm.family_id = (
+                 SELECT family_id FROM family_members
+                 WHERE user_id = pkn.child_id LIMIT 1
+               )
+           )
+         )
+         WHERE pkn.id = $1`,
+        [pk.id]
+      );
+
+      for (const parent of managersRes.rows) {
+        insertNotification(parent.id, notifType, pushTitle, pushBody, { pickupId: pk.id });
+        if (parent.push_token) {
+          sendPush(parent.push_token, pushTitle, pushBody, { type: 'pickup', pickupId: pk.id });
+        }
+      }
+    }
 
     return successResponse(res, 200, 'Pickup updated', { status: newStatus });
 

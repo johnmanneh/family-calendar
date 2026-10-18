@@ -252,5 +252,40 @@
     "language": "ภาษา",
     "language_subtitle": "เลือกภาษาที่คุณต้องการ",
     "device_default": "ค่าเริ่มต้นของอุปกรณ์"
+  },
+  "pickup_people": {
+    "title": "ผู้รับเด็ก",
+    "subtitle": "ผู้ที่สามารถรับเด็กของคุณได้",
+    "add_btn": "เพิ่มบุคคล",
+    "add_family_member": "สมาชิกครอบครัว",
+    "add_external": "คนอื่น",
+    "name_placeholder": "ชื่อ",
+    "phone_placeholder": "หมายเลขโทรศัพท์",
+    "family_member_badge": "สมาชิกครอบครัว",
+    "remove_title": "ลบบุคคล",
+    "remove_confirm": "ลบ {{name}} ออกจากรายการรับเด็กของคุณ?",
+    "remove": "ลบ",
+    "empty": "ยังไม่มีผู้รับเด็ก",
+    "empty_hint": "เพิ่มสมาชิกครอบครัวหรือผู้อื่นที่สามารถรับเด็กของคุณได้",
+    "save": "บันทึก"
+  },
+  "pickup": {
+    "section_title": "รับเด็ก",
+    "assign_btn": "มอบหมายผู้รับเด็ก",
+    "assigned_to": "{{name}} จะมารับ",
+    "status_asked": "รอการตอบรับ",
+    "status_going": "ยืนยันแล้ว",
+    "status_picked_up": "รับแล้ว",
+    "status_declined": "ปฏิเสธแล้ว",
+    "status_cancelled": "ยกเลิกแล้ว",
+    "action_accept": "รับ",
+    "action_decline": "ปฏิเสธ",
+    "action_picked_up": "รับแล้ว",
+    "action_cancel": "ไปไม่ได้",
+    "cancel_pickup": "ยกเลิกการรับ",
+    "cancel_confirm": "ยกเลิกการนัดรับ {{name}}?",
+    "select_child": "ใครจะถูกรับ?",
+    "select_person": "ใครจะมารับ?",
+    "assign": "มอบหมาย"
   }
 }

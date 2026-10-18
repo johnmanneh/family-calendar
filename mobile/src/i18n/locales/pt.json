@@ -252,5 +252,40 @@
     "language": "Idioma",
     "language_subtitle": "Escolha o idioma preferido",
     "device_default": "Padrão do dispositivo"
+  },
+  "pickup_people": {
+    "title": "Pessoas de recolha",
+    "subtitle": "Pessoas que podem buscar seus filhos",
+    "add_btn": "Adicionar pessoa",
+    "add_family_member": "Membro da família",
+    "add_external": "Outra pessoa",
+    "name_placeholder": "Nome",
+    "phone_placeholder": "Número de telefone",
+    "family_member_badge": "Membro da família",
+    "remove_title": "Remover pessoa",
+    "remove_confirm": "Remover {{name}} da sua lista de recolha?",
+    "remove": "Remover",
+    "empty": "Nenhuma pessoa de recolha ainda",
+    "empty_hint": "Adicione membros da família ou outras pessoas que possam buscar seus filhos.",
+    "save": "Guardar"
+  },
+  "pickup": {
+    "section_title": "Recolha",
+    "assign_btn": "Atribuir pessoa de recolha",
+    "assigned_to": "Será recolhido por {{name}}",
+    "status_asked": "A aguardar resposta",
+    "status_going": "Confirmado",
+    "status_picked_up": "Recolhido",
+    "status_declined": "Recusado",
+    "status_cancelled": "Cancelado",
+    "action_accept": "Aceitar",
+    "action_decline": "Recusar",
+    "action_picked_up": "Recolhido",
+    "action_cancel": "Não consigo ir",
+    "cancel_pickup": "Cancelar recolha",
+    "cancel_confirm": "Cancelar a recolha para {{name}}?",
+    "select_child": "Quem vai ser recolhido?",
+    "select_person": "Quem vai recolher?",
+    "assign": "Atribuir"
   }
 }
