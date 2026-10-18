@@ -1,4 +1,5 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
+import { useTranslation } from 'react-i18next';
 import { View, Text, TouchableOpacity, Dimensions, } from 'react-native';
 import { useColorScheme } from '../context/ThemeContext';
 import { LIGHT, DARK } from '../theme';
@@ -23,7 +24,8 @@ function onSameDay(dateStr, day) {
   return y === day.getFullYear() && (m - 1) === day.getMonth() && d === day.getDate();
 }
 
-export default function MonthCalendar({ events = [], selectedDate, onSelectDate, onLongPressDate }) {
+export default function MonthCalendar({ events = [], selectedDate, onSelectDate, onLongPressDate, resetSignal = 0 }) {
+  const { t } = useTranslation();
   const s = useColorScheme() === 'dark' ? darkS : lightS;
   const today = new Date();
   today.setHours(0, 0, 0, 0);
@@ -33,6 +35,13 @@ export default function MonthCalendar({ events = [], selectedDate, onSelectDate,
     d.setDate(1);
     return d;
   });
+
+  // HomeScreen bumps resetSignal after a long break: show the selected day's month again
+  useEffect(() => {
+    if (!resetSignal) return;
+    const d = new Date(selectedDate || today); d.setDate(1); d.setHours(0, 0, 0, 0);
+    setDisplay(d);
+  }, [resetSignal]); // eslint-disable-line react-hooks/exhaustive-deps
 
   const year  = display.getFullYear();
   const month = display.getMonth();
@@ -51,6 +60,12 @@ export default function MonthCalendar({ events = [], selectedDate, onSelectDate,
   });
 
   const monthLabel = display.toLocaleDateString('en-GB', { month: 'long', year: 'numeric' });
+  const isCurrentMonth = display.getFullYear() === today.getFullYear() && display.getMonth() === today.getMonth();
+  const goToday = () => {
+    const d = new Date(today); d.setDate(1);
+    setDisplay(d);
+    onSelectDate?.(today);
+  };
   const prev = () => setDisplay(d => new Date(d.getFullYear(), d.getMonth() - 1, 1));
   const next = () => setDisplay(d => new Date(d.getFullYear(), d.getMonth() + 1, 1));
 
@@ -62,7 +77,12 @@ export default function MonthCalendar({ events = [], selectedDate, onSelectDate,
         <TouchableOpacity onPress={prev} style={s.arrow}>
           <Text style={s.arrowText}>‹</Text>
         </TouchableOpacity>
-        <Text style={s.monthLabel}>{monthLabel}</Text>
+        <TouchableOpacity style={s.labelWrap} onPress={goToday} activeOpacity={0.6}>
+          <Text style={s.monthLabel}>{monthLabel}</Text>
+          {!isCurrentMonth && (
+            <View style={s.todayPill}><Text style={s.todayPillText}>{t('home.today')}</Text></View>
+          )}
+        </TouchableOpacity>
         <TouchableOpacity onPress={next} style={s.arrow}>
           <Text style={s.arrowText}>›</Text>
         </TouchableOpacity>
@@ -139,6 +159,13 @@ const makeS = c => ({
   },
   arrow: { padding: 8 },
   arrowText: { fontSize: 24, color: '#1a8fa8', fontWeight: '300', lineHeight: 26 },
+  // "Today" pill — shown next to the label when the visible period isn't the current one
+  labelWrap: { flexDirection: 'row', alignItems: 'center', gap: 8 },
+  todayPill: {
+    paddingHorizontal: 9, paddingVertical: 3, borderRadius: 10,
+    backgroundColor: c === DARK ? 'rgba(26,143,168,0.22)' : '#E6F4F7',
+  },
+  todayPillText: { fontSize: 12, fontWeight: '600', color: c === DARK ? '#5ac8e0' : '#1a8fa8' },
   monthLabel: { fontSize: 16, fontWeight: '700', color: c.text, letterSpacing: -0.3 },
   letterRow: { flexDirection: 'row', paddingBottom: 4 },
   grid: { flexDirection: 'row', flexWrap: 'wrap' },

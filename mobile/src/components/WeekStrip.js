@@ -1,4 +1,5 @@
-import React, { useState, useRef } from 'react';
+import React, { useState, useRef, useEffect } from 'react';
+import { useTranslation } from 'react-i18next';
 import {
   View,
   Text,
@@ -95,12 +96,21 @@ function monthLabel(weekStart) {
 
 // ─── WeekStrip ────────────────────────────────────────────────────────────────
 
-export default function WeekStrip({ events, selectedDate, onSelectDate, onLongPressDate }) {
+export default function WeekStrip({ events, selectedDate, onSelectDate, onLongPressDate, resetSignal = 0 }) {
+  const { t } = useTranslation();
   const styles = useColorScheme() === 'dark' ? darkStyles : lightStyles;
   const today = new Date();
   today.setHours(0, 0, 0, 0);
 
   const [weekStart, setWeekStart] = useState(() => getMonday(selectedDate || today));
+
+  // HomeScreen bumps resetSignal after a long break: show the selected day's week again
+  useEffect(() => {
+    if (resetSignal) setWeekStart(getMonday(selectedDate || today));
+  }, [resetSignal]); // eslint-disable-line react-hooks/exhaustive-deps
+
+  const isCurrentWeek = sameDay(weekStart, getMonday(today));
+  const goToday = () => { setWeekStart(getMonday(today)); onSelectDate?.(today); };
 
   // Build the 7 days of this week
   const weekDays = Array.from({ length: 7 }, (_, i) => {
@@ -142,7 +152,12 @@ export default function WeekStrip({ events, selectedDate, onSelectDate, onLongPr
           <Text style={styles.monthArrowText}>‹</Text>
         </TouchableOpacity>
 
-        <Text style={styles.monthLabel}>{monthLabel(weekStart)}</Text>
+        <TouchableOpacity style={styles.labelWrap} onPress={goToday} activeOpacity={0.6}>
+          <Text style={styles.monthLabel}>{monthLabel(weekStart)}</Text>
+          {!isCurrentWeek && (
+            <View style={styles.todayPill}><Text style={styles.todayPillText}>{t('home.today')}</Text></View>
+          )}
+        </TouchableOpacity>
 
         <TouchableOpacity
           style={styles.monthArrow}
@@ -246,6 +261,13 @@ const makeStyles = c => ({
     fontWeight: '300',
     lineHeight: 24,
   },
+  // "Today" pill — shown next to the label when the visible period isn't the current one
+  labelWrap: { flexDirection: 'row', alignItems: 'center', gap: 8 },
+  todayPill: {
+    paddingHorizontal: 9, paddingVertical: 3, borderRadius: 10,
+    backgroundColor: c === DARK ? 'rgba(26,143,168,0.22)' : '#E6F4F7',
+  },
+  todayPillText: { fontSize: 12, fontWeight: '600', color: c === DARK ? '#5ac8e0' : '#1a8fa8' },
   monthLabel: {
     fontSize: 14,
     fontWeight: '600',

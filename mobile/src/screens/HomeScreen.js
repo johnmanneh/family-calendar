@@ -19,6 +19,7 @@ import {
   Modal,
   StyleSheet,
   Image,
+  AppState,
 } from 'react-native';
 import DateTimePicker, { DateTimePickerAndroid } from '@react-native-community/datetimepicker';
 import { SafeAreaView, useSafeAreaInsets } from 'react-native-safe-area-context';
@@ -526,6 +527,35 @@ export default function HomeScreen({ navigation, route }) {
   const todayStart = new Date();
   todayStart.setHours(0, 0, 0, 0);
   const [selectedDate, setSelectedDate] = useState(todayStart);
+
+  // ── Back to today after a long break ─────────────────────────────────────
+  // Short trips (open an event, a profile, the menu, or switch apps for a bit)
+  // keep the week you were on. After more than 30 minutes in the background,
+  // or on a new day, Home shows today again with search and filters cleared.
+  // A fresh app start always begins on today (nothing is restored from storage).
+  const LONG_BREAK_MS = 30 * 60 * 1000;
+  const [resetSignal, setResetSignal] = useState(0);
+  const backgroundAt = useRef(null);
+  useEffect(() => {
+    const sub = AppState.addEventListener('change', (state) => {
+      if (state === 'background' || state === 'inactive') {
+        if (!backgroundAt.current) backgroundAt.current = Date.now();
+        return;
+      }
+      if (state !== 'active' || !backgroundAt.current) return;
+      const since = backgroundAt.current;
+      backgroundAt.current = null;
+      const newDay = new Date(since).toDateString() !== new Date().toDateString();
+      if (Date.now() - since < LONG_BREAK_MS && !newDay) return;
+      const today = new Date(); today.setHours(0, 0, 0, 0);
+      setSelectedDate(today);
+      setResetSignal(n => n + 1);          // WeekStrip / MonthCalendar jump back
+      closeSearch();                       // search text + category filter
+      setScope('all');                     // All / child / Family / group chips
+      setSelectedMember(null);             // member avatar filter
+    });
+    return () => sub.remove();
+  }, [closeSearch]); // eslint-disable-line react-hooks/exhaustive-deps
 
   // Calendar view mode — 'week' or 'month'
   // Starts as month so new users always see the full calendar on first load.
@@ -1355,6 +1385,7 @@ export default function HomeScreen({ navigation, route }) {
                 <MonthCalendar
                   events={memberFiltered}
                   selectedDate={selectedDate}
+                  resetSignal={resetSignal}
                   onSelectDate={(day) => setSelectedDate(day)}
                   onLongPressDate={(day) => {
                     setSelectedDate(day);
@@ -1365,6 +1396,7 @@ export default function HomeScreen({ navigation, route }) {
                 <WeekStrip
                   events={memberFiltered}
                   selectedDate={selectedDate}
+                  resetSignal={resetSignal}
                   onSelectDate={(day) => setSelectedDate(day)}
                   onLongPressDate={(day) => {
                     setSelectedDate(day);
