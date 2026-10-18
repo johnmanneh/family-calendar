@@ -72,7 +72,11 @@ function TreadmillCell({ children, style, onLayout, ...rest }) {
   // otherwise a short list (e.g. one event + one task) counts as "scrollable" and
   // its last row tilts under the + even though the list isn't full.
   const realContentH = ctx ? ctx.contentH - (FAB_LINE + ROLL_ZONE + ctx.bottomInset) : 0;
-  const scrollable = ctx && ctx.viewportH >= 120 && realContentH > ctx.viewportH + 1;
+  // Rolling only starts once the user has dragged the list. At a cold start the
+  // calendar shows the month view first, so the list is briefly much shorter
+  // (e.g. 223 instead of 413) and a short list counted as scrollable; the tilt
+  // applied in that moment stayed on the phone. No drag yet → always flat.
+  const scrollable = ctx && ctx.dragged && ctx.viewportH >= 120 && realContentH > ctx.viewportH + 1;
   if (ctx && layout && scrollable) {
     const { y, height: h } = layout;
 
@@ -140,12 +144,13 @@ function TreadmillCell({ children, style, onLayout, ...rest }) {
 
 // bottomInset: pass the safe-area bottom inset when the list runs under the
 // system nav bar (full-screen), so the roll zone still lines up with the FAB.
-export default function TreadmillList({ contentContainerStyle, onScroll, onLayout, onContentSizeChange, bottomInset = 0, ...props }) {
+export default function TreadmillList({ contentContainerStyle, onScroll, onScrollBeginDrag, onLayout, onContentSizeChange, bottomInset = 0, ...props }) {
   const scrollY = useRef(new Animated.Value(0)).current;
   const lastY   = useRef(0);          // last scroll offset we know of
   const viewH   = useRef(0);
   const [viewportH, setViewportH] = useState(0);
   const [contentH, setContentH]   = useState(0);
+  const [dragged, setDragged]     = useState(false);   // see `scrollable` in TreadmillCell
 
   // When the list gets SHORTER (e.g. a new day is selected after a voice create),
   // the list snaps back but Android doesn't always send a scroll event. scrollY
@@ -160,7 +165,7 @@ export default function TreadmillList({ contentContainerStyle, onScroll, onLayou
   };
 
   return (
-    <TreadmillContext.Provider value={{ scrollY, viewportH, contentH, bottomInset }}>
+    <TreadmillContext.Provider value={{ scrollY, viewportH, contentH, bottomInset, dragged }}>
       {/* The visible height is measured on this plain wrapper View. FlatList's own
           onLayout didn't always fire again when the list grew (e.g. the top card
           switching from month to week view at start-up), so viewportH stayed too
@@ -178,6 +183,10 @@ export default function TreadmillList({ contentContainerStyle, onScroll, onLayou
         CellRendererComponent={TreadmillCell}
         contentContainerStyle={[contentContainerStyle, { paddingBottom: FAB_LINE + ROLL_ZONE + bottomInset }]}
         scrollEventThrottle={16}
+        onScrollBeginDrag={(e) => {
+          if (!dragged) setDragged(true);
+          onScrollBeginDrag?.(e);
+        }}
         onScroll={Animated.event(
           [{ nativeEvent: { contentOffset: { y: scrollY } } }],
           {
