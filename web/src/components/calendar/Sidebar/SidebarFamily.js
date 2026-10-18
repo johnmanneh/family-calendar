@@ -10,9 +10,10 @@ import "./Sidebar.css";
 
 // Top of the sidebar.
 //   On your own (personal space) → just you, with "Create a family" / "Join with code"
-//   In a family                  → family name (admin can rename), code, switch
+//   In one family                → family name (admin can rename), code, join/leave
+//   In multiple families         → family chips at top, then active family details
 const SidebarFamily = () => {
-  const { family, members, fetchFamily } = useFamily();
+  const { family, families, members, fetchFamily, switchFamily } = useFamily();
   const { joinWithCode } = useGroups();
   const { user } = useAuth();
 
@@ -20,10 +21,12 @@ const SidebarFamily = () => {
   const [value, setValue] = useState("");
   const [error, setError] = useState("");
   const [loading, setLoading] = useState(false);
+  const [leaving, setLeaving] = useState(false);
 
   const me = members.find(m => Number(m.id) === Number(user?.id)) || user;
   const isAdmin = ["admin", "owner"].includes(me?.role);
   const personal = !!family?.is_personal;
+  const multiFamily = families.filter(f => !f.is_personal).length > 1;
 
   const open = (m, initial = "") => { setMode(m); setValue(initial); setError(""); };
   const close = () => { setMode(null); setValue(""); setError(""); };
@@ -37,7 +40,7 @@ const SidebarFamily = () => {
     try {
       if (mode === "join") {
         const res = await runJoinFlow(v, joinWithCode, fetchFamily);
-        if (res === null) return; // cancelled the move-over
+        if (res === null) return;
       } else if (mode === "create") {
         await API.post("/family/create", { name: v });
         await fetchFamily();
@@ -50,6 +53,24 @@ const SidebarFamily = () => {
       setError(err.response?.data?.message || "Something went wrong");
     } finally {
       setLoading(false);
+    }
+  };
+
+  const handleLeave = async (targetFamily) => {
+    const targetIsAdmin = targetFamily.role === "admin";
+    if (targetIsAdmin) {
+      alert("You're the admin. Transfer ownership before leaving.");
+      return;
+    }
+    if (!window.confirm(`Leave ${targetFamily.name}?`)) return;
+    setLeaving(true);
+    try {
+      await API.delete("/family/leave", { data: { family_id: targetFamily.id } });
+      await fetchFamily();
+    } catch (err) {
+      alert(err.response?.data?.message || "Could not leave family");
+    } finally {
+      setLeaving(false);
     }
   };
 
@@ -102,9 +123,25 @@ const SidebarFamily = () => {
     );
   }
 
-  // ── In a family ──
+  // ── In a family (one or more) ──
   return (
     <div className="sidebar-family">
+
+      {/* Family chips — only shown when user is in 2+ real families */}
+      {multiFamily && (
+        <div className="sidebar-family-chips">
+          {families.filter(f => !f.is_personal).map(f => (
+            <button
+              key={f.id}
+              className={`sidebar-family-chip${Number(f.id) === Number(family?.id) ? " active" : ""}`}
+              onClick={() => Number(f.id) !== Number(family?.id) && switchFamily(f.id)}
+            >
+              {f.name}
+            </button>
+          ))}
+        </div>
+      )}
+
       <p className="sidebar-label">FAMILY</p>
       {mode === "rename" ? form("Family name", "Save") : (
         <h3 className="sidebar-family-name">
@@ -120,9 +157,21 @@ const SidebarFamily = () => {
         Share this code to add people: <strong>{family.invite_code}</strong>
       </p>
 
-      {mode === "join" ? form("Code of the other family", "Switch", true) : mode !== "rename" && (
+      {/* Join another family */}
+      {mode === "join" ? form("Family or group code", "Join", true) : mode !== "rename" && (
         <button className="sidebar-family-switch" onClick={() => open("join")}>
-          <Icon name="swap" size={13} /> Switch to another family
+          <Icon name="logIn" size={13} /> Join another family
+        </button>
+      )}
+
+      {/* Leave — shown for all non-admin members */}
+      {!isAdmin && mode === null && (
+        <button
+          className="sidebar-family-leave"
+          onClick={() => handleLeave(family)}
+          disabled={leaving}
+        >
+          <Icon name="logOut" size={13} /> {leaving ? "Leaving…" : `Leave ${family.name}`}
         </button>
       )}
     </div>

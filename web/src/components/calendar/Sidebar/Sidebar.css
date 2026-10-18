@@ -1602,6 +1602,29 @@
 }
 .sidebar-family-switch:hover { text-decoration: underline; }
 
+/* Family chips — shown when user belongs to 2+ families */
+.sidebar-family-chips {
+  display: flex; flex-wrap: wrap; gap: 6px; margin-bottom: 10px;
+}
+.sidebar-family-chip {
+  padding: 4px 12px; border-radius: 20px; border: 1px solid #d1d1d6;
+  background: none; font-size: 12px; font-weight: 600; color: #636366;
+  cursor: pointer; transition: all 0.15s;
+}
+.sidebar-family-chip:hover { border-color: #1a8fa8; color: #1a8fa8; }
+.sidebar-family-chip.active {
+  background: #1a8fa8; border-color: #1a8fa8; color: #fff; cursor: default;
+}
+
+/* Leave family button */
+.sidebar-family-leave {
+  display: inline-flex; align-items: center; gap: 6px;
+  margin-top: 6px; padding: 0; border: none; background: none;
+  color: #ff3b30; font-size: 12px; font-weight: 600; cursor: pointer;
+}
+.sidebar-family-leave:hover { text-decoration: underline; }
+.sidebar-family-leave:disabled { opacity: 0.5; cursor: default; }
+
 /* Notification icon: outline icon in a soft tinted circle (matches mobile) */
 .sidebar-notif-icon {
   width: 28px; height: 28px; border-radius: 50%;
