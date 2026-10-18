@@ -28,13 +28,13 @@ export default function JoinFamilyScreen({ navigation }) {
   const [loading, setLoading] = useState(false);
   const [error, setError]     = useState('');
 
-  const join = async (leaveCurrent = false) => {
+  const join = async () => {
     const trimmed = code.trim().toUpperCase();
     if (!trimmed) { setError(t('join.enter_code')); return; }
     setError('');
     setLoading(true);
     try {
-      const res = await API.post('/join', { code: trimmed, leave_current: leaveCurrent });
+      const res = await API.post('/join', { code: trimmed });
       const data = res.data || {};
 
       if (data.type === 'group' || data.group) {
@@ -49,19 +49,6 @@ export default function JoinFamilyScreen({ navigation }) {
       navigation.popToTop();
     } catch (err) {
       const body = err.response?.data;
-      if (err.response?.status === 409 && body?.code === 'IN_OTHER_FAMILY') {
-        // Already in a family with other people → ask before moving them out
-        Alert.alert(
-          t('join.switch_title'),
-          `${body.message}\n\n${t('join.stay_connected_hint')}`,
-          [
-            { text: t('common.cancel'), style: 'cancel' },
-            { text: t('join.leave_and_join'), style: 'destructive', onPress: () => join(true) },
-          ]
-        );
-        return;
-      }
-      // Show the HTTP status when the server sends no message (e.g. 404 = endpoint not deployed yet)
       const status = err.response?.status;
       setError(body?.message || (status ? `${t('common.error')} (${status})` : t('common.error')));
     } finally {
@@ -93,7 +80,7 @@ export default function JoinFamilyScreen({ navigation }) {
           autoCapitalize="characters"
           autoCorrect={false}
           autoFocus
-          onSubmitEditing={() => join(false)}
+          onSubmitEditing={() => join()}
           returnKeyType="go"
         />
 
@@ -101,7 +88,7 @@ export default function JoinFamilyScreen({ navigation }) {
 
         <TouchableOpacity
           style={[styles.btn, loading && { opacity: 0.6 }]}
-          onPress={() => join(false)}
+          onPress={() => join()}
           disabled={loading}
         >
           {loading
