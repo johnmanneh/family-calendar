@@ -13,6 +13,10 @@
 
 const request = require('supertest');
 const jwt = require('jsonwebtoken');
+
+// Must be set before createApp() loads auth middleware
+process.env.JWT_SECRET = 'test-secret';
+
 const createApp = require('../src/createApp');
 
 // ─── Mock the DB pool so tests never need a real PostgreSQL connection ────────
@@ -48,17 +52,23 @@ function mockUserExists(userId = 1) {
 
 const app = createApp();
 
+// Reset mock state before every test so stale queue values never bleed through
+beforeEach(() => {
+  pool.query.mockReset();
+  pool.query.mockResolvedValue({ rows: [], rowCount: 0 });
+});
+
 // ─────────────────────────────────────────────────────────────────────────────
 // 1. Unauthenticated requests
 // ─────────────────────────────────────────────────────────────────────────────
 describe('Unauthenticated requests', () => {
   const protectedRoutes = [
     ['GET',    '/api/events'],
-    ['POST',   '/api/events'],
+    ['POST',   '/api/events/create'],
     ['PUT',    '/api/events/1'],
     ['DELETE', '/api/events/1'],
-    ['GET',    '/api/family/members'],
-    ['GET',    '/api/tasks'],
+    ['GET',    '/api/family'],
+    ['GET',    '/api/tasks/pending'],
     ['GET',    '/api/notifications'],
     ['GET',    '/api/auth/me'],
   ];
@@ -194,7 +204,7 @@ describe('Task authorization', () => {
 
     const token = makeToken(1); // user 1, task assigned to user 99
     const res = await request(app)
-      .post('/api/tasks/1/complete')
+      .patch('/api/tasks/1/complete')
       .set('Authorization', `Bearer ${token}`);
 
     expect(res.status).toBe(404);
