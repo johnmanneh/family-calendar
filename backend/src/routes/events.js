@@ -21,6 +21,7 @@ const respondToEventInvitation = require('../controllers/events/respondToEventIn
 const getAvailability = require('../controllers/events/getAvailability');
 const getEventTargets = require('../controllers/events/getEventTargets');
 const createEventShare = require('../controllers/events/createEventShare');
+const { assignPickup, cancelPickup } = require('../controllers/events/assignPickup');
 
 //Events
 router.get("/", verifyToken, getEvents);
@@ -34,6 +35,8 @@ router.post("/create", verifyToken, createEvent);
 router.put("/:id", verifyToken, updateEvent);
 router.delete("/:id", verifyToken, deleteEvent);
 router.post("/:id/share", verifyToken, createEventShare);
+router.post("/:id/pickup", verifyToken, assignPickup);
+router.delete("/:id/pickup", verifyToken, cancelPickup);
 
 //Attendee
 router.post("/:id/attendees", verifyToken, addAttendee);
