@@ -33,6 +33,8 @@
 | `tasks` | id, event_id, assigned_to, title, position, is_standalone, due_date, completed, created_by, created_at, status, counter_offer, creator_acknowledged, last_counter_by, assignee_acknowledged |
 | `sub_tasks` | id, task_id, title, created_at |
 | `event_shares` | id, event_id, token, created_by, expires_at, revoked_at, show_notes, show_location, allow_rsvp, created_at |
+| `pickup_people` | id, family_id, user_id (nullable), name, phone, created_at |
+| `pickups` | id, event_id, child_id, person_id, created_by, status, token, revoked_at, created_at |
 
 ### Migrations
 
@@ -66,6 +68,7 @@
 | `026_create_messages.sql` | messages table (id, family_id, user_id, body, created_at) for family chat |
 | `028_merge_solo_families.sql` | data migration — merges solo families when a user joins a larger one |
 | `033_create_event_shares.sql` | event_shares table — token, expiry, revoked_at, show_notes, show_location, allow_rsvp |
+| `V007_pickup.sql` | pickup_people + pickups tables — assign/track child pickup per event |
 
 ### Grant Permissions (run after every migration)
 ```sql
@@ -214,8 +217,19 @@ DELETE /api/groups/:id/members/:userId (NEW — admin only, cannot remove self o
 POST   /api/groups/events/:id/share
 DELETE /api/groups/events/:id/share/:groupId
 
+PICKUP
+GET    /api/family/pickup-people          (list all pickup people for the family)
+POST   /api/family/pickup-people          (add pickup person — body: { user_id? | name, phone? })
+PATCH  /api/family/pickup-people/:id      (update name/phone of external person)
+DELETE /api/family/pickup-people/:id      (remove a pickup person)
+POST   /api/events/:id/pickup             (assign pickup — body: { child_id, person_id })
+DELETE /api/events/:id/pickup             (cancel/revoke pickup assignment)
+POST   /api/pickups/:id/respond           (respond — body: { action: accept|decline|picked_up|cant_make_it })
+
 PUBLIC (no auth)
 GET    /api/public/events/:token          (fetch shared event by token — returns minimal fields, respects show_notes/show_location)
+GET    /api/public/pickups/:token         (fetch pickup details by token — returns event info + available_actions)
+POST   /api/public/pickups/:token         (respond to pickup publicly — body: { action })
 
 JOIN (unified)
 POST   /api/join                      (NEW — single endpoint: joins family or group by invite code)
@@ -245,9 +259,9 @@ GET    /uploads/avatars/:filename    (served directly by Express)
 ```
 
 See `docs/SCAN.md` for full scan feature documentation (AI provider, endpoints, security).
-Planned: PDF and email import into the same review flow — see `docs/architecture/04-document-email-import.md`.
 Single-event sharing live — see step 32 in Completed Steps.
-Planned: pickup confirmation (anyone picking up a child taps buttons; the family sees the status) — see `docs/architecture/06-pickup-confirmation.md`.
+Pickup confirmation live — see step 33 in Completed Steps.
+Planned: PDF and email import into the same review flow — see `docs/architecture/04-document-email-import.md`.
 
 ---
 
@@ -610,18 +624,31 @@ export const CATEGORIES = [
 | — | Web: `/e/:token` public page — standalone React route, no login required, handles loading/expired/not-found states | ✅ Done |
 | — | Mobile: Share button in EventDetailsScreen (creator + non-private only) — opens native iOS/Android share sheet via `Share.share()` | ✅ Done |
 | — | Bug fix: `req.body \|\| {}` guards against empty POST from mobile (axios omits Content-Type when no body passed) | ✅ Done |
+| 33 | 🚗 Pickup confirmation — assign a pickup person per child, track status, public respond link | ✅ Done |
+| — | Migration V007: `pickup_people` table (id, family_id, user_id nullable, name, phone) + `pickups` table (id, event_id, child_id, person_id, created_by, status, revoked_at) | ✅ Done |
+| — | `GET/POST/PATCH/DELETE /api/family/pickup-people` — manage pickup people (family members or external contacts) | ✅ Done |
+| — | `POST /api/events/:id/pickup` — assign a pickup person to a child for an event | ✅ Done |
+| — | `DELETE /api/events/:id/pickup` — cancel/revoke a pickup assignment | ✅ Done |
+| — | `POST /api/pickups/:id/respond` — respond to a pickup (accept / decline / picked_up / cant_make_it) | ✅ Done |
+| — | `GET /api/public/pickups/:token` — no auth, returns pickup details + available_actions | ✅ Done |
+| — | `POST /api/public/pickups/:token` — no auth, public respond via link (same actions) | ✅ Done |
+| — | `getEvent.js` returns `pickups[]` array so EventDetails always has current pickup state | ✅ Done |
+| — | Notifications sent to all family managers on every status change (push + in-app) | ✅ Done |
+| — | Web: pickup section in EventDetailsView — status chip, assign form, respond buttons, cancel link | ✅ Done |
+| — | Web: `/p/:token` public page — standalone route, shows event info + action buttons, confirmation screen | ✅ Done |
+| — | Mobile: PickupPeopleScreen — list, add (family member or external), inline edit, remove | ✅ Done |
+| — | Mobile: pickup section in EventDetailsScreen — status chip, respond buttons, assign modal | ✅ Done |
+| — | Mobile: FamilyScreen — Pickup People entry navigates to PickupPeopleScreen | ✅ Done |
 
 ---
 
-## ✅ Completed Roadmap
+## 🗺️ Upcoming / Planned
 
-All planned steps complete.
-
-| Step | Feature |
-|------|---------|
-| 22 | Event search / filters — web CalendarToolbar + mobile search panel, cross-date search when active |
-| 23 | Recurring events on mobile — recurrence picker already in EventFormScreen; details screen shows 🔁 row |
-| 24 | Offline support — AsyncStorage cache, stale-while-revalidate on mount, offline banner with "last updated X min ago" |
+| Feature | Notes |
+|---------|-------|
+| PDF & email import | Scan a PDF (school newsletter etc.) and import events into the same review flow as photo scan — see `docs/architecture/04-document-email-import.md` |
+| Web i18n | Mobile has 18 locales; web is English-only |
+| Web profile / settings | Avatar upload, dark mode toggle, name editing on web |
 
 ---
 
