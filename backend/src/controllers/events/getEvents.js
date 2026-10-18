@@ -234,6 +234,12 @@ const getEvents = async (req, res) => {
          LEFT JOIN users att_u ON ea_all.user_id = att_u.id
          LEFT JOIN family_members fm2 ON att_u.id = fm2.user_id AND fm2.family_id = e.family_id
          WHERE e.id = ANY($1::int[])
+           -- never events of the user's OTHER families: switching family shows
+           -- only that family (group shares / invites from outside still show)
+           AND NOT EXISTS (
+             SELECT 1 FROM family_members mf
+             WHERE mf.user_id = $2 AND mf.family_id = e.family_id AND mf.family_id <> $3
+           )
            -- a group event from another family is an invitation: it only shows
            -- in the calendar once accepted (pending stays in Pending, declined is gone)
            AND (
@@ -241,7 +247,7 @@ const getEvents = async (req, res) => {
              OR EXISTS (SELECT 1 FROM event_attendees x WHERE x.event_id = e.id AND x.user_id = $2 AND x.status = 'accepted')
            )
          GROUP BY e.id, u.first_name, uu.first_name`,
-        [missingIds, userId]
+        [missingIds, userId, familyId]
       );
       groupEvents = extra.rows.map(e => normAllDay({
         ...e,

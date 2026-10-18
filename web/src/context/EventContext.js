@@ -4,6 +4,7 @@ import { sanitizeData } from "../utils/dataUtils";
 import { formatDateTime } from "../utils/dateUtils";
 import { useUI } from "./UIContext";
 import { useAuth } from "./AuthContext";
+import { useFamily } from "./FamilyContext";
 
 const EventContext = createContext();
 
@@ -496,6 +497,19 @@ export const EventProvider = ({ children }) => {
       sseRef.current = null;
     };
   };
+
+  // Switching family → load that family's events and my tasks (they were only
+  // reloaded on the next refresh, so the old family's events stayed on screen)
+  const { family: activeFamily } = useFamily();
+  const lastFamilyId = useRef(null);
+  useEffect(() => {
+    const id = activeFamily?.id ?? null;
+    if (lastFamilyId.current !== null && id !== null && id !== lastFamilyId.current) {
+      fetchEvents();
+      fetchMyTasks();
+    }
+    lastFamilyId.current = id;
+  }, [activeFamily?.id]); // eslint-disable-line react-hooks/exhaustive-deps
 
   useEffect(() => {
     connectSSE();

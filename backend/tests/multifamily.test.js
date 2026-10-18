@@ -46,6 +46,14 @@ const expect=(label, got, want)=>{ const ok = want instanceof Function ? want(go
   r=await call(C('events/getEvent'),{user:john,params:{id:aid}});
   expect('open an event of the other (non-active) family he belongs to', [r.c, r.b.event?.title].join(' '), '200 A party');
 
+  // Events list follows the active family (B): A's event must not leak in, even
+  // when John accepted it as an attendee
+  await q(`INSERT INTO event_attendees (event_id,user_id,status) VALUES ($1,1,'accepted')`,[aid]);
+  r=await call(C('events/getEvents'),{user:john});
+  const titles=(r.b.events||[]).map(e=>e.title);
+  expect("events list (B active) has B's event", titles.includes('Zoo'), true);
+  expect("…and not A's event, even accepted as attendee", titles.includes('A party'), false);
+
   // Switch active to A → new child goes to A
   await q('UPDATE family_members SET is_active=false WHERE user_id=1');
   await q('UPDATE family_members SET is_active=true WHERE user_id=1 AND family_id=1');

@@ -940,6 +940,19 @@ export default function HomeScreen({ navigation, route }) {
   useEffect(() => { if (taskTick  > 0) { fetchEvents(); fetchPendingCount(); fetchNotifUnread(); } }, [taskTick]);
   useEffect(() => { if (notifTick > 0) { fetchPendingCount(); fetchNotifUnread(); } }, [notifTick]);
 
+  // Switching family → reload events/tasks for that family and reset the chips
+  // (the old family's chips/children don't exist in the new one)
+  const lastFamilyId = useRef(null);
+  useEffect(() => {
+    const id = family?.id ?? null;
+    if (lastFamilyId.current !== null && id !== null && id !== lastFamilyId.current) {
+      setScope('all');
+      setSelectedMember(null);
+      fetchEvents();
+    }
+    lastFamilyId.current = id;
+  }, [family?.id]); // eslint-disable-line react-hooks/exhaustive-deps
+
   // Re-fetch tasks when returning from TaskFormScreen or any other screen
   useFocusEffect(useCallback(() => { fetchEvents(); fetchPendingCount(); }, [fetchEvents, fetchPendingCount]));
 
