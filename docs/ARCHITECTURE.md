@@ -649,6 +649,7 @@ export const CATEGORIES = [
 | PDF & email import | Scan a PDF (school newsletter etc.) and import events into the same review flow as photo scan — see `docs/architecture/04-document-email-import.md` |
 | Web i18n | Mobile has 18 locales; web is English-only |
 | Web profile / settings | Avatar upload, dark mode toggle, name editing on web |
+| Multiple families — finish | Partly built; gaps: some parts still use the *largest* family instead of the *active* one (children, pickup people, rename, scan, single event, live updates), no **Create a family** once you're in one, **Leave** should move to the bottom — see `docs/architecture/07-multi-family.md` |
 
 ---
 
