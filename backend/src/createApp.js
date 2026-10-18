@@ -13,6 +13,7 @@ const streamRoutes = require('./routes/stream');
 const notificationRoutes = require('./routes/notifications');
 const scanRoutes = require('./routes/scan');
 const chatRoutes = require('./routes/chat');
+const pickupRoutes = require('./routes/pickups');
 const joinRoutes = require('./routes/join');
 const publicRoutes = require('./routes/public');
 
@@ -38,6 +39,7 @@ function createApp() {
   app.use('/api/chat', chatRoutes);
   app.use('/api/join', joinRoutes);
   app.use('/api/scan', scanRoutes);
+  app.use('/api/pickups', pickupRoutes);
   app.use('/api/public', publicRoutes);
 
   app.get('/', (req, res) => res.json({ message: 'Family Calendar API is running' }));
