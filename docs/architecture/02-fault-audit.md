@@ -104,19 +104,14 @@ All 14 mobile screens call `API` directly instead of going through context. User
 ---
 
 ### F-20 — No security test suite
-**Severity:** P2 → **In progress**  
-Test infrastructure scaffolded:
-- `backend/src/createApp.js` — Express app factory (no `app.listen`, usable by tests)
-- `backend/src/app.js` — refactored to use `createApp.js`
-- `backend/__tests__/security.test.js` — written, covers:
-  - Unauthenticated requests → 401
-  - Tampered / deleted-user JWTs → 401
-  - Cross-family event ID guessing → 404
-  - Private event title must not leak
-  - Non-assignee cannot complete a task → 404
-  - Rate-limit headers present on auth endpoints
-- Jest + Supertest installed as devDependencies.
-- **Pending:** run tests and confirm all pass.
+**Severity:** P2 → **FIXED**  
+17/17 tests passing. Covers:
+- Unauthenticated requests → 401
+- Tampered / deleted-user JWTs → 401
+- Cross-family event ID guessing → 404
+- Private event title must not leak
+- Non-assignee cannot complete a task → 404
+- Rate-limit headers present on auth endpoints
 
 ---
 

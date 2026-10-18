@@ -37,7 +37,7 @@ Legend:
 | F-17 | Audit history underspecified | **Not started** | Only `created_by` / `updated_by` on events. No audit log table. |
 | F-18 | API responses return raw DB rows | **Done** | `getEvents.js` uses explicit `eventCols` column list instead of `SELECT e.*`. |
 | F-19 | Mobile screens call API directly | **In progress** | 14 screens bypass context layer. User fixing manually. |
-| F-20 | No security-focused test matrix | **In progress** | Test infrastructure written (`createApp.js`, `__tests__/security.test.js`). Jest + Supertest installed. Pending: run and confirm passing. |
+| F-20 | No security-focused test matrix | **Done** | 17/17 tests passing. Route paths fixed, JWT_SECRET set in test env, mock reset added. |
 | F-21a | Avatars on ephemeral Railway disk | **Done** | Cloudinary integration complete. `uploadAvatar.js` uses memory buffer + upload_stream. |
 | F-21b | CORS open to all origins | **Done** | Restricted to `its4us.app` + `localhost:3000` in `app.js`. Deployed. |
 | F-21c | No rate limiting on auth endpoints | **Done** | `express-rate-limit` on `/login`, `/register`, `/forgot-password`. Deployed. |
