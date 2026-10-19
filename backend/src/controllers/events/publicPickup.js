@@ -163,7 +163,7 @@ const respondToPublicPickup = async (req, res) => {
       for (const parent of managersRes.rows) {
         insertNotification(parent.id, notifType, pushTitle, pushBody, { pickupId: pk.id });
         if (parent.push_token) {
-          sendPush(parent.push_token, pushTitle, pushBody, { type: 'pickup', pickupId: pk.id });
+          sendPush(parent.push_token, pushTitle, pushBody, { type: 'pickup', pickupId: pk.id }, { urgent: notifType === 'pickup_needed' });
         }
       }
     }

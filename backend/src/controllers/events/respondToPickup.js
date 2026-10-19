@@ -120,7 +120,7 @@ const respondToPickup = async (req, res) => {
       for (const parent of managersRes.rows) {
         insertNotification(parent.id, notifType, pushTitle, pushBody, { pickupId });
         if (parent.push_token) {
-          sendPush(parent.push_token, pushTitle, pushBody, { type: 'pickup', pickupId });
+          sendPush(parent.push_token, pushTitle, pushBody, { type: 'pickup', pickupId }, { urgent: notifType === 'pickup_needed' });
         }
       }
     }

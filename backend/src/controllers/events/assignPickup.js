@@ -1,5 +1,6 @@
 const crypto = require('crypto');
 const pool = require('../../config/db');
+const notifyUser = require('../../utils/notifyUser');
 const { successResponse, errorResponse } = require('../../utils/response/responseHandlers');
 const { managesChild } = require('../../utils/access');
 
@@ -82,6 +83,25 @@ const assignPickup = async (req, res) => {
     );
 
     const pickup = insertResult.rows[0];
+
+    // In-app pickup person: notification + push with the request (outside
+    // people get the WhatsApp link instead)
+    const info = await pool.query(
+      `SELECT pp.user_id, c.first_name AS child_name, a.first_name AS asker
+       FROM pickup_people pp, users c, users a
+       WHERE pp.id = $1 AND c.id = $2 AND a.id = $3`,
+      [person_id, child_id, userId]
+    );
+    const p = info.rows[0];
+    if (p?.user_id && Number(p.user_id) !== userId) {
+      const when = new Date(event.start_date).toLocaleString('en-GB', {
+        weekday: 'short', day: 'numeric', month: 'short', hour: '2-digit', minute: '2-digit',
+        timeZone: 'Europe/Zurich',
+      });
+      notifyUser(p.user_id, 'pickup_request', 'Pickup request',
+        `${p.asker} asks you to pick up ${p.child_name} · ${when}`,
+        { pickupId: pickup.id, eventId });
+    }
 
     return successResponse(res, 201, 'Pickup assigned', {
       pickup: {

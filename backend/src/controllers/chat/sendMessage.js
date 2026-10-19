@@ -1,4 +1,5 @@
 const pool = require('../../config/db');
+const sendPush = require('../../utils/sendPush');
 const { ACTIVE_FAMILY_ORDER } = require('../../utils/activeFamily');
 const { broadcast } = require('../../utils/sseClients');
 const { successResponse, errorResponse } = require('../../utils/response/responseHandlers');
@@ -55,6 +56,22 @@ const sendMessage = async (req, res) => {
     };
 
     broadcast(familyId, 'chat_message', payload);
+
+    // Phone push to everyone else in this family (when the app isn't open the
+    // live update doesn't reach them). Not saved to the notification inbox —
+    // a bell entry per chat message would be noise.
+    const others = await pool.query(
+      `SELECT u.push_token, f.name AS family_name
+       FROM family_members fm JOIN users u ON u.id = fm.user_id JOIN families f ON f.id = fm.family_id
+       WHERE fm.family_id = $1 AND fm.user_id <> $2 AND u.push_token IS NOT NULL`,
+      [familyId, userId]
+    );
+    if (others.rows.length) {
+      const text = body.trim();
+      sendPush(others.rows.map(r => r.push_token), others.rows[0].family_name || 'Family chat',
+        `${sender.first_name || 'Someone'}: ${text.length > 120 ? text.slice(0, 117) + '…' : text}`,
+        { type: 'chat', familyId });
+    }
 
     return successResponse(res, 201, 'Message sent', { message: payload });
   } catch (err) {
