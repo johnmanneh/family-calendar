@@ -18,3 +18,7 @@ backend/uploads/
 
 # Screenshots — local only
 screenshots/
+
+# Firebase service-account keys are secret — never commit them
+*firebase-adminsdk*.json
+service-account*.json

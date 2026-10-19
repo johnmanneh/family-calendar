@@ -1,0 +1,29 @@
+{
+  "project_info": {
+    "project_number": "557746268287",
+    "project_id": "it-s-for-us",
+    "storage_bucket": "it-s-for-us.firebasestorage.app"
+  },
+  "client": [
+    {
+      "client_info": {
+        "mobilesdk_app_id": "1:557746268287:android:af366daba0123cc56ff74a",
+        "android_client_info": {
+          "package_name": "com.songsanchaun.whenapp"
+        }
+      },
+      "oauth_client": [],
+      "api_key": [
+        {
+          "current_key": "AIzaSyB6xXfRRXdHR-Ln7hgkoD5qu4zXM71KdqQ"
+        }
+      ],
+      "services": {
+        "appinvite_service": {
+          "other_platform_oauth_client": []
+        }
+      }
+    }
+  ],
+  "configuration_version": "1"
+}
