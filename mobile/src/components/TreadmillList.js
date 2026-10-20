@@ -24,6 +24,9 @@
 
 import React, { createContext, useContext, useRef, useState } from 'react';
 import { Animated, Platform, View } from 'react-native';
+import { canRoll } from './treadmillRoll';
+
+export { canRoll };
 
 // Rows start tilting when they reach the TOP of the + button and are almost
 // gone near the bottom of the list. FAB sits 32pt above the list bottom and is
@@ -45,6 +48,8 @@ const TOP_TILT    = `${ 60 * TILT_DIR}deg`;   // top edge recedes
 
 const TreadmillContext = createContext(null);
 
+// Whether rows may roll at all lives in treadmillRoll.js (pure, unit-tested).
+
 // Neutral style with the same transform shape as the rolling styles, so switching
 // between them always overwrites every value on the native view.
 const FLAT = {
@@ -65,18 +70,7 @@ function TreadmillCell({ children, style, onLayout, ...rest }) {
   // while the list was still measuring itself at start-up).
   let topStyle = FLAT;      // outer view: rolls away at the TOP edge
   let bottomStyle = FLAT;   // inner view: rolls under the FAB at the BOTTOM
-  // Only roll when the list really scrolls. If everything fits on screen there's
-  // nothing to roll under the FAB — and a stale/tiny viewport measurement (e.g.
-  // after filters change the list, or the keyboard was up) can't tip rows flat.
-  // contentH includes the extra bottom padding we add for the FAB; leave it out,
-  // otherwise a short list (e.g. one event + one task) counts as "scrollable" and
-  // its last row tilts under the + even though the list isn't full.
-  const realContentH = ctx ? ctx.contentH - (FAB_LINE + ROLL_ZONE + ctx.bottomInset) : 0;
-  // Rolling only starts once the user has dragged the list. At a cold start the
-  // calendar shows the month view first, so the list is briefly much shorter
-  // (e.g. 223 instead of 413) and a short list counted as scrollable; the tilt
-  // applied in that moment stayed on the phone. No drag yet → always flat.
-  const scrollable = ctx && ctx.dragged && ctx.viewportH >= 120 && realContentH > ctx.viewportH + 1;
+  const scrollable = canRoll(ctx);
   if (ctx && layout && scrollable) {
     const { y, height: h } = layout;
 
