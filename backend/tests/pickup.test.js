@@ -3,8 +3,7 @@ process.env.TZ='UTC';
 // Run against an EMPTY test database (never production):
 //   TEST_DATABASE_URL=postgres://user@localhost/when_test node tests/pickup.test.js
 // after loading src/config/migrations/000_initial_schema.sql into it.
-if (!process.env.TEST_DATABASE_URL) { console.error('Set TEST_DATABASE_URL to an empty test database'); process.exit(1); }
-process.env.DATABASE_URL = process.env.TEST_DATABASE_URL;
+require('./testDatabase')(process.env);
 const pool=require('../src/config/db'); const migrate=require('../src/db/migrate');
 const ctl=require('../src/controllers/events/assignPickup');
 const assign = ctl.assignPickup || ctl;

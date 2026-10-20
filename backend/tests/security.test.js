@@ -4,8 +4,7 @@ process.env.TZ='UTC';
 //   TEST_DATABASE_URL=postgres://user@localhost/when_test node tests/security.test.js
 // The schema is created from src/config/migrations/000_initial_schema.sql first:
 //   psql "$TEST_DATABASE_URL" -f src/config/migrations/000_initial_schema.sql
-if (!process.env.TEST_DATABASE_URL) { console.error('Set TEST_DATABASE_URL to an empty test database'); process.exit(1); }
-process.env.DATABASE_URL = process.env.TEST_DATABASE_URL;
+require('./testDatabase')(process.env);
 const pool=require('../src/config/db'); const ensure=require('../src/utils/ensureSchema');
 const C=n=>require('../src/controllers/'+n);
 const call=(fn,req)=>new Promise(r=>{const res={status(c){this.c=c;return this},json(b){r({c:this.c||200,b})}}; Promise.resolve(fn({params:{},body:{},...req},res)).catch(e=>r({c:'THROW',b:e.message}));});

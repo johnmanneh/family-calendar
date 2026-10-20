@@ -81,7 +81,7 @@ async function managesChild(actorId, ownerId) {
 }
 
 // May `actorId` perform `action` on `ownerId`'s calendar? Fails closed.
-async function canManageCalendar(actorId, ownerId, action) {
+async function canManageCalendar(actorId, ownerId, action, familyId = null) {
   if (!ACTIONS.has(action)) return false;
   if (!/^\d+$/.test(String(ownerId)) || !/^\d+$/.test(String(actorId))) return false;
   if (Number(actorId) === Number(ownerId)) return true;
@@ -92,8 +92,9 @@ async function canManageCalendar(actorId, ownerId, action) {
      JOIN family_members a ON a.family_id = cp.family_id AND a.user_id = cp.owner_user_id
      JOIN family_members b ON b.family_id = cp.family_id AND b.user_id = cp.delegate_user_id
      WHERE cp.owner_user_id = $1 AND cp.delegate_user_id = $2 AND cp.${col} = true
+       AND ($3::int IS NULL OR cp.family_id = $3)
      LIMIT 1`,
-    [ownerId, actorId]
+    [ownerId, actorId, familyId]
   );
   return r.rows.length > 0;
 }
@@ -109,7 +110,9 @@ async function canChangeEvent(actorId, event, action) {
   if (owner === uid) return true;
   if (!owner) return false;
   if (await managesChild(uid, owner)) return true;
-  if (!(await canManageCalendar(uid, owner, action))) return false;
+  // Management grants never widen event visibility (including an empty PUT).
+  if ((await eventAccess(uid, event)).level !== 'full') return false;
+  if (event.family_id == null || !(await canManageCalendar(uid, owner, action, event.family_id))) return false;
   return !event.is_private || Number(event.created_by) === uid;
 }
 const canEditEvent = (actorId, event) => canChangeEvent(actorId, event, 'edit');
@@ -196,6 +199,24 @@ async function taskAccess(userId, taskId) {
   return { task, event, canView, isTaskCreator, isAssignee, isEventCreator };
 }
 
+// Family/member listings must not expose an event's title through its tasks.
+// An invitation/group membership does not move an event into another family.
+async function filterListedTasks(userId, tasks, familyIds) {
+  const allowed = new Set(familyIds.map(Number));
+  const visible = await Promise.all(tasks.map(async task => {
+    if (!task.event_id) {
+      if (!task.is_standalone) return null;
+      // Current memberships cannot establish a legacy task's historical scope.
+      // Keep unresolved tasks hidden until their family is assigned explicitly.
+      if (task.family_id == null) return null;
+      return allowed.has(Number(task.family_id)) ? task : null;
+    }
+    const { event, level } = await eventAccess(userId, task.event_id);
+    return event && allowed.has(Number(event.family_id)) && level === 'full' ? task : null;
+  }));
+  return visible.filter(Boolean);
+}
+
 // The minimal shape for a private event someone may only see as "Busy"
 const busyView = e => ({
   id: e.id,
@@ -215,5 +236,5 @@ const busyView = e => ({
 
 module.exports = {
   loadEvent, eventAccess, canEditEvent, canDeleteEvent, canManageCalendar, managesChild,
-  creatableCalendars, canInvite, canAssignOnEvent, sharesFamily, taskAccess, busyView,
+  creatableCalendars, canInvite, canAssignOnEvent, sharesFamily, taskAccess, busyView, filterListedTasks,
 };

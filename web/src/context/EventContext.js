@@ -9,7 +9,14 @@ import { useFamily } from "./FamilyContext";
 const EventContext = createContext();
 
 export const EventProvider = ({ children }) => {
-  const { user } = useAuth();
+  const { user, token } = useAuth();
+  const { family: activeFamily } = useFamily();
+  const scope = `${token ?? ''}:${activeFamily?.id ?? ''}`;
+  const scopeRef = useRef(scope);
+  scopeRef.current = scope;
+  const eventRequest = useRef(0);
+  const taskRequest = useRef(0);
+  useEffect(() => () => { eventRequest.current += 1; taskRequest.current += 1; }, []);
   // Bumps whenever the server pings this user about a new notification
   const [notifTick, setNotifTick] = useState(0);
 
@@ -36,19 +43,23 @@ export const EventProvider = ({ children }) => {
   //
   //
   const fetchEvents = async () => {
+    const request = ++eventRequest.current;
+    const requestScope = scopeRef.current;
+    const isCurrent = () => request === eventRequest.current && requestScope === scopeRef.current;
     try {
       const res = await API.get("/events");
+      if (!isCurrent()) return;
       setEvents(res.data.events);
       setSelectedEvent(null);
       try {
         const inv = await API.get('/events/invitations');
-        setPendingInvitations(inv.data.invitations);
+        if (isCurrent()) setPendingInvitations(inv.data.invitations);
       } catch { /* silent */ }
       return res.data;
     } catch (err) {
-      setError(err.response?.data?.message || "fetching events went wrong");
+      if (isCurrent()) setError(err.response?.data?.message || "fetching events went wrong");
     } finally {
-      setLoading(false);
+      if (isCurrent()) setLoading(false);
     }
   };
   //
@@ -89,7 +100,8 @@ export const EventProvider = ({ children }) => {
       resetModal();
       return res.data;
     } catch (err) {
-      setError(err.response?.data?.message || "fetching events went wrong");
+      setError(err.response?.data?.message || "Creating event failed");
+      throw err;
     } finally {
       setLoading(false);
     }
@@ -148,11 +160,14 @@ export const EventProvider = ({ children }) => {
   //
   //
   const fetchMyTasks = async () => {
+    const request = ++taskRequest.current;
+    const requestScope = scopeRef.current;
+    const isCurrent = () => request === taskRequest.current && requestScope === scopeRef.current;
     try {
       const res = await API.get("/events/my-tasks");
-      setMyTasks(res.data.tasks);
+      if (isCurrent()) setMyTasks(res.data.tasks);
     } catch (err) {
-      setMyTasks([]);
+      if (isCurrent()) setMyTasks([]);
     }
   };
   //
@@ -269,6 +284,7 @@ export const EventProvider = ({ children }) => {
       setSelectedEvent(null);
     } catch (err) {
       setError(err.response?.data?.message || "Update failed");
+      throw err;
     }
   };
   //
@@ -459,59 +475,51 @@ export const EventProvider = ({ children }) => {
   const chatMessageCallbackRef = useRef(null);
   const onChatMessage = (cb) => { chatMessageCallbackRef.current = cb; };
 
-  const connectSSE = () => {
-    const token = localStorage.getItem('token');
-    if (!token) return;
-    if (sseRef.current) sseRef.current.close();
+  useEffect(() => {
+    let disposed = false;
+    let retryTimer = null;
+    const connectSSE = () => {
+      if (disposed) return;
+      if (!token) return;
+      clearTimeout(retryTimer);
+      if (sseRef.current) sseRef.current.close();
 
-    const sseBase = process.env.REACT_APP_API_URL || 'http://localhost:8000/api';
-    const es = new EventSource(`${sseBase}/stream?token=${token}`);
-    sseRef.current = es;
+      const sseBase = process.env.REACT_APP_API_URL || 'http://localhost:8000/api';
+      const es = new EventSource(`${sseBase}/stream?token=${encodeURIComponent(token)}`);
+      sseRef.current = es;
 
-    es.addEventListener('task_update', () => {
-      fetchPendingTasks();
-      fetchTaskNotifications();
-      fetchAssigneeNotifications();
-      if (selectedEventRef.current) {
-        fetchTasks(selectedEventRef.current.id);
-      }
-    });
+      es.addEventListener('task_update', () => {
+        fetchPendingTasks();
+        fetchTaskNotifications();
+        fetchAssigneeNotifications();
+        if (selectedEventRef.current) {
+          fetchTasks(selectedEventRef.current.id);
+        }
+      });
 
-    es.addEventListener('event_update', () => {
-      fetchEvents();
-    });
+      es.addEventListener('event_update', () => {
+        fetchEvents();
+      });
 
-    es.addEventListener('notification', () => {
-      setNotifTick(t => t + 1);
-    });
+      es.addEventListener('notification', () => {
+        setNotifTick(t => t + 1);
+      });
 
-    es.addEventListener('chat_message', (e) => {
-      try {
-        const msg = JSON.parse(e.data);
-        if (chatMessageCallbackRef.current) chatMessageCallbackRef.current(msg);
-      } catch { /* silent */ }
-    });
+      es.addEventListener('chat_message', (e) => {
+        try {
+          const msg = JSON.parse(e.data);
+          if (chatMessageCallbackRef.current) chatMessageCallbackRef.current(msg);
+        } catch { /* silent */ }
+      });
 
-    es.onerror = () => {
-      es.close();
-      sseRef.current = null;
+      es.onerror = () => {
+        if (disposed || sseRef.current !== es) return;
+        es.close();
+        sseRef.current = null;
+        retryTimer = setTimeout(connectSSE, 3000);
+      };
     };
-  };
 
-  // Switching family → load that family's events and my tasks (they were only
-  // reloaded on the next refresh, so the old family's events stayed on screen)
-  const { family: activeFamily } = useFamily();
-  const lastFamilyId = useRef(null);
-  useEffect(() => {
-    const id = activeFamily?.id ?? null;
-    if (lastFamilyId.current !== null && id !== null && id !== lastFamilyId.current) {
-      fetchEvents();
-      fetchMyTasks();
-    }
-    lastFamilyId.current = id;
-  }, [activeFamily?.id]); // eslint-disable-line react-hooks/exhaustive-deps
-
-  useEffect(() => {
     connectSSE();
 
     // 18.5 — reconnect when tab comes back into focus
@@ -523,11 +531,24 @@ export const EventProvider = ({ children }) => {
     document.addEventListener('visibilitychange', handleVisibility);
 
     return () => {
+      disposed = true;
+      clearTimeout(retryTimer);
       document.removeEventListener('visibilitychange', handleVisibility);
       if (sseRef.current) sseRef.current.close();
+      sseRef.current = null;
     };
   // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, []);
+  }, [token]);
+  // Switching family reloads family-scoped data.
+  const lastFamilyId = useRef(undefined); // undefined = effect hasn't run yet; null = seen a null family
+  useEffect(() => {
+    const id = activeFamily?.id ?? null;
+    if (lastFamilyId.current !== undefined && id !== null && id !== lastFamilyId.current) {
+      fetchEvents();
+      fetchMyTasks();
+    }
+    lastFamilyId.current = id;
+  }, [activeFamily?.id]); // eslint-disable-line react-hooks/exhaustive-deps
   //
   //
   return (

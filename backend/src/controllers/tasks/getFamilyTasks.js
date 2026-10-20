@@ -1,10 +1,11 @@
 const pool = require('../../config/db');
 const { ACTIVE_FAMILY_ORDER } = require('../../utils/activeFamily');
+const { filterListedTasks } = require('../../utils/access');
 const { successResponse, errorResponse } = require('../../utils/response/responseHandlers');
 
 // Returns all non-completed tasks for the family:
 //   - Event-linked tasks  → identified by events.family_id
-//   - Standalone tasks    → identified by the creator being in the family
+//   - Standalone tasks    → explicit family; ambiguous legacy tasks are omitted
 // Each row includes the assigned user's name + colour so the mobile
 // home screen can display and filter by member.
 const getFamilyTasks = async (req, res) => {
@@ -28,8 +29,8 @@ const getFamilyTasks = async (req, res) => {
     const result = await pool.query(
       `SELECT
          t.id, t.title, t.status, t.position, t.is_standalone,
-         t.due_date, t.created_by, t.assigned_to, t.completed,
-         e.id        AS event_id,
+         t.due_date, t.created_by, t.assigned_to, t.completed, t.family_id,
+         t.event_id,
          e.title     AS event_title,
          e.start_date,
          e.color,
@@ -48,17 +49,15 @@ const getFamilyTasks = async (req, res) => {
            -- Event-linked task whose event belongs to this family
            (t.is_standalone = false AND e.family_id = $1)
            OR
-           -- Standalone task created by a member of this family
-           (t.is_standalone = true AND EXISTS (
-             SELECT 1 FROM family_members fmc
-             WHERE fmc.user_id = t.created_by AND fmc.family_id = $1
-           ))
+           -- Legacy null scope is resolved conservatively by filterListedTasks.
+           (t.is_standalone = true AND (t.family_id = $1 OR t.family_id IS NULL))
          )
        ORDER BY COALESCE(e.start_date, t.due_date) ASC NULLS LAST`,
       [familyId]
     );
 
-    return successResponse(res, 200, 'Family tasks fetched', { tasks: result.rows });
+    const tasks = await filterListedTasks(userId, result.rows, [familyId]);
+    return successResponse(res, 200, 'Family tasks fetched', { tasks });
   } catch (error) {
     console.error('getFamilyTasks error:', error.message);
     return errorResponse(res, 500, 'Server error');

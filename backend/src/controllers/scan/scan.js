@@ -180,7 +180,7 @@ const extract = [receive, async (req, res) => {
 
 const importEvents = async (req, res) => {
   const actor = Number(req.user.id);
-  const client = await pool.connect();
+  let client;
   try {
     const owner = await targetOwner(req);            // re-checked at save time
     if (!owner) return errorResponse(res, 403, "You can't add events to this calendar");
@@ -203,6 +203,7 @@ const importEvents = async (req, res) => {
     }).filter(Boolean);
     if (!items.length) return errorResponse(res, 400, 'Nothing to add');
 
+    client = await pool.connect();
     const fam = await client.query(
       `SELECT fm.family_id FROM family_members fm WHERE fm.user_id = $1
        AND EXISTS (SELECT 1 FROM family_members o WHERE o.family_id = fm.family_id AND o.user_id = $2)
@@ -244,6 +245,8 @@ const importEvents = async (req, res) => {
       created++;
     }
     await client.query('COMMIT');
+    client.release();
+    client = null;
 
     broadcast(familyId, 'event_update', {});
     if (owner !== actor && created) {
@@ -254,11 +257,11 @@ const importEvents = async (req, res) => {
     }
     return successResponse(res, 201, 'Schedule added', { created, skipped });
   } catch (err) {
-    await client.query('ROLLBACK').catch(() => {});
+    if (client) await client.query('ROLLBACK').catch(() => {});
     console.error('scan import error:', err.message);
     return errorResponse(res, 500, 'Server error');
   } finally {
-    client.release();
+    if (client) client.release();
   }
 };
 

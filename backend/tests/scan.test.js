@@ -2,8 +2,7 @@ process.env.TZ='UTC'; process.env.GROQ_API_KEY='test-key';
 // Schedule-scan regression suite. The Claude API is replaced by a stand-in, so
 // no key or network is needed. Run against an EMPTY test database:
 //   TEST_DATABASE_URL=postgres://user@localhost/when_test node tests/scan.test.js
-if (!process.env.TEST_DATABASE_URL) { console.error('Set TEST_DATABASE_URL to an empty test database'); process.exit(1); }
-process.env.DATABASE_URL = process.env.TEST_DATABASE_URL;
+require('./testDatabase')(process.env);
 const pool=require('../src/config/db'); const migrate=require('../src/db/migrate');
 const { extract, importEvents } = require('../src/controllers/scan/scan');
 let sentBody=null;

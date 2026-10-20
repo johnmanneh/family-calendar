@@ -1,5 +1,6 @@
 const crypto = require('crypto');
 const pool = require('../../config/db');
+const { revokeFamily } = require('../../utils/sseClients');
 const { successResponse, errorResponse } = require('../../utils/response/responseHandlers');
 
 /**
@@ -98,6 +99,7 @@ const leaveFamily = async (req, res) => {
     }
 
     await client.query('COMMIT');
+    revokeFamily(userId, family_id);
     return successResponse(res, 200, 'You have left the family');
   } catch (error) {
     await client.query('ROLLBACK').catch(() => {});

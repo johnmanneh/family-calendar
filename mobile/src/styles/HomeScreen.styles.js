@@ -116,11 +116,16 @@ const make = c => StyleSheet.create({
   taskTitleRow: { flexDirection: 'row', alignItems: 'center', gap: 5 },
   taskIcon: { flexShrink: 0 },
 
-  swipeActions: { flexDirection: 'row', marginBottom: 8 },
-  swipeAction: { width: 76, justifyContent: 'center', alignItems: 'center', gap: 4 },
+  swipeActions: {
+    width: 148, flexDirection: 'row', alignItems: 'center', justifyContent: 'flex-end',
+    gap: 12, paddingRight: 12, backgroundColor: 'transparent',
+  },
+  swipeAction: { alignItems: 'center', width: 56 },
+  swipeCircle: { width: 56, height: 56, borderRadius: 28, justifyContent: 'center', alignItems: 'center' },
   swipeActionFirst: {},
-  swipeActionLast: { borderTopRightRadius: 10, borderBottomRightRadius: 10 },
-  swipeActionText: { color: '#fff', fontSize: 11, fontWeight: '600' },
+  swipeActionLast: {},
+  swipeActionText: { color: '#8e8e93', fontSize: 11, fontWeight: '500', marginTop: 4 },
+  swipeChild: { backgroundColor: c.bg },
   statusBadge: {
     paddingHorizontal: 8, paddingVertical: 3, borderRadius: 10,
     alignSelf: 'center', marginRight: 12,

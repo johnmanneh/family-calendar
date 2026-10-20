@@ -52,6 +52,9 @@ const joinFamily = async (req, res) => {
       for (const fam of soloFamilies) {
         await client.query('UPDATE events SET family_id = $1 WHERE family_id = $2', [target.id, fam.family_id]);
         await client.query('UPDATE groups SET family_id = $1 WHERE family_id = $2', [target.id, fam.family_id]);
+        // Move explicitly scoped tasks before the old family's FK cascade.
+        // Unknown legacy scope stays unresolved rather than being guessed.
+        await client.query('UPDATE tasks SET family_id = $1 WHERE family_id = $2', [target.id, fam.family_id]);
         await client.query('DELETE FROM messages WHERE family_id = $1', [fam.family_id]);
         await client.query('DELETE FROM family_members WHERE family_id = $1', [fam.family_id]);
         await client.query('DELETE FROM families WHERE id = $1', [fam.family_id]);

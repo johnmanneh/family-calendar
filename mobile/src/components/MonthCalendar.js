@@ -1,4 +1,5 @@
 import React, { useState, useEffect } from 'react';
+import { onSameDay } from '../utils/eventDates';
 import { useTranslation } from 'react-i18next';
 import { View, Text, TouchableOpacity, Dimensions, } from 'react-native';
 import { useColorScheme } from '../context/ThemeContext';
@@ -9,20 +10,6 @@ const SCREEN_WIDTH = Dimensions.get('window').width;
 const CELL = Math.floor((SCREEN_WIDTH - 16) / 7);
 const DAY_LETTERS = ['M', 'T', 'W', 'T', 'F', 'S', 'S'];
 
-// Timezone-safe day match
-function onSameDay(dateStr, day) {
-  if (!dateStr) return false;
-  // A Date object is already local — compare its local parts directly.
-  // (toISOString() converts to UTC, which shifts midnight to the previous day
-  //  in timezones ahead of UTC, e.g. tapping the 9th highlighted the 8th.)
-  if (typeof dateStr !== 'string') {
-    const dt = new Date(dateStr);
-    return dt.getFullYear() === day.getFullYear() && dt.getMonth() === day.getMonth() && dt.getDate() === day.getDate();
-  }
-  const s = dateStr;
-  const [y, m, d] = s.slice(0, 10).split('-').map(Number);
-  return y === day.getFullYear() && (m - 1) === day.getMonth() && d === day.getDate();
-}
 
 export default function MonthCalendar({ events = [], selectedDate, onSelectDate, onLongPressDate, resetSignal = 0 }) {
   const { t } = useTranslation();
@@ -103,7 +90,7 @@ export default function MonthCalendar({ events = [], selectedDate, onSelectDate,
           const inMonth   = day.getMonth() === month;
           const isToday   = day.getTime() === today.getTime();
           const isSel     = selectedDate && onSameDay(selectedDate, day);
-          const dayEvents = events.filter(e => onSameDay(e.start_date, day));
+          const dayEvents = events.filter(e => onSameDay(e.start_date, day, e.is_all_day));
           const dots      = dayEvents.slice(0, 3);
 
           return (

@@ -1,5 +1,6 @@
 const pool = require('../../config/db');
 const sharedFamilies = require('../../utils/sharedFamilies');
+const { eventAccess, busyView } = require('../../utils/access');
 const { successResponse, errorResponse } = require('../../utils/response/responseHandlers');
 
 // Upcoming events of one family member, as the VIEWER is allowed to see them:
@@ -20,7 +21,7 @@ const getMemberEvents = async (req, res) => {
     const result = await pool.query(
       `SELECT e.id, e.title, e.start_date, e.end_date, e.is_all_day,
               e.color, e.category, e.location, e.priority, e.status,
-              e.is_private, e.created_by, e.owner_id,
+              e.is_private, e.created_by, e.owner_id, e.family_id,
               EXISTS (SELECT 1 FROM event_attendees v
                       WHERE v.event_id = e.id AND v.user_id = $2 AND v.status = 'accepted') AS viewer_attends
        FROM events e
@@ -36,15 +37,13 @@ const getMemberEvents = async (req, res) => {
       [memberId, viewerId, families]
     );
 
-    const events = result.rows.map(e => {
-      const canSee = !e.is_private || Number(e.created_by) === viewerId || Number(e.owner_id) === viewerId || e.viewer_attends;
+    const visibleEvents = await Promise.all(result.rows.map(async e => {
+      const { level } = await eventAccess(viewerId, e);
       const { viewer_attends, ...ev } = e;
-      if (canSee) return { ...ev, is_busy: false };
-      return {
-        id: ev.id, start_date: ev.start_date, end_date: ev.end_date, is_all_day: ev.is_all_day,
-        title: 'Busy', color: '#b0b0b8', is_private: true, is_busy: true,
-      };
-    });
+      if (level === 'full') return { ...ev, is_busy: false };
+      return level === 'busy' ? busyView(ev) : null;
+    }));
+    const events = visibleEvents.filter(Boolean);
 
     return successResponse(res, 200, 'Member events fetched', { events });
   } catch (error) {

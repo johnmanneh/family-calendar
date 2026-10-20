@@ -50,6 +50,23 @@ function mockUserExists(userId = 1) {
   });
 }
 
+function mockEventInAnotherFamily() {
+  pool.query.mockImplementation((sql) => {
+    if (sql.includes('SELECT 1 FROM users')) return Promise.resolve({ rows: [{}] });
+    if (sql.includes('SELECT * FROM events')) return Promise.resolve({ rows: [{
+      id: 9999, family_id: 2, created_by: 42, owner_id: 42, is_private: false,
+    }] });
+    if (sql.includes('AS attendee_status')) return Promise.resolve({ rows: [{
+      attendee_status: null, circle: null, via_group: false,
+    }] });
+    if (sql.includes('u.is_managed')) return Promise.resolve({ rows: [{
+      is_managed: false, same_family: false, admin_of: false,
+    }] });
+    if (sql.includes('calendar_permissions')) return Promise.resolve({ rows: [] });
+    throw new Error('Unexpected query in cross-family test');
+  });
+}
+
 const app = createApp();
 
 // Reset mock state before every test so stale queue values never bleed through
@@ -114,11 +131,7 @@ describe('Invalid JWT', () => {
 // ─────────────────────────────────────────────────────────────────────────────
 describe('Cross-family access', () => {
   test('GET /api/events/:id for event in another family → 404', async () => {
-    // Auth passes, then eventAccess returns level=none (not family member)
-    pool.query
-      .mockResolvedValueOnce({ rows: [{}] })       // auth: user exists
-      .mockResolvedValueOnce({ rows: [] })           // eventAccess: no family match
-      .mockResolvedValueOnce({ rows: [] });          // eventAccess: no attendee match
+    mockEventInAnotherFamily();
 
     const token = makeToken(1);
     const res = await request(app)
@@ -130,11 +143,7 @@ describe('Cross-family access', () => {
   });
 
   test('PUT /api/events/:id for event in another family → 404', async () => {
-    pool.query
-      .mockResolvedValueOnce({ rows: [{}] })         // auth: user exists
-      .mockResolvedValueOnce({ rows: [{ id: 9999, family_id: 2, created_by: 42, owner_id: 42 }] }) // event found
-      .mockResolvedValueOnce({ rows: [] })            // canEditEvent: no family match
-      .mockResolvedValueOnce({ rows: [] });           // canEditEvent: not a delegate
+    mockEventInAnotherFamily();
 
     const token = makeToken(1);
     const res = await request(app)
@@ -146,11 +155,7 @@ describe('Cross-family access', () => {
   });
 
   test('DELETE /api/events/:id for event in another family → 404', async () => {
-    pool.query
-      .mockResolvedValueOnce({ rows: [{}] })         // auth: user exists
-      .mockResolvedValueOnce({ rows: [{ id: 9999, family_id: 2, created_by: 42, owner_id: 42 }] })
-      .mockResolvedValueOnce({ rows: [] })
-      .mockResolvedValueOnce({ rows: [] });
+    mockEventInAnotherFamily();
 
     const token = makeToken(1);
     const res = await request(app)
@@ -166,29 +171,38 @@ describe('Cross-family access', () => {
 // ─────────────────────────────────────────────────────────────────────────────
 describe('Private event visibility', () => {
   test('GET /api/events/:id for private event the user is not part of → title is not exposed', async () => {
-    // Simulate eventAccess returning level='busy'
-    const mockAccess = jest.requireMock('../src/utils/access');
-    if (mockAccess) {
-      // access module may or may not be mocked; test via HTTP response shape
-    }
-
-    // Simulate: user is in family, event is private, user is not creator/attendee
-    pool.query
-      .mockResolvedValueOnce({ rows: [{}] })              // auth
-      .mockResolvedValueOnce({ rows: [{ id: 5, family_id: 1, created_by: 2, owner_id: 2, is_private: true }] }) // event
-      .mockResolvedValueOnce({ rows: [{ family_id: 1 }] })// user family
-      .mockResolvedValueOnce({ rows: [] })                 // not attendee
-      .mockResolvedValueOnce({ rows: [] });                // groups
+    // Exercise the real access policy: another inner-circle member may see
+    // only a Busy block. Keep sensitive fields populated so leaks are caught.
+    pool.query.mockImplementation((sql) => {
+      if (sql.includes('SELECT 1 FROM users')) return Promise.resolve({ rows: [{}] });
+      if (sql.includes('SELECT * FROM events')) return Promise.resolve({ rows: [{
+        id: 5, family_id: 1, created_by: 2, owner_id: 2, is_private: true,
+        title: 'Secret birthday party', notes: 'Do not expose these notes',
+        location: 'Private address', start_date: '2026-11-01T10:00:00Z',
+        end_date: '2026-11-01T11:00:00Z',
+      }] });
+      if (sql.includes('AS attendee_status')) return Promise.resolve({ rows: [{
+        attendee_status: null, circle: 'inner', via_group: false,
+      }] });
+      if (sql.includes('u.is_managed')) return Promise.resolve({ rows: [{
+        is_managed: false, same_family: true, admin_of: false,
+      }] });
+      throw new Error('Unexpected query in privacy test');
+    });
 
     const token = makeToken(1); // user 1, event created by user 2
     const res = await request(app)
       .get('/api/events/5')
       .set('Authorization', `Bearer ${token}`);
 
-    if (res.status === 200) {
-      // If returned as busy block, title must be 'Busy' not the real title
-      expect(res.body?.data?.event?.title).not.toBe('Secret birthday party');
-    }
+    expect(res.status).toBe(200);
+    expect(res.body.event).toEqual(expect.objectContaining({
+      id: 5, title: 'Busy', is_busy: true, is_private: true,
+      attendees: [], tasks: [],
+    }));
+    expect(res.body.event).not.toHaveProperty('notes');
+    expect(res.body.event).not.toHaveProperty('location');
+    expect(JSON.stringify(res.body)).not.toContain('Secret birthday party');
   });
 });
 

@@ -3,8 +3,7 @@ process.env.TZ='UTC';
 // Run against an EMPTY test database (never production):
 //   TEST_DATABASE_URL=postgres://user@localhost/when_test node tests/sharing.test.js
 // after loading src/config/migrations/000_initial_schema.sql into it.
-if (!process.env.TEST_DATABASE_URL) { console.error('Set TEST_DATABASE_URL to an empty test database'); process.exit(1); }
-process.env.DATABASE_URL = process.env.TEST_DATABASE_URL;
+require('./testDatabase')(process.env);
 const pool=require('../src/config/db'); const migrate=require('../src/db/migrate');
 const C=n=>require('../src/controllers/'+n);
 const call=(fn,req)=>new Promise(r=>{const res={status(c){this.c=c;return this},json(b){r({c:this.c||200,b})}}; Promise.resolve(fn({params:{},body:{},...req},res)).catch(e=>r({c:'THROW',b:e.message}));});

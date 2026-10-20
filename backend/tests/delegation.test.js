@@ -3,8 +3,7 @@ process.env.TZ='UTC';
 // Run against an EMPTY test database (never production):
 //   TEST_DATABASE_URL=postgres://user@localhost/when_test node tests/delegation.test.js
 // after loading src/config/migrations/000_initial_schema.sql into it.
-if (!process.env.TEST_DATABASE_URL) { console.error('Set TEST_DATABASE_URL to an empty test database'); process.exit(1); }
-process.env.DATABASE_URL = process.env.TEST_DATABASE_URL;
+require('./testDatabase')(process.env);
 // Stand-in for Cloudinary: no network in tests; multer is skipped, req.file is set directly
 const avatarPath=require.resolve('../src/utils/avatarStore');
 require.cache[avatarPath]={id:avatarPath,filename:avatarPath,loaded:true,exports:{receiveAvatar:(req,res,next)=>next(),storeAvatar:async id=>`https://img.test/avatar-${id}.jpg`,deleteAvatar:async()=>{}}};

@@ -1,4 +1,5 @@
 import React, { useState, useRef, useEffect } from 'react';
+import { onSameDay } from '../utils/eventDates';
 import { useTranslation } from 'react-i18next';
 import {
   View,
@@ -48,25 +49,6 @@ function sameDay(a, b) {
   );
 }
 
-// Reads YYYY-MM-DD from the stored ISO string directly — avoids timezone
-// shifts that can push the date one day forward or back.
-function onSameDay(dateStr, day) {
-  if (!dateStr) return false;
-  // A Date object is already local — compare its local parts directly.
-  // (toISOString() converts to UTC, which shifts midnight to the previous day
-  //  in timezones ahead of UTC, e.g. tapping the 9th highlighted the 8th.)
-  if (typeof dateStr !== 'string') {
-    const dt = new Date(dateStr);
-    return dt.getFullYear() === day.getFullYear() && dt.getMonth() === day.getMonth() && dt.getDate() === day.getDate();
-  }
-  const s = dateStr;
-  const [y, m, d] = s.slice(0, 10).split('-').map(Number);
-  return (
-    y === day.getFullYear() &&
-    (m - 1) === day.getMonth() &&
-    d === day.getDate()
-  );
-}
 
 function shortTime(event) {
   if (event.is_all_day) return 'All day';
@@ -172,7 +154,7 @@ export default function WeekStrip({ events, selectedDate, onSelectDate, onLongPr
         {weekDays.map((day, i) => {
           const isToday    = sameDay(day, today);
           const isSelected = sameDay(day, selectedDate || today);
-          const dayEvents  = events.filter(e => onSameDay(e.start_date, day));
+          const dayEvents  = events.filter(e => onSameDay(e.start_date, day, e.is_all_day));
           const visible    = dayEvents.slice(0, MAX_CHIPS);
           const overflow   = dayEvents.length - visible.length;
 

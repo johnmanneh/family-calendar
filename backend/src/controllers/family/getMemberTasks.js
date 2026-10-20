@@ -1,5 +1,6 @@
 const pool = require('../../config/db');
 const sharedFamilies = require('../../utils/sharedFamilies');
+const { filterListedTasks } = require('../../utils/access');
 const { successResponse, errorResponse } = require('../../utils/response/responseHandlers');
 
 const getMemberTasks = async (req, res) => {
@@ -14,8 +15,8 @@ const getMemberTasks = async (req, res) => {
 
     const result = await pool.query(
       `SELECT t.id, t.title, t.position, t.created_at,
-        t.is_standalone, t.due_date, t.status,
-        e.id as event_id, e.title as event_title,
+        t.is_standalone, t.due_date, t.status, t.family_id, t.created_by, t.assigned_to,
+        t.event_id, e.title as event_title,
         e.start_date, e.end_date, e.color,
         u.first_name as created_by_name  -- ← creator name
  FROM tasks t
@@ -30,7 +31,7 @@ const getMemberTasks = async (req, res) => {
       [userId]
     );
     return successResponse(res, 200, 'Member tasks fetched', {
-      tasks: result.rows
+      tasks: await filterListedTasks(req.user.id, result.rows, families)
     });
   } catch (error) {
     return errorResponse(res, 500, 'Server error');

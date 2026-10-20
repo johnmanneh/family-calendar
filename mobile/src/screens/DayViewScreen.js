@@ -1,4 +1,5 @@
 import React, { useState, useEffect, useCallback, useRef } from 'react';
+import { onSameDay } from '../utils/eventDates';
 import {
   View,
   Text,
@@ -25,16 +26,6 @@ const SCREEN_W    = Dimensions.get('window').width;
 
 // ─── Helpers ─────────────────────────────────────────────────────────────────
 
-function onSameDay(dateStr, day) {
-  if (!dateStr) return false;
-  if (typeof dateStr !== 'string') {   // Date objects are local — compare local parts
-    const dt = new Date(dateStr);
-    return dt.getFullYear() === day.getFullYear() && dt.getMonth() === day.getMonth() && dt.getDate() === day.getDate();
-  }
-  const s = dateStr;
-  const [y, m, d] = s.slice(0, 10).split('-').map(Number);
-  return y === day.getFullYear() && (m - 1) === day.getMonth() && d === day.getDate();
-}
 
 function formatHour(h) {
   if (h === 0)  return '12am';
@@ -79,7 +70,7 @@ export default function DayViewScreen({ route, navigation }) {
     try {
       const res = await API.get('/events');
       const all = res.data.events || [];
-      setEvents(all.filter(e => onSameDay(e.start_date, date) || e.is_all_day && onSameDay(e.start_date, date)));
+      setEvents(all.filter(e => onSameDay(e.start_date, date, e.is_all_day)));
     } catch {
       setEvents([]);
     } finally {

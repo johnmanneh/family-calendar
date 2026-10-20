@@ -1,4 +1,5 @@
 const pool = require('../../config/db');
+const { revokeUser } = require('../../utils/sseClients');
 const { successResponse, errorResponse } = require('../../utils/response/responseHandlers');
 
 const deleteAccount = async (req, res) => {
@@ -10,6 +11,7 @@ const deleteAccount = async (req, res) => {
     await pool.query('DELETE FROM group_invitations WHERE user_id = $1 OR invited_by = $1', [userId]);
     await pool.query('DELETE FROM group_members WHERE user_id = $1', [userId]);
     await pool.query('DELETE FROM family_members WHERE user_id = $1', [userId]);
+    revokeUser(userId);
     await pool.query('DELETE FROM notifications WHERE user_id = $1', [userId]);
     await pool.query('DELETE FROM messages WHERE user_id = $1', [userId]);
 

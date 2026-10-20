@@ -12,7 +12,7 @@ import Constants from 'expo-constants';
 import { Platform } from 'react-native';
 import API from '../api/axios';
 
-export async function registerPushToken() {
+export async function registerPushToken({ isCurrent = () => true, onToken } = {}) {
   try {
     // Bail out before touching expo-notifications in Expo Go.
     // The native module requires a standalone/dev build to work.
@@ -48,7 +48,6 @@ export async function registerPushToken() {
         importance: Notifications.AndroidImportance.MAX,
         vibrationPattern: [0, 600, 200, 600, 200, 600],
         lightColor: '#D93025',
-        sound: 'default',
       });
     }
 
@@ -60,8 +59,12 @@ export async function registerPushToken() {
       projectId ? { projectId } : undefined
     );
     const token = tokenData?.data;
-    if (!token) return;
+    if (!token || !isCurrent()) return;
 
+    // Record before dispatch so logout can compensate even if the response is
+    // lost. Check again after secure storage yields: logout may have started.
+    if (onToken) await onToken(token);
+    if (!isCurrent()) return;
     await API.put('/auth/push-token', { push_token: token });
   } catch {
     // Silently ignore — push is non-critical

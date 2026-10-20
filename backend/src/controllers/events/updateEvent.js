@@ -72,7 +72,7 @@ const updateEvent = async (req, res) => {
         end_date = COALESCE($4, end_date),
         location = COALESCE($5, location),
         is_all_day = COALESCE($6, is_all_day),
-        is_private = $7,
+        is_private = COALESCE($7, is_private),
         recurrence = COALESCE($8, recurrence),
         recurrence_end_date = COALESCE($9, recurrence_end_date),
         reminder = COALESCE($10, reminder),
@@ -91,7 +91,7 @@ const updateEvent = async (req, res) => {
       RETURNING *`,
       [
         title, description, start_date, end_date, location, is_all_day,
-        is_private ?? false,
+        is_private ?? null,
         recurrence, recurrence_end_date, reminder, second_reminder, color,
         category, priority, url, notes, travel_time, video_call_link, status,
         userId, id

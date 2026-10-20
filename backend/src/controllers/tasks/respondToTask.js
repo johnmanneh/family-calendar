@@ -30,9 +30,10 @@ const respondToTask = async (req, res) => {
     const isAssignee = Number(task.assigned_to) === Number(userId);
     const isCreator  = Number(task.created_by)  === Number(userId);
 
-    // For pending tasks: any family member can accept/decline (home screen quick-accept).
-    // For countered tasks: strict turn-based — only the other party can respond.
-    const canRespondToPending = task.status === 'pending';
+    // Only the assignee can answer a new assignment. Viewing an event (including
+    // via a group) is not authority to negotiate somebody else's task.
+    // Counter offers remain turn-based between the creator and assignee.
+    const canRespondToPending = task.status === 'pending' && isAssignee;
 
     const assigneeTurn =
       (task.status === 'countered' && isAssignee && Number(task.last_counter_by) === Number(task.created_by));

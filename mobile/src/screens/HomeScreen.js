@@ -1,4 +1,5 @@
 import React, { useState, useEffect, useCallback, useRef } from 'react';
+import { onSameDay } from '../utils/eventDates';
 import { useTranslation } from 'react-i18next';
 import Swipeable from 'react-native-gesture-handler/Swipeable';
 import { GestureDetector, Gesture } from 'react-native-gesture-handler';
@@ -84,25 +85,6 @@ function formatTime(event) {
   return d.toLocaleTimeString(undefined, { hour: 'numeric', minute: '2-digit' });
 }
 
-// Timezone-safe day match: reads the YYYY-MM-DD portion of the ISO string
-// directly so timezone offsets never shift the displayed date.
-function onSameDay(dateStr, selectedDate) {
-  if (!dateStr) return false;
-  // A Date object is already local — compare its local parts directly.
-  // (toISOString() converts to UTC, which shifts midnight to the previous day
-  //  in timezones ahead of UTC, e.g. tapping the 9th highlighted the 8th.)
-  if (typeof dateStr !== 'string') {
-    const dt = new Date(dateStr);
-    return dt.getFullYear() === selectedDate.getFullYear() && dt.getMonth() === selectedDate.getMonth() && dt.getDate() === selectedDate.getDate();
-  }
-  const s = dateStr;
-  const [y, m, d] = s.slice(0, 10).split('-').map(Number);
-  return (
-    y === selectedDate.getFullYear() &&
-    (m - 1) === selectedDate.getMonth() &&
-    d === selectedDate.getDate()
-  );
-}
 
 // ─── Avatar bubble ───────────────────────────────────────────────────────────
 
@@ -169,7 +151,7 @@ function MemberBubble({ member, selected, onPress, onLongPress }) {
 // ─── Event row ───────────────────────────────────────────────────────────────
 // `eventTasks` are the tasks linked to this event — shown inline below it.
 
-function EventRow({ event, navigation, eventTasks, showDate }) {
+function EventRow({ event, navigation, eventTasks, showDate, onDelete }) {
   const { t } = useTranslation();
   const styles = useStyles();
   const color = event.color || '#1a8fa8';
@@ -180,13 +162,32 @@ function EventRow({ event, navigation, eventTasks, showDate }) {
 
   const timeDisplay = formatTime(event) ?? t('common.all_day');
 
-  return (
+  const openDetails = () => navigation.navigate('EventDetails', { eventId: event.id });
+
+  const renderRightActions = () => (
+    <View style={styles.swipeActions}>
+      <TouchableOpacity style={styles.swipeAction} onPress={openDetails} activeOpacity={0.85}>
+        <View style={[styles.swipeCircle, { backgroundColor: '#636366' }]}>
+          <Ionicons name="ellipsis-horizontal" size={22} color="#fff" />
+        </View>
+        <Text style={styles.swipeActionText}>{t('common.more')}</Text>
+      </TouchableOpacity>
+      <TouchableOpacity style={styles.swipeAction} onPress={() => onDelete(event.id)} activeOpacity={0.85}>
+        <View style={[styles.swipeCircle, { backgroundColor: '#ff3b30' }]}>
+          <Ionicons name="trash" size={20} color="#fff" />
+        </View>
+        <Text style={styles.swipeActionText}>{t('common.delete')}</Text>
+      </TouchableOpacity>
+    </View>
+  );
+
+  const card = (
     <View style={styles.eventCard}>
       {/* Main event tap target */}
       <TouchableOpacity
         style={[styles.eventRow, event.is_busy && { opacity: 0.6 }]}
         // Busy blocks (someone else's booked time) only show when — not what
-        onPress={event.is_busy ? undefined : () => navigation.navigate('EventDetails', { eventId: event.id })}
+        onPress={event.is_busy ? undefined : openDetails}
         activeOpacity={event.is_busy ? 1 : 0.75}
         disabled={event.is_busy}
       >
@@ -220,6 +221,20 @@ function EventRow({ event, navigation, eventTasks, showDate }) {
         </View>
       )}
     </View>
+  );
+
+  if (event.is_busy) return card;
+
+  return (
+    <Swipeable
+      renderRightActions={renderRightActions}
+      overshootRight={false}
+      friction={2}
+      rightThreshold={40}
+      childrenContainerStyle={styles.swipeChild}
+    >
+      {card}
+    </Swipeable>
   );
 }
 
@@ -265,20 +280,16 @@ function TaskRow({ task, navigation, onComplete, onDelete, onAccept, onSetArriva
 
   const renderRightActions = () => (
     <View style={styles.swipeActions}>
-      <TouchableOpacity
-        style={[styles.swipeAction, { backgroundColor: primaryColor }]}
-        onPress={primaryAction}
-        activeOpacity={0.85}
-      >
-        <Ionicons name={primaryIcon} size={22} color="#fff" />
+      <TouchableOpacity style={styles.swipeAction} onPress={primaryAction} activeOpacity={0.85}>
+        <View style={[styles.swipeCircle, { backgroundColor: primaryColor }]}>
+          <Ionicons name={primaryIcon} size={22} color="#fff" />
+        </View>
         <Text style={styles.swipeActionText}>{primaryLabel}</Text>
       </TouchableOpacity>
-      <TouchableOpacity
-        style={[styles.swipeAction, styles.swipeActionLast, { backgroundColor: '#ff3b30' }]}
-        onPress={() => onDelete(task.id)}
-        activeOpacity={0.85}
-      >
-        <Ionicons name="trash" size={20} color="#fff" />
+      <TouchableOpacity style={styles.swipeAction} onPress={() => onDelete(task.id)} activeOpacity={0.85}>
+        <View style={[styles.swipeCircle, { backgroundColor: '#ff3b30' }]}>
+          <Ionicons name="trash" size={20} color="#fff" />
+        </View>
         <Text style={styles.swipeActionText}>{t('common.delete')}</Text>
       </TouchableOpacity>
     </View>
@@ -302,6 +313,9 @@ function TaskRow({ task, navigation, onComplete, onDelete, onAccept, onSetArriva
       <Swipeable
         renderRightActions={renderRightActions}
         overshootRight={false}
+        friction={2}
+        rightThreshold={40}
+        childrenContainerStyle={styles.swipeChild}
         onSwipeableWillOpen={() => Animated.timing(badgeOpacity, { toValue: 0, duration: 150, useNativeDriver: true }).start()}
         onSwipeableWillClose={() => Animated.timing(badgeOpacity, { toValue: 1, duration: 200, useNativeDriver: true }).start()}
       >
@@ -408,6 +422,13 @@ export default function HomeScreen({ navigation, route }) {
   const insets = useSafeAreaInsets();
   const { logout, user } = useAuth();
   const { members, families, family, switchFamily } = useFamily();
+  const activeScope = user?.id != null && family?.id != null
+    ? JSON.stringify([user.id, family.id]) : null;
+  const familyIdRef = useRef(null);
+  familyIdRef.current = activeScope;
+  const dataScope = useRef(activeScope);
+  const requestId = useRef(0);
+  useEffect(() => () => { requestId.current += 1; }, []);
   const { eventTick, taskTick, notifTick, lastChatMsg } = useSSE();
 
   // Put the logged-in user first, everyone else follows in original order
@@ -629,12 +650,38 @@ export default function HomeScreen({ navigation, route }) {
   // ── Fetch events + tasks together ────────────────────────────────────────
   // Use allSettled so a 404 (new user with no family) doesn't crash the other request.
   const fetchEvents = useCallback(async () => {
+    const request = ++requestId.current;
+    const familyId = familyIdRef.current;
+    // A failed request may retain data only within the same account/family.
+    // Reset synchronously before starting any requests for the new scope.
+    if (dataScope.current !== familyId) {
+      dataScope.current = familyId;
+      setEvents([]);
+      setTasks([]);
+      setMyGroups([]);
+      setScope('all');
+      setSelectedMember(null);
+      setPendingCount(0);
+      setNotifUnread(0);
+      setChatUnread(0);
+      setCacheLabel(null);
+      setIsOffline(false);
+      setLoading(Boolean(familyId));
+      setRefreshing(false);
+    }
+    if (!familyId) {
+      setLoading(false);
+      setRefreshing(false);
+      return;
+    }
+    const isCurrent = () => request === requestId.current && familyId === familyIdRef.current;
     try {
       const [eventsRes, tasksRes, groupsRes] = await Promise.allSettled([
         API.get('/events'),
         API.get('/tasks/family'),
         API.get('/groups'),
       ]);
+      if (!isCurrent()) return;
 
       if (groupsRes.status === 'fulfilled') {
         const g = groupsRes.value.data.groups || [];
@@ -643,18 +690,33 @@ export default function HomeScreen({ navigation, route }) {
         setScope(prev => (typeof prev === 'number' && !g.some(x => Number(x.id) === prev) ? 'all' : prev));
       }
 
-      const newEvents = eventsRes.status === 'fulfilled' ? (eventsRes.value.data.events || []) : [];
-      const newTasks  = tasksRes.status  === 'fulfilled' ? (tasksRes.value.data.tasks   || []) : [];
-
-      setEvents(newEvents);
-      setTasks(newTasks);
-      setIsOffline(false);
-      setCacheLabel(null);
-      saveCache(newEvents, newTasks); // persist for next offline load
+      const eventsOK = eventsRes.status === 'fulfilled';
+      const tasksOK = tasksRes.status === 'fulfilled';
+      const newEvents = eventsOK ? (eventsRes.value.data.events || []) : null;
+      const newTasks = tasksOK ? (tasksRes.value.data.tasks || []) : null;
+      if (eventsOK) setEvents(newEvents);
+      if (tasksOK) setTasks(newTasks);
+      const complete = eventsOK && tasksOK && groupsRes.status === 'fulfilled';
+      setIsOffline(!complete);
+      if (complete) {
+        setCacheLabel(null);
+        saveCache(newEvents, newTasks, familyId);
+      } else {
+        // allSettled never throws on network failures. Keep the failed dataset
+        // in memory, fall back to disk only if empty, and never replace a good
+        // persisted snapshot with a partial response.
+        const cached = await loadCache(familyId);
+        if (!isCurrent()) return;
+        if (!eventsOK) setEvents(prev => prev.length ? prev : cached.events);
+        if (!tasksOK) setTasks(prev => prev.length ? prev : cached.tasks);
+        setCacheLabel(savedAtLabel(cached.savedAt));
+      }
     } catch (err) {
       // No err.response means a network failure (no connection)
+      if (!isCurrent()) return;
       if (!err.response) {
-        const cached = await loadCache();
+        const cached = await loadCache(familyId);
+        if (!isCurrent()) return;
         if (cached.events.length > 0 || cached.tasks.length > 0) {
           setEvents(cached.events);
           setTasks(cached.tasks);
@@ -665,15 +727,21 @@ export default function HomeScreen({ navigation, route }) {
         console.error('fetchEvents error:', err.message);
       }
     } finally {
-      setLoading(false);
-      setRefreshing(false);
+      if (isCurrent()) {
+        setLoading(false);
+        setRefreshing(false);
+      }
     }
   }, []);
 
   // ── Fetch notifications unread count ─────────────────────────────────────
   const fetchNotifUnread = useCallback(async () => {
+    const familyId = familyIdRef.current;
+    const request = requestId.current;
+    if (!familyId) return;
     try {
       const res = await API.get('/notifications');
+      if (familyId !== familyIdRef.current || request !== requestId.current) return;
       setNotifUnread(res.data.unread_count || 0);
     } catch { /* silent */ }
   }, []);
@@ -681,12 +749,16 @@ export default function HomeScreen({ navigation, route }) {
   // ── Fetch pending count for the badge ────────────────────────────────────
   // Adds up pending tasks + notifications + event invitations
   const fetchPendingCount = useCallback(async () => {
+    const familyId = familyIdRef.current;
+    const request = requestId.current;
+    if (!familyId) return;
     const [pendingRes, notifs, invites, assigneeNotifs] = await Promise.allSettled([
       API.get('/tasks/pending'),
       API.get('/tasks/notifications'),
       API.get('/events/invitations'),
       API.get('/tasks/assignee-notifications'),
     ]);
+    if (familyId !== familyIdRef.current || request !== requestId.current) return;
     const get = (r, key) => r.status === 'fulfilled' ? (r.value.data[key]?.length || 0) : 0;
     setPendingCount(
       get(pendingRes,      'tasks') +
@@ -905,22 +977,13 @@ export default function HomeScreen({ navigation, route }) {
     // No STT: handleFabLongPress already reset state and showed the toast
   }, []);
 
-  // Seed UI from cache immediately so the screen is never blank while fetching
-  useEffect(() => {
-    loadCache().then(cached => {
-      if (cached.events.length > 0 || cached.tasks.length > 0) {
-        setEvents(prev => prev.length === 0 ? cached.events : prev);
-        setTasks(prev  => prev.length  === 0 ? cached.tasks  : prev);
-      }
-    });
-  }, []);
-
-  // Fetch on mount
+  // Refresh on mount and every account/family resolution or change. Cache
+  // fallback happens inside this guarded refresh, never an unscoped seed.
   useEffect(() => {
     fetchEvents();
     fetchPendingCount();
     fetchNotifUnread();
-  }, [fetchEvents, fetchPendingCount, fetchNotifUnread]);
+  }, [activeScope, fetchEvents, fetchPendingCount, fetchNotifUnread]);
 
   // Re-fetch when this screen comes back into focus (returning from other screens)
   useEffect(() => {
@@ -939,19 +1002,6 @@ export default function HomeScreen({ navigation, route }) {
   useEffect(() => { if (eventTick > 0) fetchEvents(); },                                    [eventTick]);
   useEffect(() => { if (taskTick  > 0) { fetchEvents(); fetchPendingCount(); fetchNotifUnread(); } }, [taskTick]);
   useEffect(() => { if (notifTick > 0) { fetchPendingCount(); fetchNotifUnread(); } }, [notifTick]);
-
-  // Switching family → reload events/tasks for that family and reset the chips
-  // (the old family's chips/children don't exist in the new one)
-  const lastFamilyId = useRef(null);
-  useEffect(() => {
-    const id = family?.id ?? null;
-    if (lastFamilyId.current !== null && id !== null && id !== lastFamilyId.current) {
-      setScope('all');
-      setSelectedMember(null);
-      fetchEvents();
-    }
-    lastFamilyId.current = id;
-  }, [family?.id]); // eslint-disable-line react-hooks/exhaustive-deps
 
   // Re-fetch tasks when returning from TaskFormScreen or any other screen
   useFocusEffect(useCallback(() => { fetchEvents(); fetchPendingCount(); }, [fetchEvents, fetchPendingCount]));
@@ -1022,7 +1072,7 @@ export default function HomeScreen({ navigation, route }) {
           return true;
         })
         .sort((a, b) => new Date(a.start_date) - new Date(b.start_date))
-    : memberFiltered.filter(e => onSameDay(e.start_date, selectedDate));
+    : memberFiltered.filter(e => onSameDay(e.start_date, selectedDate, e.is_all_day));
 
   // Tasks filtered by member; when search is active also filter by query + category
   const memberFilteredTasks = (() => {
@@ -1106,6 +1156,15 @@ export default function HomeScreen({ navigation, route }) {
       setTasks(prev => prev.filter(t => t.id !== taskId));
     } catch {
       Alert.alert(t('common.error'), t('tasks.could_not_delete'));
+    }
+  }, []);
+
+  const handleDeleteEvent = useCallback(async (eventId) => {
+    try {
+      await API.delete(`/events/${eventId}`);
+      setEvents(prev => prev.filter(e => e.id !== eventId));
+    } catch (err) {
+      Alert.alert(t('common.error'), err.response?.data?.message || t('events.could_not_delete'));
     }
   }, []);
 
@@ -1457,7 +1516,7 @@ export default function HomeScreen({ navigation, route }) {
               return <Text style={styles.sectionHeader}>{item.title}</Text>;
             }
             if (item.type === 'event') {
-              return <EventRow event={item.data} navigation={navigation} eventTasks={item.eventTasks} showDate={item.showDate} />;
+              return <EventRow event={item.data} navigation={navigation} eventTasks={item.eventTasks} showDate={item.showDate} onDelete={handleDeleteEvent} />;
             }
             if (item.type === 'task') {
               return (
