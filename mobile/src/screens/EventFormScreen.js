@@ -13,6 +13,7 @@ import {
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { Ionicons } from '@expo/vector-icons';
 import DateTimePicker, { DateTimePickerAndroid } from '@react-native-community/datetimepicker';
+import { mergeDateAndTime, endAfterStartChange } from '../utils/pickerDates';
 import { useTranslation } from 'react-i18next';
 import API from '../api/axios';
 import { useFamily } from '../context/FamilyContext';
@@ -106,17 +107,19 @@ function DateRow({ label, date, allDay, pickerKey, openPicker, setOpenPicker, on
       DateTimePickerAndroid.open({
         value: date instanceof Date ? date : new Date(),
         mode: 'date',
-        onValueChange: (selectedDate) => {
-          if (!selectedDate) return;
+        // v9 API: onValueChange(event, date). The first argument is the event,
+        // NOT the date — reading it as the date meant the picked day was lost.
+        onValueChange: (_event, selectedDate) => {
+          if (!(selectedDate instanceof Date)) return;
           if (allDay) {
             onChange(selectedDate);
           } else {
             // For datetime: chain into time picker after date is confirmed
             DateTimePickerAndroid.open({
-              value: selectedDate,
+              value: mergeDateAndTime(selectedDate, date instanceof Date ? date : selectedDate),
               mode: 'time',
-              onValueChange: (selectedTime) => {
-                if (selectedTime) onChange(selectedTime);
+              onValueChange: (_e, selectedTime) => {
+                if (selectedTime instanceof Date) onChange(mergeDateAndTime(selectedDate, selectedTime));
               },
               onDismiss: () => {},
             });
@@ -426,6 +429,12 @@ export default function EventFormScreen({ route, navigation }) {
   // ── Helpers ───────────────────────────────────────────────────────────────
   const set = (field, value) => setFormData(p => ({ ...p, [field]: value }));
 
+  // Moving the start past the end drags the end along (same length).
+  const handleStartChange = (next) => {
+    setEndDate(endAfterStartChange(startDate, endDate, next, formData.is_all_day));
+    setStartDate(next);
+  };
+
   const handleAllDayToggle = (val) => {
     set('is_all_day', val);
     // Keep the same date, just strip or restore time
@@ -516,7 +525,7 @@ export default function EventFormScreen({ route, navigation }) {
             pickerKey="start"
             openPicker={openPicker}
             setOpenPicker={setOpenPicker}
-            onChange={setStartDate}
+            onChange={handleStartChange}
           />
           <View style={styles.cardDivider} />
           <DateRow
