@@ -58,9 +58,10 @@ test('family switch clears old in-memory data before failed replacement reads on
     ? { events: [{ id: 'B-offline' }], tasks: [], savedAt: 'B-time' }
     : { events: [{ id: 'A-secret' }], tasks: [{ id: 'A-secret-task' }], savedAt: 'A-time' });
   await home.change({ family: { id: 20 } });
-  expect(home.state().events).toEqual([]);
+  expect(home.state().events).toEqual([{ id: 'B-offline' }]);
   expect(home.state().tasks).toEqual([]);
   expect(home.state().myGroups).toEqual([]);
+  expect(home.state().loading).toBe(false);
   await act(async () => home.pending.splice(0).forEach(request => request.reject(new Error('offline'))));
   expect(home.state().events).toEqual([{ id: 'B-offline' }]);
   expect(home.state().tasks).toEqual([]);

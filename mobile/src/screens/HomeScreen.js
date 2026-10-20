@@ -654,7 +654,8 @@ export default function HomeScreen({ navigation, route }) {
     const familyId = familyIdRef.current;
     // A failed request may retain data only within the same account/family.
     // Reset synchronously before starting any requests for the new scope.
-    if (dataScope.current !== familyId) {
+    const switched = dataScope.current !== familyId;
+    if (switched) {
       dataScope.current = familyId;
       setEvents([]);
       setTasks([]);
@@ -675,12 +676,23 @@ export default function HomeScreen({ navigation, route }) {
       return;
     }
     const isCurrent = () => request === requestId.current && familyId === familyIdRef.current;
+    let settled = false;
+    if (switched) {
+      loadCache(familyId).then(cached => {
+        if (settled || !isCurrent() || !cached.savedAt) return;
+        setEvents(cached.events);
+        setTasks(cached.tasks);
+        setCacheLabel(savedAtLabel(cached.savedAt));
+        setLoading(false);
+      });
+    }
     try {
       const [eventsRes, tasksRes, groupsRes] = await Promise.allSettled([
         API.get('/events'),
         API.get('/tasks/family'),
         API.get('/groups'),
       ]);
+      settled = true;
       if (!isCurrent()) return;
 
       if (groupsRes.status === 'fulfilled') {
@@ -1333,7 +1345,7 @@ export default function HomeScreen({ navigation, route }) {
       <FamilyFilterBar
         families={families}
         activeFamilyId={family?.id}
-        onSelect={async (id) => { await switchFamily(id); fetchEvents(); }}
+        onSelect={(id) => { switchFamily(id); }}
       />
 
       {/* ── Member bubbles — hidden when no members ── */}

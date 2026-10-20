@@ -1,6 +1,6 @@
 # PERF-001 — Make switching family feel instant (mobile)
 
-**Status:** Open — to be implemented by another agent
+**Status:** Done — cache-first family switch; extra onSelect fetch removed. Optimistic switchFamily not done.
 **Area:** mobile (`mobile/src/screens/HomeScreen.js`, `mobile/src/context/FamilyContext.js`)
 **Reported:** 2026-10-20 — switching between families on Home (e.g. Family Manneh ↔ Bros) takes several seconds and shows a spinner.
 

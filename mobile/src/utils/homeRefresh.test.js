@@ -76,3 +76,29 @@ test('partial allSettled failure preserves failed events and cache, updates task
   expect(state.offline).toBe(true);
   expect(deps.saveCache).not.toHaveBeenCalled();
 });
+
+test('scope change seeds the new family snapshot before the network returns', async () => {
+  const { state, deps, refresh } = setup();
+  deps.familyIdRef.current = JSON.stringify([1, 20]);
+  deps.loadCache.mockResolvedValue({ events: [{ id: 'B' }], tasks: [{ id: 'Bt' }], savedAt: 'B-time' });
+  const pending = [];
+  deps.API.get.mockImplementation(() => new Promise(done => pending.push(done)));
+  const request = refresh();
+  await new Promise(resolve => setImmediate(resolve));
+  expect(state.events).toEqual([{ id: 'B' }]);
+  expect(state.tasks).toEqual([{ id: 'Bt' }]);
+  expect(deps.setLoading).toHaveBeenCalledWith(false);
+  expect(deps.setCacheLabel).toHaveBeenCalledWith('B-time');
+  expect(deps.loadCache).toHaveBeenCalledWith(JSON.stringify([1, 20]));
+  pending.forEach(done => done({ data: { events: [{ id: 'B-fresh' }], tasks: [{ id: 'Bt-fresh' }], groups: [] } }));
+  await request;
+  expect(state.events).toEqual([{ id: 'B-fresh' }]);
+  expect(state.tasks).toEqual([{ id: 'Bt-fresh' }]);
+});
+
+test('same-scope refresh does not read cache before the network', async () => {
+  const { deps, refresh } = setup();
+  deps.API.get.mockResolvedValue({ data: { events: [{ id: 'fresh' }], tasks: [], groups: [] } });
+  await refresh();
+  expect(deps.loadCache).not.toHaveBeenCalled();
+});
