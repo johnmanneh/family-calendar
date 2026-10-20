@@ -1,4 +1,4 @@
-import { StyleSheet } from 'react-native';
+import { StyleSheet, Platform } from 'react-native';
 import { useColorScheme } from '../context/ThemeContext';
 import { LIGHT, DARK } from '../theme';
 
@@ -116,15 +116,18 @@ const make = c => StyleSheet.create({
   taskTitleRow: { flexDirection: 'row', alignItems: 'center', gap: 5 },
   taskIcon: { flexShrink: 0 },
 
+  // The swipe row includes the card's 8pt bottom margin; paddingBottom: 8 keeps
+  // the buttons centred on the CARD, not on card + gap. Circle + label (~60pt)
+  // fits inside a one-line card (~64pt), so the pair lines up with the card.
   swipeActions: {
-    width: 148, flexDirection: 'row', alignItems: 'center', justifyContent: 'flex-end',
-    gap: 12, paddingRight: 12, backgroundColor: 'transparent',
+    width: 136, flexDirection: 'row', alignItems: 'center', justifyContent: 'flex-end',
+    gap: 12, paddingRight: 12, paddingBottom: 8, backgroundColor: 'transparent',
   },
-  swipeAction: { alignItems: 'center', width: 56 },
-  swipeCircle: { width: 56, height: 56, borderRadius: 28, justifyContent: 'center', alignItems: 'center' },
+  swipeAction: { alignItems: 'center', width: 50 },
+  swipeCircle: { width: 44, height: 44, borderRadius: 22, justifyContent: 'center', alignItems: 'center' },
   swipeActionFirst: {},
   swipeActionLast: {},
-  swipeActionText: { color: '#8e8e93', fontSize: 11, fontWeight: '500', marginTop: 4 },
+  swipeActionText: { color: '#8e8e93', fontSize: 11, fontWeight: '500', marginTop: 3 },
   swipeChild: { backgroundColor: c.bg },
   statusBadge: {
     paddingHorizontal: 8, paddingVertical: 3, borderRadius: 10,
@@ -134,11 +137,15 @@ const make = c => StyleSheet.create({
 
   eventCard: {
     backgroundColor: c.surface, borderRadius: 10, marginBottom: 8,
-    overflow: 'hidden', shadowColor: '#000', shadowOpacity: 0.04,
+    // Android: overflow hidden while Swipeable slides the row blanks the card
+    // (text disappears when swiped open). iOS clips fine.
+    overflow: Platform.OS === 'android' ? 'visible' : 'hidden',
+    shadowColor: '#000', shadowOpacity: 0.04,
     shadowRadius: 4, shadowOffset: { width: 0, height: 2 }, elevation: 1,
   },
   eventRow: { flexDirection: 'row' },
-  eventStripe: { width: 4 },
+  // Rounded so the stripe still follows the card corners without clipping.
+  eventStripe: { width: 4, borderTopLeftRadius: 10, borderBottomLeftRadius: 10 },
   eventBody: { flex: 1, padding: 12 },
   eventTitle: { fontSize: 15, fontWeight: '600', color: c.text, marginBottom: 2 },
   eventTime: { fontSize: 13, color: c.textSub },

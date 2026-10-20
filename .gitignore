@@ -22,3 +22,7 @@ screenshots/
 # Firebase service-account keys are secret — never commit them
 *firebase-adminsdk*.json
 service-account*.json
+
+# Hermes agent files (personal profile) — never commit
+/SOUL.md
+/USER.md

@@ -168,13 +168,13 @@ function EventRow({ event, navigation, eventTasks, showDate, onDelete }) {
     <View style={styles.swipeActions}>
       <TouchableOpacity style={styles.swipeAction} onPress={openDetails} activeOpacity={0.85}>
         <View style={[styles.swipeCircle, { backgroundColor: '#636366' }]}>
-          <Ionicons name="ellipsis-horizontal" size={22} color="#fff" />
+          <Ionicons name="ellipsis-horizontal" size={20} color="#fff" />
         </View>
         <Text style={styles.swipeActionText}>{t('common.more')}</Text>
       </TouchableOpacity>
       <TouchableOpacity style={styles.swipeAction} onPress={() => onDelete(event.id)} activeOpacity={0.85}>
         <View style={[styles.swipeCircle, { backgroundColor: '#ff3b30' }]}>
-          <Ionicons name="trash" size={20} color="#fff" />
+          <Ionicons name="trash" size={18} color="#fff" />
         </View>
         <Text style={styles.swipeActionText}>{t('common.delete')}</Text>
       </TouchableOpacity>
@@ -182,7 +182,9 @@ function EventRow({ event, navigation, eventTasks, showDate, onDelete }) {
   );
 
   const card = (
-    <View style={styles.eventCard}>
+    // collapsable={false}: keep this view on Android so the swipe transform
+    // has a real native view to move (otherwise the card can render blank).
+    <View style={styles.eventCard} collapsable={false}>
       {/* Main event tap target */}
       <TouchableOpacity
         style={[styles.eventRow, event.is_busy && { opacity: 0.6 }]}
@@ -282,13 +284,13 @@ function TaskRow({ task, navigation, onComplete, onDelete, onAccept, onSetArriva
     <View style={styles.swipeActions}>
       <TouchableOpacity style={styles.swipeAction} onPress={primaryAction} activeOpacity={0.85}>
         <View style={[styles.swipeCircle, { backgroundColor: primaryColor }]}>
-          <Ionicons name={primaryIcon} size={22} color="#fff" />
+          <Ionicons name={primaryIcon} size={20} color="#fff" />
         </View>
         <Text style={styles.swipeActionText}>{primaryLabel}</Text>
       </TouchableOpacity>
       <TouchableOpacity style={styles.swipeAction} onPress={() => onDelete(task.id)} activeOpacity={0.85}>
         <View style={[styles.swipeCircle, { backgroundColor: '#ff3b30' }]}>
-          <Ionicons name="trash" size={20} color="#fff" />
+          <Ionicons name="trash" size={18} color="#fff" />
         </View>
         <Text style={styles.swipeActionText}>{t('common.delete')}</Text>
       </TouchableOpacity>
