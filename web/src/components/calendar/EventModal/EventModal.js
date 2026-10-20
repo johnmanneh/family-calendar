@@ -22,11 +22,9 @@ const EventModal = () => {
     selectedGroups, setSelectedGroups, toggleGroup,
   } = useUI();
   //
-  const { createEvent, attendees } = useEvents();
+  const { createEvent, attendees, selectedEvent, updateEvent, checkAvailability } = useEvents();
   //
-  const { members } = useFamily();
-  //
-  const { selectedEvent, updateEvent } = useEvents();
+  const { members, family } = useFamily();
   //
   const { groups } = useGroups();
   //
@@ -72,42 +70,110 @@ const EventModal = () => {
     notes: "",
     video_call_link: "",
     reminder: "",
-    status: "confirmed"
+    status: "confirmed",
+    hide_cross_family_availability: false
   });
 
-  // ── Busy: who already has something at this time? ──────────────────────
-  // People who are busy can't be added (greyed out). Someone already on the
-  // event stays — they can be removed, just not re-added.
-  const [busyIds, setBusyIds] = useState([]);
-  const optionIdsKey = attendeeOptions.map(m => m.id).join(",");
+  // Per-person availability for the current slot. Reset immediately on
+  // date/family/options change; never treat errors or stale responses as free.
+  const [availabilityByUser, setAvailabilityByUser] = useState({});
+  const [availabilityStatus, setAvailabilityStatus] = useState("idle");
+  const [availabilityRefresh, setAvailabilityRefresh] = useState(0);
+  const [availabilityForeground, setAvailabilityForeground] = useState(!document.hidden);
   useEffect(() => {
-    if (!isEventModalOpen || !formData.start_date) { setBusyIds([]); return; }
+    if (!isEventModalOpen) return;
+    const revalidate = () => {
+      setAvailabilityForeground(!document.hidden);
+      setAvailabilityRefresh(value => value + 1);
+    };
+    window.addEventListener("focus", revalidate);
+    document.addEventListener("visibilitychange", revalidate);
+    return () => {
+      window.removeEventListener("focus", revalidate);
+      document.removeEventListener("visibilitychange", revalidate);
+    };
+  }, [isEventModalOpen]);
+  const optionIdsKey = attendeeOptions.map(m => m.id).join(",");
+  const receivingFamilyId = Number(
+    (isEditMode
+      ? (selectedEvent?.family_id ?? selectedEvent?.extendedProps?.family_id)
+      : null) ?? family?.id
+  );
+  useEffect(() => {
+    if (!isEventModalOpen || !formData.start_date) {
+      setAvailabilityByUser({});
+      setAvailabilityStatus("idle");
+      return;
+    }
+    if (!availabilityForeground) {
+      setAvailabilityByUser({});
+      setAvailabilityStatus("error");
+      return;
+    }
     let start, end;
     if (formData.is_all_day) {
       start = new Date(`${formData.start_date.slice(0, 10)}T00:00`);
       const last = new Date(`${(formData.end_date || formData.start_date).slice(0, 10)}T00:00`);
-      end = new Date(last.getTime() + 86400000);
+      end = new Date(last);
+      end.setDate(end.getDate() + 1);
     } else {
       start = new Date(formData.start_date);
       end = formData.end_date ? new Date(formData.end_date) : new Date(start.getTime() + 3600000);
     }
-    if (isNaN(start) || isNaN(end)) return;
+    if (isNaN(start) || isNaN(end)) {
+      setAvailabilityByUser({});
+      setAvailabilityStatus("idle");
+      return;
+    }
+    setAvailabilityByUser({});
+    setAvailabilityStatus("checking");
+    let cancelled = false;
+    let expiryTimer;
     const timer = setTimeout(() => {
-      API.post("/events/availability", {
+      Promise.resolve(checkAvailability({
         start: start.toISOString(),
         end: end.toISOString(),
         user_ids: attendeeOptions.map(m => Number(m.id)),
         exclude_event_id: isEditMode && selectedEvent ? Number(selectedEvent.id) : null,
         tz: Intl.DateTimeFormat().resolvedOptions().timeZone,
-      })
-        .then(res => setBusyIds((res.data.busy || []).map(Number)))
-        .catch(() => setBusyIds([]));
+        family_id: receivingFamilyId,
+      }))
+        .then(data => {
+          if (cancelled) return;
+          if (data == null) return;
+          const map = {};
+          (data.availability || []).forEach(row => {
+            map[Number(row.user_id)] = row.status;
+          });
+          (data.busy || []).forEach(id => {
+            if (!map[Number(id)]) map[Number(id)] = "busy";
+          });
+          (data.not_shared || []).forEach(id => {
+            if (!map[Number(id)]) map[Number(id)] = "not_shared";
+          });
+          attendeeOptions.forEach(m => {
+            if (!map[Number(m.id)]) map[Number(m.id)] = "not_shared";
+          });
+          setAvailabilityByUser(map);
+          setAvailabilityStatus("ready");
+          expiryTimer = setTimeout(() => setAvailabilityRefresh(value => value + 1), 30000);
+        })
+        .catch(() => {
+          if (cancelled) return;
+          setAvailabilityByUser({});
+          setAvailabilityStatus("error");
+          expiryTimer = setTimeout(() => setAvailabilityRefresh(value => value + 1), 30000);
+        });
     }, 300);
-    return () => clearTimeout(timer);
+    return () => {
+      cancelled = true;
+      clearTimeout(timer);
+      clearTimeout(expiryTimer);
+    };
   // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [isEventModalOpen, formData.start_date, formData.end_date, formData.is_all_day, optionIdsKey]);
+  }, [isEventModalOpen, formData.start_date, formData.end_date, formData.is_all_day, optionIdsKey, receivingFamilyId, isEditMode, selectedEvent?.id, availabilityRefresh, availabilityForeground]);
   const busySelected = attendeeOptions.filter(
-    m => busyIds.includes(Number(m.id)) && selectedAttendees.map(Number).includes(Number(m.id))
+    m => availabilityByUser[Number(m.id)] === "busy" && selectedAttendees.map(Number).includes(Number(m.id))
   );
 
   const addTask = () => {
@@ -190,6 +256,13 @@ const EventModal = () => {
 
   if (!isEventModalOpen) return null;
 
+  const availabilityLabel = status => {
+    if (status === "busy") return "Busy";
+    if (status === "no_known_conflict") return "No known conflict";
+    if (status === "not_shared") return "Availability not shared";
+    return "Availability not shared";
+  };
+
   return (
     <div className="modal-overlay" onClick={closeEventModal}>
       <div className="modal-container" onClick={e => e.stopPropagation()}>
@@ -262,11 +335,28 @@ const EventModal = () => {
             </label>
           </div>
 
+          <label className="modal-toggle-item modal-hide-availability">
+            <span className="modal-toggle-label">Hide from other families' availability</span>
+            <span className="modal-toggle-switch">
+              <input
+                type="checkbox"
+                name="hide_cross_family_availability"
+                checked={formData.hide_cross_family_availability || false}
+                onChange={e => setFormData({ ...formData, hide_cross_family_availability: e.target.checked })}
+              />
+              <span className="modal-toggle-slider" />
+            </span>
+          </label>
+          <p className="modal-hide-availability-note">
+            Only excludes this event from other families' busy checks. Your family can still see it on the calendar.
+          </p>
+
           {/* Date & Time */}
           <div className="modal-row">
             <div className="modal-field">
-              <label>Start</label>
+              <label htmlFor="event-start-date">Start</label>
               <input
+                id="event-start-date"
                 type={formData.is_all_day ? "date" : "datetime-local"}
                 name="start_date"
                 value={formData.start_date}
@@ -275,8 +365,9 @@ const EventModal = () => {
               />
             </div>
             <div className="modal-field">
-              <label>End</label>
+              <label htmlFor="event-end-date">End</label>
               <input
+                id="event-end-date"
                 type={formData.is_all_day ? "date" : "datetime-local"}
                 name="end_date"
                 value={formData.end_date}
@@ -362,17 +453,23 @@ const EventModal = () => {
           {/* Who's attending */}
           <div className="modal-field">
             <label>Who's attending?</label>
+            {availabilityStatus === "checking" && (
+              <p className="modal-availability-note">Checking availability</p>
+            )}
+            {availabilityStatus === "error" && (
+              <p className="modal-availability-note modal-availability-error">Availability unavailable</p>
+            )}
             <div className="modal-attendees">
               {attendeeOptions.map(member => {
-                const isBusy = busyIds.includes(Number(member.id));
+                const personStatus = availabilityStatus === "ready" ? (availabilityByUser[Number(member.id)] || "not_shared") : null;
+                const isBusy = personStatus === "busy";
                 const isSelected = selectedAttendees.includes(member.id);
                 return (
                 <div
                   key={member.id}
-                  className={`modal-attendee ${isSelected ? "selected" : ""} ${isBusy ? "busy" : ""}`}
+                  className={`modal-attendee ${isSelected ? "selected" : ""} ${isBusy ? "busy" : ""} ${personStatus ? `availability-${personStatus}` : ""}`}
                   title={isBusy ? `${member.first_name} is busy at this time` : undefined}
                   onClick={() => {
-                    if (isBusy && !isSelected) return; // busy → can't be added
                     toggleAttendee(member.id);
                     // Clear task assignments for this member if they're being removed
                     if (selectedAttendees.includes(member.id)) {
@@ -397,8 +494,10 @@ const EventModal = () => {
                   <span className="modal-attendee-name">
                     {member.first_name}
                   </span>
-                  {isBusy ? (
-                    <span className="modal-attendee-busy"><Icon name="lock" size={10} /> Busy</span>
+                  {personStatus ? (
+                    <span className={`modal-attendee-status modal-attendee-${personStatus === "busy" ? "busy" : personStatus === "no_known_conflict" ? "open" : "not-shared"}`}>
+                      {personStatus === "busy" && <Icon name="lock" size={10} />} {availabilityLabel(personStatus)}
+                    </span>
                   ) : member.fromGroup && (
                     <span className="modal-attendee-group" title={(member.group_names || []).join(", ")}>
                       <Icon name="users" size={10} /> {(member.group_names || [])[0]}

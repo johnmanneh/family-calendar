@@ -16,7 +16,8 @@ export const EventProvider = ({ children }) => {
   scopeRef.current = scope;
   const eventRequest = useRef(0);
   const taskRequest = useRef(0);
-  useEffect(() => () => { eventRequest.current += 1; taskRequest.current += 1; }, []);
+  const availabilityRequest = useRef(0);
+  useEffect(() => () => { eventRequest.current += 1; taskRequest.current += 1; availabilityRequest.current += 1; }, []);
   // Bumps whenever the server pings this user about a new notification
   const [notifTick, setNotifTick] = useState(0);
 
@@ -104,6 +105,30 @@ export const EventProvider = ({ children }) => {
       throw err;
     } finally {
       setLoading(false);
+    }
+  };
+  //
+  // Busy / not-shared lookup for invitees. Errors are thrown so callers never
+  // treat a failure as free. Stale responses after family switch, logout, or
+  // unmount are dropped.
+  const checkAvailability = async ({ start, end, user_ids, exclude_event_id, tz, family_id }) => {
+    const request = ++availabilityRequest.current;
+    const requestScope = scopeRef.current;
+    const isCurrent = () => request === availabilityRequest.current && requestScope === scopeRef.current;
+    try {
+      const res = await API.post("/events/availability", {
+        start,
+        end,
+        user_ids,
+        exclude_event_id,
+        tz,
+        family_id,
+      });
+      if (!isCurrent()) return null;
+      return res.data;
+    } catch (err) {
+      if (!isCurrent()) return null;
+      throw err;
     }
   };
   //
@@ -597,6 +622,7 @@ export const EventProvider = ({ children }) => {
         fetchMessages,
         sendMessage,
         onChatMessage,
+        checkAvailability,
       }}
     >
       {children}

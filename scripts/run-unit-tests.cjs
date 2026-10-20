@@ -10,6 +10,9 @@ function runUnitTests({ root = path.resolve(__dirname, '..'), spawn = spawnSync,
     rootDir: root,
     roots: ['<rootDir>/mobile/src'],
     testEnvironment: 'node',
+    // These DOM-rendered UI tests run below with their dedicated configuration.
+    // Keep the existing Node-only mobile suites unchanged, and require BOTH.
+    testPathIgnorePatterns: ['/node_modules/', '/mobile/src/__tests__/availability[^/]*\\.test\\.js$'],
     transform: {
       '^.+\\.js$': [path.join(root, 'web/node_modules/babel-jest'), {
         presets: [path.join(root, 'web/node_modules/babel-preset-react-app')],
@@ -26,6 +29,10 @@ function runUnitTests({ root = path.resolve(__dirname, '..'), spawn = spawnSync,
     ] },
     { name: 'Mobile unit tests', cwd: root, args: [
       path.join(root, 'web/node_modules/jest/bin/jest.js'), '--runInBand', '--no-cache', '--config', JSON.stringify(mobileConfig),
+    ] },
+    { name: 'Mobile availability UI tests', cwd: root, args: [
+      path.join(root, 'web/node_modules/jest/bin/jest.js'), '--runInBand', '--no-cache', '--config',
+      path.join(root, 'mobile/jest.availability.config.cjs'),
     ] },
   ];
   for (const recipe of recipes) {

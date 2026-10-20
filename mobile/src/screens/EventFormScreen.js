@@ -18,6 +18,7 @@ import { useTranslation } from 'react-i18next';
 import API from '../api/axios';
 import { useFamily } from '../context/FamilyContext';
 import { useAuth } from '../context/AuthContext';
+import useAvailability from '../hooks/useAvailability';
 import { useStyles } from '../styles/EventFormScreen.styles';
 
 import TopCard from '../components/ui/TopCard';
@@ -175,7 +176,7 @@ export default function EventFormScreen({ route, navigation }) {
   const { event, date: prefillDate, prefill } = route.params || {};
   const isEdit = !!event;
 
-  const { members } = useFamily();
+  const { members, family } = useFamily();
   const { user } = useAuth();
 
   // ── Form state ────────────────────────────────────────────────────────────
@@ -210,6 +211,7 @@ export default function EventFormScreen({ route, navigation }) {
     recurrence:           isEdit ? event.recurrence      || '' : '',
     is_all_day:           isEdit ? !!event.is_all_day : false,
     is_private:           isEdit ? !!event.is_private : false,
+    hide_cross_family_availability: isEdit ? !!event.hide_cross_family_availability : false,
   });
 
   const [startDate, setStartDate]   = useState(start);
@@ -263,34 +265,20 @@ export default function EventFormScreen({ route, navigation }) {
       .map(p => ({ ...p, fromGroup: true })),
   ];
 
-  // ── Busy: who already has something at this time? ──────────────────────
-  // Busy people are greyed out and can't be added. Someone already on the
-  // event stays (they can be removed, just not re-added).
-  const [busyIds, setBusyIds] = useState([]);
-  const optionIdsKey = attendeeOptions.map(m => m.id).join(',');
-  useEffect(() => {
-    let start, end;
-    if (formData.is_all_day) {
-      start = new Date(startDate); start.setHours(0, 0, 0, 0);
-      end = new Date(endDate); end.setHours(0, 0, 0, 0); end.setDate(end.getDate() + 1);
-    } else {
-      start = startDate;
-      end = endDate > startDate ? endDate : new Date(startDate.getTime() + 3600000);
-    }
-    const timer = setTimeout(() => {
-      API.post('/events/availability', {
-        start: start.toISOString(),
-        end: end.toISOString(),
-        user_ids: attendeeOptions.map(m => Number(m.id)),
-        exclude_event_id: isEdit ? Number(event.id) : null,
-        tz: Intl.DateTimeFormat().resolvedOptions().timeZone,
-      })
-        .then(res => setBusyIds((res.data.busy || []).map(Number)))
-        .catch(() => setBusyIds([]));
-    }, 300);
-    return () => clearTimeout(timer);
-  // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [startDate, endDate, formData.is_all_day, optionIdsKey]);
+  // Availability is an advisory status. A conflict never disables an invitation.
+  const { busyIds, statusFor } = useAvailability({
+    startDate, endDate, isAllDay: formData.is_all_day,
+    userIds: attendeeOptions.map(m => Number(m.id)),
+    familyId: isEdit ? event.family_id || family?.id : family?.id,
+    excludeEventId: isEdit ? event.id : null,
+  });
+  const availabilityLabel = status => ({
+    busy: t('availability.busy', { defaultValue: 'Busy' }),
+    no_known_conflict: t('availability.no_known_conflict', { defaultValue: 'No known conflict' }),
+    not_shared: t('availability.not_shared', { defaultValue: 'Availability not shared' }),
+    checking: t('availability.checking', { defaultValue: 'Checking availability' }),
+    unavailable: t('availability.unavailable', { defaultValue: 'Availability unavailable' }),
+  }[status]);
   const busySelected = attendeeOptions.filter(m => busyIds.includes(Number(m.id)) && selectedAttendees.includes(Number(m.id)));
   const initialGroupIds = isEdit ? (event.group_ids || []).map(Number) : [];
   const [selectedGroups, setSelectedGroups] = useState(initialGroupIds);
@@ -516,6 +504,25 @@ export default function EventFormScreen({ route, navigation }) {
           </View>
         </View>
 
+        {/* Excluding availability does not change existing event-detail permissions. */}
+        <View style={styles.card}>
+          <View style={styles.toggleRow}>
+            <Text style={[styles.toggleLabel, { flex: 1 }]}>
+              {t('availability.exclude_event', { defaultValue: 'Exclude this event from cross-family availability' })}
+            </Text>
+            <Switch
+              accessibilityLabel="Exclude this event from cross-family availability"
+              value={formData.hide_cross_family_availability}
+              onValueChange={v => set('hide_cross_family_availability', v)}
+              trackColor={{ true: '#1a8fa8' }}
+              thumbColor="#fff"
+            />
+          </View>
+          <Text style={styles.categoryLabel}>
+            {t('availability.exclude_hint', { defaultValue: 'This event will not be used for busy-time checks in other families. Its existing calendar visibility stays the same.' })}
+          </Text>
+        </View>
+
         {/* ── Dates ── */}
         <View style={styles.card}>
           <DateRow
@@ -640,12 +647,11 @@ export default function EventFormScreen({ route, navigation }) {
               return (
                 <TouchableOpacity
                   key={m.id}
-                  style={[styles.attendeeBubble, busyIds.includes(Number(m.id)) && !isSelected && styles.attendeeBusy]}
-                  onPress={() => {
-                    if (busyIds.includes(Number(m.id)) && !isSelected) return; // busy → can't be added
-                    toggleAttendee(m.id);
-                  }}
-                  activeOpacity={busyIds.includes(Number(m.id)) && !isSelected ? 1 : 0.7}
+                  style={styles.attendeeBubble}
+                  onPress={() => toggleAttendee(m.id)}
+                  accessibilityLabel={`Invite ${m.first_name}`}
+                  accessibilityState={{ selected: isSelected }}
+                  activeOpacity={0.7}
                 >
                   <View style={[
                     styles.attendeeCircle,
@@ -660,11 +666,10 @@ export default function EventFormScreen({ route, navigation }) {
                     )}
                   </View>
                   <Text style={styles.attendeeName} numberOfLines={1}>{m.first_name}</Text>
-                  {busyIds.includes(Number(m.id)) ? (
-                    <Text style={[styles.attendeeGroup, isSelected && { color: '#ff3b30', opacity: 1 }]} numberOfLines={1}>
-                      <Ionicons name="lock-closed-outline" size={9} /> {t('events.busy')}
-                    </Text>
-                  ) : m.fromGroup && (
+                  <Text style={[styles.attendeeGroup, { width: 100, textAlign: 'center' }, busyIds.includes(Number(m.id)) && { color: '#d97706', opacity: 1 }]}>
+                    {availabilityLabel(statusFor(m.id))}
+                  </Text>
+                  {m.fromGroup && (
                     <Text style={styles.attendeeGroup} numberOfLines={1}>
                       <Ionicons name="people-outline" size={9} /> {(m.group_names || [])[0]}
                     </Text>
@@ -675,7 +680,7 @@ export default function EventFormScreen({ route, navigation }) {
           </View>
           {busySelected.length > 0 && (
             <Text style={styles.busyNote}>
-              {t('events.busy_note', { names: busySelected.map(m => m.first_name).join(', '), count: busySelected.length })}
+              {t('availability.conflict_warning', { names: busySelected.map(m => m.first_name).join(', '), defaultValue: `${busySelected.map(m => m.first_name).join(', ')}: conflicting plans. You can still send the invitation.` })}
             </Text>
           )}
         </View>

@@ -17,6 +17,7 @@ const updateEvent = async (req, res) => {
     location,
     is_all_day,
     is_private,
+    hide_cross_family_availability,
     recurrence,
     recurrence_end_date,
     reminder,
@@ -31,6 +32,10 @@ const updateEvent = async (req, res) => {
     status,
     updated_at: clientVersion,
   } = req.body;
+
+  if (hide_cross_family_availability !== undefined && typeof hide_cross_family_availability !== 'boolean') {
+    return errorResponse(res, 400, 'hide_cross_family_availability must be a boolean');
+  }
 
   try {
     // Check event exists and belongs to user
@@ -86,7 +91,8 @@ const updateEvent = async (req, res) => {
         video_call_link = COALESCE($18, video_call_link),
         status = COALESCE($19, status),
         updated_by = $20,
-        updated_at = NOW()
+        updated_at = NOW(),
+        hide_cross_family_availability = COALESCE($22, hide_cross_family_availability)
       WHERE id = $21
       RETURNING *`,
       [
@@ -94,7 +100,7 @@ const updateEvent = async (req, res) => {
         is_private ?? null,
         recurrence, recurrence_end_date, reminder, second_reminder, color,
         category, priority, url, notes, travel_time, video_call_link, status,
-        userId, id
+        userId, id, hide_cross_family_availability ?? null
       ]
     );
 

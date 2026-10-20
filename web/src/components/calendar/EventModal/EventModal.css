@@ -497,3 +497,33 @@
 .modal-owner-chip.on { border-color: var(--chip); background: color-mix(in srgb, var(--chip) 14%, transparent); }
 .modal-owner-dot { width: 8px; height: 8px; border-radius: 50%; background: var(--chip); }
 .modal-owner-note { font-size: 12px; color: #8e8e93; margin-top: 6px; }
+
+.modal-hide-availability { margin: 8px 0 0; }
+.modal-hide-availability-note,
+.modal-availability-note {
+  font-size: 12px;
+  color: #6e6e73;
+  margin: 4px 0 8px;
+}
+.modal-availability-error { color: #ff3b30; }
+
+/* Availability status — busy people stay selectable */
+.modal-attendee.busy { cursor: pointer; }
+.modal-attendee-status {
+  display: inline-flex;
+  align-items: center;
+  gap: 3px;
+  font-size: 10px;
+  font-weight: 600;
+  max-width: 88px;
+  text-align: center;
+  line-height: 1.2;
+}
+.modal-attendee-busy { color: #ff3b30; }
+.modal-attendee.busy.selected .modal-attendee-busy { color: #ff3b30; }
+.modal-attendee-open { color: #6e6e73; }
+.modal-attendee-not-shared { color: #8e8e93; }
+.modal-busy-note { font-size: 12px; color: #ff3b30; margin-top: 6px; }
+
+.modal-attendee.busy:not(.selected) { opacity: 1; filter: none; }
+.modal-attendee.busy:not(.selected):hover { background: #f5f5f7; }

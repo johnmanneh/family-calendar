@@ -36,7 +36,7 @@ test('the unit-test gate runs workflow, backend, web and mobile suites without w
     return { status: 0 };
   }, log: () => {} });
   assert.equal(result, 0);
-  assert.equal(calls.length, 4);
+  assert.equal(calls.length, 5);
   assert.ok(calls[0].args.includes('--test'));
   assert.ok(calls[1].args[0].endsWith('backend/node_modules/jest/bin/jest.js'));
   assert.ok(calls[2].args[0].endsWith('web/node_modules/react-scripts/bin/react-scripts.js'));
@@ -44,6 +44,17 @@ test('the unit-test gate runs workflow, backend, web and mobile suites without w
   assert.equal(JSON.parse(calls[3].args.at(-1)).rootDir, root);
   assert.equal(calls[2].options.env.CI, 'true');
   assert.equal(calls[3].options.env.TZ, 'America/Los_Angeles');
+  const unitConfig = JSON.parse(calls[3].args.at(-1));
+  assert.ok(unitConfig.testPathIgnorePatterns.some(pattern => new RegExp(pattern).test(path.join(root, 'mobile/src/__tests__/availability-context.test.js'))));
+  assert.equal(calls[4].args.at(-1), path.join(root, 'mobile/jest.availability.config.cjs'));
+  assert.equal(calls[4].options.env.CI, 'true');
+});
+
+test('a failing availability UI suite blocks the commit after the other suites pass', () => {
+  let calls = 0;
+  const status = runner().runUnitTests({ root, spawn: () => ({ status: ++calls === 5 ? 17 : 0 }), log: () => {} });
+  assert.equal(calls, 5);
+  assert.equal(status, 17);
 });
 
 for (const failure of [{ status: 7 }, { status: null, signal: 'SIGTERM' }, { error: new Error('missing tool') }]) {

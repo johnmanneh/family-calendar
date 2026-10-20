@@ -11,6 +11,7 @@ const { listPickupPeople, addPickupPerson, updatePickupPerson, removePickupPerso
 const getFamily = require('../controllers/family/getFamily');
 const getAllFamilies = require('../controllers/family/getAllFamilies');
 const setActiveFamily = require('../controllers/family/setActiveFamily');
+const setAvailabilitySharing = require('../controllers/family/setAvailabilitySharing');
 const updateMemberColor = require('../controllers/family/updateMemberColor');
 const updateMemberCircle = require('../controllers/family/updateMemberCircle');
 const updateMemberRelationship = require('../controllers/family/updateMemberRelationship');
@@ -24,6 +25,7 @@ router.delete('/leave', verifyToken, leaveFamily);
 router.get('/', verifyToken, getFamily);
 router.get('/all', verifyToken, getAllFamilies);
 router.patch('/active', verifyToken, setActiveFamily);
+router.patch('/availability', verifyToken, setAvailabilitySharing);
 router.put('/name', verifyToken, renameFamily);
 router.post('/children', verifyToken, createChild);
 router.put('/children/:id', verifyToken, updateChild);

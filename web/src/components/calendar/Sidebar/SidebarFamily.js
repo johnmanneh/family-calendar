@@ -13,7 +13,7 @@ import "./Sidebar.css";
 //   In one family                → family name (admin can rename), code, join/leave
 //   In multiple families         → family chips at top, then active family details
 const SidebarFamily = () => {
-  const { family, families, members, fetchFamily, switchFamily } = useFamily();
+  const { family, families, members, fetchFamily, switchFamily, setAvailabilitySharing } = useFamily();
   const { joinWithCode } = useGroups();
   const { user } = useAuth();
 
@@ -22,11 +22,28 @@ const SidebarFamily = () => {
   const [error, setError] = useState("");
   const [loading, setLoading] = useState(false);
   const [leaving, setLeaving] = useState(false);
+  const [sharingPending, setSharingPending] = useState({});
+  const [sharingErrors, setSharingErrors] = useState({});
+
+  const changeSharing = async (familyId, shared) => {
+    if (sharingPending[familyId]) return;
+    setSharingPending(prev => ({ ...prev, [familyId]: true }));
+    setSharingErrors(prev => ({ ...prev, [familyId]: "" }));
+    try {
+      await setAvailabilitySharing(familyId, shared);
+    } catch (err) {
+      setSharingErrors(prev => ({ ...prev, [familyId]:
+        err.response?.data?.message || "Could not update availability sharing. Please try again." }));
+    } finally {
+      setSharingPending(prev => ({ ...prev, [familyId]: false }));
+    }
+  };
 
   const me = members.find(m => Number(m.id) === Number(user?.id)) || user;
   const isAdmin = ["admin", "owner"].includes(me?.role);
   const personal = !!family?.is_personal;
   const multiFamily = families.filter(f => !f.is_personal).length > 1;
+  const receivingFamilies = families.filter(f => !f.is_personal);
 
   const open = (m, initial = "") => { setMode(m); setValue(initial); setError(""); };
   const close = () => { setMode(null); setValue(""); setError(""); };
@@ -94,6 +111,38 @@ const SidebarFamily = () => {
     </form>
   );
 
+  const availabilityControls = receivingFamilies.length > 0 && (
+    <div className="sidebar-availability">
+      <p className="sidebar-label">AVAILABILITY SHARING</p>
+      <p className="sidebar-availability-copy">
+        Opt in per family to share busy only for cross-family busy checks, including future commitments.
+        In these checks, they never see event details, only whether you are busy.
+        This applies to current and future members of that family. Ordinary event visibility is unchanged.
+        Only you control this; a family admin cannot change it for another adult.
+      </p>
+      {receivingFamilies.map(f => (
+        <React.Fragment key={f.id}>
+          <label className="sidebar-availability-row">
+            <input
+              type="checkbox"
+              checked={!!f.share_availability}
+              disabled={!!sharingPending[f.id]}
+              aria-describedby={sharingErrors[f.id] ? `sharing-error-${f.id}` : undefined}
+              onChange={e => changeSharing(f.id, e.target.checked)}
+            />
+            <span>Share my busy times with {f.name}</span>
+          </label>
+          {sharingPending[f.id] && <span role="status">Saving…</span>}
+          {sharingErrors[f.id] && (
+            <p id={`sharing-error-${f.id}`} role="alert" className="sidebar-group-error">
+              {sharingErrors[f.id]}
+            </p>
+          )}
+        </React.Fragment>
+      ))}
+    </div>
+  );
+
   if (!family) return <div className="sidebar-family" />;
 
   // ── On your own ──
@@ -156,6 +205,8 @@ const SidebarFamily = () => {
       <p className="sidebar-invite">
         Share this code to add people: <strong>{family.invite_code}</strong>
       </p>
+
+      {availabilityControls}
 
       {/* Join or create another family */}
       {mode === "join" ? form("Family or group code", "Join", true)

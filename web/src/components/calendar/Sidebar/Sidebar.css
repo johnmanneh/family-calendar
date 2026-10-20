@@ -1713,3 +1713,21 @@
   display: flex; align-items: center; justify-content: center; gap: 8px;
   background: #E8F5EE; color: #166534; font-size: 13px; font-weight: 700; cursor: pointer; font-family: inherit;
 }
+
+.sidebar-availability { margin-top: 12px; }
+.sidebar-availability-copy {
+  font-size: 12px;
+  color: #6e6e73;
+  line-height: 1.4;
+  margin: 4px 0 8px;
+}
+.sidebar-availability-row {
+  display: flex;
+  align-items: flex-start;
+  gap: 8px;
+  font-size: 13px;
+  color: #1d1d1f;
+  margin: 6px 0;
+  cursor: pointer;
+}
+.sidebar-availability-row input { margin-top: 2px; }

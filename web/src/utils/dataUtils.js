@@ -23,7 +23,8 @@ export const emptyForm = {
   notes: "",
   video_call_link: "",
   reminder: "",
-  status: "confirmed"
+  status: "confirmed",
+  hide_cross_family_availability: false
 };
 //
 //
@@ -65,6 +66,9 @@ export const mapEventToForm = event => {
       ? toLocalDate(event.extendedProps.recurrence_end_date)
       : "",
     reminder: "",
-    status: event.extendedProps?.status || "confirmed"
+    status: event.extendedProps?.status || "confirmed",
+    hide_cross_family_availability: !!(
+      event.extendedProps?.hide_cross_family_availability ?? event.hide_cross_family_availability
+    )
   };
 };

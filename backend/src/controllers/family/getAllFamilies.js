@@ -9,7 +9,7 @@ const getAllFamilies = async (req, res) => {
   try {
     const result = await pool.query(
       `SELECT f.id, f.name, f.invite_code, f.is_personal,
-              fm.role, fm.is_active,
+              fm.role, fm.is_active, fm.share_availability,
               (SELECT COUNT(*) FROM family_members WHERE family_id = f.id)::int AS member_count
        FROM families f
        JOIN family_members fm ON fm.family_id = f.id

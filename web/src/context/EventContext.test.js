@@ -139,3 +139,77 @@ test('null→resolved family triggers a replacement fetch after mount responses 
   expect(ui.setEvents).toHaveBeenCalledWith([{ id: 'new' }]);
   expect(ui.setMyTasks).toHaveBeenCalledWith([{ id: 'new-task' }]);
 });
+
+test('checkAvailability posts the contract payload and returns statuses without event metadata', async () => {
+  render(<EventProvider><Probe /></EventProvider>);
+  const payload = {
+    start: '2026-10-21T08:00:00.000Z',
+    end: '2026-10-21T09:00:00.000Z',
+    user_ids: [1, 2, 3],
+    exclude_event_id: 9,
+    tz: 'Europe/Oslo',
+    family_id: 4,
+  };
+  API.post.mockResolvedValue({
+    data: {
+      busy: [1],
+      not_shared: [3],
+      availability: [
+        { user_id: 1, status: 'busy' },
+        { user_id: 2, status: 'no_known_conflict' },
+        { user_id: 3, status: 'not_shared' },
+      ],
+    },
+  });
+  let result;
+  await act(async () => { result = await context.checkAvailability(payload); });
+  expect(API.post).toHaveBeenCalledWith('/events/availability', payload);
+  expect(result).toEqual({
+    busy: [1],
+    not_shared: [3],
+    availability: [
+      { user_id: 1, status: 'busy' },
+      { user_id: 2, status: 'no_known_conflict' },
+      { user_id: 3, status: 'not_shared' },
+    ],
+  });
+  expect(JSON.stringify(result)).not.toMatch(/title|description|location/);
+});
+
+test('obsolete checkAvailability responses after family switch or unmount are ignored', async () => {
+  const view = render(<EventProvider><Probe /></EventProvider>);
+  const pending = [];
+  API.post.mockImplementation(() => new Promise(resolve => pending.push(resolve)));
+  let stale;
+  act(() => { stale = context.checkAvailability({ start: 's', end: 'e', user_ids: [1], family_id: 1 }); });
+  useFamily.mockReturnValue({ family: { id: 2 } });
+  view.rerender(<EventProvider><Probe /></EventProvider>);
+  let current;
+  act(() => { current = context.checkAvailability({ start: 's', end: 'e', user_ids: [1], family_id: 2 }); });
+  let staleResult;
+  await act(async () => {
+    pending[0]({ data: { busy: [1], not_shared: [], availability: [{ user_id: 1, status: 'busy' }] } });
+    staleResult = await stale;
+  });
+  expect(staleResult).toBeNull();
+  let currentResult;
+  await act(async () => {
+    pending[1]({ data: { busy: [], not_shared: [], availability: [{ user_id: 1, status: 'no_known_conflict' }] } });
+    currentResult = await current;
+  });
+  expect(currentResult.availability[0].status).toBe('no_known_conflict');
+  let unmounted;
+  act(() => { unmounted = context.checkAvailability({ start: 's', end: 'e', user_ids: [1], family_id: 2 }); });
+  view.unmount();
+  await act(async () => {
+    pending[2]({ data: { busy: [1], availability: [{ user_id: 1, status: 'busy' }] } });
+    expect(await unmounted).toBeNull();
+  });
+});
+
+test('checkAvailability errors are thrown rather than returned as free', async () => {
+  render(<EventProvider><Probe /></EventProvider>);
+  const failure = Object.assign(new Error('unavailable'), { response: { data: { message: 'down' } } });
+  API.post.mockRejectedValue(failure);
+  await expect(context.checkAvailability({ start: 's', end: 'e', user_ids: [1], family_id: 1 })).rejects.toBe(failure);
+});

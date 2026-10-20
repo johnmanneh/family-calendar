@@ -15,6 +15,7 @@ const createEvent = async (req, res) => {
     location,
     is_all_day,
     is_private,
+    hide_cross_family_availability,
     recurrence,
     recurrence_end_date,
     reminder,
@@ -31,6 +32,10 @@ const createEvent = async (req, res) => {
 
   if (!title || !start_date) {
     return errorResponse(res, 400, 'Title and start date are required');
+  }
+
+  if (hide_cross_family_availability !== undefined && typeof hide_cross_family_availability !== 'boolean') {
+    return errorResponse(res, 400, 'hide_cross_family_availability must be a boolean');
   }
 
   try {
@@ -66,16 +71,16 @@ const createEvent = async (req, res) => {
         title, description, start_date, end_date, family_id, created_by,
         location, is_all_day, is_private, recurrence, recurrence_end_date, reminder,
         second_reminder, color, category, priority, url, notes, travel_time,
-        video_call_link, status, owner_id
+        video_call_link, status, owner_id, hide_cross_family_availability
       ) VALUES (
         $1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11, $12, $13, $14, $15,
-        $16, $17, $18, $19, $20, $21, $22
+        $16, $17, $18, $19, $20, $21, $22, $23
       ) RETURNING *`,
       [
         title, description, start_date, end_date, familyId, userId,
         location, is_all_day, is_private || false, recurrence, recurrence_end_date, reminder,
         second_reminder, color, category, priority, url, notes, travel_time,
-        video_call_link, status || 'confirmed', ownerId,
+        video_call_link, status || 'confirmed', ownerId, hide_cross_family_availability ?? false,
       ]
     );
 

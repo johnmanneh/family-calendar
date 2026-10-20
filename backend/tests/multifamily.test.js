@@ -21,6 +21,16 @@ const expect=(label, got, want)=>{ const ok = want instanceof Function ? want(go
     (1,1,'admin',false),(1,2,'member',false),(1,3,'member',false),(2,1,'admin',true),(2,4,'member',false)`);
   const john={id:1};
 
+  // Cross-family availability is an explicit choice for each receiving family.
+  // to_jsonb lets the assertion fail meaningfully before the migration exists.
+  const availabilityDefaults = await q(`SELECT to_jsonb(fm)->'share_availability' AS shared
+    FROM family_members fm WHERE user_id = 1 ORDER BY family_id`);
+  expect('availability sharing defaults to off in every family',
+    availabilityDefaults.rows.every(row => row.shared === false), true);
+  const listedFamilies = await call(C('family/getAllFamilies'), { user: john });
+  expect('family settings expose only your own availability choice for each family',
+    listedFamilies.b.families?.length === 2 && listedFamilies.b.families.every(f => f.share_availability === false), true);
+
   let r=await call(C('family/children').createChild,{user:john,body:{first_name:'Leo'}});
   expect('add child → created', r.c, 201);
   const leo=(await q("SELECT id FROM users WHERE first_name='Leo'")).rows[0].id;
@@ -38,6 +48,8 @@ const expect=(label, got, want)=>{ const ok = want instanceof Function ? want(go
 
   r=await call(C('events/createEvent'),{user:john,body:{title:'Zoo',start_date:'2026-11-01T10:00:00Z',end_date:'2026-11-01T11:00:00Z'}});
   expect('create event → in the active family', (await q("SELECT family_id FROM events WHERE title='Zoo'")).rows[0]?.family_id, 2);
+  expect('new events have an explicit cross-family availability exclusion flag',
+    (await q("SELECT to_jsonb(e)->'hide_cross_family_availability' AS hidden FROM events e WHERE title='Zoo'")).rows[0]?.hidden, false);
 
   // An event in family A (not active) — John is a member there, so he can still open it
   await q(`INSERT INTO events (title,start_date,end_date,family_id,created_by) VALUES ('A party','2026-11-02 10:00','2026-11-02 11:00',1,2)`);

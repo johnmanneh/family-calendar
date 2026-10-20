@@ -9,6 +9,7 @@ import {
   Clipboard,
   TextInput,
   ActivityIndicator,
+  Switch,
 } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { Ionicons } from '@expo/vector-icons';
@@ -81,7 +82,18 @@ export default function FamilyScreen({ navigation }) {
   const { t } = useTranslation();
   const styles = useStyles();
   const { user, logout } = useAuth();
-  const { family, families, members, fetchFamily, switchFamily } = useFamily();
+  const { family, families, members, fetchFamily, switchFamily, setAvailabilitySharing } = useFamily();
+  const [sharingFamilyId, setSharingFamilyId] = useState(null);
+  const changeAvailability = async (familyId, value) => {
+    setSharingFamilyId(familyId);
+    try {
+      await setAvailabilitySharing(familyId, value);
+    } catch (err) {
+      Alert.alert(t('common.error'), err.response?.data?.message || 'Could not save availability sharing. Please try again.');
+    } finally {
+      setSharingFamilyId(null);
+    }
+  };
 
   const [codeCopied, setCodeCopied] = useState(false);
   const [leaving,    setLeaving]    = useState(false);
@@ -299,6 +311,9 @@ export default function FamilyScreen({ navigation }) {
         {families.length > 0 && (
           <>
             <Text style={[styles.sectionHeader, { marginTop: 32 }]}>{t('family.my_families')}</Text>
+            <Text style={[styles.leaveDescription, { marginBottom: 8 }]}>
+              {t('availability.sharing_hint', { defaultValue: 'Optional: let current and future members of a family check your busy times from your other families, including future commitments. No event details or other people\'s calendars are shared. Off by default; turn it off at any time.' })}
+            </Text>
             <View style={styles.card}>
               {families.map((f, i) => {
                 const isActive = Number(f.id) === Number(family?.id);
@@ -321,6 +336,21 @@ export default function FamilyScreen({ navigation }) {
                         </TouchableOpacity>
                       )}
                     </View>
+                    {!f.is_personal && (
+                      <View style={{ flexDirection: 'row', alignItems: 'center', paddingVertical: 8 }}>
+                        <Text style={[styles.leaveDescription, { flex: 1, marginBottom: 0 }]}>
+                          {t('availability.share_with', { name: f.name, defaultValue: `Share my busy times with ${f.name}` })}
+                        </Text>
+                        <Switch
+                          accessibilityLabel={`Share my busy times with ${f.name}`}
+                          value={f.share_availability === true}
+                          disabled={sharingFamilyId !== null}
+                          onValueChange={value => changeAvailability(f.id, value)}
+                          trackColor={{ true: '#1a8fa8' }}
+                          thumbColor="#fff"
+                        />
+                      </View>
+                    )}
                     {i < families.length - 1 && <View style={[styles.divider, { marginVertical: 6 }]} />}
                   </React.Fragment>
                 );
