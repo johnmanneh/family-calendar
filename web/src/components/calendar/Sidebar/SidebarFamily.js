@@ -24,6 +24,7 @@ const SidebarFamily = () => {
   const [leaving, setLeaving] = useState(false);
   const [sharingPending, setSharingPending] = useState({});
   const [sharingErrors, setSharingErrors] = useState({});
+  const [availabilityMore, setAvailabilityMore] = useState(false);
 
   const changeSharing = async (familyId, shared) => {
     if (sharingPending[familyId]) return;
@@ -115,11 +116,24 @@ const SidebarFamily = () => {
     <div className="sidebar-availability">
       <p className="sidebar-label">AVAILABILITY SHARING</p>
       <p className="sidebar-availability-copy">
-        Opt in per family to share busy only for cross-family busy checks, including future commitments.
-        In these checks, they never see event details, only whether you are busy.
-        This applies to current and future members of that family. Ordinary event visibility is unchanged.
-        Only you control this; a family admin cannot change it for another adult.
+        Share only whether you are busy, not event details.
+        {' '}
+        <button
+          type="button"
+          className="sidebar-availability-more"
+          onClick={() => setAvailabilityMore(open => !open)}
+        >
+          {availabilityMore ? 'Less' : 'More'}
+        </button>
       </p>
+      {availabilityMore && (
+        <p className="sidebar-availability-copy">
+          Opt in per family for cross-family busy checks, including future commitments.
+          They never see event details, only whether you are busy.
+          This applies to current and future members of that family. Ordinary event visibility is unchanged.
+          Only you control this; a family admin cannot change it for another adult.
+        </p>
+      )}
       {receivingFamilies.map(f => (
         <React.Fragment key={f.id}>
           <label className="sidebar-availability-row">

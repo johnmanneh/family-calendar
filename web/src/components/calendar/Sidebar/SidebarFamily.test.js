@@ -36,12 +36,12 @@ test('shows an opt-in sharing control for each receiving family using own settin
   expect(screen.getByLabelText(/Share my busy times with Manneh/i)).not.toBeChecked();
   expect(screen.getByLabelText(/Share my busy times with Grandparents/i)).toBeChecked();
   expect(screen.queryByLabelText(/Personal/i)).not.toBeInTheDocument();
-  expect(screen.getByText(/busy only/i)).toBeInTheDocument();
+  expect(screen.getByText(/Share only whether you are busy, not event details/i)).toBeInTheDocument();
+  expect(screen.queryByText(/current and future members/i)).not.toBeInTheDocument();
+  fireEvent.click(screen.getByRole('button', { name: /more/i }));
   expect(screen.getByText(/never see event details/i)).toBeInTheDocument();
   expect(screen.getByText(/current and future members/i)).toBeInTheDocument();
   expect(screen.getByText(/cannot change it for another adult/i)).toBeInTheDocument();
-  expect(screen.getByText(/cross-family busy checks/i)).toBeInTheDocument();
-  expect(screen.getByText(/future commitments/i)).toBeInTheDocument();
   expect(screen.getByText(/ordinary event visibility is unchanged/i)).toBeInTheDocument();
   await act(async () => { fireEvent.click(screen.getByLabelText(/Share my busy times with Manneh/i)); });
   expect(setAvailabilitySharing).toHaveBeenCalledWith(1, true);
