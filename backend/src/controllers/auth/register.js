@@ -1,7 +1,6 @@
 const pool = require('../../config/db');
 const bcrypt = require('bcryptjs');
 const jwt = require('jsonwebtoken');
-const crypto = require('crypto');
 const validateRegister = require('../../utils/validation/registerValidation');
 const {errorResponse,successResponse} = require('../../utils/response/responseHandlers');
 
@@ -42,13 +41,15 @@ const register = async (req, res) => {
 
     // Personal space behind the scenes so the user can use the app immediately.
     // It stays hidden (no name or code shown) until they create a family or join one.
-    const inviteCode = crypto.randomBytes(24).toString('base64url');
+    const { generateLongCode, generateShortCode, storedShortCode } = require('../../utils/inviteCodes');
+    const inviteCode = generateLongCode();
+    const shortCode = storedShortCode(generateShortCode());
     const familyName = `${first_name}'s Family`;
 
     const newFamily = await pool.query(
-      `INSERT INTO families (name, invite_code, created_by, is_personal)
-       VALUES ($1, $2, $3, true) RETURNING id`,
-      [familyName, inviteCode, userId]
+      `INSERT INTO families (name, invite_code, short_invite_code, created_by, is_personal)
+       VALUES ($1, $2, $3, $4, true) RETURNING id`,
+      [familyName, inviteCode, shortCode, userId]
     );
 
     await pool.query(

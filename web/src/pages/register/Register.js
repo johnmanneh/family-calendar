@@ -1,10 +1,11 @@
 import React, { useState } from 'react';
-import { useNavigate, Navigate } from 'react-router-dom';
+import { useNavigate, Navigate, useSearchParams } from 'react-router-dom';
 import { useAuth } from '../../context/AuthContext';
 import API from '../../api/axios';
 import Input from '../../components/common/Input/Input';
 import Button from '../../components/common/Button/Button';
 import AuthLink from '../../components/common/AuthLink/AuthLink';
+import { pathWithJoin, joinTokenFromSearch } from '../../utils/joinQuery';
 import './Register.css';
 
 const Register = () => {
@@ -22,8 +23,10 @@ const Register = () => {
 
   const { login, token, authLoading } = useAuth();
   const navigate = useNavigate();
+  const [searchParams] = useSearchParams();
+  const joinFromUrl = joinTokenFromSearch(searchParams.toString());
 
-  if (!authLoading && token) return <Navigate to="/dashboard" replace />;
+  if (!authLoading && token) return <Navigate to={pathWithJoin('/dashboard', joinFromUrl)} replace />;
 
   const handleChange = (e) => {
     setFormData({ ...formData, [e.target.name]: e.target.value });
@@ -39,14 +42,16 @@ const Register = () => {
       const res = await API.post('/auth/register', formData);
       login(res.data.user, res.data.token);
 
-      // Step 2 — Create or Join family
-      if (familyOption === 'create') {
+      if (joinFromUrl) {
+        navigate(pathWithJoin('/dashboard', joinFromUrl));
+      } else if (familyOption === 'create') {
         await API.post('/family/create', { name: familyName });
-      } else if (familyOption === 'join') {
-        await API.post('/family/join', { invite_code: inviteCode });
+        navigate('/dashboard');
+      } else if (familyOption === 'join' && inviteCode.trim()) {
+        navigate(pathWithJoin('/dashboard', inviteCode.trim()));
+      } else {
+        navigate('/dashboard');
       }
-
-      navigate('/dashboard');
     } catch (err) {
       setError(err.response?.data?.message || 'Something went wrong');
     } finally {
@@ -174,7 +179,7 @@ const Register = () => {
         <AuthLink
           text="Already have an account?"
           linkText="Sign in →"
-          linkUrl="/login"
+          linkUrl={pathWithJoin('/login', joinFromUrl)}
         />
       </div>
     </div>

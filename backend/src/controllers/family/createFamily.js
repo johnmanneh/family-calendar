@@ -1,6 +1,6 @@
-const crypto = require('crypto');
 const pool = require('../../config/db');
 const { successResponse, errorResponse } = require('../../utils/response/responseHandlers');
+const { generateLongCode, generateShortCode, storedShortCode } = require('../../utils/inviteCodes');
 
 /**
  * POST /api/family/create { name }
@@ -35,11 +35,12 @@ const createFamily = async (req, res) => {
 
     if (sharedFamilies.length > 0) {
       // User is already in real families — create a fresh new one
-      const inviteCode = crypto.randomBytes(24).toString('base64url');
+      const inviteCode = generateLongCode();
+      const shortCode = storedShortCode(generateShortCode());
       family = (await pool.query(
-        `INSERT INTO families (name, invite_code, created_by, is_personal)
-         VALUES ($1, $2, $3, false) RETURNING id, name, invite_code, is_personal`,
-        [name, inviteCode, userId]
+        `INSERT INTO families (name, invite_code, short_invite_code, created_by, is_personal)
+         VALUES ($1, $2, $3, $4, false) RETURNING id, name, invite_code, is_personal`,
+        [name, inviteCode, shortCode, userId]
       )).rows[0];
       await pool.query(
         `INSERT INTO family_members (family_id, user_id, role, color) VALUES ($1, $2, 'admin', '#1a8fa8')`,
@@ -47,10 +48,13 @@ const createFamily = async (req, res) => {
       );
     } else if (personalFamily) {
       // Only a personal space exists — rename it and make it real
+      const shortCode = storedShortCode(generateShortCode());
       family = (await pool.query(
-        `UPDATE families SET name = $1, is_personal = false WHERE id = $2
+        `UPDATE families SET name = $1, is_personal = false,
+                short_invite_code = COALESCE(short_invite_code, $3)
+         WHERE id = $2
          RETURNING id, name, invite_code, is_personal`,
-        [name, personalFamily.id]
+        [name, personalFamily.id, shortCode]
       )).rows[0];
       await pool.query(
         `UPDATE family_members SET role = 'admin' WHERE family_id = $1 AND user_id = $2`,
@@ -58,11 +62,12 @@ const createFamily = async (req, res) => {
       );
     } else {
       // No family at all — create one
-      const inviteCode = crypto.randomBytes(24).toString('base64url');
+      const inviteCode = generateLongCode();
+      const shortCode = storedShortCode(generateShortCode());
       family = (await pool.query(
-        `INSERT INTO families (name, invite_code, created_by, is_personal)
-         VALUES ($1, $2, $3, false) RETURNING id, name, invite_code, is_personal`,
-        [name, inviteCode, userId]
+        `INSERT INTO families (name, invite_code, short_invite_code, created_by, is_personal)
+         VALUES ($1, $2, $3, $4, false) RETURNING id, name, invite_code, is_personal`,
+        [name, inviteCode, shortCode, userId]
       )).rows[0];
       await pool.query(
         `INSERT INTO family_members (family_id, user_id, role, color) VALUES ($1, $2, 'admin', '#1a8fa8')`,

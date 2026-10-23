@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useEffect, useState } from 'react';
 import {
   View,
   Text,
@@ -10,6 +10,7 @@ import {
   TextInput,
   ActivityIndicator,
   Switch,
+  Share,
 } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { Ionicons } from '@expo/vector-icons';
@@ -22,6 +23,16 @@ import API, { SERVER_URL } from '../api/axios';
 import { useStyles } from '../styles/FamilyScreen.styles';
 
 import TopCard from '../components/ui/TopCard';
+
+function InviteQrImage({ value, size }) {
+  try {
+    const mod = require('react-native-qrcode-svg');
+    const QRCode = mod.default || mod;
+    return <QRCode value={value} size={size} />;
+  } catch {
+    return null;
+  }
+}
 // ─── Helpers ─────────────────────────────────────────────────────────────────
 
 function avatarUrl(path) {
@@ -96,6 +107,9 @@ export default function FamilyScreen({ navigation }) {
   };
 
   const [codeCopied, setCodeCopied] = useState(false);
+  const [invite, setInvite] = useState(null);
+  const [showLongCode, setShowLongCode] = useState(false);
+  const [replacing, setReplacing] = useState(false);
   const [leaving,    setLeaving]    = useState(false);
   // Create a family (personal space) / rename it (admin)
   const [nameInput, setNameInput] = useState('');
@@ -123,12 +137,60 @@ export default function FamilyScreen({ navigation }) {
   };
 
   const myMembership = members.find(m => Number(m.id) === Number(user?.id));
-  const isOwner = myMembership?.role === 'admin';
+  const isOwner = myMembership?.role === 'admin' || myMembership?.role === 'owner';
+
+  useEffect(() => {
+    if (!isOwner || personal || !family?.id) {
+      setInvite(null);
+      return;
+    }
+    let cancelled = false;
+    API.get('/family/invite')
+      .then((res) => { if (!cancelled) setInvite(res.data); })
+      .catch(() => { if (!cancelled) setInvite(null); });
+    return () => { cancelled = true; };
+  }, [isOwner, personal, family?.id]);
 
   const handleCopyCode = () => {
-    Clipboard.setString(family?.invite_code || '');
+    Clipboard.setString(invite?.short_code || invite?.invite_code || '');
     setCodeCopied(true);
     setTimeout(() => setCodeCopied(false), 2000);
+  };
+
+  const handleShareInvite = async () => {
+    if (!invite?.join_url) return;
+    try {
+      await Share.share({
+        message: `${invite.join_url}\n${invite.short_code || ''}`,
+        url: invite.join_url,
+      });
+    } catch (_) { /* cancelled */ }
+  };
+
+  const handleReplaceInvite = () => {
+    Alert.alert(
+      t('family.replace_invite'),
+      t('family.replace_invite_confirm'),
+      [
+        { text: t('common.cancel'), style: 'cancel' },
+        {
+          text: t('family.replace_invite'),
+          style: 'destructive',
+          onPress: async () => {
+            setReplacing(true);
+            try {
+              const res = await API.post('/family/invite/rotate');
+              setInvite(res.data);
+              setShowLongCode(false);
+            } catch (err) {
+              Alert.alert(t('common.error'), err.response?.data?.message || t('family.could_not_replace_invite'));
+            } finally {
+              setReplacing(false);
+            }
+          },
+        },
+      ]
+    );
   };
 
   const handleLeave = (targetFamily, targetIsOwner) => {
@@ -249,20 +311,42 @@ export default function FamilyScreen({ navigation }) {
                   )}
                 </View>
               )}
-              <Text style={styles.inviteLabel}>{t('family.invite_label')}</Text>
-              <View style={styles.inviteRow}>
-                <Text style={styles.inviteCode}>{family.invite_code}</Text>
-                <TouchableOpacity style={styles.copyBtn} onPress={handleCopyCode}>
-                  <Ionicons
-                    name={codeCopied ? 'checkmark' : 'copy-outline'}
-                    size={16}
-                    color={codeCopied ? '#34c759' : '#1a8fa8'}
-                  />
-                  <Text style={[styles.copyBtnText, codeCopied && { color: '#34c759' }]}>
-                    {codeCopied ? t('common.copied') : t('common.copy')}
-                  </Text>
-                </TouchableOpacity>
-              </View>
+              {isOwner && invite && (
+                <>
+                  <Text style={styles.inviteLabel}>{t('family.scan_to_join', { name: family.name })}</Text>
+                  {invite.join_url ? (
+                    <View style={{ alignItems: 'center', marginVertical: 12, backgroundColor: '#fff', padding: 12, borderRadius: 12 }}>
+                      <InviteQrImage value={invite.join_url} size={180} />
+                    </View>
+                  ) : null}
+                  <Text style={styles.inviteCode}>{t('family.invite_code_short', { code: invite.short_code })}</Text>
+                  {showLongCode && invite.invite_code ? (
+                    <Text style={styles.inviteCode}>{invite.invite_code}</Text>
+                  ) : null}
+                  <View style={styles.inviteRow}>
+                    <TouchableOpacity style={styles.copyBtn} onPress={handleCopyCode}>
+                      <Ionicons
+                        name={codeCopied ? 'checkmark' : 'copy-outline'}
+                        size={16}
+                        color={codeCopied ? '#34c759' : '#1a8fa8'}
+                      />
+                      <Text style={[styles.copyBtnText, codeCopied && { color: '#34c759' }]}>
+                        {codeCopied ? t('common.copied') : t('common.copy')}
+                      </Text>
+                    </TouchableOpacity>
+                    <TouchableOpacity style={styles.copyBtn} onPress={handleShareInvite}>
+                      <Ionicons name="share-outline" size={16} color="#1a8fa8" />
+                      <Text style={styles.copyBtnText}>{t('family.share_invite')}</Text>
+                    </TouchableOpacity>
+                  </View>
+                  <TouchableOpacity onPress={() => setShowLongCode(v => !v)}>
+                    <Text style={styles.copyBtnText}>{showLongCode ? t('family.hide_code') : t('family.show_code')}</Text>
+                  </TouchableOpacity>
+                  <TouchableOpacity onPress={handleReplaceInvite} disabled={replacing}>
+                    <Text style={styles.copyBtnText}>{replacing ? '…' : t('family.replace_invite')}</Text>
+                  </TouchableOpacity>
+                </>
+              )}
             </View>
           </>
         )}

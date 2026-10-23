@@ -62,6 +62,15 @@
   font-weight: 600;
 }
 
+.sidebar-invite-qr {
+  display: block;
+  margin: 10px auto;
+  background: #fff;
+  padding: 8px;
+  border-radius: 8px;
+  image-rendering: pixelated;
+}
+
 /* ─────────────────────────────────────────
    Member bubbles
 ───────────────────────────────────────── */

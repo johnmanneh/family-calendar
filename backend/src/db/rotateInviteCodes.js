@@ -21,7 +21,7 @@ if (process.env.CONFIRM_ROTATE_INVITES !== '1') {
 }
 
 const { Pool } = require('pg');
-const crypto   = require('crypto');
+const { generateLongCode, generateShortCode, storedShortCode } = require('../utils/inviteCodes');
 
 let connectionString = process.env.DATABASE_URL || process.env.DATABASE_PUBLIC_URL;
 if (/railway\.internal/.test(connectionString || '') && process.env.DATABASE_PUBLIC_URL) {
@@ -44,15 +44,19 @@ async function main() {
 
   let count = 0;
   for (const { id } of rows) {
-    const code = crypto.randomBytes(24).toString('base64url');
-    await pool.query('UPDATE families SET invite_code = $1 WHERE id = $2', [code, id]);
+    const code = generateLongCode();
+    const short = storedShortCode(generateShortCode());
+    await pool.query(
+      'UPDATE families SET invite_code = $1, short_invite_code = $2 WHERE id = $3',
+      [code, short, id]
+    );
     count++;
   }
 
   const groups = await pool.query('SELECT id FROM groups');
   let gcount = 0;
   for (const { id } of groups.rows) {
-    const code = crypto.randomBytes(24).toString('base64url');
+    const code = generateLongCode();
     await pool.query('UPDATE groups SET invite_code = $1 WHERE id = $2', [code, id]);
     gcount++;
   }

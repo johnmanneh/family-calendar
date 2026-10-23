@@ -9,7 +9,8 @@ import API from '../../../api/axios';
 jest.mock('../../../context/FamilyContext', () => ({ useFamily: jest.fn() }));
 jest.mock('../../../context/GroupContext', () => ({ useGroups: jest.fn() }));
 jest.mock('../../../context/AuthContext', () => ({ useAuth: jest.fn() }));
-jest.mock('../../../api/axios', () => ({ post: jest.fn(), put: jest.fn(), delete: jest.fn() }));
+jest.mock('../../../api/axios', () => ({ post: jest.fn(), put: jest.fn(), delete: jest.fn(), get: jest.fn() }));
+jest.mock('./InviteQr', () => () => null);
 
 const setAvailabilitySharing = jest.fn();
 
@@ -29,6 +30,11 @@ beforeEach(() => {
     switchFamily: jest.fn(),
     setAvailabilitySharing,
   });
+});
+
+test('members do not see the raw family invite code', () => {
+  render(<SidebarFamily />);
+  expect(screen.queryByText('ABCD')).not.toBeInTheDocument();
 });
 
 test('shows an opt-in sharing control for each receiving family using own settings only', async () => {

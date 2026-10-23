@@ -3,21 +3,25 @@ import useIsPhone from "../../hooks/useIsPhone";
 import Icon from "../../components/common/Icon/Icon";
 import SidebarNotifications from "../../components/calendar/Sidebar/SidebarNotifications";
 import SidebarChat from "../../components/calendar/Sidebar/SidebarChat";
-import { useLocation, useNavigate } from "react-router-dom";
+import { useLocation, useNavigate, useSearchParams } from "react-router-dom";
 import { useUI } from "../../context/UIContext";
 import { useAuth } from "../../context/AuthContext";
 import { useFamily } from "../../context/FamilyContext";
+import { useGroups } from "../../context/GroupContext";
 import { useEvents } from "../../context/EventContext";
 import Sidebar from "../../components/calendar/Sidebar/Sidebar";
 import CalendarView from "../../components/calendar/CalendarView/CalendarView";
 import EventDetails from "../../components/calendar/EventDetails/EventDetails";
 import EventModal from "../../components/calendar/EventModal/EventModal";
 import StandaloneTaskModal from "../../components/calendar/EventModal/StandaloneTaskModal";
+import { runJoinFlow } from "../../utils/joinFlow";
+import { joinTokenFromSearch } from "../../utils/joinQuery";
 
 import "./Dashboard.css";
 
 const Dashboard = () => {
   const { fetchFamily, members, family } = useFamily();
+  const { joinWithCode } = useGroups();
   const { fetchEvents, selectedEvent, setSelectedEvent } = useEvents();
   const { setSelectedMember, openNewEvent, setSearchQuery, setSelectedCategory } = useUI();
   const { fetchNotifications } = useEvents();
@@ -44,6 +48,20 @@ const Dashboard = () => {
   useEffect(() => { if (selectedEvent) setDrawerOpen(false); }, [selectedEvent]);
   const location = useLocation();
   const navigate = useNavigate();
+  const [searchParams, setSearchParams] = useSearchParams();
+  const pendingJoin = joinTokenFromSearch(searchParams.toString());
+
+  useEffect(() => {
+    if (!pendingJoin) return undefined;
+    let cancelled = false;
+    runJoinFlow(pendingJoin, joinWithCode, fetchFamily).finally(() => {
+      if (cancelled) return;
+      const next = new URLSearchParams(searchParams);
+      next.delete('join');
+      setSearchParams(next, { replace: true });
+    });
+    return () => { cancelled = true; };
+  }, [pendingJoin]);
 
   // "See all <name>'s events" on a profile → open the calendar filtered to them
   useEffect(() => {

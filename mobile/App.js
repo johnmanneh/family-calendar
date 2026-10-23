@@ -1,8 +1,8 @@
 import './src/i18n'; // initialise i18next + device locale detection
-import React from 'react';
+import React, { useEffect, useRef } from 'react';
 import { NavigationContainer } from '@react-navigation/native';
 import { createNativeStackNavigator } from '@react-navigation/native-stack';
-import { ActivityIndicator, View } from 'react-native';
+import { ActivityIndicator, Linking, View } from 'react-native';
 import { GestureHandlerRootView } from 'react-native-gesture-handler';
 
 import { AuthProvider, useAuth } from './src/context/AuthContext';
@@ -27,12 +27,52 @@ import ForgotPasswordScreen from './src/screens/ForgotPasswordScreen';
 import ResetPasswordScreen from './src/screens/ResetPasswordScreen';
 import JoinFamilyScreen from './src/screens/JoinFamilyScreen';
 import PickupPeopleScreen from './src/screens/PickupPeopleScreen';
+import storage from './src/utils/storage';
+import { tokenFromInviteUrl } from './src/utils/tokenFromInviteUrl';
+
+function inviteTokenFromLink(url) {
+  if (!url) return null;
+  const fromHttps = tokenFromInviteUrl(url);
+  if (fromHttps) return fromHttps;
+  const match = String(url).match(/join\/([^/?#]+)/);
+  if (!match) return null;
+  if (!/^when:/.test(url) && !/its4us\.app/.test(url)) return null;
+  try {
+    return decodeURIComponent(match[1]);
+  } catch {
+    return match[1];
+  }
+}
 
 const Stack = createNativeStackNavigator();
 
 // Inner component — can call useAuth() because it's inside AuthProvider
 function AppNavigator() {
   const { user, token, authLoading } = useAuth();
+  const navRef = useRef(null);
+
+  useEffect(() => {
+    const handleUrl = async (url) => {
+      const invite = inviteTokenFromLink(url);
+      if (!invite) return;
+      if (user && token && navRef.current) {
+        navRef.current.navigate('JoinFamily', { code: invite });
+      } else {
+        await storage.setItem('pendingJoin', invite);
+      }
+    };
+    Linking.getInitialURL().then((url) => { if (url) handleUrl(url); });
+    const sub = Linking.addEventListener('url', ({ url }) => handleUrl(url));
+    return () => sub.remove();
+  }, [user, token]);
+
+  useEffect(() => {
+    if (!user || !token || !navRef.current) return undefined;
+    storage.getItem('pendingJoin').then((pending) => {
+      if (pending) navRef.current.navigate('JoinFamily', { code: pending });
+    }).catch(() => {});
+    return undefined;
+  }, [user, token]);
 
   // Still checking AsyncStorage — show a blank spinner
   if (authLoading) {
@@ -44,7 +84,7 @@ function AppNavigator() {
   }
 
   return (
-    <NavigationContainer>
+    <NavigationContainer ref={navRef}>
       <Stack.Navigator screenOptions={{ headerShown: false }}>
         {user && token ? (
           // Logged in — Home + EventDetails in the same stack

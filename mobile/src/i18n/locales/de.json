@@ -214,7 +214,15 @@
     "personal_title": "Du bist noch in keiner Familie",
     "personal_hint": "Erstelle eine und teile den Code, oder tritt deiner Familie mit ihrem Code bei.",
     "name_placeholder": "Familienname, z. B. Familie Manneh",
-    "create": "Familie erstellen"
+    "create": "Familie erstellen",
+    "scan_to_join": "Scannen, um {{name}} beizutreten",
+    "invite_code_short": "Code: {{code}}",
+    "show_code": "Code zeigen",
+    "hide_code": "Langen Code verbergen",
+    "replace_invite": "Einladung ersetzen",
+    "replace_invite_confirm": "Einladung ersetzen? Alte Links, Bilder und der Tippcode funktionieren dann nicht mehr.",
+    "share_invite": "Einladung teilen",
+    "could_not_replace_invite": "Einladung konnte nicht ersetzt werden"
   },
   "profile": {
     "title": "Profil",
@@ -298,6 +306,14 @@
     "leave_and_join": "Verlassen & beitreten",
     "joined_family": "Du bist jetzt in {{name}}",
     "joined_group": "Du bist der Gruppe {{name}} beigetreten",
+    "confirm_family": "{{name}} beitreten?",
+    "scan_qr": "QR scannen",
+    "from_image": "Aus Bild",
+    "invalid_qr": "Dieser QR-Code ist keine Familieneinladung.",
+    "no_qr_in_image": "Kein Einladungs-QR in diesem Bild gefunden.",
+    "allow_camera": "Erlaube Kamerazugang, um eine Einladung zu scannen.",
+    "allow_photos": "Erlaube Fotozugang, um einen Einladungs-QR zu lesen.",
+    "need_native_build": "QR-Scan braucht einen neuen App-Build. Bis dahin den Code eintippen.",
     "stay_connected_hint": "Tipp: Um mit deiner alten Familie verbunden zu bleiben, erstellt gemeinsam eine Gruppe."
   },
   "access": {

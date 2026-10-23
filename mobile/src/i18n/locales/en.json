@@ -213,7 +213,15 @@
     "personal_title": "You're not in a family yet",
     "personal_hint": "Create one and share the code, or join your family with their code.",
     "name_placeholder": "Family name, e.g. Manneh Family",
-    "create": "Create a family"
+    "create": "Create a family",
+    "scan_to_join": "Scan to join {{name}}",
+    "invite_code_short": "Code: {{code}}",
+    "show_code": "Show code",
+    "hide_code": "Hide long code",
+    "replace_invite": "Replace invite",
+    "replace_invite_confirm": "Replace invite? Old links, pictures, and the typed code will stop working.",
+    "share_invite": "Share invite",
+    "could_not_replace_invite": "Could not replace invite"
   },
   "profile": {
     "title": "Profile",
@@ -297,6 +305,14 @@
     "leave_and_join": "Leave & join",
     "joined_family": "You are now in {{name}}",
     "joined_group": "You joined the group {{name}}",
+    "confirm_family": "Join {{name}}?",
+    "scan_qr": "Scan QR",
+    "from_image": "From image",
+    "invalid_qr": "That QR is not a family invite.",
+    "no_qr_in_image": "No invite QR found in that image.",
+    "allow_camera": "Allow camera access to scan an invite.",
+    "allow_photos": "Allow photo access to read an invite QR.",
+    "need_native_build": "QR scan needs a new app build. Use the typed code until then.",
     "stay_connected_hint": "Tip: to stay connected with your old family, create a group together."
   },
   "access": {

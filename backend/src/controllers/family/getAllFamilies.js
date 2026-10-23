@@ -18,8 +18,14 @@ const getAllFamilies = async (req, res) => {
       [userId]
     );
 
+    const families = result.rows.map((row) => {
+      if (row.role === 'admin' || row.role === 'owner') return row;
+      const { invite_code, short_invite_code, ...rest } = row;
+      return rest;
+    });
+
     return successResponse(res, 200, 'Families retrieved successfully', {
-      families: result.rows,
+      families,
     });
 
   } catch (error) {

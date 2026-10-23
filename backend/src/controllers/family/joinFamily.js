@@ -1,5 +1,6 @@
 const pool = require('../../config/db');
 const { successResponse, errorResponse } = require('../../utils/response/responseHandlers');
+const { findFamilyByInvite } = require('../../utils/findFamilyByInvite');
 
 // POST /api/family/join  { invite_code }
 // Joins a family. Users can now belong to multiple families simultaneously.
@@ -17,14 +18,21 @@ const joinFamily = async (req, res) => {
 
   const client = await pool.connect();
   try {
-    const family = await client.query(
-      'SELECT id, name FROM families WHERE invite_code = $1',
-      [invite_code.trim()]  // base64url codes are case-sensitive
+    const managed = await client.query(
+      'SELECT is_managed FROM users WHERE id = $1',
+      [userId]
     );
-    if (family.rows.length === 0) {
+    if (managed.rows[0]?.is_managed) {
+      return errorResponse(res, 403, 'Managed accounts cannot join with an invite');
+    }
+
+    const target = await findFamilyByInvite(
+      invite_code.trim(),
+      client.query.bind(client)
+    );
+    if (!target) {
       return errorResponse(res, 404, 'Family not found');
     }
-    const target = family.rows[0];
 
     // Every family the user is currently in
     const current = await client.query(

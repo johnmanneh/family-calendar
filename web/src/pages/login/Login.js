@@ -1,10 +1,11 @@
 import React, { useState } from "react";
-import { useNavigate, Navigate, Link } from "react-router-dom";
+import { useNavigate, Navigate, Link, useSearchParams } from "react-router-dom";
 import { useAuth } from "../../context/AuthContext";
 import API from "../../api/axios";
 import Input from "../../components/common/Input/Input";
 import Button from "../../components/common/Button/Button";
 import AuthLink from "../../components/common/AuthLink/AuthLink";
+import { pathWithJoin, joinTokenFromSearch } from "../../utils/joinQuery";
 import "./Login.css";
 
 const Login = () => {
@@ -15,8 +16,11 @@ const Login = () => {
 
   const { login, token, authLoading } = useAuth();
   const navigate = useNavigate();
+  const [searchParams] = useSearchParams();
+  const joinToken = joinTokenFromSearch(searchParams.toString());
+  const afterAuth = pathWithJoin("/dashboard", joinToken);
 
-  if (!authLoading && token) return <Navigate to="/dashboard" replace />;
+  if (!authLoading && token) return <Navigate to={afterAuth} replace />;
 
   const handleSubmit = async e => {
     e.preventDefault();
@@ -26,7 +30,7 @@ const Login = () => {
     try {
       const res = await API.post("/auth/login", { email, password });
       login(res.data.user, res.data.token);
-      navigate("/dashboard");
+      navigate(afterAuth);
     } catch (err) {
       setError(err.response?.data?.message || "Something went wrong");
     } finally {
@@ -174,7 +178,7 @@ const Login = () => {
         <AuthLink
           text="New here?"
           linkText="Create account →"
-          linkUrl="/register"
+          linkUrl={pathWithJoin("/register", joinToken)}
         />
       </div>
     </div>

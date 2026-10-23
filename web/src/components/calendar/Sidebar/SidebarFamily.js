@@ -1,9 +1,10 @@
-import React, { useState } from "react";
+import React, { useEffect, useState } from "react";
 import { useFamily } from "../../../context/FamilyContext";
 import { useGroups } from "../../../context/GroupContext";
 import { useAuth } from "../../../context/AuthContext";
 import { runJoinFlow } from "../../../utils/joinFlow";
 import API from "../../../api/axios";
+import InviteQr from "./InviteQr";
 import Avatar from "../../common/Avatar/Avatar";
 import Icon from "../../common/Icon/Icon";
 import "./Sidebar.css";
@@ -25,6 +26,9 @@ const SidebarFamily = () => {
   const [sharingPending, setSharingPending] = useState({});
   const [sharingErrors, setSharingErrors] = useState({});
   const [availabilityMore, setAvailabilityMore] = useState(false);
+  const [invite, setInvite] = useState(null);
+  const [showLongCode, setShowLongCode] = useState(false);
+  const [replacing, setReplacing] = useState(false);
 
   const changeSharing = async (familyId, shared) => {
     if (sharingPending[familyId]) return;
@@ -45,6 +49,33 @@ const SidebarFamily = () => {
   const personal = !!family?.is_personal;
   const multiFamily = families.filter(f => !f.is_personal).length > 1;
   const receivingFamilies = families.filter(f => !f.is_personal);
+
+  useEffect(() => {
+    if (!isAdmin || personal || !family?.id) {
+      setInvite(null);
+      return;
+    }
+    let cancelled = false;
+    API.get("/family/invite")
+      .then((res) => { if (!cancelled) setInvite(res.data); })
+      .catch(() => { if (!cancelled) setInvite(null); });
+    return () => { cancelled = true; };
+  }, [isAdmin, personal, family?.id]);
+
+  const replaceInvite = async () => {
+    if (replacing) return;
+    if (!window.confirm("Replace invite? Old links, pictures, and the typed code will stop working.")) return;
+    setReplacing(true);
+    try {
+      const res = await API.post("/family/invite/rotate");
+      setInvite(res.data);
+      setShowLongCode(false);
+    } catch (err) {
+      alert(err.response?.data?.message || "Could not replace invite");
+    } finally {
+      setReplacing(false);
+    }
+  };
 
   const open = (m, initial = "") => { setMode(m); setValue(initial); setError(""); };
   const close = () => { setMode(null); setValue(""); setError(""); };
@@ -171,7 +202,7 @@ const SidebarFamily = () => {
           </div>
         </div>
         {mode === "create" ? form("Family name, e.g. Manneh Family", "Create")
-          : mode === "join" ? form("Family or group code", "Join", true)
+          : mode === "join" ? form("Family or group code", "Join")
           : (
             <div className="sidebar-me-actions">
               <button className="sidebar-me-btn primary" onClick={() => open("create")}>
@@ -216,14 +247,36 @@ const SidebarFamily = () => {
           )}
         </h3>
       )}
-      <p className="sidebar-invite">
-        Share this code to add people: <strong>{family.invite_code}</strong>
-      </p>
+      {isAdmin && invite && (
+        <div className="sidebar-invite-card">
+          <p className="sidebar-invite">Scan to join {family.name}</p>
+          {invite.join_url && (
+            <>
+              <InviteQr url={invite.join_url} alt={`QR to join ${family.name}`} />
+              <p className="sidebar-invite">
+                <a href={invite.join_url}>{invite.join_url}</a>
+              </p>
+            </>
+          )}
+          <p className="sidebar-invite">
+            Code: <strong>{invite.short_code}</strong>
+          </p>
+          {showLongCode && invite.invite_code && (
+            <p className="sidebar-invite">{invite.invite_code}</p>
+          )}
+          <button type="button" className="sidebar-family-switch" onClick={() => setShowLongCode(v => !v)}>
+            {showLongCode ? "Hide long code" : "Show code"}
+          </button>
+          <button type="button" className="sidebar-family-switch" onClick={replaceInvite} disabled={replacing}>
+            {replacing ? "Replacing…" : "Replace invite"}
+          </button>
+        </div>
+      )}
 
       {availabilityControls}
 
       {/* Join or create another family */}
-      {mode === "join" ? form("Family or group code", "Join", true)
+      {mode === "join" ? form("Family or group code", "Join")
         : mode === "create" ? form("Family name, e.g. Grandparents", "Create")
         : mode !== "rename" && (
           <>

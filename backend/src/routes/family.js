@@ -1,8 +1,11 @@
 const express = require('express');
 const router = express.Router();
+const rateLimit = require('express-rate-limit');
 const verifyToken = require('../middleware/auth');
 const createFamily = require('../controllers/family/createFamily');
 const joinFamily = require('../controllers/family/joinFamily');
+const getInvite = require('../controllers/family/getInvite');
+const rotateInvite = require('../controllers/family/rotateInvite');
 const leaveFamily = require('../controllers/family/leaveFamily');
 const renameFamily = require('../controllers/family/renameFamily');
 const { createChild, updateChild, removeChild, uploadChildAvatar } = require('../controllers/family/children');
@@ -19,8 +22,18 @@ const updateMemberRelationship = require('../controllers/family/updateMemberRela
 const getMemberEvents = require('../controllers/family/getMemberEvents');
 const getMemberTasks = require('../controllers/family/getMemberTasks');
 
+const joinLimiter = rateLimit({
+  windowMs: 15 * 60 * 1000,
+  max: 20,
+  standardHeaders: 'draft-6',
+  legacyHeaders: false,
+  message: { error: 'Too many join attempts, please try again later' },
+});
+
 router.post('/create', verifyToken, createFamily);
-router.post('/join', verifyToken, joinFamily);
+router.post('/join', joinLimiter, verifyToken, joinFamily);
+router.get('/invite', verifyToken, getInvite);
+router.post('/invite/rotate', verifyToken, rotateInvite);
 router.delete('/leave', verifyToken, leaveFamily);
 router.get('/', verifyToken, getFamily);
 router.get('/all', verifyToken, getAllFamilies);

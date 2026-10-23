@@ -11,6 +11,7 @@
       "infoPlist": {
         "NSSpeechRecognitionUsageDescription": "Allow $(PRODUCT_NAME) to use speech recognition.",
         "NSMicrophoneUsageDescription": "Allow $(PRODUCT_NAME) to use the microphone.",
+        "NSCameraUsageDescription": "Allow $(PRODUCT_NAME) to scan family invite QR codes.",
         "ITSAppUsesNonExemptEncryption": false
       },
       "bundleIdentifier": "com.songsanchaun.whenapp"
@@ -59,8 +60,17 @@
         }
       ],
       "expo-localization",
-      "expo-speech-recognition"
+      "expo-speech-recognition",
+      [
+        "expo-camera",
+        {
+          "cameraPermission": "Allow $(PRODUCT_NAME) to scan family invite QR codes.",
+          "microphonePermission": false,
+          "recordAudioAndroid": false
+        }
+      ]
     ],
+    "scheme": "when",
     "extra": {
       "eas": {
         "projectId": "926305bd-ac2a-414c-b6b0-04c45b48a607"

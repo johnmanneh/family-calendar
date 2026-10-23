@@ -11,6 +11,7 @@ import ForgotPassword from './pages/forgot-password/ForgotPassword';
 import ResetPassword from './pages/reset-password/ResetPassword';
 import PublicEventPage from './pages/public-event/PublicEventPage';
 import PublicPickupPage from './pages/public-pickup/PublicPickupPage';
+import PublicJoinPage from './pages/public-join/PublicJoinPage';
 import './App.css';
 
 
@@ -29,6 +30,7 @@ function App() {
           <Route path="/group/:groupId" element={<PrivateRoute><GroupPage /></PrivateRoute>} />
           <Route path="/e/:token" element={<PublicEventPage />} />
           <Route path="/p/:token" element={<PublicPickupPage />} />
+          <Route path="/join/:token" element={<PublicJoinPage />} />
         </Routes>
       </Router>
     </AppProviders>

@@ -27,6 +27,7 @@ const getFamily = async (req, res) => {
     // so they cannot inadvertently leak the join link (security pass-1).
     if (role !== 'admin' && role !== 'owner') {
       delete familyData.invite_code;
+      delete familyData.short_invite_code;
     }
 
     // Get all members of the family

@@ -56,7 +56,7 @@ export const GroupProvider = ({ children }) => {
   // "you're in a family with others — confirm leaving it"; call again with
   // leaveCurrent = true after the user agrees.
   const joinWithCode = async (code, leaveCurrent = false) => {
-    const res = await API.post("/join", { code: code.trim().toUpperCase(), leave_current: leaveCurrent });
+    const res = await API.post("/join", { code: String(code).trim(), leave_current: leaveCurrent });
     await fetchGroups();
     return res.data;
   };
