@@ -1023,7 +1023,7 @@ export default function EventDetailsScreen({ route, navigation }) {
             </InfoRow>
           )}
 
-          {event.video_call_link && (
+          {event.video_call_link && /^https?:\/\//i.test(event.video_call_link) && (
             <InfoRow icon="videocam-outline">
               <TouchableOpacity onPress={() => Linking.openURL(event.video_call_link)}>
                 <Text style={styles.infoLink}>{t('events.join_video_call')}</Text>

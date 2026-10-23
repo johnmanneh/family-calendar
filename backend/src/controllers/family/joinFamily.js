@@ -19,7 +19,7 @@ const joinFamily = async (req, res) => {
   try {
     const family = await client.query(
       'SELECT id, name FROM families WHERE invite_code = $1',
-      [invite_code.trim().toUpperCase()]
+      [invite_code.trim()]  // base64url codes are case-sensitive
     );
     if (family.rows.length === 0) {
       return errorResponse(res, 404, 'Family not found');
@@ -61,10 +61,11 @@ const joinFamily = async (req, res) => {
       }
     }
 
-    // Add user to the new family
+    // Add user to the new family — new joiners are outer circle by default.
+    // Existing members are NOT recategorized. An admin can promote via PUT /member/circle.
     await client.query(
-      'INSERT INTO family_members (family_id, user_id, role) VALUES ($1, $2, $3)',
-      [target.id, userId, 'member']
+      'INSERT INTO family_members (family_id, user_id, role, circle_type) VALUES ($1, $2, $3, $4)',
+      [target.id, userId, 'member', 'outer']
     );
 
     // Set new family as active, clear active on all others

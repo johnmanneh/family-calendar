@@ -16,7 +16,7 @@ const resetPassword  = require('../controllers/auth/resetPassword');
 const authLimiter = rateLimit({
   windowMs: 15 * 60 * 1000,
   max: 10,
-  standardHeaders: true,
+  standardHeaders: 'draft-6',
   legacyHeaders: false,
   message: { error: 'Too many attempts, please try again later' },
 });
@@ -29,7 +29,7 @@ router.put('/profile', verifyToken, updateProfile);
 router.post('/avatar', verifyToken, uploadAvatar);
 router.delete('/account', verifyToken, deleteAccount);
 router.put('/push-token', verifyToken, savePushToken);
-router.post('/reset-password',  resetPassword);
+router.post('/reset-password', authLimiter, resetPassword);
 
 
 module.exports = router;

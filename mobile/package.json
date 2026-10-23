@@ -13,7 +13,6 @@
     "expo": "~57.0.26",
     "expo-blur": "~57.0.3",
     "expo-build-properties": "^0.14.8",
-    "expo-calendar": "~57.0.5",
     "expo-dev-client": "~57.0.19",
     "expo-image-picker": "~57.0.20",
     "expo-linear-gradient": "~57.0.2",

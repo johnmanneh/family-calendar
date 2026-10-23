@@ -1,9 +1,14 @@
 const bcrypt = require('bcryptjs');
+const crypto = require('crypto');
 const pool = require('../../config/db');
 const { successResponse, errorResponse } = require('../../utils/response/responseHandlers');
 
 // POST /api/auth/reset-password
-// Accepts { token, password } — validates the token and sets a new password.
+// Accepts { token, password }.
+// Hashes the raw token to find the matching stored digest, then:
+//  - Sets the new password
+//  - Clears the reset token fields
+//  - Increments token_version (migration V011) so all existing JWTs are invalidated
 const resetPassword = async (req, res) => {
   const { token, password } = req.body;
 
@@ -15,25 +20,32 @@ const resetPassword = async (req, res) => {
   }
 
   try {
+    // Compare digest — never compare raw tokens
+    const digest = crypto.createHash('sha256').update(token).digest('hex');
+
     const userRes = await pool.query(
       `SELECT id FROM users
        WHERE reset_token = $1
          AND reset_token_expires > NOW()`,
-      [token]
+      [digest]
     );
 
-    if (userRes.rowCount === 0) {
+    if (!userRes.rows.length) {
       return errorResponse(res, 400, 'Reset link is invalid or has expired');
     }
 
     const userId       = userRes.rows[0].id;
     const passwordHash = await bcrypt.hash(password, 10);
 
+    // Increment token_version to invalidate all previously issued JWTs for
+    // this account. Any session token with a lower version will be rejected
+    // by verifyToken on the next request.
     await pool.query(
       `UPDATE users
-       SET password             = $1,
-           reset_token          = NULL,
-           reset_token_expires  = NULL
+       SET password            = $1,
+           reset_token         = NULL,
+           reset_token_expires = NULL,
+           token_version       = token_version + 1
        WHERE id = $2`,
       [passwordHash, userId]
     );

@@ -10,7 +10,7 @@
 | GitHub | `johnmanneh/family-calendar` |
 | Backend | Express.js (port 8000), PostgreSQL |
 | Frontend | React (port 3000) |
-| Test credentials | `james@test.com` / `123456` (user_id: 3, family_id: 1, invite_code: `2O7ZRI`) |
+| Test credentials | `<test-email>` / `<test-password>` (see `.env.test` — do not commit real values) |
 | DB credentials | `johnmanneh` as PostgreSQL superuser, `family_admin` as app user |
 
 ---

@@ -6,9 +6,9 @@ const getFamily = async (req, res) => {
   const userId = req.user.id;
 
   try {
-    // Get family the user belongs to
+    // Get the family and the requesting user's role at the same time
     const family = await pool.query(
-      `SELECT f.id, f.name, f.invite_code, f.is_personal
+      `SELECT f.id, f.name, f.invite_code, f.is_personal, fm.role
        FROM families f
        JOIN family_members fm ON f.id = fm.family_id
        WHERE fm.user_id = $1
@@ -21,17 +21,26 @@ const getFamily = async (req, res) => {
       return errorResponse(res, 404, 'You are not a member of any family');
     }
 
+    const { role, ...familyData } = family.rows[0];
+
+    // invite_code is only for admins and owners — members must not see it
+    // so they cannot inadvertently leak the join link (security pass-1).
+    if (role !== 'admin' && role !== 'owner') {
+      delete familyData.invite_code;
+    }
+
     // Get all members of the family
     const members = await pool.query(
-      `SELECT u.id, u.first_name, u.last_name, u.avatar_url, u.is_managed, u.managed_by, fm.role, fm.color, fm.circle_type, fm.relationship
+      `SELECT u.id, u.first_name, u.last_name, u.avatar_url, u.is_managed, u.managed_by,
+              fm.role, fm.color, fm.circle_type, fm.relationship
        FROM users u
        JOIN family_members fm ON u.id = fm.user_id
        WHERE fm.family_id = $1`,
-      [family.rows[0].id]
+      [familyData.id]
     );
 
     return successResponse(res, 200, 'Family retrieved successfully', {
-      family: family.rows[0],
+      family: familyData,
       members: members.rows,
     });
 

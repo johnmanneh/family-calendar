@@ -1,6 +1,7 @@
 const pool = require('../../config/db');
 const { ACTIVE_FAMILY_ORDER } = require('../../utils/activeFamily');
 const { successResponse, errorResponse } = require('../../utils/response/responseHandlers');
+const { busyView } = require('../../utils/access');
 
 // All-day events: return a plain YYYY-MM-DD string instead of a UTC timestamp.
 // A UTC timestamp like "2026-10-12T00:00:00Z" becomes Oct 11 at 10 pm in UTC+2,
@@ -154,21 +155,9 @@ const getEvents = async (req, res) => {
       const isMember = isCreator || isAttendee;
 
       if (event.is_private && !isMember) {
-        return normAllDay({
-          id: event.id,
-          family_id: event.family_id,
-          created_by: event.created_by,
-          start_date: event.start_date,
-          end_date: event.end_date,
-          is_all_day: event.is_all_day,
-          recurrence: event.recurrence,
-          recurrence_end_date: event.recurrence_end_date,
-          title: 'Busy',
-          color: '#b0b0b8',
-          is_private: true,
-          is_busy: true,
-          attendees: (event.attendees || []).map(a => ({ id: a.id }))
-        });
+        // Use the canonical busyView shape — no created_by, family_id, or
+        // attendee IDs exposed (security pass-1: no identifying fields on Busy rows).
+        return normAllDay(busyView(event));
       }
 
       return normAllDay({ ...event, is_busy: false });

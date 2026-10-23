@@ -35,7 +35,7 @@ const createFamily = async (req, res) => {
 
     if (sharedFamilies.length > 0) {
       // User is already in real families — create a fresh new one
-      const inviteCode = crypto.randomBytes(4).toString('hex').toUpperCase();
+      const inviteCode = crypto.randomBytes(24).toString('base64url');
       family = (await pool.query(
         `INSERT INTO families (name, invite_code, created_by, is_personal)
          VALUES ($1, $2, $3, false) RETURNING id, name, invite_code, is_personal`,
@@ -58,7 +58,7 @@ const createFamily = async (req, res) => {
       );
     } else {
       // No family at all — create one
-      const inviteCode = crypto.randomBytes(4).toString('hex').toUpperCase();
+      const inviteCode = crypto.randomBytes(24).toString('base64url');
       family = (await pool.query(
         `INSERT INTO families (name, invite_code, created_by, is_personal)
          VALUES ($1, $2, $3, false) RETURNING id, name, invite_code, is_personal`,

@@ -13,12 +13,18 @@ const shareEventToGroup = async (req, res) => {
   try {
     // Verify user owns the event or is an attendee
     const event = await pool.query(
-      'SELECT id, created_by FROM events WHERE id = $1',
+      'SELECT id, created_by, is_private FROM events WHERE id = $1',
       [eventId]
     );
     if (event.rows.length === 0) return errorResponse(res, 404, 'Event not found');
     if (Number(event.rows[0].created_by) !== Number(userId)) {
       return errorResponse(res, 403, 'Only the event creator can share it');
+    }
+
+    // Private events must not be shared into groups — pending membership must
+    // not grant visibility into private event details.
+    if (event.rows[0].is_private) {
+      return errorResponse(res, 400, 'Private events cannot be shared with groups');
     }
 
     // Verify user is a member of the group

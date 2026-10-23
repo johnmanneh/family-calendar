@@ -17,7 +17,8 @@ let context;
 let streams;
 function Probe() { context = useEvents(); return null; }
 beforeEach(() => {
-  auth = { token: null, user: null };
+  jest.clearAllMocks();
+  auth = { token: null, user: null, logout: jest.fn() };
   ui = Object.fromEntries(['setLoading', 'setError', 'setEvents', 'setSelectedEvent', 'resetModal', 'setPendingInvitations', 'setTasks', 'setMyTasks'].map(key => [key, jest.fn()]));
   Object.assign(ui, { attendees: [], selectedAttendees: [], modalTasks: [], selectedGroups: [] });
   useAuth.mockImplementation(() => auth);
@@ -25,12 +26,16 @@ beforeEach(() => {
   useFamily.mockReturnValue({ family: { id: 1 } });
   streams = [];
   global.EventSource = jest.fn().mockImplementation(url => {
-    const stream = { url, close: jest.fn(), addEventListener: jest.fn() };
+    const stream = { url, close: jest.fn(), addEventListener: jest.fn(), onerror: null };
     streams.push(stream);
     return stream;
   });
+  global.fetch = jest.fn().mockResolvedValue({
+    ok: true,
+    status: 200,
+    json: async () => ({ ticket: 'ticket-1' }),
+  });
   localStorage.clear();
-  jest.clearAllMocks();
 });
 afterEach(() => { jest.useRealTimers(); });
 
@@ -63,47 +68,54 @@ test('obsolete family event/task responses cannot overwrite a newer family', asy
   expect(ui.setMyTasks).toHaveBeenLastCalledWith([{ id: 'new-task' }]);
 });
 
-test('SSE retries errors and cancels retry on logout or unmount', () => {
+test('SSE retries errors and cancels retry on logout or unmount', async () => {
   jest.useFakeTimers();
-  auth = { token: 'active', user: { id: 1 } };
+  auth = { token: 'active', user: { id: 1 }, logout: jest.fn() };
   localStorage.setItem('token', 'active');
   const view = render(<EventProvider><Probe /></EventProvider>);
+  await act(async () => { await Promise.resolve(); });
+  expect(streams).toHaveLength(1);
+  expect(streams[0].url).toContain('ticket=');
+  expect(streams[0].url).not.toContain('token=');
   act(() => streams[0].onerror());
   expect(streams[0].close).toHaveBeenCalledTimes(1);
-  act(() => jest.advanceTimersByTime(5000));
+  await act(async () => { jest.advanceTimersByTime(3000); await Promise.resolve(); });
   expect(streams).toHaveLength(2);
-  // An obsolete error must not close or reconnect the replacement stream.
   act(() => streams[0].onerror());
-  act(() => jest.advanceTimersByTime(5000));
+  await act(async () => { jest.advanceTimersByTime(3000); await Promise.resolve(); });
   expect(streams).toHaveLength(2);
   act(() => streams[1].onerror());
-  auth = { token: null, user: null };
+  auth = { token: null, user: null, logout: jest.fn() };
   localStorage.removeItem('token');
   view.rerender(<EventProvider><Probe /></EventProvider>);
-  act(() => jest.advanceTimersByTime(10000));
+  await act(async () => { jest.advanceTimersByTime(10000); await Promise.resolve(); });
   expect(streams).toHaveLength(2);
-  auth = { token: 'new', user: { id: 2 } };
+  auth = { token: 'new', user: { id: 2 }, logout: jest.fn() };
   view.rerender(<EventProvider><Probe /></EventProvider>);
+  await act(async () => { await Promise.resolve(); });
   act(() => streams[2].onerror());
   view.unmount();
-  act(() => jest.advanceTimersByTime(10000));
+  await act(async () => { jest.advanceTimersByTime(10000); await Promise.resolve(); });
   expect(streams).toHaveLength(3);
 });
 
-test('SSE follows login, token replacement, and logout without provider remount', () => {
+test('SSE follows login, token replacement, and logout without provider remount', async () => {
   const view = render(<EventProvider><Probe /></EventProvider>);
   expect(streams).toHaveLength(0);
-  auth = { token: 'first', user: { id: 1 } };
+  auth = { token: 'first', user: { id: 1 }, logout: jest.fn() };
   localStorage.setItem('token', 'first');
   view.rerender(<EventProvider><Probe /></EventProvider>);
+  await act(async () => { await Promise.resolve(); });
   expect(streams).toHaveLength(1);
-  expect(streams[0].url).toContain('token=first');
-  auth = { token: 'replacement', user: { id: 1 } };
+  expect(streams[0].url).toContain('ticket=');
+  expect(streams[0].url).not.toContain('token=first');
+  auth = { token: 'replacement', user: { id: 1 }, logout: jest.fn() };
   localStorage.setItem('token', 'replacement');
   view.rerender(<EventProvider><Probe /></EventProvider>);
+  await act(async () => { await Promise.resolve(); });
   expect(streams[0].close).toHaveBeenCalledTimes(1);
   expect(streams).toHaveLength(2);
-  auth = { token: null, user: null };
+  auth = { token: null, user: null, logout: jest.fn() };
   localStorage.removeItem('token');
   view.rerender(<EventProvider><Probe /></EventProvider>);
   expect(streams[1].close).toHaveBeenCalledTimes(1);

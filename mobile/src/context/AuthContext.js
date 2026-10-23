@@ -95,6 +95,24 @@ export const AuthProvider = ({ children }) => {
         if (generation.current !== restoreGeneration) return;
         const status = err.response?.status;
         if (status === 401 || status === 404) {
+          // Unregister the push token for this device before dropping credentials,
+          // same as the full logout path — prevents stale tokens receiving pushes.
+          try {
+            const savedToken = await storage.getItem('token');
+            if (savedToken) {
+              const bindings = await readBindings();
+              // We don't have a full user object yet — match by any binding that
+              // used this token value.
+              for (const binding of bindings) {
+                if (ownTokens(binding).length > 0) {
+                  for (const pushToken of ownTokens(binding)) {
+                    await API.put('/auth/push-token', { push_token: null, previous_push_token: pushToken });
+                  }
+                }
+              }
+              await storage.deleteItem(PUSH_BINDING_KEY);
+            }
+          } catch { /* best-effort */ }
           await storage.deleteItem('token');
           await clearCache();
         }

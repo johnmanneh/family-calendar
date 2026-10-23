@@ -4,12 +4,18 @@ jest.mock('../src/config/db', () => ({ query: jest.fn(), connect: jest.fn() }));
 jest.mock('../src/utils/access', () => ({ canManageCalendar: jest.fn() }));
 jest.mock('../src/utils/notifyUser', () => jest.fn());
 const pool = require('../src/config/db');
+const { issueTicket } = require('../src/utils/sseTickets');
 const response = () => Object.assign(new EventEmitter(), {
   status: jest.fn().mockReturnThis(), json: jest.fn().mockReturnThis(),
   end: jest.fn(function () { this.emit('close'); return this; }),
   setHeader: jest.fn(), flushHeaders: jest.fn(), write: jest.fn(),
 });
-const request = (id, body = {}) => Object.assign(new EventEmitter(), { user: { id }, body });
+const request = (id, body = {}) => Object.assign(new EventEmitter(), { user: { id }, body, query: {} });
+const streamRequest = (id) => {
+  const req = request(id);
+  req.query = { ticket: issueTicket(id) };
+  return req;
+};
 
 beforeEach(() => { jest.clearAllMocks(); jest.useFakeTimers(); });
 afterEach(() => { jest.clearAllTimers(); jest.useRealTimers(); });
@@ -129,7 +135,7 @@ test('a membership lookup started before leave cannot re-register the departed f
   const { revokeFamily, broadcast } = require('../src/utils/sseClients');
   let resolve;
   pool.query.mockReturnValueOnce(new Promise(done => { resolve = done; }));
-  const req = request(50), res = response();
+  const req = streamRequest(50), res = response();
   const pending = stream(req, res);
   revokeFamily(50, 100);
   resolve({ rowCount: 2, rows: [{ family_id: 100 }, { family_id: 200 }] });
@@ -146,7 +152,7 @@ test('a membership lookup started before account deletion cannot reopen a stream
   const { revokeUser, broadcast, sendToUser } = require('../src/utils/sseClients');
   let resolve;
   pool.query.mockReturnValueOnce(new Promise(done => { resolve = done; }));
-  const req = request(60), res = response();
+  const req = streamRequest(60), res = response();
   const pending = stream(req, res);
   revokeUser(60);
   resolve({ rowCount: 1, rows: [{ family_id: 300 }] });
@@ -218,7 +224,8 @@ test('account deletion closes all user devices and revokes personal and family d
   const remove = require('../src/controllers/auth/deleteAccount');
   const { broadcast, sendToUser } = require('../src/utils/sseClients');
   pool.query.mockResolvedValue({ rowCount: 1, rows: [{ family_id: 30 }] });
-  const reqs = [request(3), request(3), request(4)];
+  pool.connect.mockResolvedValue({ query: pool.query, release: jest.fn() });
+  const reqs = [streamRequest(3), streamRequest(3), streamRequest(4)];
   const responses = reqs.map(response);
   for (let i = 0; i < reqs.length; i++) await stream(reqs[i], responses[i]);
   await remove(request(3), response());
@@ -238,7 +245,7 @@ test('leaving a family revokes every device of that user, not other families or 
   const leave = require('../src/controllers/family/leaveFamily');
   const { broadcast } = require('../src/utils/sseClients');
   pool.query.mockResolvedValue({ rowCount: 2, rows: [{ family_id: 10 }, { family_id: 20 }] });
-  const reqs = [request(1), request(1), request(2)];
+  const reqs = [streamRequest(1), streamRequest(1), streamRequest(2)];
   const responses = reqs.map(response);
   for (let i = 0; i < reqs.length; i++) await stream(reqs[i], responses[i]);
   const client = { release: jest.fn(), query: jest.fn(async sql => {

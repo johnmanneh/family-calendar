@@ -9,7 +9,7 @@ import { useFamily } from "./FamilyContext";
 const EventContext = createContext();
 
 export const EventProvider = ({ children }) => {
-  const { user, token } = useAuth();
+  const { user, token, logout } = useAuth();
   const { family: activeFamily } = useFamily();
   const scope = `${token ?? ''}:${activeFamily?.id ?? ''}`;
   const scopeRef = useRef(scope);
@@ -503,14 +503,39 @@ export const EventProvider = ({ children }) => {
   useEffect(() => {
     let disposed = false;
     let retryTimer = null;
-    const connectSSE = () => {
+
+    // Fetch a one-time SSE ticket using the Authorization header.
+    // The JWT is never placed in a URL query string.
+    const fetchTicket = async () => {
+      try {
+        const sseBase = process.env.REACT_APP_API_URL || 'http://localhost:8000/api';
+        const res = await fetch(`${sseBase}/stream/ticket`, {
+          method:  'POST',
+          headers: { Authorization: `Bearer ${token}` },
+        });
+        if (res.status === 401) {
+          logout();
+          return null;
+        }
+        if (!res.ok) return null;
+        const body = await res.json();
+        return body.ticket || null;
+      } catch {
+        return null;
+      }
+    };
+
+    const connectSSE = async () => {
       if (disposed) return;
       if (!token) return;
       clearTimeout(retryTimer);
-      if (sseRef.current) sseRef.current.close();
+      if (sseRef.current) { sseRef.current.close(); sseRef.current = null; }
+
+      const ticket = await fetchTicket();
+      if (!ticket || disposed) return;
 
       const sseBase = process.env.REACT_APP_API_URL || 'http://localhost:8000/api';
-      const es = new EventSource(`${sseBase}/stream?token=${encodeURIComponent(token)}`);
+      const es = new EventSource(`${sseBase}/stream?ticket=${encodeURIComponent(ticket)}`);
       sseRef.current = es;
 
       es.addEventListener('task_update', () => {
@@ -541,13 +566,14 @@ export const EventProvider = ({ children }) => {
         if (disposed || sseRef.current !== es) return;
         es.close();
         sseRef.current = null;
+        // Reconnect fetches a fresh ticket
         retryTimer = setTimeout(connectSSE, 3000);
       };
     };
 
     connectSSE();
 
-    // 18.5 — reconnect when tab comes back into focus
+    // Reconnect when tab comes back into focus — get a fresh ticket each time
     const handleVisibility = () => {
       if (document.visibilityState === 'visible' && !sseRef.current) {
         connectSSE();

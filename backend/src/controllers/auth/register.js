@@ -42,7 +42,7 @@ const register = async (req, res) => {
 
     // Personal space behind the scenes so the user can use the app immediately.
     // It stays hidden (no name or code shown) until they create a family or join one.
-    const inviteCode = crypto.randomBytes(4).toString('hex').toUpperCase(); // e.g. "A3F2B1C4"
+    const inviteCode = crypto.randomBytes(24).toString('base64url');
     const familyName = `${first_name}'s Family`;
 
     const newFamily = await pool.query(

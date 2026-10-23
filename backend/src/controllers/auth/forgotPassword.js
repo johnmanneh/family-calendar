@@ -4,7 +4,8 @@ const sendEmail = require('../../utils/sendEmail');
 const { successResponse, errorResponse } = require('../../utils/response/responseHandlers');
 
 // POST /api/auth/forgot-password
-// Accepts { email }, generates a 1-hour reset token and emails a link.
+// Generates a cryptographically random reset token, stores its SHA-256 digest
+// (never the raw token) and emails the raw token to the user as a link.
 // Always returns 200 so we don't reveal whether the email exists.
 const forgotPassword = async (req, res) => {
   const { email } = req.body;
@@ -16,19 +17,20 @@ const forgotPassword = async (req, res) => {
       [email.trim()]
     );
 
-    if (userRes.rowCount > 0) {
+    if (userRes.rows.length > 0) {
       const user = userRes.rows[0];
 
-      // 32-byte hex token — enough entropy to be unguessable
-      const token   = crypto.randomBytes(32).toString('hex');
-      const expires = new Date(Date.now() + 60 * 60 * 1000); // 1 hour
+      // Generate raw token (sent to the user) and store only its SHA-256 digest
+      const rawToken = crypto.randomBytes(32).toString('hex');
+      const digest   = crypto.createHash('sha256').update(rawToken).digest('hex');
+      const expires  = new Date(Date.now() + 60 * 60 * 1000); // 1 hour
 
       await pool.query(
         `UPDATE users SET reset_token = $1, reset_token_expires = $2 WHERE id = $3`,
-        [token, expires, user.id]
+        [digest, expires, user.id]
       );
 
-      const resetUrl  = `https://its4us.app/reset-password?token=${token}`;
+      const resetUrl  = `https://its4us.app/reset-password?token=${rawToken}`;
       const firstName = user.first_name || 'there';
 
       try {
@@ -54,12 +56,10 @@ const forgotPassword = async (req, res) => {
           `
         );
       } catch (emailErr) {
-        // Log but never crash — token is saved so reset still works
         console.error('forgotPassword email error:', emailErr.message);
       }
     }
 
-    // Always 200 — don't reveal whether the email exists
     return successResponse(res, 200, 'If that email is registered, a reset link has been sent.');
   } catch (err) {
     console.error('forgotPassword error:', err.message);

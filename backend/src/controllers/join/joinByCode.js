@@ -13,7 +13,9 @@ const joinByCode = async (req, res) => {
   if (!raw || !String(raw).trim()) {
     return errorResponse(res, 400, 'Invite code is required');
   }
-  const code = String(raw).trim().toUpperCase();
+  // New codes are base64url (case-sensitive). Old short hex codes were uppercased.
+  // Pass through as-is; DB comparison is case-sensitive by default.
+  const code = String(raw).trim();
   req.body.invite_code = code;
 
   try {

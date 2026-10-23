@@ -39,7 +39,13 @@
             "compileSdkVersion": 36,
             "targetSdkVersion": 36,
             "minSdkVersion": 24,
-            "buildToolsVersion": "36.0.0"
+            "buildToolsVersion": "36.0.0",
+            "allowBackup": false,
+            "blockedPermissions": [
+              "android.permission.READ_CALENDAR",
+              "android.permission.WRITE_CALENDAR",
+              "android.permission.SYSTEM_ALERT_WINDOW"
+            ]
           }
         }
       ],

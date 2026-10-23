@@ -32,20 +32,52 @@ export const SSEProvider = ({ children }) => {
   const logoutRef = useRef(logout);
   useEffect(() => { logoutRef.current = logout; }, [logout]);
 
-  // ── Open a new SSE connection ─────────────────────────────────────────────
-  const connect = (currentToken) => {
-    if (!currentToken) return;
-
-    // Close any existing connection first
+  // ── Close the connection cleanly ──────────────────────────────────────────
+  const disconnect = () => {
     if (esRef.current) {
       esRef.current.removeAllEventListeners();
       esRef.current.close();
       esRef.current = null;
     }
+  };
 
-    // Token goes in the query string — EventSource cannot set custom headers
-    const url = `${BASE_URL}/stream?token=${currentToken}`;
-    const es  = new EventSource(url);
+  // ── Fetch a one-time SSE ticket from the server ───────────────────────────
+  // The JWT is sent only in the Authorization header here — never in a URL.
+  // Returns the ticket string, or null if the request fails.
+  const fetchTicket = async (currentToken) => {
+    try {
+      const res = await fetch(`${BASE_URL}/stream/ticket`, {
+        method:  'POST',
+        headers: { Authorization: `Bearer ${currentToken}` },
+      });
+      if (res.status === 401) {
+        // Token is no longer valid — log the user out
+        logoutRef.current?.();
+        return null;
+      }
+      if (!res.ok) return null;
+      const body = await res.json();
+      return body.ticket || null;
+    } catch {
+      return null;
+    }
+  };
+
+  // ── Open a new SSE connection ─────────────────────────────────────────────
+  const connect = async (currentToken) => {
+    if (!currentToken) return;
+
+    // Close any existing connection first
+    disconnect();
+
+    const ticket = await fetchTicket(currentToken);
+    if (!ticket) return;
+
+    // pollingInterval: 0 disables react-native-sse's built-in auto-reconnect —
+    // we manage reconnects manually (foreground restore, error handler).
+    const es = new EventSource(`${BASE_URL}/stream?ticket=${ticket}`, {
+      pollingInterval: 0,
+    });
 
     es.addEventListener('event_update', () => {
       setEventTick(t => t + 1);
@@ -83,15 +115,6 @@ export const SSEProvider = ({ children }) => {
     esRef.current = es;
   };
 
-  // ── Close the connection cleanly ──────────────────────────────────────────
-  const disconnect = () => {
-    if (esRef.current) {
-      esRef.current.removeAllEventListeners();
-      esRef.current.close();
-      esRef.current = null;
-    }
-  };
-
   // ── Connect / disconnect when token changes (login / logout) ─────────────
   useEffect(() => {
     if (token) {
@@ -100,12 +123,13 @@ export const SSEProvider = ({ children }) => {
       disconnect();
     }
     return disconnect; // cleanup on unmount
-  }, [token]);
+  }, [token]); // eslint-disable-line react-hooks/exhaustive-deps
 
   // ── Reconnect when the app comes back to the foreground ───────────────────
   // On iOS/Android, the OS can close the TCP connection while the app is
   // backgrounded. We reconnect so updates are instant the moment the user
-  // returns to the app.
+  // returns to the app.  Each reconnect fetches a fresh ticket — the old one
+  // was single-use and is already consumed.
   useEffect(() => {
     const sub = AppState.addEventListener('change', nextState => {
       const wasBackground = appState.current.match(/inactive|background/);
@@ -113,7 +137,7 @@ export const SSEProvider = ({ children }) => {
       const isBackground  = nextState.match(/inactive|background/);
 
       if (wasBackground && isActive) {
-        // App came to foreground — reconnect
+        // App came to foreground — reconnect with a new ticket
         connect(tokenRef.current);
       } else if (isBackground) {
         // App went to background — disconnect to save battery / connections
@@ -124,7 +148,7 @@ export const SSEProvider = ({ children }) => {
     });
 
     return () => sub.remove();
-  }, []); // runs once — uses tokenRef so it always reads the latest token
+  }, []); // runs once — uses tokenRef/logoutRef so it always reads the latest values
 
   return (
     <SSEContext.Provider value={{ eventTick, taskTick, notifTick, lastChatMsg }}>

@@ -43,8 +43,8 @@ function makeToken(userId = 1) {
 // auth.js does a DB look-up after verifying the token; stub that lookup.
 function mockUserExists(userId = 1) {
   pool.query.mockImplementation((sql) => {
-    // Auth middleware: SELECT 1 FROM users WHERE id = $1
-    if (sql.includes('SELECT 1 FROM users')) return Promise.resolve({ rows: [{ '?column?': 1 }] });
+    // Auth middleware: SELECT token_version FROM users WHERE id = $1
+    if (sql.includes('FROM users WHERE id')) return Promise.resolve({ rows: [{ token_version: 0 }] });
     // Default: empty
     return Promise.resolve({ rows: [], rowCount: 0 });
   });
@@ -52,7 +52,7 @@ function mockUserExists(userId = 1) {
 
 function mockEventInAnotherFamily() {
   pool.query.mockImplementation((sql) => {
-    if (sql.includes('SELECT 1 FROM users')) return Promise.resolve({ rows: [{}] });
+    if (sql.includes('FROM users WHERE id')) return Promise.resolve({ rows: [{ token_version: 0 }] });
     if (sql.includes('SELECT * FROM events')) return Promise.resolve({ rows: [{
       id: 9999, family_id: 2, created_by: 42, owner_id: 42, is_private: false,
     }] });
@@ -174,7 +174,7 @@ describe('Private event visibility', () => {
     // Exercise the real access policy: another inner-circle member may see
     // only a Busy block. Keep sensitive fields populated so leaks are caught.
     pool.query.mockImplementation((sql) => {
-      if (sql.includes('SELECT 1 FROM users')) return Promise.resolve({ rows: [{}] });
+      if (sql.includes('FROM users WHERE id')) return Promise.resolve({ rows: [{ token_version: 0 }] });
       if (sql.includes('SELECT * FROM events')) return Promise.resolve({ rows: [{
         id: 5, family_id: 1, created_by: 2, owner_id: 2, is_private: true,
         title: 'Secret birthday party', notes: 'Do not expose these notes',

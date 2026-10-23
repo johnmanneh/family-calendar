@@ -3,19 +3,30 @@ const { ACTIVE_FAMILY_ORDER } = require('../../utils/activeFamily');
 const { successResponse, errorResponse } = require('../../utils/response/responseHandlers');
 
 // GET /api/chat — last 50 messages for the user's family, oldest-first for display
+// Inner circle only (security pass-1). Outer circle users receive 403.
 const getMessages = async (req, res) => {
   const userId = req.user.id;
 
   try {
-    // Resolve the user's family_id
+    // Resolve the user's active family and circle_type together
     const familyRes = await pool.query(
-      `SELECT fm.family_id FROM family_members fm WHERE fm.user_id = $1 ORDER BY ${ACTIVE_FAMILY_ORDER} LIMIT 1`,
+      `SELECT fm.family_id, fm.circle_type
+       FROM family_members fm
+       WHERE fm.user_id = $1
+       ORDER BY ${ACTIVE_FAMILY_ORDER}
+       LIMIT 1`,
       [userId]
     );
     if (!familyRes.rows.length) {
       return successResponse(res, 200, 'Messages fetched', { messages: [] });
     }
-    const familyId = familyRes.rows[0].family_id;
+
+    const { family_id: familyId, circle_type } = familyRes.rows[0];
+
+    // Chat is inner-circle only. Outer members have no chat access.
+    if (circle_type === 'outer') {
+      return errorResponse(res, 403, 'Chat is available to inner circle members only');
+    }
 
     const result = await pool.query(
       `SELECT

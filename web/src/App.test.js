@@ -21,8 +21,13 @@ test('real app provider tree renders signed out, connects after login, and clean
     const { events } = useEvents();
     return <div>{auth.token ? 'signed in' : 'signed out'}: {family?.id ?? 'no family'}: {events.length} events</div>;
   }
-  const stream = { close: jest.fn(), addEventListener: jest.fn() };
+  const stream = { close: jest.fn(), addEventListener: jest.fn(), onerror: null };
   global.EventSource = jest.fn(() => stream);
+  global.fetch = jest.fn().mockResolvedValue({
+    ok: true,
+    status: 200,
+    json: async () => ({ ticket: 'ticket-1' }),
+  });
   API.get.mockResolvedValue({ data: { family: { id: 1 }, members: [], families: [{ id: 1 }], groups: [], invitations: [], events: [], tasks: [] } });
   const view = render(<AppProviders><Probe /></AppProviders>);
   expect(screen.getByText('signed out: no family: 0 events')).toBeInTheDocument();

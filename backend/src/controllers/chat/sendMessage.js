@@ -5,6 +5,7 @@ const { broadcast } = require('../../utils/sseClients');
 const { successResponse, errorResponse } = require('../../utils/response/responseHandlers');
 
 // POST /api/chat — insert a message and broadcast to the family via SSE
+// Inner circle only (security pass-1). Outer circle users receive 403.
 const sendMessage = async (req, res) => {
   const userId = req.user.id;
   const { body } = req.body;
@@ -14,15 +15,25 @@ const sendMessage = async (req, res) => {
   }
 
   try {
-    // Resolve family
+    // Resolve family and circle_type together
     const familyRes = await pool.query(
-      `SELECT fm.family_id FROM family_members fm WHERE fm.user_id = $1 ORDER BY ${ACTIVE_FAMILY_ORDER} LIMIT 1`,
+      `SELECT fm.family_id, fm.circle_type
+       FROM family_members fm
+       WHERE fm.user_id = $1
+       ORDER BY ${ACTIVE_FAMILY_ORDER}
+       LIMIT 1`,
       [userId]
     );
     if (!familyRes.rows.length) {
       return errorResponse(res, 403, 'Not in a family');
     }
-    const familyId = familyRes.rows[0].family_id;
+
+    const { family_id: familyId, circle_type } = familyRes.rows[0];
+
+    // Chat is inner-circle only.
+    if (circle_type === 'outer') {
+      return errorResponse(res, 403, 'Chat is available to inner circle members only');
+    }
 
     // Insert
     const result = await pool.query(
@@ -52,14 +63,12 @@ const sendMessage = async (req, res) => {
       last_name:  sender.last_name,
       avatar_url: sender.avatar_url,
       color:      sender.color,
-      family_id:  familyId,   // clients ignore messages from their other families
+      family_id:  familyId,
     };
 
     broadcast(familyId, 'chat_message', payload);
 
-    // Phone push to everyone else in this family (when the app isn't open the
-    // live update doesn't reach them). Not saved to the notification inbox —
-    // a bell entry per chat message would be noise.
+    // Phone push to everyone else in this family
     const others = await pool.query(
       `SELECT u.push_token, f.name AS family_name
        FROM family_members fm JOIN users u ON u.id = fm.user_id JOIN families f ON f.id = fm.family_id
