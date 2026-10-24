@@ -1,5 +1,6 @@
 import React, { useState, useEffect, useCallback, useRef } from 'react';
 import { onSameDay } from '../utils/eventDates';
+import { eventInvolvesPerson } from '../utils/eventPeople';
 import { useTranslation } from 'react-i18next';
 import Swipeable from 'react-native-gesture-handler/Swipeable';
 import { GestureDetector, Gesture } from 'react-native-gesture-handler';
@@ -440,8 +441,6 @@ export default function HomeScreen({ navigation, route }) {
         ...members.filter(m => Number(m.id) !== Number(user.id)),
       ]
     : members;
-  // Children get their own chips right after "All"
-  const kids = members.filter(m => m.is_managed);
 
   const [events, setEvents] = useState([]);
   const [tasks, setTasks] = useState([]);
@@ -457,13 +456,8 @@ export default function HomeScreen({ navigation, route }) {
     }
   }, [route?.params?.focusMemberId]);
 
-  // Scope chips: 'all' | 'family' | <groupId>. Only shown when the user is in a group.
+  // Groups the user belongs to (loaded with the events; used for group badges)
   const [myGroups, setMyGroups] = useState([]);
-  const [scope, setScope] = useState('all');
-  // A removed child profile can't stay selected
-  useEffect(() => {
-    if (String(scope).startsWith('kid:') && !kids.some(k => `kid:${k.id}` === scope)) setScope('all');
-  }, [members]);
   const [pendingCount, setPendingCount] = useState(0);
   const [notifUnread,  setNotifUnread]  = useState(0);
   const [chatUnread,   setChatUnread]   = useState(0);
@@ -575,8 +569,7 @@ export default function HomeScreen({ navigation, route }) {
       setSelectedDate(today);
       setResetSignal(n => n + 1);          // WeekStrip / MonthCalendar jump back
       closeSearch();                       // search text + category filter
-      setScope('all');                     // All / child / Family / group chips
-      setSelectedMember(null);             // member avatar filter
+      setSelectedMember(null);             // person filter (bubble row)
     });
     return () => sub.remove();
   }, [closeSearch]); // eslint-disable-line react-hooks/exhaustive-deps
@@ -662,7 +655,6 @@ export default function HomeScreen({ navigation, route }) {
       setEvents([]);
       setTasks([]);
       setMyGroups([]);
-      setScope('all');
       setSelectedMember(null);
       setPendingCount(0);
       setNotifUnread(0);
@@ -698,10 +690,7 @@ export default function HomeScreen({ navigation, route }) {
       if (!isCurrent()) return;
 
       if (groupsRes.status === 'fulfilled') {
-        const g = groupsRes.value.data.groups || [];
-        setMyGroups(g);
-        // The selected group may have been left/deleted since — fall back to All
-        setScope(prev => (typeof prev === 'number' && !g.some(x => Number(x.id) === prev) ? 'all' : prev));
+        setMyGroups(groupsRes.value.data.groups || []);
       }
 
       const eventsOK = eventsRes.status === 'fulfilled';
@@ -1048,25 +1037,11 @@ export default function HomeScreen({ navigation, route }) {
 
   // ── Filter ───────────────────────────────────────────────────────────────
 
-  // Scope first: All (family + groups) · Family only · one group
-  const scopeFiltered =
-    scope === 'all'    ? events :
-    scope === 'family' ? events.filter(e => !e.from_group) :
-    String(scope).startsWith('kid:') ? events.filter(e => {
-      const kid = Number(String(scope).slice(4));
-      return Number(e.owner_id) === kid ||
-        (e.attendees || []).some(a => Number(a.user_id ?? a.id) === kid);
-    }) :
-    events.filter(e => (e.group_ids || []).map(Number).includes(Number(scope)));
-
+  // One person filter: a selected bubble shows events that person owns,
+  // created or attends; no selection (the "All" bubble) shows everything.
   const memberFiltered = selectedMember
-    ? scopeFiltered.filter(
-        (e) =>
-          Number(e.owner_id ?? e.created_by) === Number(selectedMember) ||
-          Number(e.created_by) === Number(selectedMember) ||
-          (e.attendees && e.attendees.some((a) => Number(a.user_id) === Number(selectedMember)))
-      )
-    : scopeFiltered;
+    ? events.filter((e) => eventInvolvesPerson(e, selectedMember))
+    : events;
 
   const q = searchQuery.trim().toLowerCase();
   const isSearchActive = q.length > 0 || selectedCategory !== '';
@@ -1093,11 +1068,6 @@ export default function HomeScreen({ navigation, route }) {
     let list = selectedMember
       ? tasks.filter(t => Number(t.assigned_to) === Number(selectedMember))
       : tasks;
-    // A group view only shows tasks that belong to that group's events
-    if (typeof scope === 'number') {
-      const ids = new Set(scopeFiltered.map(e => Number(e.id)));
-      list = list.filter(t => t.event_id && ids.has(Number(t.event_id)));
-    }
     if (isSearchActive) {
       if (selectedCategory) list = list.filter(t => t.category === selectedCategory);
       if (q) list = list.filter(t => (t.title || '').toLowerCase().includes(q));
@@ -1105,8 +1075,8 @@ export default function HomeScreen({ navigation, route }) {
     return list;
   })();
 
-  // Coming up: the next events in the current scope (All / Family / a group /
-  // a person), so choosing a chip always shows something useful even when the
+  // Coming up: the next events for the current person filter (or everyone),
+  // so choosing a bubble always shows something useful even when the
   // selected day itself is empty.
   const upcomingEvents = (() => {
     if (isSearchActive) return [];
@@ -1368,58 +1338,29 @@ export default function HomeScreen({ navigation, route }) {
                 onLongPress={() => navigation.navigate('MemberProfile', { memberId: member.id })}
               />
             ))}
-          </ScrollView>
-        </View>
-      )}
-
-      {/* ── Scope chips: All · each child · Family · <groups> — kids come first ── */}
-      {(myGroups.length > 0 || kids.length > 0) && (
-        <ScrollView
-          horizontal
-          showsHorizontalScrollIndicator={false}
-          style={styles.scopeRow}
-          contentContainerStyle={styles.scopeContent}
-        >
-          {[
-            { key: 'all',    label: t('home.filter_all') },
-            ...kids.map(k => ({ key: `kid:${k.id}`, label: k.first_name, kid: k })),
-            { key: 'family', label: t('home.filter_family') },
-            ...myGroups.map(g => ({ key: Number(g.id), label: g.name, isGroup: true })),
-          ].map(chip => {
-            // "All" only looks selected when no person filter is on — otherwise
-            // "All" + a selected avatar showed an empty list that looked like everything
-            const active = chip.key === 'all' ? scope === 'all' && !selectedMember : scope === chip.key;
-            return (
+            {/* "All" — clears the person filter. Only useful with 2+ people. */}
+            {sortedMembers.length > 1 && (
               <TouchableOpacity
-                key={String(chip.key)}
-                style={[styles.scopeChip, active && styles.scopeChipActive]}
-                onPress={() => {
-                  setScope(chip.key);
-                  if (chip.key === 'all') setSelectedMember(null);   // All = really everyone
-                }}
+                style={styles.bubble}
+                onPress={() => setSelectedMember(null)}
+                accessibilityRole="button"
+                accessibilityState={{ selected: !selectedMember }}
               >
-                {chip.kid && (
-                  chip.kid.avatar_url ? (
-                    <Image
-                      source={{ uri: chip.kid.avatar_url.startsWith('http') ? chip.kid.avatar_url : `${SERVER_URL}${chip.kid.avatar_url}` }}
-                      style={{ width: 20, height: 20, borderRadius: 10, marginLeft: -6, marginRight: 6 }}
-                    />
-                  ) : (
-                    <View style={{ width: 20, height: 20, borderRadius: 10, marginLeft: -6, marginRight: 6, backgroundColor: chip.kid.color || '#f48c06', alignItems: 'center', justifyContent: 'center' }}>
-                      <Text style={{ color: '#fff', fontSize: 9, fontWeight: '700' }}>{(chip.kid.first_name || '?')[0]}</Text>
-                    </View>
-                  )
-                )}
-                {chip.isGroup && (
-                  <Ionicons name="people" size={12} color={active ? '#fff' : '#8e8e93'} style={{ marginRight: 4 }} />
-                )}
-                <Text style={[styles.scopeChipText, active && styles.scopeChipTextActive]} numberOfLines={1}>
-                  {chip.label}
+                <View style={styles.bubbleHaloWrap}>
+                  {!selectedMember && (
+                    <View style={[styles.bubbleHalo, { backgroundColor: '#1a8fa8', opacity: 0.25 }]} />
+                  )}
+                  <View style={[styles.bubbleCircle, styles.bubbleAllCircle]}>
+                    <Ionicons name="people" size={18} color="#1a8fa8" />
+                  </View>
+                </View>
+                <Text style={[styles.bubbleName, !selectedMember && { color: '#1a8fa8', fontWeight: '700' }]} numberOfLines={1}>
+                  {t('home.filter_all')}
                 </Text>
               </TouchableOpacity>
-            );
-          })}
-        </ScrollView>
+            )}
+          </ScrollView>
+        </View>
       )}
 
       {/* ── Search panel — slides in below member bubbles ── */}
@@ -1521,7 +1462,7 @@ export default function HomeScreen({ navigation, route }) {
           // effect measures row positions and content height, and stale numbers
           // from the previous (longer) list made a short list tilt its last row
           // under the + button. A fresh list measures from scratch.
-          key={`${scope}|${selectedMember ?? ''}|${selectedDate.toDateString()}|${isSearchActive ? 's' : ''}|${selectedCategory}`}
+          key={`${selectedMember ?? ''}|${selectedDate.toDateString()}|${isSearchActive ? 's' : ''}|${selectedCategory}`}
           bottomInset={insets.bottom}
           data={listData}
           keyExtractor={(item) => item.key}

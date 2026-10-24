@@ -72,19 +72,10 @@ const make = c => StyleSheet.create({
   },
   membersRow: { flex: 1 },
 
-  // Scope chips (All · Family · groups) under the member bubbles
-  scopeRow: { flexGrow: 0, flexShrink: 0 },
-  scopeContent: { paddingHorizontal: 16, paddingBottom: 8, gap: 6 },
-  scopeChip: {
-    flexDirection: 'row', alignItems: 'center',
-    paddingVertical: 5, paddingHorizontal: 12, borderRadius: 14,
-    backgroundColor: c.surface2,
-  },
-  scopeChipActive: { backgroundColor: '#1a8fa8' },
-  scopeChipText: { fontSize: 12, fontWeight: '600', color: c.textSub, maxWidth: 140 },
-  scopeChipTextActive: { color: '#fff' },
   membersContent: { paddingHorizontal: 16, paddingTop: 8, paddingBottom: 8 },
   bubble: { alignItems: 'center', width: 46, marginRight: 10 },
+  // "All" bubble at the end of the member row — outlined, no photo
+  bubbleAllCircle: { backgroundColor: c.surface2, borderWidth: 1.5, borderColor: '#1a8fa8' },
   bubbleHaloWrap: { width: 44, height: 44, alignItems: 'center', justifyContent: 'center' },
   bubbleHalo: { position: 'absolute', width: 44, height: 44, borderRadius: 22 },
   bubbleCircle: { width: 36, height: 36, borderRadius: 18, alignItems: 'center', justifyContent: 'center' },
