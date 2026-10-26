@@ -95,7 +95,7 @@ function createApp() {
     <li><strong>Chat messages:</strong> Text messages sent within the family chat feature, stored on our servers.</li>
     <li><strong>Photos:</strong> Profile photos and images you upload are stored with our cloud image provider (Cloudinary).</li>
     <li><strong>Device information:</strong> A push-notification token for your device (via Expo / Firebase Cloud Messaging or Apple Push Notification service), used only to deliver app notifications.</li>
-    <li><strong>Voice/speech input:</strong> If you use the voice capture feature, audio is converted to text on-device or via a speech-to-text service. We do not store audio recordings.</li>
+    <li><strong>Voice/speech input:</strong> If you use the voice capture feature, audio is sent to Groq (a third-party AI service) for transcription. We do not store audio recordings after transcription is complete.</li>
   </ul>
 
   <h2>2. How We Use Your Information</h2>
@@ -113,7 +113,7 @@ function createApp() {
   <ul>
     <li><strong>Railway</strong> (railway.app) — cloud hosting for the backend server and PostgreSQL database.</li>
     <li><strong>Cloudinary</strong> — cloud storage and delivery for profile photos and uploaded images.</li>
-    <li><strong>Groq</strong> — AI inference API used to extract event details from scanned images or text.</li>
+    <li><strong>Groq</strong> — AI inference API used to extract event details from scanned images or text, and to transcribe voice audio recordings.</li>
     <li><strong>Resend</strong> — transactional email delivery (e.g. password reset emails).</li>
     <li><strong>Expo / Firebase Cloud Messaging (FCM) / Apple Push Notification service (APNs)</strong> — push notification delivery to Android and iOS devices.</li>
   </ul>
