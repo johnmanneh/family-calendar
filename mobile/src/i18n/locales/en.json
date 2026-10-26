@@ -401,5 +401,13 @@
     "select_child": "Who is being picked up?",
     "select_person": "Who will pick them up?",
     "assign": "Assign"
+  },
+  "voice": {
+    "listening": "Listening…",
+    "creating": "Creating…",
+    "processing": "Processing…",
+    "no_audio": "Couldn't hear you — try again",
+    "error": "Could not create — try again",
+    "auto_stopped": "Stopped (30s max)"
   }
 }

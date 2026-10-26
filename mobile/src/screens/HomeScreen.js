@@ -500,10 +500,30 @@ export default function HomeScreen({ navigation, route }) {
   const isRecordingRef    = useRef(false);
   const lastTranscriptRef = useRef('');
 
+  // VOICE-001: persisted recording (Android 13+) for server-side Whisper.
+  const audioUriRef        = useRef(null);
+  const persistAudioRef    = useRef(false); // true when this session asked to persist
+  const audioEndedRef      = useRef(false); // 'audioend' seen → file is complete
+  const audioEndWaiterRef  = useRef(null);  // resolves a pending wait for 'audioend'
+  const autoStopTimerRef   = useRef(null);
+  const recordingTimerRef  = useRef(null);
+  const [recordingSeconds, setRecordingSeconds] = useState(0);
+
+  const clearRecordingTimers = useCallback(() => {
+    if (autoStopTimerRef.current)  clearTimeout(autoStopTimerRef.current);
+    if (recordingTimerRef.current) clearInterval(recordingTimerRef.current);
+    autoStopTimerRef.current  = null;
+    recordingTimerRef.current = null;
+    setRecordingSeconds(0);
+  }, []);
+
+  useEffect(() => clearRecordingTimers, [clearRecordingTimers]);
+
   // ── STT event listeners (called unconditionally — hooks rule) ─────────────
   // useSTTEvent is a no-op when expo-speech-recognition isn't available.
   useSTTEvent('result', (e) => {
     const best = e.results?.[0]?.transcript ?? '';
+    if (e.results?.[0]?.audioUri) audioUriRef.current = e.results[0].audioUri;
     setVoiceTranscript(best);
     // Store every non-empty partial so 'end' can use it if isFinal never fires.
     if (best) lastTranscriptRef.current = best;
@@ -521,6 +541,15 @@ export default function HomeScreen({ navigation, route }) {
       // handleFinalTranscript will open EventForm with a blank prefill.
       handleFinalTranscriptRef.current?.(lastTranscriptRef.current);
     }
+  });
+
+  // The persisted file's URI arrives on 'audioend' (not on 'result'). On
+  // Android it fires after the final result, so handleFinalTranscript waits for it.
+  useSTTEvent('audioend', (e) => {
+    if (e?.uri) audioUriRef.current = e.uri;
+    audioEndedRef.current = true;
+    audioEndWaiterRef.current?.();
+    audioEndWaiterRef.current = null;
   });
 
   useSTTEvent('error', (e) => {
@@ -813,9 +842,20 @@ export default function HomeScreen({ navigation, route }) {
     // Stop the FAB pulse and recording indicator
     setIsRecording(false);
     stopFabPulse();
+    clearRecordingTimers();
+
+    // A final 'result' can arrive before 'audioend' — wait briefly so the
+    // persisted file is complete and its URI is known.
+    if (persistAudioRef.current && !audioEndedRef.current) {
+      await new Promise((resolve) => {
+        audioEndWaiterRef.current = resolve;
+        setTimeout(resolve, 1500);
+      });
+      audioEndWaiterRef.current = null;
+    }
 
     // Nothing captured → let the user know and reset quietly
-    if (!trimmed) {
+    if (!trimmed && !audioUriRef.current) {
       setVoiceStatus('idle');
       setVoiceTranscript('');
       hasNavigatedRef.current = false;
@@ -826,6 +866,40 @@ export default function HomeScreen({ navigation, route }) {
     // Show "Creating…" pill while we work
     setVoiceStatus('creating');
     setVoiceTranscript('');
+
+    // ── Whisper (server) first, when we have a recording ──────────────────
+    const uri = audioUriRef.current;
+    audioUriRef.current = null; // consume immediately
+    if (uri) {
+      try {
+        const formData = new FormData();
+        // expo-speech-recognition persists 16 kHz PCM WAV on Android and iOS
+        formData.append('audio', { uri, type: 'audio/wav', name: 'voice.wav' });
+        formData.append('tz', Intl.DateTimeFormat().resolvedOptions().timeZone || 'Europe/Zurich');
+        const response = await API.post('/voice', formData, {
+          headers: { 'Content-Type': 'multipart/form-data' },
+          timeout: 20000,
+        });
+        if (response.status === 201 || response.status === 200) {
+          const title = response.data?.data?.event?.title || 'Event';
+          setVoiceStatus('idle');
+          hasNavigatedRef.current = false;
+          fetchEvents();
+          showSuccessToast(`✓ "${title}" created`);
+          return;
+        }
+      } catch (_err) {
+        // Groq failed or server error → fall through to local path
+      }
+    }
+
+    // ── Fallback: local parseVoiceInput path ──────────────────────────────
+    if (!trimmed) {
+      setVoiceStatus('idle');
+      hasNavigatedRef.current = false;
+      showSuccessToast("Couldn't hear you — try again");
+      return;
+    }
 
     // Parse — if no title found use the full raw transcript as the title
     const parsed = parseVoiceInput(trimmed);
@@ -918,7 +992,7 @@ export default function HomeScreen({ navigation, route }) {
       hasNavigatedRef.current = false;
       showSuccessToast('Could not create event — try again');
     }
-  }, [stopFabPulse, fetchEvents, showSuccessToast, members, user]);
+  }, [stopFabPulse, clearRecordingTimers, fetchEvents, showSuccessToast, members, user]);
 
   // Long-press on FAB → start recording
   const handleFabLongPress = useCallback(async () => {
@@ -926,6 +1000,9 @@ export default function HomeScreen({ navigation, route }) {
     setIsRecording(true);
     isRecordingRef.current  = true;   // update ref immediately (state is async)
     lastTranscriptRef.current = '';   // clear leftovers from any previous session
+    audioUriRef.current       = null;
+    audioEndedRef.current     = false;
+    persistAudioRef.current   = false;
     setVoiceStatus('listening');
     setVoiceTranscript('');
     startFabPulse();
@@ -946,7 +1023,17 @@ export default function HomeScreen({ navigation, route }) {
           stopFabPulse();
           return;
         }
-        ExpoSpeechRecognitionModule.start({ lang: 'en-US', interimResults: true, continuous: false });
+        // Persist audio for Whisper only on Android 13+ (API 33); elsewhere
+        // keep the on-device transcript path.
+        persistAudioRef.current = Platform.OS === 'android' && Platform.Version >= 33;
+        ExpoSpeechRecognitionModule.start({
+          lang: 'en-US', interimResults: true, continuous: false,
+          ...(persistAudioRef.current && { recordingOptions: { persist: true } }),
+        });
+        // 30 s max, with a seconds counter in the pill
+        clearRecordingTimers();
+        autoStopTimerRef.current  = setTimeout(() => { handleFabRelease(); }, 30000);
+        recordingTimerRef.current = setInterval(() => setRecordingSeconds(s => s + 1), 1000);
       } catch (err) {
         console.warn('Could not start speech recognition:', err);
         setIsRecording(false);
@@ -965,12 +1052,14 @@ export default function HomeScreen({ navigation, route }) {
     }
     // In Expo Go (no STT): pill shows "Listening…" and releasing triggers the
     // fallback path via handleFabRelease → handleFinalTranscript('').
-  }, [isRecording, startFabPulse, stopFabPulse]);
+  // handleFabRelease is declared below; the auto-stop callback reads it at fire time.
+  }, [isRecording, startFabPulse, stopFabPulse, clearRecordingTimers]);
 
   // PressOut on FAB → stop recording.
   // Use isRecordingRef (not state) — state update from onLongPress is async
   // and may not have committed by the time onPressOut fires.
   const handleFabRelease = useCallback(() => {
+    clearRecordingTimers(); // before the guard: STT may have ended on its own
     if (!isRecordingRef.current) return;
     if (STT_AVAILABLE) {
       try { ExpoSpeechRecognitionModule.stop(); } catch (_) {}
@@ -978,7 +1067,7 @@ export default function HomeScreen({ navigation, route }) {
       // (works on both iOS and Android, even when isFinal is never set).
     }
     // No STT: handleFabLongPress already reset state and showed the toast
-  }, []);
+  }, [clearRecordingTimers]);
 
   // Refresh on mount and every account/family resolution or change. Cache
   // fallback happens inside this guarded refresh, never an unscoped seed.
@@ -1518,7 +1607,7 @@ export default function HomeScreen({ navigation, route }) {
             <Text style={styles.voicePillText}>
               {voiceStatus === 'creating'    ? 'Creating…'
                : voiceStatus === 'processing' ? 'Processing…'
-               : 'Listening…'}
+               : 'Listening… (' + recordingSeconds + 's)'}
             </Text>
             {voiceTranscript ? (
               <Text style={styles.voicePillTranscript} numberOfLines={2}>{voiceTranscript}</Text>

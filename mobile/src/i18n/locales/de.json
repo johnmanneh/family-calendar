@@ -402,5 +402,13 @@
     "select_child": "Wer wird abgeholt?",
     "select_person": "Wer holt ab?",
     "assign": "Zuweisen"
+  },
+  "voice": {
+    "listening": "Aufnahme…",
+    "creating": "Erstelle…",
+    "processing": "Verarbeite…",
+    "no_audio": "Nichts gehört — bitte nochmal",
+    "error": "Konnte nicht erstellen — bitte nochmal",
+    "auto_stopped": "Gestoppt (max. 30s)"
   }
 }

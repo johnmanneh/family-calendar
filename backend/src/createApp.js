@@ -13,6 +13,7 @@ const groupRoutes        = require('./routes/groups');
 const streamRoutes       = require('./routes/stream');
 const notificationRoutes = require('./routes/notifications');
 const scanRoutes         = require('./routes/scan');
+const voiceRoutes        = require('./routes/voice');
 const chatRoutes         = require('./routes/chat');
 const pickupRoutes       = require('./routes/pickups');
 const joinRoutes         = require('./routes/join');
@@ -55,6 +56,7 @@ function createApp() {
   app.use('/api/chat',          chatRoutes);
   app.use('/api/join',          joinRoutes);
   app.use('/api/scan',          scanRoutes);
+  app.use('/api/voice',         voiceRoutes);
   app.use('/api/pickups',       pickupRoutes);
   app.use('/api/public',        publicRoutes);
 
