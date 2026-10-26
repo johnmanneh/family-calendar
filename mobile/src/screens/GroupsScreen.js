@@ -351,7 +351,7 @@ export default function GroupsScreen({ navigation }) {
       {selectedGroup ? (
         <GroupDetail
           group={selectedGroup}
-          onBack={() => setSelectedGroup(null)}
+          onBack={() => { setSelectedGroup(null); fetchGroups(); }}
           navigation={navigation}
         />
       ) : loading ? (
