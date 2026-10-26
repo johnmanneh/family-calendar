@@ -1458,6 +1458,27 @@ export default function HomeScreen({ navigation, route }) {
             style={styles.membersRow}
             contentContainerStyle={styles.membersContent}
           >
+            {/* "All" first — clears the person/group filter. Only useful when there is something to filter. */}
+            {(sortedMembers.length > 1 || myGroups.length > 0) && (
+              <TouchableOpacity
+                style={styles.bubble}
+                onPress={clearFilter}
+                accessibilityRole="button"
+                accessibilityState={{ selected: selectedFilter.type === null }}
+              >
+                <View style={styles.bubbleHaloWrap}>
+                  {selectedFilter.type === null && (
+                    <View style={[styles.bubbleHalo, { backgroundColor: '#1a8fa8', opacity: 0.25 }]} />
+                  )}
+                  <View style={[styles.bubbleCircle, styles.bubbleAllCircle]}>
+                    <Ionicons name="people" size={18} color="#1a8fa8" />
+                  </View>
+                </View>
+                <Text style={[styles.bubbleName, selectedFilter.type === null && { color: '#1a8fa8', fontWeight: '700' }]} numberOfLines={1}>
+                  {t('home.filter_all')}
+                </Text>
+              </TouchableOpacity>
+            )}
             {sortedMembers.map((member) => (
               <MemberBubble
                 key={member.id}
@@ -1479,27 +1500,6 @@ export default function HomeScreen({ navigation, route }) {
                 ))}
               />
             ))}
-            {/* "All" — clears the person/group filter. Only useful when there is something to filter. */}
-            {(sortedMembers.length > 1 || myGroups.length > 0) && (
-              <TouchableOpacity
-                style={styles.bubble}
-                onPress={clearFilter}
-                accessibilityRole="button"
-                accessibilityState={{ selected: selectedFilter.type === null }}
-              >
-                <View style={styles.bubbleHaloWrap}>
-                  {selectedFilter.type === null && (
-                    <View style={[styles.bubbleHalo, { backgroundColor: '#1a8fa8', opacity: 0.25 }]} />
-                  )}
-                  <View style={[styles.bubbleCircle, styles.bubbleAllCircle]}>
-                    <Ionicons name="people" size={18} color="#1a8fa8" />
-                  </View>
-                </View>
-                <Text style={[styles.bubbleName, selectedFilter.type === null && { color: '#1a8fa8', fontWeight: '700' }]} numberOfLines={1}>
-                  {t('home.filter_all')}
-                </Text>
-              </TouchableOpacity>
-            )}
           </ScrollView>
         </View>
       )}
