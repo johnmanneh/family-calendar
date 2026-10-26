@@ -10,7 +10,7 @@ function homeLifecycle(deps, observe) {
   const source = fs.readFileSync(path.join(__dirname, '../../../mobile/src/screens/HomeScreen.js'), 'utf8');
   const ast = babel.parseSync(source, { configFile: false, babelrc: false, parserOpts: { plugins: ['jsx'] } });
   const fn = ast.program.body.find(n => n.type === 'ExportDefaultDeclaration').declaration;
-  const names = new Set(['user', 'family', 'familyIdRef', 'requestId', 'events', 'tasks', 'loading', 'refreshing', 'selectedMember', 'myGroups', 'pendingCount', 'notifUnread', 'chatUnread', 'isOffline', 'cacheLabel', 'fetchEvents', 'fetchPendingCount', 'fetchNotifUnread', 'lastFamilyId', 'activeScope', 'scopeRef', 'dataScope']);
+  const names = new Set(['user', 'family', 'familyIdRef', 'requestId', 'events', 'tasks', 'loading', 'refreshing', 'selectedFilter', 'clearFilter', 'myGroups', 'pendingCount', 'notifUnread', 'chatUnread', 'isOffline', 'cacheLabel', 'fetchEvents', 'fetchPendingCount', 'fetchNotifUnread', 'lastFamilyId', 'activeScope', 'scopeRef', 'dataScope']);
   const bindings = node => Object.keys(babel.types.getBindingIdentifiers(node));
   fn.body.body = fn.body.body.filter(n => {
     if (n.type === 'VariableDeclaration') return bindings(n).some(name => names.has(name));
@@ -22,7 +22,7 @@ function homeLifecycle(deps, observe) {
     } });
     return relevant;
   });
-  fn.body.body.push(babel.template.statement.ast('observe({ events, tasks, loading, refreshing, myGroups, selectedMember, isOffline, cacheLabel, pendingCount, notifUnread, chatUnread });'));
+  fn.body.body.push(babel.template.statement.ast('observe({ events, tasks, loading, refreshing, myGroups, selectedFilter, isOffline, cacheLabel, pendingCount, notifUnread, chatUnread });'));
   fn.body.body.push(babel.types.returnStatement(babel.types.nullLiteral()));
   const code = babel.transformFromAstSync(babel.types.file(babel.types.program([fn])), null, { configFile: false, babelrc: false }).code;
   return new Function('useState', 'useEffect', 'useCallback', 'useRef', 'observe', ...Object.keys(deps), `${code}; return HomeScreen;`)(React.useState, React.useEffect, React.useCallback, React.useRef, observe, ...Object.values(deps));

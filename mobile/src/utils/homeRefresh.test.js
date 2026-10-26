@@ -21,7 +21,7 @@ function setup() {
     API: { get: jest.fn() },
     setEvents: setter('events'), setTasks: setter('tasks'), setIsOffline: setter('offline'),
     setMyGroups: jest.fn(), setScope: jest.fn(), setCacheLabel: jest.fn(),
-    setSelectedMember: jest.fn(), setPendingCount: jest.fn(), setNotifUnread: jest.fn(), setChatUnread: jest.fn(),
+    clearFilter: jest.fn(), setPendingCount: jest.fn(), setNotifUnread: jest.fn(), setChatUnread: jest.fn(),
     dataScope: { current: JSON.stringify([1, 10]) },
     setLoading: jest.fn(), setRefreshing: jest.fn(),
     saveCache: jest.fn(), loadCache: jest.fn().mockResolvedValue({ events: state.events, tasks: state.tasks, savedAt: 'old' }),

@@ -149,6 +149,32 @@ function MemberBubble({ member, selected, onPress, onLongPress }) {
   );
 }
 
+// Group bubble — same shape as MemberBubble, with a people icon.
+// `selected` adds a teal halo so the user knows which filter is active.
+function GroupBubble({ group, selected, onPress }) {
+  const styles = useStyles();
+  return (
+    <TouchableOpacity
+      style={styles.bubble}
+      onPress={onPress}
+      accessibilityRole="button"
+      accessibilityState={{ selected }}
+    >
+      <View style={styles.bubbleHaloWrap}>
+        {selected && (
+          <View style={[styles.bubbleHalo, { backgroundColor: '#1a8fa8', opacity: 0.25 }]} />
+        )}
+        <View style={[styles.bubbleCircle, { backgroundColor: '#1a8fa8' }]}>
+          <Ionicons name="people-circle-outline" size={20} color="#fff" />
+        </View>
+      </View>
+      <Text style={[styles.bubbleName, selected && { color: '#1a8fa8', fontWeight: '700' }]} numberOfLines={1}>
+        {group.name}
+      </Text>
+    </TouchableOpacity>
+  );
+}
+
 // ─── Event row ───────────────────────────────────────────────────────────────
 // `eventTasks` are the tasks linked to this event — shown inline below it.
 
@@ -446,12 +472,14 @@ export default function HomeScreen({ navigation, route }) {
   const [tasks, setTasks] = useState([]);
   const [loading, setLoading] = useState(true);
   const [refreshing, setRefreshing] = useState(false);
-  const [selectedMember, setSelectedMember] = useState(null);
+  // One active bubble filter: type null = All, 'person' = person bubble, 'group' = group bubble
+  const [selectedFilter, setSelectedFilter] = useState({ type: null, id: null });
+  const clearFilter = () => setSelectedFilter({ type: null, id: null });
   // "See all <name>'s events" on a profile → open home filtered to that person
   useEffect(() => {
     const id = route?.params?.focusMemberId;
     if (id != null) {
-      setSelectedMember(id);
+      setSelectedFilter({ type: 'person', id });
       navigation.setParams({ focusMemberId: undefined });
     }
   }, [route?.params?.focusMemberId]);
@@ -598,7 +626,7 @@ export default function HomeScreen({ navigation, route }) {
       setSelectedDate(today);
       setResetSignal(n => n + 1);          // WeekStrip / MonthCalendar jump back
       closeSearch();                       // search text + category filter
-      setSelectedMember(null);             // person filter (bubble row)
+      clearFilter();                       // person/group filter (bubble row)
     });
     return () => sub.remove();
   }, [closeSearch]); // eslint-disable-line react-hooks/exhaustive-deps
@@ -684,7 +712,7 @@ export default function HomeScreen({ navigation, route }) {
       setEvents([]);
       setTasks([]);
       setMyGroups([]);
-      setSelectedMember(null);
+      clearFilter();
       setPendingCount(0);
       setNotifUnread(0);
       setChatUnread(0);
@@ -1126,11 +1154,18 @@ export default function HomeScreen({ navigation, route }) {
 
   // ── Filter ───────────────────────────────────────────────────────────────
 
-  // One person filter: a selected bubble shows events that person owns,
-  // created or attends; no selection (the "All" bubble) shows everything.
-  const memberFiltered = selectedMember
-    ? events.filter((e) => eventInvolvesPerson(e, selectedMember))
-    : events;
+  // One bubble filter: a person bubble shows events that person owns,
+  // created or attends; a group bubble shows events shared with that group;
+  // no selection (the "All" bubble) shows everything.
+  const memberFiltered = (() => {
+    if (selectedFilter.type === 'person') {
+      return events.filter((e) => eventInvolvesPerson(e, selectedFilter.id));
+    }
+    if (selectedFilter.type === 'group') {
+      return events.filter((e) => Array.isArray(e.group_ids) && e.group_ids.map(Number).includes(Number(selectedFilter.id)));
+    }
+    return events;
+  })();
 
   const q = searchQuery.trim().toLowerCase();
   const isSearchActive = q.length > 0 || selectedCategory !== '';
@@ -1152,10 +1187,11 @@ export default function HomeScreen({ navigation, route }) {
         .sort((a, b) => new Date(a.start_date) - new Date(b.start_date))
     : memberFiltered.filter(e => onSameDay(e.start_date, selectedDate, e.is_all_day));
 
-  // Tasks filtered by member; when search is active also filter by query + category
+  // Tasks filtered by person; tasks have no groups, so a group filter shows all tasks.
+  // When search is active also filter by query + category
   const memberFilteredTasks = (() => {
-    let list = selectedMember
-      ? tasks.filter(t => Number(t.assigned_to) === Number(selectedMember))
+    let list = selectedFilter.type === 'person'
+      ? tasks.filter(t => Number(t.assigned_to) === Number(selectedFilter.id))
       : tasks;
     if (isSearchActive) {
       if (selectedCategory) list = list.filter(t => t.category === selectedCategory);
@@ -1209,7 +1245,11 @@ export default function HomeScreen({ navigation, route }) {
 
   // ── Toggle member filter ──────────────────────────────────────────────────
   const handleMemberPress = (memberId) => {
-    setSelectedMember((prev) => (Number(prev) === Number(memberId) ? null : memberId));
+    setSelectedFilter((prev) => (
+      prev.type === 'person' && Number(prev.id) === Number(memberId)
+        ? { type: null, id: null }
+        : { type: 'person', id: memberId }
+    ));
   };
 
   // ── Complete a task ───────────────────────────────────────────────────────
@@ -1409,8 +1449,8 @@ export default function HomeScreen({ navigation, route }) {
         onSelect={(id) => { switchFamily(id); }}
       />
 
-      {/* ── Member bubbles — hidden when no members ── */}
-      {sortedMembers.length > 0 && (
+      {/* ── Member + group bubbles — hidden when there is nothing to show ── */}
+      {(sortedMembers.length > 0 || myGroups.length > 0) && (
         <View style={styles.membersRowWrapper}>
           <ScrollView
             horizontal
@@ -1422,28 +1462,40 @@ export default function HomeScreen({ navigation, route }) {
               <MemberBubble
                 key={member.id}
                 member={member}
-                selected={Number(selectedMember) === Number(member.id)}
+                selected={selectedFilter.type === 'person' && Number(selectedFilter.id) === Number(member.id)}
                 onPress={() => handleMemberPress(member.id)}
                 onLongPress={() => navigation.navigate('MemberProfile', { memberId: member.id })}
               />
             ))}
-            {/* "All" — clears the person filter. Only useful with 2+ people. */}
-            {sortedMembers.length > 1 && (
+            {myGroups.map((group) => (
+              <GroupBubble
+                key={`g-${group.id}`}
+                group={group}
+                selected={selectedFilter.type === 'group' && Number(selectedFilter.id) === Number(group.id)}
+                onPress={() => setSelectedFilter((prev) => (
+                  prev.type === 'group' && Number(prev.id) === Number(group.id)
+                    ? { type: null, id: null }
+                    : { type: 'group', id: group.id }
+                ))}
+              />
+            ))}
+            {/* "All" — clears the person/group filter. Only useful when there is something to filter. */}
+            {(sortedMembers.length > 1 || myGroups.length > 0) && (
               <TouchableOpacity
                 style={styles.bubble}
-                onPress={() => setSelectedMember(null)}
+                onPress={clearFilter}
                 accessibilityRole="button"
-                accessibilityState={{ selected: !selectedMember }}
+                accessibilityState={{ selected: selectedFilter.type === null }}
               >
                 <View style={styles.bubbleHaloWrap}>
-                  {!selectedMember && (
+                  {selectedFilter.type === null && (
                     <View style={[styles.bubbleHalo, { backgroundColor: '#1a8fa8', opacity: 0.25 }]} />
                   )}
                   <View style={[styles.bubbleCircle, styles.bubbleAllCircle]}>
                     <Ionicons name="people" size={18} color="#1a8fa8" />
                   </View>
                 </View>
-                <Text style={[styles.bubbleName, !selectedMember && { color: '#1a8fa8', fontWeight: '700' }]} numberOfLines={1}>
+                <Text style={[styles.bubbleName, selectedFilter.type === null && { color: '#1a8fa8', fontWeight: '700' }]} numberOfLines={1}>
                   {t('home.filter_all')}
                 </Text>
               </TouchableOpacity>
@@ -1551,7 +1603,7 @@ export default function HomeScreen({ navigation, route }) {
           // effect measures row positions and content height, and stale numbers
           // from the previous (longer) list made a short list tilt its last row
           // under the + button. A fresh list measures from scratch.
-          key={`${selectedMember ?? ''}|${selectedDate.toDateString()}|${isSearchActive ? 's' : ''}|${selectedCategory}`}
+          key={`${selectedFilter.type ?? ''}:${selectedFilter.id ?? ''}|${selectedDate.toDateString()}|${isSearchActive ? 's' : ''}|${selectedCategory}`}
           bottomInset={insets.bottom}
           data={listData}
           keyExtractor={(item) => item.key}
