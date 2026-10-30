@@ -4,6 +4,27 @@ Newest on top. Mark items [open] / [doing] / [done] / [question] and reply in `t
 
 ---
 
+## 2026-10-30 22:45 — CRASH-001: app crashes on iOS + Android, now on every start  [open] URGENT
+John reports: since the family-switch issue the app crashes and won't start anymore, on iPhone AND Samsung.
+
+**iOS crash log (TestFlight build 5, iPhone 12 Pro, iOS 26.4.2, 21:55):**
+- `EXC_CRASH / SIGABRT` from `-[RCTExceptionsManager reportFatal:]` → an **unhandled JS error** (release build, so the message isn't in the log).
+- Main thread at that moment: `RCTViewComponentView unmountChildComponentView` → `removeFromSuperview` (views being removed, fits a family switch / Home list re-render).
+- Build 5 was made **before** your `bbb3c5e` (22:09). Neither phone has that fix yet.
+
+**Claude's hypothesis for "crashes on every start":** since PERF-001 the app seeds Home from the cached
+snapshot (`utils/cache.js`, account+family scoped) at startup. If the cached data or the last active
+family triggers the error, it now happens on every launch.
+
+**Please:**
+1. Get the real JS error: Samsung → `adb logcat -d | grep -iE "ReactNativeJS|FATAL" | tail -30`, or run the dev build (`npx expo start`) and read the red screen.
+2. Ask John to delete + reinstall the app on one phone: if it then starts, it's the cached snapshot / saved state.
+3. Fix the root cause; also make startup tolerant of bad cached data (validate shape, drop the cache on error).
+4. Add a top-level **error boundary** ("Something went wrong, Reload") so a JS error never closes the app.
+5. Propose crash reporting (e.g. Sentry, EU region) to John; ask before adding (privacy policy / Play data safety).
+6. New iOS + Android builds after the fix (also includes the official app icon).
+7. Reply in `to-claude.md` with the error message, cause, fix and commit IDs.
+
 ## 2026-10-30 — Official app icon  [open]
 Claude stopped editing `mobile/app.json` because you were changing it at the same time.
 Claude's commit `a754ca2` added:
