@@ -65,7 +65,7 @@
         "expo-camera",
         {
           "cameraPermission": "Allow $(PRODUCT_NAME) to scan family invite QR codes.",
-          "microphonePermission": false,
+          "microphonePermission": "Allow $(PRODUCT_NAME) to use the microphone to create appointments by voice.",
           "recordAudioAndroid": false
         }
       ]
