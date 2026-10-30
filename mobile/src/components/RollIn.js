@@ -37,6 +37,7 @@ export function RollIn({ index = 0, style, children }) {
         style,
         {
           opacity: p,
+          transformOrigin: 'top',
           transform: [
             { perspective: 700 },
             { rotateX: p.interpolate({ inputRange: [0, 1], outputRange: [START_TILT, '0deg'] }) },

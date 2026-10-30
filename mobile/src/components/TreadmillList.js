@@ -83,6 +83,7 @@ function TreadmillCell({ children, style, onLayout, ...rest }) {
     });
     bottomStyle = {
       opacity: bottom.interpolate({ inputRange: [0, 1], outputRange: [0.08, 1] }),
+      transformOrigin: 'top',
       transform: [
         { perspective: 700 },
         { rotateX: bottom.interpolate({ inputRange: [0, 1], outputRange: [BOTTOM_TILT, '0deg'] }) },
@@ -106,6 +107,7 @@ function TreadmillCell({ children, style, onLayout, ...rest }) {
     const top = Animated.multiply(topRaw, engage);
     topStyle = {
       opacity: top.interpolate({ inputRange: [0, 1], outputRange: [1, 0.08] }),
+      transformOrigin: 'bottom',
       transform: [
         { perspective: 700 },
         { rotateX: top.interpolate({ inputRange: [0, 1], outputRange: ['0deg', TOP_TILT] }) },

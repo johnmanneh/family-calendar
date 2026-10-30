@@ -11,6 +11,7 @@ const make = c => StyleSheet.create({
     position: 'absolute',
     left: 8,
     width: DRAWER_WIDTH,
+    transformOrigin: 'left center',   // hinge for the drum roll (removing it cuts the panel in half mid-animation)
     backgroundColor: c.bg,
     borderRadius: 24,
     shadowColor: '#000',
