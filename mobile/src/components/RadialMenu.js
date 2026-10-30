@@ -28,7 +28,7 @@ import {
 import { Ionicons, MaterialCommunityIcons } from '@expo/vector-icons';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { useThemeColors } from '../theme';
-import { TILT_DIR } from './TreadmillList';
+import { TILT_DIR } from './treadmillRoll';
 import { SPRING, SPRING_DARK } from './icons/scanColors';
 
 // ── FAB constants (must match HomeScreen.styles.js) ──────────────────────────

@@ -1,5 +1,6 @@
 const pool = require('../../config/db');
 const { successResponse, errorResponse } = require('../../utils/response/responseHandlers');
+const { withFreshAvatar } = require('../../utils/avatarStore');
 
 // PATCH /api/family/active  { family_id }
 // Sets the user's active family. Returns updated family + members.
@@ -49,7 +50,7 @@ const setActiveFamily = async (req, res) => {
 
     return successResponse(res, 200, 'Active family updated', {
       family: family.rows[0],
-      members: members.rows,
+      members: members.rows.map((row) => withFreshAvatar(row)),
     });
 
   } catch (error) {

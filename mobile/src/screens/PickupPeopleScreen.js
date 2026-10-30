@@ -48,6 +48,7 @@ function PersonRow({ person, editingId, editName, editPhone, onEditName, onEditP
   const initials  = isInApp
     ? ([person.member_first_name?.[0], person.member_last_name?.[0]].filter(Boolean).join('').toUpperCase() || '?')
     : (displayName(person)[0] || '?').toUpperCase();
+  const [photoFailed, setPhotoFailed] = React.useState(false);
 
   if (isEditing) {
     // ── Edit mode: replace the row with input fields ──────────────────────
@@ -95,8 +96,8 @@ function PersonRow({ person, editingId, editName, editPhone, onEditName, onEditP
   return (
     <View style={styles.personRow}>
       {/* Avatar */}
-      {photo ? (
-        <Image source={{ uri: photo }} style={styles.personAvatar} />
+      {photo && !photoFailed ? (
+        <Image source={{ uri: photo }} style={styles.personAvatar} onError={() => setPhotoFailed(true)} />
       ) : (
         <View style={[styles.personAvatar, { backgroundColor: color }]}>
           <Text style={styles.personInitial}>{initials}</Text>

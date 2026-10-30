@@ -1,6 +1,7 @@
 const pool = require('../../config/db');
 const { ACTIVE_FAMILY_ORDER } = require('../../utils/activeFamily');
 const { successResponse, errorResponse } = require('../../utils/response/responseHandlers');
+const { withFreshAvatar } = require('../../utils/avatarStore');
 
 // The user's active family (see utils/activeFamily.js)
 async function myFamily(userId) {
@@ -36,7 +37,9 @@ const listPickupPeople = async (req, res) => {
       [fam.id]
     );
 
-    return successResponse(res, 200, 'Pickup people', { people: result.rows });
+    return successResponse(res, 200, 'Pickup people', {
+      people: result.rows.map((row) => withFreshAvatar(row, 'member_avatar_url', 'user_id')),
+    });
   } catch (err) {
     console.error('listPickupPeople error:', err.message);
     return errorResponse(res, 500, 'Server error');

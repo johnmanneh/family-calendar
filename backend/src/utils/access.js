@@ -1,4 +1,5 @@
 const pool = require('../config/db');
+const { withFreshAvatar } = require('./avatarStore');
 
 /**
  * access.js — one place that decides who may see or change an event and the
@@ -137,7 +138,9 @@ async function creatableCalendars(actorId) {
      ORDER BY u.id`,
     [actorId]
   );
-  return r.rows.sort((a, b) => (b.is_self - a.is_self) || String(a.first_name).localeCompare(b.first_name));
+  return r.rows
+    .map((row) => withFreshAvatar(row))
+    .sort((a, b) => (b.is_self - a.is_self) || String(a.first_name).localeCompare(b.first_name));
 }
 
 // May `actorId` invite `targetId` to `event`? Same family as the event, or

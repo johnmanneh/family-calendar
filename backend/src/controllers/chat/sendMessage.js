@@ -3,6 +3,7 @@ const sendPush = require('../../utils/sendPush');
 const { ACTIVE_FAMILY_ORDER } = require('../../utils/activeFamily');
 const { broadcast } = require('../../utils/sseClients');
 const { successResponse, errorResponse } = require('../../utils/response/responseHandlers');
+const { withFreshAvatar } = require('../../utils/avatarStore');
 
 // POST /api/chat — insert a message and broadcast to the family via SSE
 // Inner circle only (security pass-1). Outer circle users receive 403.
@@ -61,7 +62,7 @@ const sendMessage = async (req, res) => {
       user_id:    userId,
       first_name: sender.first_name,
       last_name:  sender.last_name,
-      avatar_url: sender.avatar_url,
+      avatar_url: withFreshAvatar({ id: userId, avatar_url: sender.avatar_url }).avatar_url,
       color:      sender.color,
       family_id:  familyId,
     };

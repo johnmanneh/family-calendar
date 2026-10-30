@@ -51,6 +51,7 @@ function MemberRow({ member, isMe, navigation }) {
   const initials = [member.first_name?.[0], member.last_name?.[0]]
     .filter(Boolean).join('').toUpperCase() || '?';
   const name = [member.first_name, member.last_name].filter(Boolean).join(' ') || '?';
+  const [photoFailed, setPhotoFailed] = React.useState(false);
 
   return (
     <TouchableOpacity
@@ -59,8 +60,8 @@ function MemberRow({ member, isMe, navigation }) {
       activeOpacity={0.7}
     >
       {/* Avatar */}
-      {photo ? (
-        <Image source={{ uri: photo }} style={styles.memberAvatar} />
+      {photo && !photoFailed ? (
+        <Image source={{ uri: photo }} style={styles.memberAvatar} onError={() => setPhotoFailed(true)} />
       ) : (
         <View style={[styles.memberAvatar, styles.memberAvatarInitials, { backgroundColor: color }]}>
           <Text style={styles.memberAvatarText}>{initials}</Text>

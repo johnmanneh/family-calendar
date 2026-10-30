@@ -19,7 +19,7 @@ import { useFamily } from '../context/FamilyContext';
 import { SERVER_URL } from '../api/axios';
 import { useStyles, DRAWER_WIDTH } from '../styles/DrawerMenu.styles';
 import { useColorScheme, useToggleTheme } from '../context/ThemeContext';
-import { TILT_DIR } from './TreadmillList';
+import { TILT_DIR } from './treadmillRoll';
 
 // ── Rolling row ─────────────────────────────────────────────────────────────
 // Same idea as the treadmill list, but gentle and only on open: each row rolls
@@ -156,6 +156,7 @@ export default function DrawerMenu({ controller, navigation, pendingCount = 0, n
   const avatarPhoto = me?.avatar_url
     ? (me.avatar_url.startsWith('http') ? me.avatar_url : `${SERVER_URL}${me.avatar_url}`)
     : null;
+  const [photoFailed, setPhotoFailed] = React.useState(false);
 
   const iconColor = isDark ? '#aeaeb2' : '#1d1d1f';
 
@@ -273,8 +274,8 @@ export default function DrawerMenu({ controller, navigation, pendingCount = 0, n
                 onPress={() => go('MemberProfile', { memberId: user?.id })}
                 activeOpacity={0.7}
               >
-                {avatarPhoto ? (
-                  <Image source={{ uri: avatarPhoto }} style={styles.avatar} />
+                {avatarPhoto && !photoFailed ? (
+                  <Image source={{ uri: avatarPhoto }} style={styles.avatar} onError={() => setPhotoFailed(true)} />
                 ) : (
                   <View style={[styles.avatar, { backgroundColor: memberColor }]}>
                     <Text style={styles.avatarText}>{initials}</Text>

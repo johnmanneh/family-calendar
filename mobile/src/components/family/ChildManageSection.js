@@ -16,6 +16,7 @@ export default function ChildManageSection({ child, onSaved, onRemoved, onScan }
   const [color, setColor] = useState(child.color || '#f48c06');
   const [msg, setMsg] = useState('');
   const [photo, setPhoto] = useState(child.avatar_url || null);
+  const [photoFailed, setPhotoFailed] = useState(false);
   const [uploading, setUploading] = useState(false);
 
   // ── Photo: camera or library → upload straight away ──
@@ -111,8 +112,8 @@ export default function ChildManageSection({ child, onSaved, onRemoved, onScan }
       <Text style={s.header}>{t('child.photo')}</Text>
       <View style={[s.card, { flexDirection: 'row', alignItems: 'center' }]}>
         <TouchableOpacity onPress={choosePhoto} disabled={uploading} activeOpacity={0.8}>
-          {photo ? (
-            <Image source={{ uri: photo }} style={{ width: 64, height: 64, borderRadius: 32 }} />
+          {photo && !photoFailed ? (
+            <Image source={{ uri: photo }} style={{ width: 64, height: 64, borderRadius: 32 }} onError={() => setPhotoFailed(true)} />
           ) : (
             <View style={{ width: 64, height: 64, borderRadius: 32, backgroundColor: color, alignItems: 'center', justifyContent: 'center' }}>
               <Text style={{ color: '#fff', fontSize: 22, fontWeight: '700' }}>{initials}</Text>

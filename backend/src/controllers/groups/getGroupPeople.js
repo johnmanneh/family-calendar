@@ -1,5 +1,6 @@
 const pool = require('../../config/db');
 const { successResponse, errorResponse } = require('../../utils/response/responseHandlers');
+const { withFreshAvatar } = require('../../utils/avatarStore');
 
 /**
  * GET /api/groups/people — everyone you share a group with who isn't in your
@@ -26,7 +27,9 @@ const getGroupPeople = async (req, res) => {
        ORDER BY u.first_name`,
       [userId]
     );
-    return successResponse(res, 200, 'Group people retrieved', { people: result.rows });
+    return successResponse(res, 200, 'Group people retrieved', {
+      people: result.rows.map((row) => withFreshAvatar(row)),
+    });
   } catch (error) {
     console.error('getGroupPeople error:', error.message);
     return errorResponse(res, 500, 'Server error');

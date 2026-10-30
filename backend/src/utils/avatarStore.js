@@ -40,10 +40,20 @@ const receiveAvatar = (req, res, next) => {
   });
 };
 
-// ── Upload ────────────────────────────────────────────────────────────────────
-// Stores the image as type 'authenticated' so it never has a guessable URL.
-// Face crop is baked in at upload time (400×400) — no on-the-fly transform.
-// Returns a time-limited signed download URL (expires in 5 minutes).
+// ── Signed delivery URL ───────────────────────────────────────────────────────
+// iOS Image cannot load private_download_url (Cloudinary API download, often a
+// redirect). A signed res.cloudinary.com delivery URL is a normal image URL.
+// Authenticated assets stay signed. Legacy public uploads (avatars/avatar-N)
+// are unsigned type=upload so old photos still resolve.
+function _deliveryUrl(publicId, { authenticated }) {
+  return cloudinary.utils.url(publicId, {
+    type: authenticated ? 'authenticated' : 'upload',
+    sign_url: authenticated,
+    secure: true,
+    format: 'jpg',
+  });
+}
+
 function storeAvatar(personId, buffer) {
   return new Promise((resolve, reject) => {
     let publicId;
@@ -63,16 +73,7 @@ function storeAvatar(personId, buffer) {
       },
       (error) => {
         if (error) return reject(error);
-        const url = cloudinary.utils.private_download_url(
-          `avatars/${publicId}`,
-          'jpg',
-          {
-            type:       'authenticated',
-            expires_at: Math.floor(Date.now() / 1000) + 300,
-            attachment: false,
-          }
-        );
-        resolve(url);
+        resolve(_deliveryUrl(`avatars/${publicId}`, { authenticated: true }));
       }
     );
     stream.end(buffer);
@@ -80,18 +81,13 @@ function storeAvatar(personId, buffer) {
 }
 
 // ── Signed URL on demand ──────────────────────────────────────────────────────
-// Use this to refresh a download URL without re-uploading.
-function getAvatarUrl(personId) {
-  const publicId = _hmacPublicId(personId);
-  return cloudinary.utils.private_download_url(
-    `avatars/${publicId}`,
-    'jpg',
-    {
-      type:       'authenticated',
-      expires_at: Math.floor(Date.now() / 1000) + 300,
-      attachment: false,
-    }
-  );
+// Use this to refresh a URL without re-uploading. Pass { legacy: true } for
+// photos uploaded before the HMAC change (public id avatars/avatar-<id>).
+function getAvatarUrl(personId, { legacy = false } = {}) {
+  if (legacy) {
+    return _deliveryUrl(`avatars/avatar-${personId}`, { authenticated: false });
+  }
+  return _deliveryUrl(`avatars/${_hmacPublicId(personId)}`, { authenticated: true });
 }
 
 // ── Delete ────────────────────────────────────────────────────────────────────
@@ -105,4 +101,21 @@ async function deleteAvatar(personId) {
   ]);
 }
 
-module.exports = { receiveAvatar, storeAvatar, getAvatarUrl, deleteAvatar };
+// Replace a stored avatar_url with a URL the phone can load now.
+// The column keeps a marker (or an old Cloudinary URL). The image URL is signed
+// on each read so a 5-minute download link is never what iOS Image receives.
+// A row with no photo stays empty so the app shows initials.
+function withFreshAvatar(row, urlKey = 'avatar_url', idKey = 'id') {
+  if (!row || !row[urlKey]) return row;
+  const id = row[idKey] ?? row.user_id;
+  if (id == null) return row;
+  const stored = String(row[urlKey]);
+  const legacy = stored.includes(`avatar-${id}`) && !stored.includes('/authenticated/');
+  try {
+    return { ...row, [urlKey]: getAvatarUrl(id, { legacy }) };
+  } catch {
+    return { ...row, [urlKey]: null };
+  }
+}
+
+module.exports = { receiveAvatar, storeAvatar, getAvatarUrl, deleteAvatar, withFreshAvatar };

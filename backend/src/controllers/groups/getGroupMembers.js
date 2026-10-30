@@ -1,5 +1,6 @@
 const pool = require('../../config/db');
 const { successResponse, errorResponse } = require('../../utils/response/responseHandlers');
+const { withFreshAvatar } = require('../../utils/avatarStore');
 
 const getGroupMembers = async (req, res) => {
   const userId = req.user.id;
@@ -25,7 +26,9 @@ const getGroupMembers = async (req, res) => {
       [groupId]
     );
 
-    return successResponse(res, 200, 'Group members retrieved', { members: result.rows });
+    return successResponse(res, 200, 'Group members retrieved', {
+      members: result.rows.map((row) => withFreshAvatar(row)),
+    });
   } catch (error) {
     return errorResponse(res, 500, 'Server error');
   }

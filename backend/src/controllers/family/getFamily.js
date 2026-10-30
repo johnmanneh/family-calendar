@@ -1,6 +1,7 @@
 const pool = require('../../config/db');
 const { ACTIVE_FAMILY_ORDER } = require('../../utils/activeFamily');
 const { successResponse, errorResponse } = require('../../utils/response/responseHandlers');
+const { withFreshAvatar } = require('../../utils/avatarStore');
 
 const getFamily = async (req, res) => {
   const userId = req.user.id;
@@ -42,7 +43,7 @@ const getFamily = async (req, res) => {
 
     return successResponse(res, 200, 'Family retrieved successfully', {
       family: familyData,
-      members: members.rows,
+      members: members.rows.map((row) => withFreshAvatar(row)),
     });
 
   } catch (error) {

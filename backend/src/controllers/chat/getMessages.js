@@ -1,6 +1,7 @@
 const pool = require('../../config/db');
 const { ACTIVE_FAMILY_ORDER } = require('../../utils/activeFamily');
 const { successResponse, errorResponse } = require('../../utils/response/responseHandlers');
+const { withFreshAvatar } = require('../../utils/avatarStore');
 
 // GET /api/chat — last 50 messages for the user's family, oldest-first for display
 // Inner circle only (security pass-1). Outer circle users receive 403.
@@ -48,7 +49,7 @@ const getMessages = async (req, res) => {
     );
 
     // Reverse so the oldest is first — easier to render top-to-bottom
-    const messages = result.rows.reverse();
+    const messages = result.rows.reverse().map((row) => withFreshAvatar(row, 'avatar_url', 'user_id'));
     return successResponse(res, 200, 'Messages fetched', { messages });
   } catch (err) {
     console.error('getMessages error:', err.message);

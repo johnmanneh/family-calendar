@@ -1,5 +1,6 @@
 const pool = require('../../config/db');
 const { successResponse, errorResponse } = require('../../utils/response/responseHandlers');
+const { withFreshAvatar } = require('../../utils/avatarStore');
 
 const me = async (req, res) => {
   const userId = req.user.id;
@@ -12,7 +13,7 @@ const me = async (req, res) => {
       return errorResponse(res, 404, 'User not found');
     }
     return successResponse(res, 200, 'User fetched', {
-      user: result.rows[0]
+      user: withFreshAvatar(result.rows[0])
     });
   } catch (error) {
     return errorResponse(res, 500, 'Server error');

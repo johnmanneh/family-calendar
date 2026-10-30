@@ -17,7 +17,7 @@ process.env.CLOUDINARY_CLOUD_NAME = 'test-cloud';
 // ── Mock the cloudinary v2 SDK ────────────────────────────────────────────────
 const mockUploadStream  = jest.fn();
 const mockDestroy       = jest.fn();
-const mockPrivateUrl    = jest.fn();
+const mockSignedUrl     = jest.fn();
 
 jest.mock('cloudinary', () => ({
   v2: {
@@ -27,7 +27,7 @@ jest.mock('cloudinary', () => ({
       destroy: mockDestroy,
     },
     utils: {
-      private_download_url: mockPrivateUrl,
+      url: mockSignedUrl,
     },
   },
 }));
@@ -70,7 +70,7 @@ describe('avatarStore — HMAC public_id', () => {
     const expected = expectedPublicId(personId);
 
     mockUploadStream.mockImplementation((opts, cb) => simulateUpload(opts, cb));
-    mockPrivateUrl.mockReturnValue('https://signed-url');
+    mockSignedUrl.mockReturnValue('https://signed-url');
 
     await avatarStore.storeAvatar(personId, Buffer.from('fake-image'));
 
@@ -84,7 +84,7 @@ describe('avatarStore — HMAC public_id', () => {
   // ── 2. Upload must be type = 'authenticated' ──────────────────────────────
   test('storeAvatar passes type: authenticated to upload_stream', async () => {
     mockUploadStream.mockImplementation((opts, cb) => simulateUpload(opts, cb));
-    mockPrivateUrl.mockReturnValue('https://signed-url');
+    mockSignedUrl.mockReturnValue('https://signed-url');
 
     await avatarStore.storeAvatar(7, Buffer.from('img'));
 
@@ -95,7 +95,7 @@ describe('avatarStore — HMAC public_id', () => {
   // ── 3. Upload sets overwrite + invalidate ─────────────────────────────────
   test('storeAvatar sets overwrite=true and invalidate=true', async () => {
     mockUploadStream.mockImplementation((opts, cb) => simulateUpload(opts, cb));
-    mockPrivateUrl.mockReturnValue('https://signed-url');
+    mockSignedUrl.mockReturnValue('https://signed-url');
 
     await avatarStore.storeAvatar(7, Buffer.from('img'));
 
@@ -107,7 +107,7 @@ describe('avatarStore — HMAC public_id', () => {
   // ── 4. Face crop is applied on upload ─────────────────────────────────────
   test('storeAvatar requests 400×400 face crop on upload', async () => {
     mockUploadStream.mockImplementation((opts, cb) => simulateUpload(opts, cb));
-    mockPrivateUrl.mockReturnValue('https://signed-url');
+    mockSignedUrl.mockReturnValue('https://signed-url');
 
     await avatarStore.storeAvatar(7, Buffer.from('img'));
 
@@ -116,33 +116,52 @@ describe('avatarStore — HMAC public_id', () => {
     expect(tf).toMatchObject({ width: 400, height: 400, crop: 'fill', gravity: 'face' });
   });
 
-  // ── 5. Return value is private_download_url (not secure_url) ─────────────
-  test('storeAvatar returns the private_download_url', async () => {
+  // ── 5. Return value is a signed delivery URL (not the API download URL) ──
+  test('storeAvatar returns a signed delivery URL iOS Image can load', async () => {
     mockUploadStream.mockImplementation((opts, cb) => simulateUpload(opts, cb));
-    const expectedUrl = 'https://res.cloudinary.com/test-cloud/authenticated/s--sig--/avatars/hash.jpg';
-    mockPrivateUrl.mockReturnValue(expectedUrl);
+    const expectedUrl = 'https://res.cloudinary.com/test-cloud/image/authenticated/s--sig--/avatars/hash.jpg';
+    mockSignedUrl.mockReturnValue(expectedUrl);
 
     const result = await avatarStore.storeAvatar(7, Buffer.from('img'));
     expect(result).toBe(expectedUrl);
-    expect(mockPrivateUrl).toHaveBeenCalledTimes(1);
+    expect(mockSignedUrl).toHaveBeenCalledTimes(1);
+    const [publicId, urlOpts] = mockSignedUrl.mock.calls[0];
+    expect(publicId).toBe(`avatars/${expectedPublicId(7)}`);
+    expect(urlOpts).toMatchObject({
+      type: 'authenticated',
+      sign_url: true,
+      secure: true,
+      format: 'jpg',
+    });
+    expect(urlOpts.expires_at).toBeUndefined();
   });
 
-  // ── 6. private_download_url gets type=authenticated, expires now+300 ─────
-  test('storeAvatar calls private_download_url with authenticated type and ~300s expiry', async () => {
-    mockUploadStream.mockImplementation((opts, cb) => simulateUpload(opts, cb));
-    mockPrivateUrl.mockReturnValue('https://signed-url');
+  // ── 6. getAvatarUrl signs the same delivery URL for a new upload ─────────
+  test('getAvatarUrl signs the HMAC delivery URL, not private_download_url', () => {
+    const expectedUrl = 'https://res.cloudinary.com/test-cloud/image/authenticated/s--sig--/avatars/hash.jpg';
+    mockSignedUrl.mockReturnValue(expectedUrl);
 
-    const before = Math.floor(Date.now() / 1000);
-    await avatarStore.storeAvatar(7, Buffer.from('img'));
-    const after = Math.floor(Date.now() / 1000);
+    const result = avatarStore.getAvatarUrl(7);
 
-    expect(mockPrivateUrl).toHaveBeenCalledTimes(1);
-    const [, , urlOpts] = mockPrivateUrl.mock.calls[0];
+    expect(result).toBe(expectedUrl);
+    expect(mockSignedUrl).toHaveBeenCalledTimes(1);
+    const [publicId, urlOpts] = mockSignedUrl.mock.calls[0];
+    expect(publicId).toBe(`avatars/${expectedPublicId(7)}`);
     expect(urlOpts.type).toBe('authenticated');
-    expect(urlOpts.attachment).toBe(false);
-    // expires_at must be within [now+290, now+310]
-    expect(urlOpts.expires_at).toBeGreaterThanOrEqual(before + 290);
-    expect(urlOpts.expires_at).toBeLessThanOrEqual(after + 310);
+    expect(urlOpts.sign_url).toBe(true);
+    expect(urlOpts.secure).toBe(true);
+  });
+
+  // ── 6b. old public uploads still resolve ─────────────────────────────────
+  test('getAvatarUrl falls back to the legacy public id when asked', () => {
+    mockSignedUrl.mockReturnValue('https://legacy');
+
+    avatarStore.getAvatarUrl(42, { legacy: true });
+
+    const [publicId, urlOpts] = mockSignedUrl.mock.calls[0];
+    expect(publicId).toBe('avatars/avatar-42');
+    expect(urlOpts.type).toBe('upload');
+    expect(urlOpts.sign_url).toBe(false);
   });
 
   // ── 7. deleteAvatar destroys both HMAC id and legacy id ──────────────────
@@ -158,6 +177,38 @@ describe('avatarStore — HMAC public_id', () => {
     expect(destroyedIds.some(id => id.includes(hmacId))).toBe(true);
     // Must also include the legacy path
     expect(destroyedIds.some(id => id.includes(`avatar-42`))).toBe(true);
+  });
+
+  test('withFreshAvatar replaces a stored download URL with a signed HMAC delivery URL', () => {
+    mockSignedUrl.mockReturnValue('https://fresh');
+    const { withFreshAvatar } = avatarStore;
+    const row = withFreshAvatar({
+      id: 7,
+      avatar_url: 'https://api.cloudinary.com/v1_1/test/image/download?timestamp=1',
+    });
+    expect(row.avatar_url).toBe('https://fresh');
+    const [publicId, urlOpts] = mockSignedUrl.mock.calls[0];
+    expect(publicId).toBe(`avatars/${expectedPublicId(7)}`);
+    expect(urlOpts.type).toBe('authenticated');
+    expect(urlOpts.sign_url).toBe(true);
+  });
+
+  test('withFreshAvatar keeps a legacy public upload on the old public id', () => {
+    mockSignedUrl.mockReturnValue('https://legacy');
+    const row = avatarStore.withFreshAvatar({
+      id: 42,
+      avatar_url: 'https://res.cloudinary.com/test/image/upload/avatars/avatar-42.jpg',
+    });
+    expect(row.avatar_url).toBe('https://legacy');
+    const [publicId, urlOpts] = mockSignedUrl.mock.calls[0];
+    expect(publicId).toBe('avatars/avatar-42');
+    expect(urlOpts.type).toBe('upload');
+  });
+
+  test('withFreshAvatar leaves a member with no photo empty', () => {
+    const row = avatarStore.withFreshAvatar({ id: 3, avatar_url: null });
+    expect(row.avatar_url).toBeNull();
+    expect(mockSignedUrl).not.toHaveBeenCalled();
   });
 
   // ── 8. Throws when neither HMAC key nor API secret is set ─────────────────

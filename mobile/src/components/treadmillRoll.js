@@ -18,6 +18,9 @@
  */
 export const MIN_VIEWPORT = 120;
 
+// Same direction on iOS and Android. A platform flip inverted iOS rotateX.
+export const TILT_DIR = 1;
+
 export function canRoll(ctx) {
   if (!ctx || !ctx.dragged) return false;
   if (!(ctx.viewportH >= MIN_VIEWPORT)) return false;

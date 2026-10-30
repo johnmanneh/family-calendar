@@ -43,12 +43,13 @@ function MessageRow({ msg, isMe, navigation }) {
   const photoUri = msg.avatar_url
     ? (msg.avatar_url.startsWith('http') ? msg.avatar_url : `${SERVER_URL}${msg.avatar_url}`)
     : null;
+  const [photoFailed, setPhotoFailed] = React.useState(false);
 
   return (
     <View style={[styles.msgRow, isMe && styles.msgRowMe]}>
       {!isMe && (
-        photoUri ? (
-          <Image source={{ uri: photoUri }} style={styles.avatar} />
+        photoUri && !photoFailed ? (
+          <Image source={{ uri: photoUri }} style={styles.avatar} onError={() => setPhotoFailed(true)} />
         ) : (
           <View style={[styles.avatar, { backgroundColor: msg.color || '#1a8fa8' }]}>
             <Text style={styles.avatarText}>{initials(msg)}</Text>

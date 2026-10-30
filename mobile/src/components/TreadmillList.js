@@ -23,8 +23,8 @@
  */
 
 import React, { createContext, useContext, useRef, useState } from 'react';
-import { Animated, Platform, View } from 'react-native';
-import { canRoll } from './treadmillRoll';
+import { Animated, View } from 'react-native';
+import { canRoll, TILT_DIR } from './treadmillRoll';
 
 export { canRoll };
 
@@ -40,9 +40,8 @@ export const ROLL_ZONE = 64;
 // tilted when the list is at rest.
 export const TOP_ZONE  = 48;
 
-// iOS and Android apply rotateX in opposite directions. The angles below were
-// tuned on Android; on iOS we flip them so both platforms tip rows AWAY.
-export const TILT_DIR = Platform.OS === 'ios' ? -1 : 1;
+// Both platforms apply rotateX the same way (RN new architecture). The old
+// iOS flip inverted the treadmill so the top edge came toward the viewer.
 const BOTTOM_TILT = `${-60 * TILT_DIR}deg`;   // bottom edge recedes
 const TOP_TILT    = `${ 60 * TILT_DIR}deg`;   // top edge recedes
 
@@ -84,7 +83,6 @@ function TreadmillCell({ children, style, onLayout, ...rest }) {
     });
     bottomStyle = {
       opacity: bottom.interpolate({ inputRange: [0, 1], outputRange: [0.08, 1] }),
-      transformOrigin: 'top',
       transform: [
         { perspective: 700 },
         { rotateX: bottom.interpolate({ inputRange: [0, 1], outputRange: [BOTTOM_TILT, '0deg'] }) },
@@ -108,7 +106,6 @@ function TreadmillCell({ children, style, onLayout, ...rest }) {
     const top = Animated.multiply(topRaw, engage);
     topStyle = {
       opacity: top.interpolate({ inputRange: [0, 1], outputRange: [1, 0.08] }),
-      transformOrigin: 'bottom',
       transform: [
         { perspective: 700 },
         { rotateX: top.interpolate({ inputRange: [0, 1], outputRange: ['0deg', TOP_TILT] }) },

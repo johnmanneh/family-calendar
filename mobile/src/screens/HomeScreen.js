@@ -107,6 +107,7 @@ function MemberBubble({ member, selected, onPress, onLongPress }) {
   const photoUri = member.avatar_url
     ? (member.avatar_url.startsWith('http') ? member.avatar_url : `${SERVER_URL}${member.avatar_url}`)
     : null;
+  const [photoFailed, setPhotoFailed] = React.useState(false);
 
   return (
     <TouchableOpacity
@@ -125,8 +126,12 @@ function MemberBubble({ member, selected, onPress, onLongPress }) {
             { backgroundColor: memberColor, opacity: 0.25 },
           ]} />
         )}
-        {photoUri ? (
-          <Image source={{ uri: photoUri }} style={styles.bubbleCircle} />
+        {photoUri && !photoFailed ? (
+          <Image
+            source={{ uri: photoUri }}
+            style={styles.bubbleCircle}
+            onError={() => setPhotoFailed(true)}
+          />
         ) : (
           <View style={[styles.bubbleCircle, { backgroundColor: memberColor }]}>
             <Text style={styles.bubbleInitials}>{initials}</Text>

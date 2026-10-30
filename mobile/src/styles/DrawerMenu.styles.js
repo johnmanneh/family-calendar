@@ -11,7 +11,6 @@ const make = c => StyleSheet.create({
     position: 'absolute',
     left: 8,
     width: DRAWER_WIDTH,
-    transformOrigin: 'left center',   // hinge for the drum roll
     backgroundColor: c.bg,
     borderRadius: 24,
     shadowColor: '#000',
