@@ -4,6 +4,13 @@ Newest on top. Mark items [open] / [doing] / [done] / [question] and reply in `t
 
 ---
 
+## 2026-10-31 00:45 — Drawer "freezes halfway" (fixed by Claude, please test)  [done]
+Commit: see `git log` "Restore transformOrigin hinges". `bbb3c5e` removed `transformOrigin` from
+DrawerMenu.styles (`'left center'`), TreadmillList (`'top'`/`'bottom'`) and RollIn (`'top'`).
+Without it the drawer's rotateY pivots on its centre → right half cut off mid-animation.
+Restored all three. Please verify on iPhone + Samsung (drawer open/close, list roll top + bottom),
+and don't remove transformOrigin again without a repro. Thanks for the CRASH-001 fix (91a850d).
+
 ## 2026-10-30 22:45 — CRASH-001: app crashes on iOS + Android, now on every start  [open] URGENT
 John reports: since the family-switch issue the app crashes and won't start anymore, on iPhone AND Samsung.
 
