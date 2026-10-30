@@ -51,7 +51,7 @@ function RollRow({ progress, children }) {
 // and the drawer comes up from underneath. `progress` (0 closed → 1 open) drives
 // both layers, and it follows your finger while you drag.
 const clamp01 = v => Math.max(0, Math.min(1, v));
-const DRUM_TILT = 60;   // degrees the drawer is turned away before it rolls in
+const DRUM_TILT = 80;   // degrees the drawer is turned away before it rolls in (≈ edge-on: comes from behind the drum)
 
 export function useDrawerController() {
   const progress = useRef(new Animated.Value(0)).current;
@@ -202,17 +202,12 @@ export default function DrawerMenu({ controller, navigation, pendingCount = 0, n
   const blockCount = 1 + sections.length + 1;
   const rolls = useRef(Array.from({ length: 8 }, () => new Animated.Value(0))).current;
 
-  // ── Rows roll up one after another each time the drawer opens ─────────────
+  // ── Smooth roll: the whole panel is one belt coming over the drum ─────────
+  // Rows no longer roll in one after another; they ride along with the panel,
+  // so drag and release feel like a single treadmill belt.
   useEffect(() => {
-    if (!visible) return;
-    rolls.forEach(r => r.setValue(0));
-    Animated.sequence([
-      Animated.delay(80),
-      Animated.stagger(55, rolls.slice(0, blockCount).map(r =>
-        Animated.timing(r, { toValue: 1, duration: 340, easing: Easing.out(Easing.cubic), useNativeDriver: true })
-      )),
-    ]).start();
-  }, [visible]);
+    rolls.forEach(r => r.setValue(1));
+  }, []);
 
   // ── The drawer rolls in OVER the home screen ─────────────────────────────
   // Hinged on its left edge, it turns toward you (rotateY) while it slides in
@@ -221,9 +216,8 @@ export default function DrawerMenu({ controller, navigation, pendingCount = 0, n
     opacity: open.interpolate({ inputRange: [0, 0.2, 1], outputRange: [0, 1, 1], extrapolate: 'clamp' }),
     transform: [
       { perspective: 900 },
-      { translateX: open.interpolate({ inputRange: [0, 1], outputRange: [-DRAWER_WIDTH * 0.6, 0] }) },
+      { translateX: open.interpolate({ inputRange: [0, 1], outputRange: [-DRAWER_WIDTH * 0.15, 0] }) },
       { rotateY: open.interpolate({ inputRange: [0, 1], outputRange: [`${DRUM_TILT * TILT_DIR}deg`, '0deg'] }) },
-      { scale: open.interpolate({ inputRange: [0, 1], outputRange: [0.92, 1] }) },
     ],
   };
 
