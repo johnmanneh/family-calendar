@@ -1,4 +1,4 @@
-import { StyleSheet, Platform } from 'react-native';
+import { StyleSheet } from 'react-native';
 import { useColorScheme } from '../context/ThemeContext';
 import { LIGHT, DARK } from '../theme';
 
@@ -113,12 +113,14 @@ const make = c => StyleSheet.create({
   swipeActions: {
     width: 136, flexDirection: 'row', alignItems: 'center', justifyContent: 'flex-end',
     gap: 12, paddingRight: 12, paddingBottom: 8, backgroundColor: 'transparent',
+    overflow: 'visible',
   },
   swipeAction: { alignItems: 'center', width: 50 },
-  swipeCircle: { width: 44, height: 44, borderRadius: 22, justifyContent: 'center', alignItems: 'center' },
+  // 40pt circle + label (~55pt) fits a one-line card on iOS (~54pt) without clipping
+  swipeCircle: { width: 40, height: 40, borderRadius: 20, justifyContent: 'center', alignItems: 'center' },
   swipeActionFirst: {},
   swipeActionLast: {},
-  swipeActionText: { color: '#8e8e93', fontSize: 11, fontWeight: '500', marginTop: 3 },
+  swipeActionText: { color: '#8e8e93', fontSize: 10, fontWeight: '500', marginTop: 2 },
   swipeChild: { backgroundColor: c.bg },
   statusBadge: {
     paddingHorizontal: 8, paddingVertical: 3, borderRadius: 10,
@@ -130,7 +132,10 @@ const make = c => StyleSheet.create({
     backgroundColor: c.surface, borderRadius: 10, marginBottom: 8,
     // Android: overflow hidden while Swipeable slides the row blanks the card
     // (text disappears when swiped open). iOS clips fine.
-    overflow: Platform.OS === 'android' ? 'visible' : 'hidden',
+    // overflow 'hidden' + the Swipeable transform blanks the card while it is
+    // swiped open — first seen on Android, iOS does it too. The stripe has its
+    // own rounded corners, so nothing needs clipping.
+    overflow: 'visible',
     shadowColor: '#000', shadowOpacity: 0.04,
     shadowRadius: 4, shadowOffset: { width: 0, height: 2 }, elevation: 1,
   },
