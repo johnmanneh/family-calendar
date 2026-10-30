@@ -12,7 +12,7 @@ function runUnitTests({ root = path.resolve(__dirname, '..'), spawn = spawnSync,
     testEnvironment: 'node',
     // These DOM-rendered UI tests run below with their dedicated configuration.
     // Keep the existing Node-only mobile suites unchanged, and require BOTH.
-    testPathIgnorePatterns: ['/node_modules/', '/mobile/src/__tests__/availability[^/]*\\.test\\.js$'],
+    testPathIgnorePatterns: ['/node_modules/', '/mobile/src/__tests__/(availability|ui-)[^/]*\\.test\\.js$'],
     transform: {
       '^.+\\.js$': [path.join(root, 'web/node_modules/babel-jest'), {
         presets: [path.join(root, 'web/node_modules/babel-preset-react-app')],

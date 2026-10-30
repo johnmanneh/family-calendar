@@ -4,7 +4,7 @@ const web = name => require.resolve(path.join(__dirname, '../web/node_modules', 
 module.exports = {
   rootDir: __dirname,
   testEnvironment: web('jest-environment-jsdom'),
-  testMatch: ['<rootDir>/src/__tests__/availability*.test.js'],
+  testMatch: ['<rootDir>/src/__tests__/availability*.test.js', '<rootDir>/src/__tests__/ui-*.test.js'],
   moduleDirectories: ['node_modules', path.join(__dirname, '../web/node_modules')],
   moduleNameMapper: {
     '^react$': web('react'),

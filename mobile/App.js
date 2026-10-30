@@ -4,6 +4,9 @@ import { NavigationContainer } from '@react-navigation/native';
 import { createNativeStackNavigator } from '@react-navigation/native-stack';
 import { ActivityIndicator, Linking, View } from 'react-native';
 import { GestureHandlerRootView } from 'react-native-gesture-handler';
+import AppErrorBoundary, { installGlobalErrorHandler } from './src/components/AppErrorBoundary';
+
+installGlobalErrorHandler();
 
 import { AuthProvider, useAuth } from './src/context/AuthContext';
 import { FamilyProvider } from './src/context/FamilyContext';
@@ -121,6 +124,7 @@ function AppNavigator() {
 export default function App() {
   return (
     <GestureHandlerRootView style={{ flex: 1 }}>
+      <AppErrorBoundary>
       <ThemeProvider>
       <AuthProvider>
         <SSEProvider>
@@ -130,6 +134,7 @@ export default function App() {
         </SSEProvider>
       </AuthProvider>
       </ThemeProvider>
+      </AppErrorBoundary>
     </GestureHandlerRootView>
   );
 }

@@ -240,15 +240,15 @@ function EventRow({ event, navigation, eventTasks, showDate, onDelete }) {
       {/* Inline tasks for this event */}
       {eventTasks?.length > 0 && (
         <View style={[styles.inlineTasksList, { borderLeftColor: color }]}>
-          {eventTasks.map(t => (
-            <View key={t.id} style={styles.inlineTaskRow}>
-              <Ionicons name="checkmark-circle-outline" size={13} color={STATUS_COLOR[t.status] || '#aeaeb2'} />
-              <Text style={styles.inlineTaskTitle} numberOfLines={1}>{t.title}</Text>
-              {t.assigned_first_name && (
-                <Text style={styles.inlineTaskAssignee}>{t.assigned_first_name}</Text>
+          {eventTasks.map(task => (
+            <View key={task.id} style={styles.inlineTaskRow}>
+              <Ionicons name="checkmark-circle-outline" size={13} color={STATUS_COLOR[task.status] || '#aeaeb2'} />
+              <Text style={styles.inlineTaskTitle} numberOfLines={1}>{task.title}</Text>
+              {task.assigned_first_name && (
+                <Text style={styles.inlineTaskAssignee}>{task.assigned_first_name}</Text>
               )}
-              <View style={[styles.inlineTaskBadge, { backgroundColor: STATUS_COLOR[t.status] || '#aeaeb2' }]}>
-                <Text style={styles.inlineTaskBadgeText}>{STATUS_KEY[t.status] ? t(STATUS_KEY[t.status]) : t.status}</Text>
+              <View style={[styles.inlineTaskBadge, { backgroundColor: STATUS_COLOR[task.status] || '#aeaeb2' }]}>
+                <Text style={styles.inlineTaskBadgeText}>{STATUS_KEY[task.status] ? t(STATUS_KEY[task.status]) : task.status}</Text>
               </View>
             </View>
           ))}
