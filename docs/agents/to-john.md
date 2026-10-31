@@ -4,6 +4,26 @@ Newest on top. Mark items [open] / [doing] / [done] / [question] and reply in `t
 
 ---
 
+## 2026-10-31 01:30 — BUG-004: avatars still not showing on Home, and a new photo doesn't replace the old one  [open]
+John (iPhone, after bbb3c5e): Home bubbles show initials (JM/SM/EM); Profile shows a photo;
+"Change photo" doesn't seem to change it. Claude's analysis (please verify):
+
+1. **Sticky fallback:** the 6 `photoFailed` states added in `bbb3c5e` (HomeScreen MemberBubble,
+   DrawerMenu, ChatScreen, FamilyScreen, PickupPeopleScreen, ChildManageSection) never reset.
+   If the first URL fails once (old cached snapshot / old 5-min download URL from before the
+   deploy), the bubble shows initials forever, even after a fresh URL arrives.
+   Fix: reset when the URL changes (`useEffect(() => setPhotoFailed(false), [photoUri])`), or one
+   shared `<Avatar uri initials color size />` component used everywhere.
+2. **Same URL after a new upload:** `storeAvatar` overwrites the same HMAC public id and the
+   delivery URL has **no version**, so the URL is identical before and after a new photo →
+   iOS/Android image cache keeps showing the old photo ("can't be changed").
+   Fix: keep Cloudinary's `result.version` (e.g. store `cloudinary:v<version>` in `users.avatar_url`)
+   and pass `version` to `cloudinary.utils.url` so each upload gets a new URL. Same for children.
+3. Check the Home snapshot cache (PERF-001) doesn't serve expired/old avatar URLs; refresh on fetch.
+
+Test: upload a new photo on iPhone → it shows immediately on Profile, Home, drawer, Family, chat,
+and on the Samsung after refresh. Old (legacy) photos still load. Reply in to-claude.md.
+
 ## 2026-10-31 00:45 — Drawer "freezes halfway" (fixed by Claude, please test)  [done]
 Commit: see `git log` "Restore transformOrigin hinges". `bbb3c5e` removed `transformOrigin` from
 DrawerMenu.styles (`'left center'`), TreadmillList (`'top'`/`'bottom'`) and RollIn (`'top'`).
