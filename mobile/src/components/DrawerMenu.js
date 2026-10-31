@@ -10,6 +10,7 @@ import {
   Easing,
   BackHandler,
   StyleSheet,
+  Platform,
 } from 'react-native';
 import { Ionicons } from '@expo/vector-icons';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
@@ -48,6 +49,11 @@ function RollRow({ progress, children }) {
 // and the drawer comes up from underneath. `progress` (0 closed → 1 open) drives
 // both layers, and it follows your finger while you drag.
 const clamp01 = v => Math.max(0, Math.min(1, v));
+// Page-turn angle: almost edge-on at the start (comes from behind the spine).
+const PAGE_TURN = 88;
+// iOS and Android turn rotateY opposite ways here (the old drawer needed the
+// same flip and looked right on both), so the page always comes from BEHIND.
+const PAGE_DIR = Platform.OS === 'ios' ? -1 : 1;
 
 export function useDrawerController() {
   const progress = useRef(new Animated.Value(0)).current;
@@ -64,7 +70,7 @@ export function useDrawerController() {
       activate(true);
       Animated.spring(progress, { toValue: 1, useNativeDriver: true, tension: 70, friction: 16 }).start();
     } else {
-      Animated.timing(progress, { toValue: 0, duration: 260, easing: Easing.inOut(Easing.cubic), useNativeDriver: true })
+      Animated.timing(progress, { toValue: 0, duration: 340, easing: Easing.inOut(Easing.cubic), useNativeDriver: true })
         .start(({ finished }) => { if (finished) activate(false); });
     }
   };
@@ -201,33 +207,27 @@ export default function DrawerMenu({ controller, navigation, pendingCount = 0, n
   const blockCount = 1 + sections.length + 1;
   const rolls = useRef(Array.from({ length: 8 }, () => new Animated.Value(0))).current;
 
-  // ── Blocks fly out like the + menu: springs, 70 ms apart; back in reverse ──
-  // Starts as soon as the drawer layer appears (tap or edge swipe).
+  // ── Page turn: the rows are printed on the page, they don't move on their own ──
   useEffect(() => {
-    if (!active) { rolls.forEach(r => r.setValue(0)); return; }   // hidden → ready for next open
-    Animated.stagger(70, rolls.slice(0, blockCount).map(r =>
-      Animated.spring(r, { toValue: 1, friction: 8, tension: 110, useNativeDriver: true })
-    )).start();
-  }, [active]);
-  useEffect(() => {
-    if (visible || !active) return;   // closing: fly back in, last block first
-    Animated.stagger(50, rolls.slice(0, blockCount).reverse().map(r =>
-      Animated.timing(r, { toValue: 0, duration: 170, easing: Easing.in(Easing.cubic), useNativeDriver: true })
-    )).start();
-  }, [visible]);
+    rolls.forEach(r => r.setValue(1));
+  }, []);
 
   // ── The drawer rolls in OVER the home screen ─────────────────────────────
   // Hinged on its left edge, it turns toward you (rotateY) while it slides in
   // from off-screen — the treadmill roll, sideways. Follows the finger on drag.
-  // Panel: slides in from the left and grows slightly (no 3D turn), so it looks
-  // the same on iOS and Android. The rows inside fly out on top of it.
+  // ── Page turn ─────────────────────────────────────────────────────────────
+  // The drawer is a page bound on its left edge (the spine). Opening pulls the
+  // page round from behind the book until it lies flat; closing turns it back.
+  // It follows your finger while you drag. While the page is turning it is in
+  // shadow, and the shadow lifts as it lies flat.
   const panelStyle = {
-    opacity: open.interpolate({ inputRange: [0, 0.15, 1], outputRange: [0, 1, 1], extrapolate: 'clamp' }),
+    opacity: open.interpolate({ inputRange: [0, 0.05, 1], outputRange: [0, 1, 1], extrapolate: 'clamp' }),
     transform: [
-      { translateX: open.interpolate({ inputRange: [0, 1], outputRange: [-DRAWER_WIDTH * 0.35, 0] }) },
-      { scale: open.interpolate({ inputRange: [0, 1], outputRange: [0.94, 1] }) },
+      { perspective: 1200 },
+      { rotateY: open.interpolate({ inputRange: [0, 1], outputRange: [`${PAGE_TURN * PAGE_DIR}deg`, '0deg'] }) },
     ],
   };
+  const pageShade = open.interpolate({ inputRange: [0, 0.7, 1], outputRange: [0.35, 0.08, 0], extrapolate: 'clamp' });
 
   const renderRow = (row, last) => (
     <TouchableOpacity
@@ -321,6 +321,11 @@ export default function DrawerMenu({ controller, navigation, pendingCount = 0, n
               </View>
             </RollRow>
           </ScrollView>
+          {/* Shadow on the page while it turns */}
+          <Animated.View
+            pointerEvents="none"
+            style={[StyleSheet.absoluteFill, { borderRadius: 24, backgroundColor: '#000', opacity: pageShade }]}
+          />
         </Animated.View>
     </View>
   );
