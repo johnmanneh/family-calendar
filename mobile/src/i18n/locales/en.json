@@ -222,7 +222,11 @@
     "replace_invite": "Replace invite",
     "replace_invite_confirm": "Replace invite? Old links, pictures, and the typed code will stop working.",
     "share_invite": "Share invite",
-    "could_not_replace_invite": "Could not replace invite"
+    "could_not_replace_invite": "Could not replace invite",
+    "remove_member_title": "Remove from family",
+    "remove_member_confirm": "Remove {{name}} from {{family}}? They lose access to the family calendar, chat and pickups.",
+    "remove_member_btn": "Remove",
+    "remove_member_named": "Remove {{name}} from family"
   },
   "profile": {
     "title": "Profile",

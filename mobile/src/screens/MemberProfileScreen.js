@@ -547,7 +547,38 @@ export default function MemberProfileScreen({ route, navigation }) {
 
   // Current user's membership info — used to determine admin status
   const myMembership = members.find(m => Number(m.id) === Number(user?.id));
-  const isAdmin = myMembership?.role === 'admin';
+  const isAdmin = myMembership?.role === 'admin' || myMembership?.role === 'owner';
+
+  // ── Admin: remove another adult from this family ──────────────────────────
+  const [removing, setRemoving] = useState(false);
+  const handleRemoveFromFamily = () => {
+    const name = member?.first_name || t('profile.this_member', { defaultValue: 'this member' });
+    Alert.alert(
+      t('family.remove_member_title', { defaultValue: 'Remove from family' }),
+      t('family.remove_member_confirm', {
+        name, family: family?.name || '',
+        defaultValue: `Remove ${name} from ${family?.name || 'the family'}? They lose access to the family calendar, chat and pickups.`,
+      }),
+      [
+        { text: t('common.cancel'), style: 'cancel' },
+        {
+          text: t('family.remove_member_btn', { defaultValue: 'Remove' }), style: 'destructive',
+          onPress: async () => {
+            setRemoving(true);
+            try {
+              await API.delete(`/family/members/${memberId}`, { data: { family_id: family?.id } });
+              await fetchFamily();
+              navigation.goBack();
+            } catch (err) {
+              Alert.alert(t('common.error'), err.response?.data?.message || t('common.something_went_wrong'));
+            } finally {
+              setRemoving(false);
+            }
+          },
+        },
+      ]
+    );
+  };
 
   const memberColor = member?.color || '#1a8fa8';
   const displayName = member
@@ -700,6 +731,18 @@ export default function MemberProfileScreen({ route, navigation }) {
               currentCircle={member?.circle_type}
               fetchFamily={fetchFamily}
             />
+          )}
+
+          {/* Remove from family — admins only, not yourself, not children */}
+          {isAdmin && !isOwnProfile && member && !member.is_managed && !family?.is_personal && (
+            <View style={[styles.settingsCard, { marginTop: 24 }]}>
+              <TouchableOpacity style={styles.deleteBtn} onPress={handleRemoveFromFamily} disabled={removing}>
+                <Ionicons name="person-remove-outline" size={16} color="#ff3b30" />
+                <Text style={styles.deleteBtnText}>
+                  {removing ? '…' : t('family.remove_member_named', { name: member.first_name, defaultValue: `Remove ${member.first_name} from family` })}
+                </Text>
+              </TouchableOpacity>
+            </View>
           )}
         </ScrollView>
       )}

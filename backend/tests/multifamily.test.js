@@ -80,5 +80,22 @@ const expect=(label, got, want)=>{ const ok = want instanceof Function ? want(go
   const mia=(await q("SELECT id FROM users WHERE first_name='Mia'")).rows[0].id;
   expect('after switching to A, a new child goes to A', (await q('SELECT family_id FROM family_members WHERE user_id=$1',[mia])).rows[0].family_id, 1);
 
+  // ── Admin removes a family member (John is admin of A; Sarah=2, Ext=3 are members; Mia is a child) ──
+  const rm = C('family/removeFamilyMember');
+  r=await call(rm,{user:{id:2},params:{userId:'3'}});
+  expect('a normal member cannot remove someone', r.c, 403);
+  r=await call(rm,{user:john,params:{userId:'1'}});
+  expect('an admin cannot remove themselves (use Leave)', r.c, 400);
+  r=await call(rm,{user:john,params:{userId:String(mia)}});
+  expect('a child is removed from their profile, not here', r.c, 400);
+  r=await call(rm,{user:john,params:{userId:'4'}});
+  expect('removing someone who is not in this family → 404', r.c, 404);
+  r=await call(rm,{user:john,params:{userId:'3'}});
+  expect('admin removes Ext from A', r.c, 200);
+  expect('…Ext is no longer in A', (await q('SELECT 1 FROM family_members WHERE family_id=1 AND user_id=3')).rows.length, 0);
+  const extFams=(await q('SELECT f.is_personal, fm.is_active FROM family_members fm JOIN families f ON f.id=fm.family_id WHERE fm.user_id=3')).rows;
+  expect('…Ext gets a personal calendar (no families left), and it is active', extFams.length===1 && extFams[0].is_personal && extFams[0].is_active, true);
+  expect('…Ext is told about it', (await q("SELECT 1 FROM notifications WHERE user_id=3 AND type='family_removed'")).rows.length, 1);
+
   console.log(`\n${pass} passed, ${fail} failed`); process.exit(fail?1:0);
 })().catch(e=>{console.error(e);process.exit(1)});

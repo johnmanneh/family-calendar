@@ -223,7 +223,11 @@
     "replace_invite": "Einladung ersetzen",
     "replace_invite_confirm": "Einladung ersetzen? Alte Links, Bilder und der Tippcode funktionieren dann nicht mehr.",
     "share_invite": "Einladung teilen",
-    "could_not_replace_invite": "Einladung konnte nicht ersetzt werden"
+    "could_not_replace_invite": "Einladung konnte nicht ersetzt werden",
+    "remove_member_title": "Aus der Familie entfernen",
+    "remove_member_confirm": "{{name}} aus {{family}} entfernen? Der Zugriff auf Familienkalender, Chat und Abholungen endet sofort.",
+    "remove_member_btn": "Entfernen",
+    "remove_member_named": "{{name}} aus der Familie entfernen"
   },
   "profile": {
     "title": "Profil",
