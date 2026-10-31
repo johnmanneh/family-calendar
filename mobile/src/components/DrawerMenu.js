@@ -10,7 +10,6 @@ import {
   Easing,
   BackHandler,
   StyleSheet,
-  Platform,
 } from 'react-native';
 import { Ionicons } from '@expo/vector-icons';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
@@ -20,26 +19,21 @@ import { useFamily } from '../context/FamilyContext';
 import { SERVER_URL } from '../api/axios';
 import { useStyles, DRAWER_WIDTH } from '../styles/DrawerMenu.styles';
 import { useColorScheme, useToggleTheme } from '../context/ThemeContext';
-// The drawer was tuned with an iOS flip and looked right on both phones; keep it
-// independent of the list's TILT_DIR (changed in bbb3c5e).
-const TILT_DIR = Platform.OS === 'ios' ? -1 : 1;
 
-// ── Rolling row ─────────────────────────────────────────────────────────────
-// Same idea as the treadmill list, but gentle and only on open: each row rolls
-// up off the "drum" (small rotateX + rise + fade), one after another.
-const ROLL_TILT = 28;   // degrees — the list uses 60, this is the soft version
-const ROLL_RISE = 14;   // px the row travels up while it settles
+// ── Row that flies out from the side ─────────────────────────────────────────
+// Same feel as the + (radial) menu: each block springs out from the left edge,
+// growing from half size, one after another; on close they fly back in reverse.
+const FLY_FROM = -60;   // px left of its place where a block starts
 
 function RollRow({ progress, children }) {
   return (
     <Animated.View
       style={{
-        opacity: progress,
+        opacity: progress.interpolate({ inputRange: [0, 0.3, 1], outputRange: [0, 1, 1], extrapolate: 'clamp' }),
+        transformOrigin: 'left center',
         transform: [
-          { perspective: 700 },
-          { translateY: progress.interpolate({ inputRange: [0, 1], outputRange: [ROLL_RISE, 0] }) },
-          { rotateX: progress.interpolate({ inputRange: [0, 1], outputRange: [`${ROLL_TILT * TILT_DIR}deg`, '0deg'] }) },
-          { scale: progress.interpolate({ inputRange: [0, 1], outputRange: [0.94, 1] }) },
+          { translateX: progress.interpolate({ inputRange: [0, 1], outputRange: [FLY_FROM, 0] }) },
+          { scale: progress.interpolate({ inputRange: [0, 1], outputRange: [0.5, 1] }) },
         ],
       }}
     >
@@ -54,7 +48,6 @@ function RollRow({ progress, children }) {
 // and the drawer comes up from underneath. `progress` (0 closed → 1 open) drives
 // both layers, and it follows your finger while you drag.
 const clamp01 = v => Math.max(0, Math.min(1, v));
-const DRUM_TILT = 60;   // degrees the drawer is turned away before it rolls in
 
 export function useDrawerController() {
   const progress = useRef(new Animated.Value(0)).current;
@@ -208,23 +201,31 @@ export default function DrawerMenu({ controller, navigation, pendingCount = 0, n
   const blockCount = 1 + sections.length + 1;
   const rolls = useRef(Array.from({ length: 8 }, () => new Animated.Value(0))).current;
 
-  // ── Smooth roll: the rows ride along with the panel ───────────────────────
-  // (They used to roll in one after another, which looked choppy.) The panel's
-  // own drum roll below is unchanged, with the drawer's iOS direction.
+  // ── Blocks fly out like the + menu: springs, 70 ms apart; back in reverse ──
+  // Starts as soon as the drawer layer appears (tap or edge swipe).
   useEffect(() => {
-    rolls.forEach(r => r.setValue(1));
-  }, []);
+    if (!active) { rolls.forEach(r => r.setValue(0)); return; }   // hidden → ready for next open
+    Animated.stagger(70, rolls.slice(0, blockCount).map(r =>
+      Animated.spring(r, { toValue: 1, friction: 8, tension: 110, useNativeDriver: true })
+    )).start();
+  }, [active]);
+  useEffect(() => {
+    if (visible || !active) return;   // closing: fly back in, last block first
+    Animated.stagger(50, rolls.slice(0, blockCount).reverse().map(r =>
+      Animated.timing(r, { toValue: 0, duration: 170, easing: Easing.in(Easing.cubic), useNativeDriver: true })
+    )).start();
+  }, [visible]);
 
   // ── The drawer rolls in OVER the home screen ─────────────────────────────
   // Hinged on its left edge, it turns toward you (rotateY) while it slides in
   // from off-screen — the treadmill roll, sideways. Follows the finger on drag.
+  // Panel: slides in from the left and grows slightly (no 3D turn), so it looks
+  // the same on iOS and Android. The rows inside fly out on top of it.
   const panelStyle = {
-    opacity: open.interpolate({ inputRange: [0, 0.2, 1], outputRange: [0, 1, 1], extrapolate: 'clamp' }),
+    opacity: open.interpolate({ inputRange: [0, 0.15, 1], outputRange: [0, 1, 1], extrapolate: 'clamp' }),
     transform: [
-      { perspective: 900 },
-      { translateX: open.interpolate({ inputRange: [0, 1], outputRange: [-DRAWER_WIDTH * 0.6, 0] }) },
-      { rotateY: open.interpolate({ inputRange: [0, 1], outputRange: [`${DRUM_TILT * TILT_DIR}deg`, '0deg'] }) },
-      { scale: open.interpolate({ inputRange: [0, 1], outputRange: [0.92, 1] }) },
+      { translateX: open.interpolate({ inputRange: [0, 1], outputRange: [-DRAWER_WIDTH * 0.35, 0] }) },
+      { scale: open.interpolate({ inputRange: [0, 1], outputRange: [0.94, 1] }) },
     ],
   };
 
