@@ -69,7 +69,7 @@ export function useDrawerController() {
   const animate = (to) => {
     if (to === 1) {
       activate(true);
-      Animated.spring(progress, { toValue: 1, useNativeDriver: true, tension: 90, friction: 15 }).start();
+      Animated.spring(progress, { toValue: 1, useNativeDriver: true, tension: 70, friction: 16 }).start();
     } else {
       Animated.timing(progress, { toValue: 0, duration: 260, easing: Easing.inOut(Easing.cubic), useNativeDriver: true })
         .start(({ finished }) => { if (finished) activate(false); });
@@ -208,17 +208,12 @@ export default function DrawerMenu({ controller, navigation, pendingCount = 0, n
   const blockCount = 1 + sections.length + 1;
   const rolls = useRef(Array.from({ length: 8 }, () => new Animated.Value(0))).current;
 
-  // ── Rows roll up one after another each time the drawer opens ─────────────
+  // ── Smooth roll: the rows ride along with the panel ───────────────────────
+  // (They used to roll in one after another, which looked choppy.) The panel's
+  // own drum roll below is unchanged, with the drawer's iOS direction.
   useEffect(() => {
-    if (!visible) return;
-    rolls.forEach(r => r.setValue(0));
-    Animated.sequence([
-      Animated.delay(80),
-      Animated.stagger(55, rolls.slice(0, blockCount).map(r =>
-        Animated.timing(r, { toValue: 1, duration: 340, easing: Easing.out(Easing.cubic), useNativeDriver: true })
-      )),
-    ]).start();
-  }, [visible]);
+    rolls.forEach(r => r.setValue(1));
+  }, []);
 
   // ── The drawer rolls in OVER the home screen ─────────────────────────────
   // Hinged on its left edge, it turns toward you (rotateY) while it slides in
