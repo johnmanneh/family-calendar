@@ -157,6 +157,9 @@ export default function DrawerMenu({ controller, navigation, pendingCount = 0, n
     ? (me.avatar_url.startsWith('http') ? me.avatar_url : `${SERVER_URL}${me.avatar_url}`)
     : null;
   const [photoFailed, setPhotoFailed] = React.useState(false);
+  // A new photo URL (new upload, or a fresh signed link) gets a new chance to load;
+  // otherwise one early failure would show initials forever.
+  React.useEffect(() => { setPhotoFailed(false); }, [avatarPhoto]);
 
   const iconColor = isDark ? '#aeaeb2' : '#1d1d1f';
 

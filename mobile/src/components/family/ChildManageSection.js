@@ -17,6 +17,9 @@ export default function ChildManageSection({ child, onSaved, onRemoved, onScan }
   const [msg, setMsg] = useState('');
   const [photo, setPhoto] = useState(child.avatar_url || null);
   const [photoFailed, setPhotoFailed] = useState(false);
+  // A new photo URL (new upload, or a fresh signed link) gets a new chance to load;
+  // otherwise one early failure would show initials forever.
+  React.useEffect(() => { setPhotoFailed(false); }, [photo]);
   const [uploading, setUploading] = useState(false);
 
   // ── Photo: camera or library → upload straight away ──

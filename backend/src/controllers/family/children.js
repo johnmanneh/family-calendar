@@ -3,7 +3,7 @@ const { ACTIVE_FAMILY_ORDER } = require('../../utils/activeFamily');
 const { successResponse, errorResponse } = require('../../utils/response/responseHandlers');
 const { managesChild } = require('../../utils/access');
 const { broadcast } = require('../../utils/sseClients');
-const { receiveAvatar, storeAvatar, deleteAvatar, getAvatarUrl } = require('../../utils/avatarStore');
+const { receiveAvatar, saveAvatar, deleteAvatar } = require('../../utils/avatarStore');
 const { recolorEvents, currentColors } = require('../../utils/recolorEvents');
 
 /**
@@ -147,11 +147,11 @@ const uploadChildAvatar = [
     if (!req.file) return errorResponse(res, 400, 'No file uploaded');
     const { id } = req.params;
     try {
-      await storeAvatar(id, req.file.buffer);
-      await pool.query('UPDATE users SET avatar_url = $1 WHERE id = $2 AND is_managed', ['cloudinary', id]);
+      const { url, marker } = await saveAvatar(id, req.file.buffer);
+      await pool.query('UPDATE users SET avatar_url = $1 WHERE id = $2 AND is_managed', [marker, id]);
       const fam = await myFamily(req.user.id);
       if (fam) broadcast(fam.id, 'event_update', {});
-      return successResponse(res, 200, 'Photo updated', { avatar_url: getAvatarUrl(id) });
+      return successResponse(res, 200, 'Photo updated', { avatar_url: url });
     } catch (error) {
       console.error('uploadChildAvatar error:', error.message);
       return errorResponse(res, 500, 'Failed to save photo');

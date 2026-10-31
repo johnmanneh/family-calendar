@@ -49,6 +49,9 @@ function PersonRow({ person, editingId, editName, editPhone, onEditName, onEditP
     ? ([person.member_first_name?.[0], person.member_last_name?.[0]].filter(Boolean).join('').toUpperCase() || '?')
     : (displayName(person)[0] || '?').toUpperCase();
   const [photoFailed, setPhotoFailed] = React.useState(false);
+  // A new photo URL (new upload, or a fresh signed link) gets a new chance to load;
+  // otherwise one early failure would show initials forever.
+  React.useEffect(() => { setPhotoFailed(false); }, [photo]);
 
   if (isEditing) {
     // ── Edit mode: replace the row with input fields ──────────────────────

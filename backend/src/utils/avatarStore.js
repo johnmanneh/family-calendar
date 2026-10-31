@@ -45,16 +45,34 @@ const receiveAvatar = (req, res, next) => {
 // redirect). A signed res.cloudinary.com delivery URL is a normal image URL.
 // Authenticated assets stay signed. Legacy public uploads (avatars/avatar-N)
 // are unsigned type=upload so old photos still resolve.
-function _deliveryUrl(publicId, { authenticated }) {
-  return cloudinary.utils.url(publicId, {
+// `version` (Cloudinary's upload version) makes every new upload a NEW URL.
+// The public id never changes (HMAC of the person id), so without it the URL
+// before and after "Change photo" was identical and phones kept showing the
+// cached old photo.
+function _deliveryUrl(publicId, { authenticated, version }) {
+  const opts = {
     type: authenticated ? 'authenticated' : 'upload',
     sign_url: authenticated,
     secure: true,
     format: 'jpg',
-  });
+  };
+  if (version) opts.version = version;
+  return cloudinary.utils.url(publicId, opts);
 }
 
-function storeAvatar(personId, buffer) {
+// What we store in users.avatar_url for a Cloudinary upload: "cloudinary:v<version>".
+// (Plain "cloudinary" = uploaded before versions were kept.)
+const MARKER_PREFIX = 'cloudinary';
+function avatarMarker(version) {
+  return version ? `${MARKER_PREFIX}:v${version}` : MARKER_PREFIX;
+}
+function _versionFromStored(stored) {
+  const m = /^cloudinary:v(\d+)$/.exec(String(stored || ''));
+  return m ? m[1] : undefined;
+}
+
+// Upload and return { url, marker }. Store `marker` in users.avatar_url.
+function saveAvatar(personId, buffer) {
   return new Promise((resolve, reject) => {
     let publicId;
     try {
@@ -71,23 +89,32 @@ function storeAvatar(personId, buffer) {
         invalidate:  true,
         transformation: [{ width: 400, height: 400, crop: 'fill', gravity: 'face' }],
       },
-      (error) => {
+      (error, result) => {
         if (error) return reject(error);
-        resolve(_deliveryUrl(`avatars/${publicId}`, { authenticated: true }));
+        const version = result && result.version ? String(result.version) : undefined;
+        resolve({
+          url: _deliveryUrl(`avatars/${publicId}`, { authenticated: true, version }),
+          marker: avatarMarker(version),
+        });
       }
     );
     stream.end(buffer);
   });
 }
 
+// Backwards compatible: resolves to the URL only.
+function storeAvatar(personId, buffer) {
+  return saveAvatar(personId, buffer).then(r => r.url);
+}
+
 // ── Signed URL on demand ──────────────────────────────────────────────────────
 // Use this to refresh a URL without re-uploading. Pass { legacy: true } for
 // photos uploaded before the HMAC change (public id avatars/avatar-<id>).
-function getAvatarUrl(personId, { legacy = false } = {}) {
+function getAvatarUrl(personId, { legacy = false, version } = {}) {
   if (legacy) {
     return _deliveryUrl(`avatars/avatar-${personId}`, { authenticated: false });
   }
-  return _deliveryUrl(`avatars/${_hmacPublicId(personId)}`, { authenticated: true });
+  return _deliveryUrl(`avatars/${_hmacPublicId(personId)}`, { authenticated: true, version });
 }
 
 // ── Delete ────────────────────────────────────────────────────────────────────
@@ -112,10 +139,10 @@ function withFreshAvatar(row, urlKey = 'avatar_url', idKey = 'id') {
   const stored = String(row[urlKey]);
   const legacy = stored.includes(`avatar-${id}`) && !stored.includes('/authenticated/');
   try {
-    return { ...row, [urlKey]: getAvatarUrl(id, { legacy }) };
+    return { ...row, [urlKey]: getAvatarUrl(id, { legacy, version: _versionFromStored(stored) }) };
   } catch {
     return { ...row, [urlKey]: null };
   }
 }
 
-module.exports = { receiveAvatar, storeAvatar, getAvatarUrl, deleteAvatar, withFreshAvatar };
+module.exports = { receiveAvatar, storeAvatar, saveAvatar, avatarMarker, getAvatarUrl, deleteAvatar, withFreshAvatar };

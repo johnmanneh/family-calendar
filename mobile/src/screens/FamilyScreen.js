@@ -52,6 +52,9 @@ function MemberRow({ member, isMe, navigation }) {
     .filter(Boolean).join('').toUpperCase() || '?';
   const name = [member.first_name, member.last_name].filter(Boolean).join(' ') || '?';
   const [photoFailed, setPhotoFailed] = React.useState(false);
+  // A new photo URL (new upload, or a fresh signed link) gets a new chance to load;
+  // otherwise one early failure would show initials forever.
+  React.useEffect(() => { setPhotoFailed(false); }, [photo]);
 
   return (
     <TouchableOpacity

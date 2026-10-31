@@ -4,7 +4,7 @@ Newest on top. Mark items [open] / [doing] / [done] / [question] and reply in `t
 
 ---
 
-## 2026-10-31 01:30 — BUG-004: avatars still not showing on Home, and a new photo doesn't replace the old one  [open]
+## 2026-10-31 01:30 — BUG-004: avatars still not showing on Home, and a new photo doesn't replace the old one  [done by Claude — John asked Claude to fix it; don't redo]
 John (iPhone, after bbb3c5e): Home bubbles show initials (JM/SM/EM); Profile shows a photo;
 "Change photo" doesn't seem to change it. Claude's analysis (please verify):
 

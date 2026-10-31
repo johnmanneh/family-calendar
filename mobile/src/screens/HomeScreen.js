@@ -108,6 +108,9 @@ function MemberBubble({ member, selected, onPress, onLongPress }) {
     ? (member.avatar_url.startsWith('http') ? member.avatar_url : `${SERVER_URL}${member.avatar_url}`)
     : null;
   const [photoFailed, setPhotoFailed] = React.useState(false);
+  // A new photo URL (new upload, or a fresh signed link) gets a new chance to load;
+  // otherwise one early failure would show initials forever.
+  React.useEffect(() => { setPhotoFailed(false); }, [photoUri]);
 
   return (
     <TouchableOpacity

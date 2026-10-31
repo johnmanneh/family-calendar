@@ -211,6 +211,31 @@ describe('avatarStore — HMAC public_id', () => {
     expect(mockSignedUrl).not.toHaveBeenCalled();
   });
 
+  // ── 7b. A new upload gets a new URL (version), so phones don't show the cached old photo ──
+  test('saveAvatar returns a versioned URL and a marker carrying the version', async () => {
+    mockUploadStream.mockImplementation((opts, cb) => ({ end: () => cb(null, { public_id: opts.public_id, version: 1761900000 }) }));
+    mockSignedUrl.mockReturnValue('https://v-url');
+    const { url, marker } = await avatarStore.saveAvatar(7, Buffer.from('img'));
+    expect(url).toBe('https://v-url');
+    expect(marker).toBe('cloudinary:v1761900000');
+    expect(mockSignedUrl.mock.calls[0][1].version).toBe('1761900000');
+  });
+
+  test('withFreshAvatar signs the stored version so each upload has its own URL', () => {
+    mockSignedUrl.mockReturnValue('https://fresh-v');
+    avatarStore.withFreshAvatar({ id: 7, avatar_url: 'cloudinary:v1761900000' });
+    const [publicId, urlOpts] = mockSignedUrl.mock.calls[0];
+    expect(publicId).toBe(`avatars/${expectedPublicId(7)}`);
+    expect(urlOpts.version).toBe('1761900000');
+    expect(urlOpts.type).toBe('authenticated');
+  });
+
+  test('withFreshAvatar still works for the old plain "cloudinary" marker (no version)', () => {
+    mockSignedUrl.mockReturnValue('https://fresh');
+    avatarStore.withFreshAvatar({ id: 7, avatar_url: 'cloudinary' });
+    expect(mockSignedUrl.mock.calls[0][1].version).toBeUndefined();
+  });
+
   // ── 8. Throws when neither HMAC key nor API secret is set ─────────────────
   test('storeAvatar throws if AVATAR_HMAC_KEY and CLOUDINARY_API_SECRET are absent', async () => {
     jest.resetModules();

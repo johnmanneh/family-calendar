@@ -6,7 +6,7 @@ process.env.TZ='UTC';
 require('./testDatabase')(process.env);
 // Stand-in for Cloudinary: no network in tests; multer is skipped, req.file is set directly
 const avatarPath=require.resolve('../src/utils/avatarStore');
-require.cache[avatarPath]={id:avatarPath,filename:avatarPath,loaded:true,exports:{receiveAvatar:(req,res,next)=>next(),storeAvatar:async id=>`https://img.test/avatar-${id}.jpg`,deleteAvatar:async()=>{}}};
+require.cache[avatarPath]={id:avatarPath,filename:avatarPath,loaded:true,exports:{receiveAvatar:(req,res,next)=>next(),storeAvatar:async id=>`https://img.test/avatar-${id}.jpg`,saveAvatar:async id=>({url:`https://img.test/avatar-${id}.jpg`,marker:'cloudinary:v1'}),withFreshAvatar:r=>r,getAvatarUrl:id=>`https://img.test/avatar-${id}.jpg`,deleteAvatar:async()=>{}}};
 const pool=require('../src/config/db'); const migrate=require('../src/db/migrate');
 const C=n=>require('../src/controllers/'+n);
 const call=(fn,req)=>new Promise(r=>{const res={status(c){this.c=c;return this},json(b){r({c:this.c||200,b})}}; Promise.resolve(fn({params:{},body:{},...req},res)).catch(e=>r({c:'THROW',b:e.message}));});

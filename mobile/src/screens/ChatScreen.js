@@ -44,6 +44,9 @@ function MessageRow({ msg, isMe, navigation }) {
     ? (msg.avatar_url.startsWith('http') ? msg.avatar_url : `${SERVER_URL}${msg.avatar_url}`)
     : null;
   const [photoFailed, setPhotoFailed] = React.useState(false);
+  // A new photo URL (new upload, or a fresh signed link) gets a new chance to load;
+  // otherwise one early failure would show initials forever.
+  React.useEffect(() => { setPhotoFailed(false); }, [photoUri]);
 
   return (
     <View style={[styles.msgRow, isMe && styles.msgRowMe]}>
