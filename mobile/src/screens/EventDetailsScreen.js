@@ -485,6 +485,22 @@ function TaskRow({ task, eventId, onRefresh, currentUserId }) {
     Number(currentUserId) === Number(task.created_by) ||
     Number(currentUserId) === Number(task.user_id);
 
+  // Done: the assignee (or whoever made the task) can close an accepted task.
+  // The other person gets a "Task done" notification.
+  const canComplete = task.status === 'accepted' && canAddSubTask;
+  const [completing, setCompleting] = useState(false);
+  const handleComplete = async () => {
+    setCompleting(true);
+    try {
+      await API.patch(`/tasks/${task.id}/complete`);
+      onRefresh();
+    } catch (err) {
+      Alert.alert(t('common.error'), err.response?.data?.message || t('common.something_went_wrong'));
+    } finally {
+      setCompleting(false);
+    }
+  };
+
   const handleAddSubTask = async () => {
     if (!subTaskText.trim()) return;
     setAdding(true);
@@ -514,6 +530,18 @@ function TaskRow({ task, eventId, onRefresh, currentUserId }) {
         <View style={styles.taskTitleRow}>
           <Text style={styles.taskTitle} numberOfLines={1}>{task.title}</Text>
           <StatusBadge status={task.status} />
+          {canComplete && (
+            <TouchableOpacity
+              onPress={handleComplete}
+              disabled={completing}
+              hitSlop={{ top: 8, bottom: 8, left: 8, right: 8 }}
+              style={{ marginLeft: 8, flexDirection: 'row', alignItems: 'center', gap: 4, paddingVertical: 4, paddingHorizontal: 10, borderRadius: 12, backgroundColor: '#34c7591f', opacity: completing ? 0.5 : 1 }}
+              accessibilityRole="button"
+            >
+              <Ionicons name="checkmark-circle-outline" size={15} color="#34c759" />
+              <Text style={{ color: '#34c759', fontWeight: '600', fontSize: 13 }}>{t('tasks.done', { defaultValue: 'Done' })}</Text>
+            </TouchableOpacity>
+          )}
         </View>
 
         {/* Negotiation bubble — only shown when status is countered */}

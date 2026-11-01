@@ -6,14 +6,14 @@ const getPendingTasks = async (req, res) => {
 
   try {
     const result = await pool.query(
-      `SELECT t.id, t.title, t.status, t.counter_offer, t.created_at,
+      `SELECT t.id, t.title, t.status, t.counter_offer, t.created_at, t.due_date,
               e.id as event_id, e.title as event_title,
               e.start_date, e.color,
               u.first_name as created_by_first_name,
               u.last_name as created_by_last_name,
               st.id as sub_task_id, st.title as sub_task_title
        FROM tasks t
-       JOIN events e ON t.event_id = e.id
+       LEFT JOIN events e ON t.event_id = e.id   -- standalone tasks have no event
        LEFT JOIN users u ON t.created_by = u.id
        LEFT JOIN sub_tasks st ON t.id = st.task_id
        WHERE t.assigned_to = $1
@@ -21,7 +21,7 @@ const getPendingTasks = async (req, res) => {
          t.status = 'pending'
          OR (t.status = 'countered' AND t.last_counter_by = t.created_by)
        )
-       ORDER BY e.start_date ASC, t.created_at ASC, st.created_at ASC`,
+       ORDER BY COALESCE(e.start_date, t.due_date, t.created_at) ASC, t.created_at ASC, st.created_at ASC`,
       [userId]
     );
 
@@ -34,6 +34,7 @@ const getPendingTasks = async (req, res) => {
           status: row.status,
           counter_offer: row.counter_offer,
           created_at: row.created_at,
+          due_date: row.due_date,
           event_id: row.event_id,
           event_title: row.event_title,
           start_date: row.start_date,

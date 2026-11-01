@@ -160,7 +160,8 @@
     "complete": "Abschließen",
     "could_not_complete": "Aufgabe konnte nicht abgeschlossen werden",
     "could_not_delete": "Aufgabe konnte nicht gelöscht werden",
-    "could_not_save_arrival": "Ankunftszeit konnte nicht gespeichert werden"
+    "could_not_save_arrival": "Ankunftszeit konnte nicht gespeichert werden",
+    "done": "Erledigt"
   },
   "pending": {
     "title": "Ausstehend",
@@ -181,7 +182,9 @@
     "min_ago": "vor {{count}} Min",
     "hours_ago": "vor {{count}} Std",
     "days_ago": "vor {{count}} T",
-    "empty": "Noch keine Benachrichtigungen"
+    "empty": "Noch keine Benachrichtigungen",
+    "accept": "Annehmen",
+    "decline": "Ablehnen"
   },
   "chat": {
     "title_named": "{{name}} Chat",

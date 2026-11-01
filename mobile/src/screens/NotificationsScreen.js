@@ -29,6 +29,8 @@ const TYPE_CONFIG = {
   event_shared:     { icon: 'people-outline',           color: '#7b61ff' },
   event_added_for_you: { icon: 'calendar-number-outline', color: '#f48c06' },
   calendar_access:  { icon: 'key-outline',              color: '#34c759' },
+  task_completed:   { icon: 'checkmark-done-outline',   color: '#34c759' },
+  family_removed:   { icon: 'person-remove-outline',    color: '#ff3b30' },
 };
 
 // ─── Time ago helper ─────────────────────────────────────────────────────────
@@ -47,7 +49,13 @@ function timeAgoKey(dateStr) {
 
 // ─── Notification row ────────────────────────────────────────────────────────
 
-function NotifRow({ item, onMarkRead, onOpen }) {
+function parseData(item) {
+  let data = item.data || {};
+  if (typeof data === 'string') { try { data = JSON.parse(data); } catch { data = {}; } }
+  return data;
+}
+
+function NotifRow({ item, onMarkRead, onOpen, action, onRespond }) {
   const { t } = useTranslation();
   const styles = useStyles();
   const cfg = TYPE_CONFIG[item.type] || { icon: 'notifications-outline', color: '#8e8e93' };
@@ -76,6 +84,26 @@ function NotifRow({ item, onMarkRead, onOpen }) {
           <Text style={styles.rowText} numberOfLines={2}>{item.body}</Text>
         ) : null}
         <Text style={styles.rowTime}>{timeStr}</Text>
+
+        {/* Still open → answer right here (task assignment or event invitation) */}
+        {action ? (
+          <View style={{ flexDirection: 'row', gap: 10, marginTop: 10 }}>
+            <TouchableOpacity
+              onPress={() => onRespond(item, action, false)}
+              disabled={action.busy}
+              style={{ paddingVertical: 7, paddingHorizontal: 16, borderRadius: 16, backgroundColor: '#ff3b301f', opacity: action.busy ? 0.5 : 1 }}
+            >
+              <Text style={{ color: '#ff3b30', fontWeight: '600', fontSize: 14 }}>{t('notifications.decline', { defaultValue: 'Decline' })}</Text>
+            </TouchableOpacity>
+            <TouchableOpacity
+              onPress={() => onRespond(item, action, true)}
+              disabled={action.busy}
+              style={{ paddingVertical: 7, paddingHorizontal: 16, borderRadius: 16, backgroundColor: '#1a8fa8', opacity: action.busy ? 0.5 : 1 }}
+            >
+              <Text style={{ color: '#fff', fontWeight: '600', fontSize: 14 }}>{t('notifications.accept', { defaultValue: 'Accept' })}</Text>
+            </TouchableOpacity>
+          </View>
+        ) : null}
       </View>
 
       {!item.is_read && <View style={[styles.rowDot, { backgroundColor: cfg.color }]} />}
@@ -93,11 +121,23 @@ export default function NotificationsScreen({ navigation }) {
   const [loading,       setLoading]       = useState(true);
   const [refreshing,    setRefreshing]    = useState(false);
 
+  // What is still waiting for an answer, so only those rows get Accept / Decline
+  const [openTasks,  setOpenTasks]  = useState(new Set());
+  const [openEvents, setOpenEvents] = useState(new Set());
+  const [busyId,     setBusyId]     = useState(null);
+
   const load = useCallback(async () => {
     try {
-      const res = await API.get('/notifications');
+      const [res, pend, inv] = await Promise.all([
+        API.get('/notifications'),
+        API.get('/tasks/pending').catch(() => null),
+        API.get('/events/invitations').catch(() => null),
+      ]);
       setNotifications(res.data.notifications || []);
       setUnreadCount(res.data.unread_count   || 0);
+      setOpenTasks(new Set((pend?.data?.tasks || [])
+        .filter(x => x.status === 'pending').map(x => Number(x.id))));
+      setOpenEvents(new Set((inv?.data?.invitations || inv?.data?.events || []).map(x => Number(x.id ?? x.event_id))));
     } catch {
       setNotifications([]);
       setUnreadCount(0);
@@ -133,6 +173,34 @@ export default function NotificationsScreen({ navigation }) {
     if (typeof data === 'string') { try { data = JSON.parse(data); } catch { data = {}; } }
     if (data.eventId) navigation.navigate('EventDetails', { eventId: data.eventId });
     else if (data.taskId || String(item.type).startsWith('task') || item.type === 'counter_accepted') navigation.navigate('Pending');
+  };
+
+  const actionFor = (item) => {
+    const data = parseData(item);
+    if (item.type === 'task_assigned' && data.taskId && openTasks.has(Number(data.taskId))) {
+      return { kind: 'task', id: Number(data.taskId), busy: busyId === item.id };
+    }
+    if (item.type === 'event_invited' && data.eventId && openEvents.has(Number(data.eventId))) {
+      return { kind: 'event', id: Number(data.eventId), busy: busyId === item.id };
+    }
+    return null;
+  };
+
+  const handleRespond = async (item, action, accept) => {
+    setBusyId(item.id);
+    try {
+      if (action.kind === 'task') {
+        await API.patch(`/tasks/${action.id}/respond`, { response: accept ? 'accepted' : 'declined' });
+      } else {
+        await API.put(`/events/invitations/${action.id}`, { response: accept ? 'accepted' : 'denied' });
+      }
+      if (!item.is_read) handleMarkRead(item.id);
+      await load();
+    } catch (err) {
+      await load();   // already answered elsewhere → buttons disappear
+    } finally {
+      setBusyId(null);
+    }
   };
 
   const handleMarkAllRead = async () => {
@@ -175,7 +243,8 @@ export default function NotificationsScreen({ navigation }) {
           data={notifications}
           keyExtractor={item => String(item.id)}
           renderItem={({ item }) => (
-            <NotifRow item={item} onMarkRead={handleMarkRead} onOpen={handleOpen} />
+            <NotifRow item={item} onMarkRead={handleMarkRead} onOpen={handleOpen}
+              action={actionFor(item)} onRespond={handleRespond} />
           )}
           contentContainerStyle={
             notifications.length === 0 ? styles.emptyContainer : styles.listContent

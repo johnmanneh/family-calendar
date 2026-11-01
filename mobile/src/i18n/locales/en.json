@@ -159,7 +159,8 @@
     "complete": "Complete",
     "could_not_complete": "Could not mark task complete",
     "could_not_delete": "Could not delete task",
-    "could_not_save_arrival": "Could not save arrival time"
+    "could_not_save_arrival": "Could not save arrival time",
+    "done": "Done"
   },
   "pending": {
     "title": "Pending",
@@ -180,7 +181,9 @@
     "min_ago": "{{count}}m ago",
     "hours_ago": "{{count}}h ago",
     "days_ago": "{{count}}d ago",
-    "empty": "No notifications yet"
+    "empty": "No notifications yet",
+    "accept": "Accept",
+    "decline": "Decline"
   },
   "chat": {
     "title_named": "{{name}} chat",
