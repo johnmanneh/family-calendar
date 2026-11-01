@@ -10,7 +10,7 @@ function homeLifecycle(deps, observe) {
   const source = fs.readFileSync(path.join(__dirname, '../../../mobile/src/screens/HomeScreen.js'), 'utf8');
   const ast = babel.parseSync(source, { configFile: false, babelrc: false, parserOpts: { plugins: ['jsx'] } });
   const fn = ast.program.body.find(n => n.type === 'ExportDefaultDeclaration').declaration;
-  const names = new Set(['user', 'family', 'familyIdRef', 'requestId', 'events', 'tasks', 'loading', 'refreshing', 'selectedFilter', 'clearFilter', 'myGroups', 'pendingCount', 'notifUnread', 'chatUnread', 'isOffline', 'cacheLabel', 'fetchEvents', 'fetchPendingCount', 'fetchNotifUnread', 'lastFamilyId', 'activeScope', 'scopeRef', 'dataScope']);
+  const names = new Set(['user', 'family', 'familyIdRef', 'requestId', 'events', 'tasks', 'loading', 'refreshing', 'selectedFilter', 'clearFilter', 'meFilter', 'myGroups', 'pendingCount', 'notifUnread', 'chatUnread', 'isOffline', 'cacheLabel', 'fetchEvents', 'fetchPendingCount', 'fetchNotifUnread', 'lastFamilyId', 'activeScope', 'scopeRef', 'dataScope']);
   const bindings = node => Object.keys(babel.types.getBindingIdentifiers(node));
   fn.body.body = fn.body.body.filter(n => {
     if (n.type === 'VariableDeclaration') return bindings(n).some(name => names.has(name));

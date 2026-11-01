@@ -482,9 +482,16 @@ export default function HomeScreen({ navigation, route }) {
   const [tasks, setTasks] = useState([]);
   const [loading, setLoading] = useState(true);
   const [refreshing, setRefreshing] = useState(false);
-  // One active bubble filter: type null = All, 'person' = person bubble, 'group' = group bubble
-  const [selectedFilter, setSelectedFilter] = useState({ type: null, id: null });
-  const clearFilter = () => setSelectedFilter({ type: null, id: null });
+  // One active bubble filter: 'person' = person bubble, 'group' = group bubble.
+  // There is no "All": the calendar always opens on ME (testers wanted their own
+  // day first). Each bubble shows only that person's events and tasks.
+  const meFilter = () => (user?.id != null ? { type: 'person', id: user.id } : { type: null, id: null });
+  const [selectedFilter, setSelectedFilter] = useState(meFilter);
+  const clearFilter = () => setSelectedFilter(meFilter());   // "reset" = back to me
+  // User loaded after the first render → select me
+  useEffect(() => {
+    if (user?.id != null) setSelectedFilter(prev => (prev.type == null ? meFilter() : prev));
+  }, [user?.id]); // eslint-disable-line react-hooks/exhaustive-deps
   // "See all <name>'s events" on a profile → open home filtered to that person
   useEffect(() => {
     const id = route?.params?.focusMemberId;
@@ -1255,11 +1262,8 @@ export default function HomeScreen({ navigation, route }) {
 
   // ── Toggle member filter ──────────────────────────────────────────────────
   const handleMemberPress = (memberId) => {
-    setSelectedFilter((prev) => (
-      prev.type === 'person' && Number(prev.id) === Number(memberId)
-        ? { type: null, id: null }
-        : { type: 'person', id: memberId }
-    ));
+    // Always select (no toggle off — there is no "everyone" view any more)
+    setSelectedFilter({ type: 'person', id: memberId });
   };
 
   // ── Complete a task ───────────────────────────────────────────────────────
@@ -1468,27 +1472,6 @@ export default function HomeScreen({ navigation, route }) {
             style={styles.membersRow}
             contentContainerStyle={styles.membersContent}
           >
-            {/* "All" first — clears the person/group filter. Only useful when there is something to filter. */}
-            {(sortedMembers.length > 1 || myGroups.length > 0) && (
-              <TouchableOpacity
-                style={styles.bubble}
-                onPress={clearFilter}
-                accessibilityRole="button"
-                accessibilityState={{ selected: selectedFilter.type === null }}
-              >
-                <View style={styles.bubbleHaloWrap}>
-                  {selectedFilter.type === null && (
-                    <View style={[styles.bubbleHalo, { backgroundColor: '#1a8fa8', opacity: 0.25 }]} />
-                  )}
-                  <View style={[styles.bubbleCircle, styles.bubbleAllCircle]}>
-                    <Ionicons name="people" size={18} color="#1a8fa8" />
-                  </View>
-                </View>
-                <Text style={[styles.bubbleName, selectedFilter.type === null && { color: '#1a8fa8', fontWeight: '700' }]} numberOfLines={1}>
-                  {t('home.filter_all')}
-                </Text>
-              </TouchableOpacity>
-            )}
             {sortedMembers.map((member) => (
               <MemberBubble
                 key={member.id}
@@ -1505,7 +1488,7 @@ export default function HomeScreen({ navigation, route }) {
                 selected={selectedFilter.type === 'group' && Number(selectedFilter.id) === Number(group.id)}
                 onPress={() => setSelectedFilter((prev) => (
                   prev.type === 'group' && Number(prev.id) === Number(group.id)
-                    ? { type: null, id: null }
+                    ? meFilter()                       // tap again → back to me
                     : { type: 'group', id: group.id }
                 ))}
               />
