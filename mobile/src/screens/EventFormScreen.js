@@ -1,4 +1,5 @@
 import React, { useState, useEffect } from 'react';
+import { useColorScheme } from '../context/ThemeContext';
 import {
   View,
   Text,
@@ -101,6 +102,9 @@ function formatDisplay(date, allDay) {
 function DateRow({ label, date, allDay, pickerKey, openPicker, setOpenPicker, onChange }) {
   const styles = useStyles();
   const isOpen = openPicker === pickerKey;
+  // The app has its own dark mode (app.json is 'light'), so tell the iOS picker
+  // which one to draw, or it shows dark text on our dark background.
+  const pickerTheme = useColorScheme() === 'dark' ? 'dark' : 'light';
 
   // Android v9+: use the imperative API — the inline component crashes internally
   const openAndroid = () => {
@@ -156,6 +160,7 @@ function DateRow({ label, date, allDay, pickerKey, openPicker, setOpenPicker, on
           value={date}
           mode={allDay ? 'date' : 'datetime'}
           display="inline"
+          themeVariant={pickerTheme}
           onChange={(_, selected) => {
             if (selected) onChange(selected);
           }}

@@ -1,4 +1,5 @@
 import React, { useState } from 'react';
+import { useColorScheme } from '../context/ThemeContext';
 import {
   View,
   Text,
@@ -38,6 +39,7 @@ function formatDisplay(date) {
 export default function TaskFormScreen({ route, navigation }) {
   const { t } = useTranslation();
   const styles = useStyles();
+  const pickerTheme = useColorScheme() === 'dark' ? 'dark' : 'light';   // iOS picker follows the app's dark mode
   const { user } = useAuth();
   const { members } = useFamily();
 
@@ -61,13 +63,13 @@ export default function TaskFormScreen({ route, navigation }) {
   const [error, setError]           = useState('');
 
   // Determine which button set to show at the bottom
-  const isPendingForMe = isEditing
-    && existingTask.status === 'pending'
-    && Number(existingTask.assigned_to) === Number(user?.id);
+  // A task you gave yourself never needs accepting: it's already yours (Done only).
+  const isMine     = isEditing && Number(existingTask.assigned_to) === Number(user?.id);
+  const selfMade   = isEditing && Number(existingTask.created_by) === Number(user?.id);
+  const isPendingForMe = isMine && existingTask.status === 'pending' && !selfMade;
 
-  const isOngoingForMe = isEditing
-    && existingTask.status === 'accepted'
-    && Number(existingTask.assigned_to) === Number(user?.id);
+  const isOngoingForMe = isMine
+    && (existingTask.status === 'accepted' || (existingTask.status === 'pending' && selfMade));
 
   const handleAccept = async () => {
     setLoading(true);
@@ -281,6 +283,7 @@ export default function TaskFormScreen({ route, navigation }) {
                   value={dueDate}
                   mode="datetime"
                   display="inline"
+                  themeVariant={pickerTheme}
                   onChange={(_, selected) => { if (selected) setDueDate(selected); }}
                   style={{ marginTop: 8 }}
                 />

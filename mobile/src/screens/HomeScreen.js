@@ -283,6 +283,7 @@ const STATUS_KEY   = { pending: 'common.pending', accepted: 'home.ongoing', coun
 function TaskRow({ task, navigation, onComplete, onDelete, onAccept, onSetArrivalTime, currentUserId }) {
   const { t } = useTranslation();
   const styles = useStyles();
+  const dark = useColorScheme() === 'dark';   // arrival-time picker follows the app's dark mode
   const color = task.color || task.assigned_color || '#1a8fa8';
   const badge = STATUS_COLOR[task.status] || '#aeaeb2';
   const badgeOpacity = useRef(new Animated.Value(1)).current;
@@ -427,7 +428,8 @@ function TaskRow({ task, navigation, onComplete, onDelete, onAccept, onSetArriva
                 display="spinner"
                 onChange={(_, date) => { if (date) setPickerTime(date); }}
                 style={{ width: '100%' }}
-                textColor="#1d1d1f"
+                themeVariant={dark ? 'dark' : 'light'}
+                textColor={dark ? '#fff' : '#1d1d1f'}
               />
             </View>
           </View>
