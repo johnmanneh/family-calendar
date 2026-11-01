@@ -23,7 +23,6 @@ import TopCard from '../components/ui/TopCard';
 import ListCard, { SectionHeader } from '../components/ui/ListCard';
 import TreadmillList from '../components/TreadmillList';
 import { RollInGroup } from '../components/RollIn';
-import CalendarAccessSection from '../components/family/CalendarAccessSection';
 import ChildManageSection from '../components/family/ChildManageSection';
 import { useStyles } from '../styles/MemberProfileScreen.styles';
 import { useTranslation } from 'react-i18next';
@@ -147,7 +146,7 @@ const TASK_BADGE = {
 // ─── Settings tab ────────────────────────────────────────────────────────────
 
 function SettingsTab({ member, user, family, fetchFamily, onAvatarChange, navigation }) {
-  const { members: familyMembers } = useFamily();
+  // (Calendar access moved to the Family screen)
   const styles = useStyles();
   const { t }  = useTranslation();
   const { logout } = useAuth();
@@ -450,9 +449,6 @@ function SettingsTab({ member, user, family, fetchFamily, onAvatarChange, naviga
           </>
         )}
       </View>
-
-      {/* ── Who can add to my calendar ── */}
-      {family && !family.is_personal && <CalendarAccessSection members={familyMembers} meId={user?.id} />}
 
       {/* ── Danger zone ── */}
       <Text style={[styles.settingsSectionHeader, { marginTop: 32 }]}>{t('common.danger_zone')}</Text>

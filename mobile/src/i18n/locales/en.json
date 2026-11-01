@@ -417,5 +417,8 @@
     "no_audio": "Couldn't hear you — try again",
     "error": "Could not create — try again",
     "auto_stopped": "Stopped (30s max)"
+  },
+  "availability": {
+    "title": "Share my busy times"
   }
 }

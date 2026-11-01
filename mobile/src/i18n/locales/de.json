@@ -418,5 +418,8 @@
     "no_audio": "Nichts gehört — bitte nochmal",
     "error": "Konnte nicht erstellen — bitte nochmal",
     "auto_stopped": "Gestoppt (max. 30s)"
+  },
+  "availability": {
+    "title": "Meine belegten Zeiten teilen"
   }
 }

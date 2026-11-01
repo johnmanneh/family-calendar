@@ -28,6 +28,8 @@ jest.mock('../styles/FamilyScreen.styles', () => ({ useStyles: () => ({}) }));
 jest.mock('../components/ui/TopCard', () => ({ __esModule: true, default: ({ children }) => <div>{children}</div> }));
 jest.mock('../components/RollIn', () => ({ RollInGroup: ({ children }) => <div>{children}</div> }));
 jest.mock('../components/family/AddChildSection', () => ({ __esModule: true, default: () => null }));
+jest.mock('../context/ThemeContext', () => ({ useColorScheme: () => 'light' }));
+jest.mock('../components/family/CalendarAccessSection', () => ({ __esModule: true, default: () => null }));
 const navigation = { navigate: jest.fn(), goBack: jest.fn() };
 const route = { params: { prefill: { title: 'Bros plan', date: '2026-11-21', time: '10:00' } } };
 let setSharing;

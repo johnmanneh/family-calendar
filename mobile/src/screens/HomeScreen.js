@@ -490,9 +490,9 @@ export default function HomeScreen({ navigation, route }) {
   const [tasks, setTasks] = useState([]);
   const [loading, setLoading] = useState(true);
   const [refreshing, setRefreshing] = useState(false);
-  // One active bubble filter: 'person' = person bubble, 'group' = group bubble.
-  // There is no "All": the calendar always opens on ME (testers wanted their own
-  // day first). Each bubble shows only that person's events and tasks.
+  // One active bubble filter: null = All (last bubble), 'person', 'group'.
+  // The calendar always opens on ME (testers wanted their own day first).
+  // Each person bubble shows only that person's events and tasks.
   const meFilter = () => (user?.id != null ? { type: 'person', id: user.id } : { type: null, id: null });
   const [selectedFilter, setSelectedFilter] = useState(meFilter);
   const clearFilter = () => setSelectedFilter(meFilter());   // "reset" = back to me
@@ -1501,6 +1501,27 @@ export default function HomeScreen({ navigation, route }) {
                 ))}
               />
             ))}
+            {/* "All" at the END: everyone's events. The calendar still opens on me. */}
+            {(sortedMembers.length > 1 || myGroups.length > 0) && (
+              <TouchableOpacity
+                style={styles.bubble}
+                onPress={() => setSelectedFilter({ type: null, id: null })}
+                accessibilityRole="button"
+                accessibilityState={{ selected: selectedFilter.type === null }}
+              >
+                <View style={styles.bubbleHaloWrap}>
+                  {selectedFilter.type === null && (
+                    <View style={[styles.bubbleHalo, { backgroundColor: '#1a8fa8', opacity: 0.25 }]} />
+                  )}
+                  <View style={[styles.bubbleCircle, styles.bubbleAllCircle]}>
+                    <Ionicons name="people" size={18} color="#1a8fa8" />
+                  </View>
+                </View>
+                <Text style={[styles.bubbleName, selectedFilter.type === null && { color: '#1a8fa8', fontWeight: '700' }]} numberOfLines={1}>
+                  {t('home.filter_all')}
+                </Text>
+              </TouchableOpacity>
+            )}
           </ScrollView>
         </View>
       )}
