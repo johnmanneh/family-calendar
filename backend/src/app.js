@@ -11,6 +11,8 @@ require('./db/migrate')()
     app.listen(PORT, () => {
       console.log(`Server running on port ${PORT}`);
     });
+    // Task reminders ("Buy bread is due in 30 min"), checked every minute
+    require('./jobs/taskReminders').startTaskReminders();
   })
   .catch(err => {
     console.error(err.message);

@@ -160,7 +160,14 @@
     "could_not_complete": "Could not mark task complete",
     "could_not_delete": "Could not delete task",
     "could_not_save_arrival": "Could not save arrival time",
-    "done": "Done"
+    "done": "Done",
+    "remind": "Reminder",
+    "remind_none": "None",
+    "remind_at": "At due time",
+    "remind_15": "15 min",
+    "remind_30": "30 min",
+    "remind_60": "1 hour",
+    "remind_1440": "1 day"
   },
   "pending": {
     "title": "Pending",

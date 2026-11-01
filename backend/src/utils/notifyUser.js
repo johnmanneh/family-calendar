@@ -17,7 +17,12 @@ async function notifyUser(userId, type, title, body = '', data = {}, opts = {}) 
 
     const tok = await pool.query('SELECT push_token FROM users WHERE id = $1', [userId]);
     const token = tok.rows[0]?.push_token;
-    if (token) sendPush(token, title, body, { type, ...data }, opts);
+    if (token) {
+      // Red number on the app icon = unread notifications (includes this one)
+      const unread = await pool.query(
+        'SELECT COUNT(*)::int AS n FROM notifications WHERE user_id = $1 AND is_read = false', [userId]);
+      sendPush(token, title, body, { type, ...data }, { ...opts, badge: unread.rows[0]?.n ?? undefined });
+    }
   } catch (err) {
     console.error('notifyUser error:', err.message);
   }

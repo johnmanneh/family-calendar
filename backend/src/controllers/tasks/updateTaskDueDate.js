@@ -8,7 +8,7 @@ const updateTaskDueDate = async (req, res) => {
 
   try {
     const result = await pool.query(
-      `UPDATE tasks SET due_date = $1
+      `UPDATE tasks SET due_date = $1, reminder_sent_at = NULL
        WHERE id = $2 AND (assigned_to = $3 OR created_by = $3)
        RETURNING *`,
       [due_date || null, taskId, userId]

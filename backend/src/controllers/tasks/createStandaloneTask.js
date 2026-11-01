@@ -7,6 +7,9 @@ const { successResponse, errorResponse } = require('../../utils/response/respons
 const createStandaloneTask = async (req, res) => {
   const userId = req.user.id;
   const { title, assigned_to, due_date, position } = req.body;
+  // Reminder before the due time: number of minutes, or null for none (default 30)
+  const remind = req.body.remind_minutes === undefined ? 30
+    : (req.body.remind_minutes === null ? null : Math.max(0, Math.min(10080, Number(req.body.remind_minutes) || 0)));
 
   if (!title || !assigned_to) {
     return errorResponse(res, 400, 'Title and assigned_to are required');
@@ -30,11 +33,11 @@ const createStandaloneTask = async (req, res) => {
 
     const result = await pool.query(
       // A task you give yourself is already accepted (ongoing): nothing to accept.
-      `INSERT INTO tasks (title, assigned_to, due_date, position, is_standalone, created_by, family_id, status)
-       VALUES ($1, $2, $3, $4, true, $5, $6, $7)
+      `INSERT INTO tasks (title, assigned_to, due_date, position, is_standalone, created_by, family_id, status, remind_minutes)
+       VALUES ($1, $2, $3, $4, true, $5, $6, $7, $8)
        RETURNING *`,
       [title, assigned_to, due_date || null, position || 'full', userId, familyId,
-       Number(assigned_to) === Number(userId) ? 'accepted' : 'pending']
+       Number(assigned_to) === Number(userId) ? 'accepted' : 'pending', remind]
     );
     // Tell the assignee (inbox + phone push), unless you gave yourself the task
     if (Number(assigned_to) !== Number(userId)) {

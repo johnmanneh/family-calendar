@@ -29,7 +29,7 @@ const getFamilyTasks = async (req, res) => {
     const result = await pool.query(
       `SELECT
          t.id, t.title, t.status, t.position, t.is_standalone,
-         t.due_date, t.created_by, t.assigned_to, t.completed, t.family_id,
+         t.due_date, t.remind_minutes, t.created_by, t.assigned_to, t.completed, t.family_id,
          t.event_id,
          e.title     AS event_title,
          e.start_date,

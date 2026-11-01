@@ -36,6 +36,16 @@ function formatDisplay(date) {
   });
 }
 
+// Reminder choices (minutes before the due time; null = no reminder)
+const REMIND_OPTIONS = [
+  { value: null, key: 'tasks.remind_none',  fallback: 'None' },
+  { value: 0,    key: 'tasks.remind_at',    fallback: 'At due time' },
+  { value: 15,   key: 'tasks.remind_15',    fallback: '15 min' },
+  { value: 30,   key: 'tasks.remind_30',    fallback: '30 min' },
+  { value: 60,   key: 'tasks.remind_60',    fallback: '1 hour' },
+  { value: 1440, key: 'tasks.remind_1440',  fallback: '1 day' },
+];
+
 export default function TaskFormScreen({ route, navigation }) {
   const { t } = useTranslation();
   const styles = useStyles();
@@ -57,6 +67,10 @@ export default function TaskFormScreen({ route, navigation }) {
   );
   const [position, setPosition]     = useState(existingTask?.position || 'full');
   const [hasDueDate, setHasDueDate] = useState(!!existingTask?.due_date);
+  // Reminder before the due time (minutes; null = none). New tasks: 30 min.
+  const [remind, setRemind] = useState(
+    existingTask ? (existingTask.remind_minutes ?? null) : 30
+  );
   const [dueDate, setDueDate]       = useState(initialDueDate);
   const [showPicker, setShowPicker] = useState(false);
   const [loading, setLoading]       = useState(false);
@@ -116,6 +130,7 @@ export default function TaskFormScreen({ route, navigation }) {
           assigned_to: assignedTo,
           position,
           due_date: hasDueDate ? toISOLocal(dueDate) : null,
+          remind_minutes: remind,
         });
       } else {
         await API.post('/tasks/standalone', {
@@ -123,6 +138,7 @@ export default function TaskFormScreen({ route, navigation }) {
           assigned_to: assignedTo,
           position,
           due_date: hasDueDate ? toISOLocal(dueDate) : null,
+          remind_minutes: remind,
         });
       }
       navigation.goBack();
@@ -288,6 +304,22 @@ export default function TaskFormScreen({ route, navigation }) {
                   style={{ marginTop: 8 }}
                 />
               )}
+
+              {/* Reminder for the person doing the task */}
+              <Text style={[styles.fieldLabel, { marginTop: 14 }]}>{t('tasks.remind', { defaultValue: 'Reminder' })}</Text>
+              <View style={[styles.segmentRow, { flexWrap: 'wrap', gap: 6 }]}>
+                {REMIND_OPTIONS.map(o => (
+                  <TouchableOpacity
+                    key={String(o.value)}
+                    style={[styles.segment, { flexGrow: 0, paddingHorizontal: 10 }, remind === o.value && styles.segmentActive]}
+                    onPress={() => setRemind(o.value)}
+                  >
+                    <Text style={[styles.segmentText, remind === o.value && styles.segmentTextActive]}>
+                      {t(o.key, { defaultValue: o.fallback })}
+                    </Text>
+                  </TouchableOpacity>
+                ))}
+              </View>
             </>
           )}
         </View>

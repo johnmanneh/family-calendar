@@ -161,7 +161,14 @@
     "could_not_complete": "Aufgabe konnte nicht abgeschlossen werden",
     "could_not_delete": "Aufgabe konnte nicht gelöscht werden",
     "could_not_save_arrival": "Ankunftszeit konnte nicht gespeichert werden",
-    "done": "Erledigt"
+    "done": "Erledigt",
+    "remind": "Erinnerung",
+    "remind_none": "Keine",
+    "remind_at": "Zur Fälligkeit",
+    "remind_15": "15 Min.",
+    "remind_30": "30 Min.",
+    "remind_60": "1 Stunde",
+    "remind_1440": "1 Tag"
   },
   "pending": {
     "title": "Ausstehend",

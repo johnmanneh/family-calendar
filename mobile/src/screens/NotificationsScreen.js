@@ -13,6 +13,7 @@ import { useTranslation } from 'react-i18next';
 import { useSSE } from '../context/SSEContext';
 import TreadmillList from '../components/TreadmillList';
 import API from '../api/axios';
+import { setAppBadge } from '../utils/appBadge';
 import { useStyles } from '../styles/NotificationsScreen.styles';
 
 import TopCard from '../components/ui/TopCard';
@@ -30,6 +31,7 @@ const TYPE_CONFIG = {
   event_added_for_you: { icon: 'calendar-number-outline', color: '#f48c06' },
   calendar_access:  { icon: 'key-outline',              color: '#34c759' },
   task_completed:   { icon: 'checkmark-done-outline',   color: '#34c759' },
+  task_reminder:    { icon: 'alarm-outline',            color: '#f48c06' },
   family_removed:   { icon: 'person-remove-outline',    color: '#ff3b30' },
 };
 
@@ -135,6 +137,7 @@ export default function NotificationsScreen({ navigation }) {
       ]);
       setNotifications(res.data.notifications || []);
       setUnreadCount(res.data.unread_count   || 0);
+      setAppBadge(res.data.unread_count || 0);
       setOpenTasks(new Set((pend?.data?.tasks || [])
         .filter(x => x.status === 'pending').map(x => Number(x.id))));
       setOpenEvents(new Set((inv?.data?.invitations || inv?.data?.events || []).map(x => Number(x.id ?? x.event_id))));
@@ -162,7 +165,7 @@ export default function NotificationsScreen({ navigation }) {
       setNotifications(prev =>
         prev.map(n => n.id === id ? { ...n, is_read: true } : n)
       );
-      setUnreadCount(prev => Math.max(0, prev - 1));
+      setUnreadCount(prev => { const n = Math.max(0, prev - 1); setAppBadge(n); return n; });
     } catch { /* silent */ }
   };
 
@@ -208,6 +211,7 @@ export default function NotificationsScreen({ navigation }) {
       await API.patch('/notifications/read-all');
       setNotifications(prev => prev.map(n => ({ ...n, is_read: true })));
       setUnreadCount(0);
+      setAppBadge(0);
     } catch { /* silent */ }
   };
 

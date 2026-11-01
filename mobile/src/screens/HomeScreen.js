@@ -55,6 +55,7 @@ function useHeaderIconColor() {
   if (HEADER_STYLE !== 'logo') return '#8e8e93';
   return dark ? '#ffffff' : '#1d1d1f';
 }
+import { setAppBadge } from '../utils/appBadge';
 import { useStyles } from '../styles/HomeScreen.styles';
 import { useColorScheme } from '../context/ThemeContext';
 import parseVoiceInput from '../utils/parseVoiceInput';
@@ -828,6 +829,7 @@ export default function HomeScreen({ navigation, route }) {
       const res = await API.get('/notifications');
       if (familyId !== familyIdRef.current || request !== requestId.current) return;
       setNotifUnread(res.data.unread_count || 0);
+      setAppBadge(res.data.unread_count || 0);   // number on the app icon
     } catch { /* silent */ }
   }, []);
 
