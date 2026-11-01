@@ -42,5 +42,10 @@ const expect=(label, got, want)=>{ const ok = want instanceof Function ? want(go
   expect('…pickup still active', (await q("SELECT 1 FROM pickups WHERE event_id=3 AND direction='pickup' AND revoked_at IS NULL")).rows.length, 1);
   const { statusText } = require('../src/utils/pickupText');
   expect('drop-off wording', statusText('dropoff','picked_up','Nana','Emmanuel').body, 'Emmanuel has been dropped off by Nana');
+  // Assigning yourself → confirmed straight away
+  await q(`INSERT INTO pickup_people (family_id,user_id,created_by) VALUES (1,1,1)`);
+  const me=(await q('SELECT id FROM pickup_people WHERE user_id=1')).rows[0].id;
+  r=await call(assign,{user:{id:1},params:{id:2},body:{child_id:2,person_id:me}});
+  expect('assigning yourself → already confirmed (going)', r.b.pickup?.status, 'going');
   console.log(`\n${pass} passed, ${fail} failed`); process.exit(fail?1:0);
 })().catch(e=>{console.error(e);process.exit(1)});

@@ -48,7 +48,7 @@ const assignPickup = async (req, res) => {
 
     // 3. Pickup person must belong to this family
     const personResult = await pool.query(
-      'SELECT id FROM pickup_people WHERE id = $1 AND family_id = $2',
+      'SELECT id, user_id FROM pickup_people WHERE id = $1 AND family_id = $2',
       [person_id, event.family_id]
     );
     if (personResult.rows.length === 0) {
@@ -66,6 +66,10 @@ const assignPickup = async (req, res) => {
       [eventId, direction]
     );
 
+    // Assigning yourself: nothing to accept, it's confirmed straight away.
+    const selfAssigned = Number(personResult.rows[0].user_id) === userId;
+    const startStatus = selfAssigned ? 'going' : 'asked';
+
     // 5. Token — 64 hex chars (32 random bytes), same pattern as event sharing
     const token = crypto.randomBytes(32).toString('hex');
 
@@ -81,9 +85,9 @@ const assignPickup = async (req, res) => {
     const insertResult = await pool.query(
       `INSERT INTO pickups
          (event_id, child_id, person_id, token, status, expires_at, created_by, direction)
-       VALUES ($1, $2, $3, $4, 'asked', $5, $6, $7)
+       VALUES ($1, $2, $3, $4, $5, $6, $7, $8)
        RETURNING id, token, status, expires_at, direction`,
-      [eventId, child_id, person_id, token, expiresAt, userId, direction]
+      [eventId, child_id, person_id, token, startStatus, expiresAt, userId, direction]
     );
 
     const pickup = insertResult.rows[0];
