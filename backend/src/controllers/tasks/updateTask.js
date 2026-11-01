@@ -38,7 +38,13 @@ const updateTask = async (req, res) => {
        SET title       = COALESCE($1, title),
            assigned_to = COALESCE($2, assigned_to),
            position    = COALESCE($3, position),
-           due_date    = $4
+           due_date    = $4,
+           -- Reassigned to yourself: already yours (accepted). To someone else: they must accept.
+           status      = CASE
+                           WHEN $2::int IS NULL OR $2::int = assigned_to THEN status
+                           WHEN $2::int = $6::int THEN 'accepted'
+                           ELSE 'pending'
+                         END
        WHERE id = $5
        RETURNING *`,
       [
@@ -47,6 +53,7 @@ const updateTask = async (req, res) => {
         position      || null,
         due_date      || null,   // explicit null clears it
         taskId,
+        userId,
       ]
     );
 

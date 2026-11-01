@@ -29,10 +29,12 @@ const createStandaloneTask = async (req, res) => {
     }
 
     const result = await pool.query(
-      `INSERT INTO tasks (title, assigned_to, due_date, position, is_standalone, created_by, family_id)
-       VALUES ($1, $2, $3, $4, true, $5, $6)
+      // A task you give yourself is already accepted (ongoing): nothing to accept.
+      `INSERT INTO tasks (title, assigned_to, due_date, position, is_standalone, created_by, family_id, status)
+       VALUES ($1, $2, $3, $4, true, $5, $6, $7)
        RETURNING *`,
-      [title, assigned_to, due_date || null, position || 'full', userId, familyId]
+      [title, assigned_to, due_date || null, position || 'full', userId, familyId,
+       Number(assigned_to) === Number(userId) ? 'accepted' : 'pending']
     );
     // Tell the assignee (inbox + phone push), unless you gave yourself the task
     if (Number(assigned_to) !== Number(userId)) {
