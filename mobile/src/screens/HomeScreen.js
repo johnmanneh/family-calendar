@@ -37,6 +37,14 @@ import AppIconButton from '../components/AppIconButton';
 
 // Home header look. 'logo' = app icon top-left (opens the menu), no title.
 // 'classic' = gradient menu bars + "it's for us" title in the middle.
+// The selected calendar day, at the next full hour from now.
+function dayAtNextHour(day) {
+  const d = new Date(day);
+  const h = new Date().getHours() + 1;
+  d.setHours(Math.min(h, 23), 0, 0, 0);
+  return d;
+}
+
 // Change this one word to switch back.
 const HEADER_STYLE = 'logo';
 
@@ -1724,8 +1732,10 @@ export default function HomeScreen({ navigation, route }) {
         visible={radialVisible}
         fabCenter={fabCenter}
         onClose={() => setRadialVisible(false)}
-        onNewEvent={() => navigation.navigate('EventForm')}
-        onNewTask={() => navigation.navigate('TaskForm')}
+        // New event/task starts on the day you're looking at (not always today),
+        // at the next full hour.
+        onNewEvent={() => navigation.navigate('EventForm', { date: dayAtNextHour(selectedDate).toISOString() })}
+        onNewTask={() => navigation.navigate('TaskForm', { date: dayAtNextHour(selectedDate).toISOString() })}
         onScan={() => navigation.navigate('Scan')}
       />
 

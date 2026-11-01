@@ -49,7 +49,7 @@ export default function TaskFormScreen({ route, navigation }) {
 
   const initialDueDate = existingTask?.due_date
     ? new Date(existingTask.due_date)
-    : new Date();
+    : (route.params?.date ? new Date(route.params.date) : new Date());   // day picked on Home
 
   const [title, setTitle]           = useState(existingTask?.title || '');
   const [assignedTo, setAssignedTo] = useState(
