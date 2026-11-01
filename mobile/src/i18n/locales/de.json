@@ -377,8 +377,8 @@
     "scan_for": "Plan für {{name}} scannen"
   },
   "pickup_people": {
-    "title": "Abholpersonen",
-    "subtitle": "Personen, die Ihre Kinder abholen können",
+    "title": "Vertrauenspersonen",
+    "subtitle": "Personen, die Ihre Kinder bringen oder abholen können",
     "add_btn": "Person hinzufügen",
     "add_family_member": "Familienmitglied",
     "add_external": "Jemand anderes",
@@ -386,14 +386,14 @@
     "phone_placeholder": "Telefonnummer",
     "family_member_badge": "Familienmitglied",
     "remove_title": "Person entfernen",
-    "remove_confirm": "{{name}} von der Abholliste entfernen?",
+    "remove_confirm": "{{name}} von Ihren Vertrauenspersonen entfernen?",
     "remove": "Entfernen",
-    "empty": "Noch keine Abholpersonen",
-    "empty_hint": "Fügen Sie Familienmitglieder oder andere Personen hinzu, die Ihre Kinder abholen können.",
+    "empty": "Noch keine Vertrauenspersonen",
+    "empty_hint": "Fügen Sie Familienmitglieder oder andere Personen hinzu, die Ihre Kinder bringen oder abholen können.",
     "save": "Speichern"
   },
   "pickup": {
-    "section_title": "Abholung",
+    "section_title": "Bringen & Abholen",
     "assign_btn": "Abholperson zuweisen",
     "assigned_to": "Wird von {{name}} abgeholt",
     "status_asked": "Wartet auf Antwort",
@@ -409,7 +409,17 @@
     "cancel_confirm": "Die Abholung für {{name}} absagen?",
     "select_child": "Wer wird abgeholt?",
     "select_person": "Wer holt ab?",
-    "assign": "Zuweisen"
+    "assign": "Zuweisen",
+    "pickup_label": "Abholen",
+    "dropoff_label": "Bringen",
+    "assign_dropoff_btn": "Bringperson zuweisen",
+    "dropoff_by": "Wird von {{name}} gebracht",
+    "status_dropped_off": "Gebracht",
+    "action_dropped_off": "Gebracht",
+    "cancel_dropoff": "Bringen absagen",
+    "cancel_dropoff_confirm": "Das Bringen für {{name}} absagen?",
+    "select_child_dropoff": "Wer wird gebracht?",
+    "select_person_dropoff": "Wer bringt?"
   },
   "voice": {
     "listening": "Aufnahme…",

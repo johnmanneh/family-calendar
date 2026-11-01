@@ -64,6 +64,10 @@ function PickupSection({ event, user, members, onRefresh, t, styles }) {
 
   const hasActivePickup = pickups.length > 0;
   const showAssignBtn   = managedChildren.length > 0;
+  // Drop-off (bring) or pickup (collect) — chosen by which Assign button was tapped
+  const [direction, setDirection] = useState('pickup');
+  const dirOf = pk => (pk.direction === 'dropoff' ? 'dropoff' : 'pickup');
+  const activeFor = d => pickups.filter(pk => dirOf(pk) === d);
 
   // Assign modal state
   const [showAssign,     setShowAssign]     = useState(false);
@@ -79,7 +83,8 @@ function PickupSection({ event, user, members, onRefresh, t, styles }) {
     if (managedChildren.length === 1) setSelectedChild(managedChildren[0].id);
   }, [managedChildren.length]);
 
-  const openAssign = async () => {
+  const openAssign = async (dir = 'pickup') => {
+    setDirection(dir);
     setShowAssign(true);
     if (pickupPeople.length > 0) return; // already loaded
     setLoadingPeople(true);
@@ -100,6 +105,7 @@ function PickupSection({ event, user, members, onRefresh, t, styles }) {
       await API.post(`/events/${event.id}/pickup`, {
         child_id:  selectedChild,
         person_id: selectedPerson,
+        direction,
       });
       setShowAssign(false);
       setSelectedPerson(null);
@@ -123,18 +129,20 @@ function PickupSection({ event, user, members, onRefresh, t, styles }) {
     }
   };
 
-  const handleCancelPickup = () => {
+  const handleCancelPickup = (dir = 'pickup') => {
+    const pk = activeFor(dir)[0];
+    const title = dir === 'dropoff' ? t('pickup.cancel_dropoff') : t('pickup.cancel_pickup');
     Alert.alert(
-      t('pickup.cancel_pickup'),
-      t('pickup.cancel_confirm', { name: pickups[0]?.child_name || '' }),
+      title,
+      t(dir === 'dropoff' ? 'pickup.cancel_dropoff_confirm' : 'pickup.cancel_confirm', { name: pk?.child_name || '' }),
       [
         { text: t('common.cancel'), style: 'cancel' },
         {
-          text: t('pickup.cancel_pickup'),
+          text: title,
           style: 'destructive',
           onPress: async () => {
             try {
-              await API.delete(`/events/${event.id}/pickup`);
+              await API.delete(`/events/${event.id}/pickup?direction=${dir}`);
               onRefresh();
             } catch (err) {
               Alert.alert(t('common.error'), err.response?.data?.message || t('common.something_went_wrong'));
@@ -152,75 +160,78 @@ function PickupSection({ event, user, members, onRefresh, t, styles }) {
       <View style={styles.pickupCard}>
         <Text style={styles.pickupSectionLabel}>{t('pickup.section_title')}</Text>
 
-        {/* Each active pickup */}
-        {pickups.map(pk => {
-          const chip      = PICKUP_CHIP[pk.status] || PICKUP_CHIP.asked;
-          const iAmPerson = Number(pk.person_user_id) === Number(user?.id);
-          const respondActions = PICKUP_RESPOND_ACTIONS[pk.status] || [];
-
+        {/* Two slots: drop-off (bring) and pickup (collect) */}
+        {['dropoff', 'pickup'].map(dir => {
+          const list = activeFor(dir);
+          if (list.length === 0 && !showAssignBtn) return null;
           return (
-            <View key={pk.id} style={{ marginBottom: 10 }}>
-              {/* Person + status chip */}
-              <View style={styles.pickupRow}>
-                <View style={{ flex: 1 }}>
-                  <Text style={styles.pickupPersonName}>
-                    {t('pickup.assigned_to', { name: pk.person_name })}
-                  </Text>
-                  <Text style={styles.pickupChildName}>{pk.child_name}</Text>
-                </View>
-                <View style={[styles.pickupChip, { backgroundColor: chip.bg }]}>
-                  <Text style={[styles.pickupChipText, { color: chip.color }]}>
-                    {t(`pickup.status_${pk.status}`)}
-                  </Text>
-                </View>
-              </View>
+            <View key={dir} style={{ marginBottom: 12 }}>
+              <Text style={[styles.pickupChildName, { fontWeight: '700', marginBottom: 4 }]}>
+                {dir === 'dropoff' ? t('pickup.dropoff_label') : t('pickup.pickup_label')}
+              </Text>
 
-              {/* Respond buttons — only shown to the pickup person */}
-              {iAmPerson && respondActions.length > 0 && (
-                <View style={styles.pickupActions}>
-                  {respondActions.map(btn => (
-                    <TouchableOpacity
-                      key={btn.action}
-                      style={[
-                        styles.pickupActionBtn,
-                        btn.primary
-                          ? { backgroundColor: '#1a8fa8', borderColor: '#1a8fa8' }
-                          : { borderColor: '#8e8e93' },
-                        responding && { opacity: 0.5 },
-                      ]}
-                      onPress={() => handleRespond(pk.id, btn.action)}
-                      disabled={responding}
-                    >
-                      <Text style={[
-                        styles.pickupActionBtnText,
-                        { color: btn.primary ? '#fff' : '#8e8e93' },
-                      ]}>
-                        {t(btn.labelKey)}
-                      </Text>
-                    </TouchableOpacity>
-                  ))}
-                </View>
+              {list.map(pk => {
+                const chip      = PICKUP_CHIP[pk.status] || PICKUP_CHIP.asked;
+                const iAmPerson = Number(pk.person_user_id) === Number(user?.id);
+                const respondActions = PICKUP_RESPOND_ACTIONS[pk.status] || [];
+                const statusKey = dir === 'dropoff' && pk.status === 'picked_up' ? 'pickup.status_dropped_off' : `pickup.status_${pk.status}`;
+                return (
+                  <View key={pk.id} style={{ marginBottom: 6 }}>
+                    <View style={styles.pickupRow}>
+                      <View style={{ flex: 1 }}>
+                        <Text style={styles.pickupPersonName}>
+                          {t(dir === 'dropoff' ? 'pickup.dropoff_by' : 'pickup.assigned_to', { name: pk.person_name })}
+                        </Text>
+                        <Text style={styles.pickupChildName}>{pk.child_name}</Text>
+                      </View>
+                      <View style={[styles.pickupChip, { backgroundColor: chip.bg }]}>
+                        <Text style={[styles.pickupChipText, { color: chip.color }]}>{t(statusKey)}</Text>
+                      </View>
+                    </View>
+
+                    {iAmPerson && respondActions.length > 0 && (
+                      <View style={styles.pickupActions}>
+                        {respondActions.map(btn => (
+                          <TouchableOpacity
+                            key={btn.action}
+                            style={[
+                              styles.pickupActionBtn,
+                              btn.primary ? { backgroundColor: '#1a8fa8', borderColor: '#1a8fa8' } : { borderColor: '#8e8e93' },
+                              responding && { opacity: 0.5 },
+                            ]}
+                            onPress={() => handleRespond(pk.id, btn.action)}
+                            disabled={responding}
+                          >
+                            <Text style={[styles.pickupActionBtnText, { color: btn.primary ? '#fff' : '#8e8e93' }]}>
+                              {btn.action === 'picked_up' && dir === 'dropoff' ? t('pickup.action_dropped_off') : t(btn.labelKey)}
+                            </Text>
+                          </TouchableOpacity>
+                        ))}
+                      </View>
+                    )}
+                  </View>
+                );
+              })}
+
+              {list.length > 0 && isManager && (
+                <TouchableOpacity style={styles.pickupCancelLink} onPress={() => handleCancelPickup(dir)}>
+                  <Text style={styles.pickupCancelLinkText}>
+                    {dir === 'dropoff' ? t('pickup.cancel_dropoff') : t('pickup.cancel_pickup')}
+                  </Text>
+                </TouchableOpacity>
+              )}
+
+              {showAssignBtn && (
+                <TouchableOpacity style={styles.pickupAssignBtn} onPress={() => openAssign(dir)}>
+                  <Ionicons name="person-add-outline" size={16} color="#1a8fa8" />
+                  <Text style={styles.pickupAssignBtnText}>
+                    {dir === 'dropoff' ? t('pickup.assign_dropoff_btn') : t('pickup.assign_btn')}
+                  </Text>
+                </TouchableOpacity>
               )}
             </View>
           );
         })}
-
-        {/* Cancel link — only for managers, only when pickup is active */}
-        {hasActivePickup && isManager && (
-          <TouchableOpacity style={styles.pickupCancelLink} onPress={handleCancelPickup}>
-            <Text style={styles.pickupCancelLinkText}>{t('pickup.cancel_pickup')}</Text>
-          </TouchableOpacity>
-        )}
-
-        {/* Assign / reassign button */}
-        {showAssignBtn && (
-          <TouchableOpacity style={styles.pickupAssignBtn} onPress={openAssign}>
-            <Ionicons name="person-add-outline" size={16} color="#1a8fa8" />
-            <Text style={styles.pickupAssignBtnText}>
-              {hasActivePickup ? t('pickup.assign_btn') : t('pickup.assign_btn')}
-            </Text>
-          </TouchableOpacity>
-        )}
       </View>
 
       {/* ── Assign modal ───────────────────────────────────────────────────── */}
@@ -232,14 +243,14 @@ function PickupSection({ event, user, members, onRefresh, t, styles }) {
       >
         <View style={styles.modalOverlay}>
           <View style={[styles.modalSheet, { maxHeight: '75%' }]}>
-            <Text style={styles.modalTitle}>{t('pickup.assign_btn')}</Text>
+            <Text style={styles.modalTitle}>{direction === 'dropoff' ? t('pickup.assign_dropoff_btn') : t('pickup.assign_btn')}</Text>
 
             <ScrollView showsVerticalScrollIndicator={false}>
 
               {/* Step 1 — select child (hidden when only one) */}
               {managedChildren.length > 1 && (
                 <View style={styles.assignModalStep}>
-                  <Text style={styles.assignModalStepLabel}>{t('pickup.select_child')}</Text>
+                  <Text style={styles.assignModalStepLabel}>{direction === 'dropoff' ? t('pickup.select_child_dropoff') : t('pickup.select_child')}</Text>
                   {managedChildren.map(child => {
                     const color    = child.color || '#f48c06';
                     const initial  = (child.first_name?.[0] || '?').toUpperCase();
@@ -265,7 +276,7 @@ function PickupSection({ event, user, members, onRefresh, t, styles }) {
 
               {/* Step 2 — select pickup person */}
               <View style={styles.assignModalStep}>
-                <Text style={styles.assignModalStepLabel}>{t('pickup.select_person')}</Text>
+                <Text style={styles.assignModalStepLabel}>{direction === 'dropoff' ? t('pickup.select_person_dropoff') : t('pickup.select_person')}</Text>
                 {loadingPeople ? (
                   <ActivityIndicator color="#1a8fa8" style={{ marginVertical: 16 }} />
                 ) : pickupPeople.length === 0 ? (

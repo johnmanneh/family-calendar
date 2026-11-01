@@ -57,6 +57,7 @@ export default function PublicPickupPage() {
   const { token } = useParams();
 
   const [pickup,  setPickup]  = useState(null);
+  const isDrop = pickup?.direction === 'dropoff';   // bring the child instead of picking up
   const [status,  setStatus]  = useState('loading'); // loading | ok | done | expired | not_found | error
   const [doneStatus, setDoneStatus] = useState(null); // the newStatus after an action
   const [busy,    setBusy]    = useState(false);
@@ -137,7 +138,8 @@ export default function PublicPickupPage() {
 
       {/* Action confirmed */}
       {status === 'done' && (() => {
-        const msg = DONE_MESSAGES[doneStatus] || { icon: '✅', title: 'Done', sub: '' };
+        let msg = DONE_MESSAGES[doneStatus] || { icon: '✅', title: 'Done', sub: '' };
+        if (isDrop && doneStatus === 'picked_up') msg = { ...msg, sub: 'The family has been notified that the child has been dropped off.' };
         return (
           <div className="pe-card">
             <div className="pp-done">
@@ -154,13 +156,13 @@ export default function PublicPickupPage() {
         <div className="pe-card">
 
           {/* Who asked + for whom */}
-          <p className="pp-intro">{pickup.asked_by} asked you to pick up</p>
+          <p className="pp-intro">{pickup.asked_by} asked you to {isDrop ? 'bring' : 'pick up'}</p>
           <h1 className="pp-child">{pickup.child_name}</h1>
           <p className="pp-askedby">You are: {pickup.person_name}</p>
 
           {/* Current status chip */}
           <div className={`pp-status pp-status--${pickup.status}`}>
-            {STATUS_LABELS[pickup.status] || pickup.status}
+            {isDrop && pickup.status === 'picked_up' ? 'Dropped off' : (STATUS_LABELS[pickup.status] || pickup.status)}
           </div>
 
           <div className="pe-divider" />
@@ -194,7 +196,7 @@ export default function PublicPickupPage() {
                   onClick={() => handleAction(action)}
                   disabled={busy}
                 >
-                  {ACTION_LABELS[action] || action}
+                  {isDrop && action === 'picked_up' ? "I've dropped them off" : (ACTION_LABELS[action] || action)}
                 </button>
               ))}
             </div>

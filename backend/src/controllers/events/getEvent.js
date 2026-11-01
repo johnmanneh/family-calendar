@@ -153,6 +153,7 @@ const getEvent = async (req, res) => {
       `SELECT
          pk.id,
          pk.status,
+         pk.direction,
          pk.child_id,
          ch.first_name                   AS child_name,
          COALESCE(pp.name, pu.first_name) AS person_name,

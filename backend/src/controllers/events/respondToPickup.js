@@ -2,6 +2,7 @@ const pool = require('../../config/db');
 const { successResponse, errorResponse } = require('../../utils/response/responseHandlers');
 const insertNotification = require('../../utils/insertNotification');
 const sendPush = require('../../utils/sendPush');
+const { statusText } = require('../../utils/pickupText');
 
 // Valid status transitions for in-app pickup person responses.
 // TRANSITIONS[currentStatus][action] = newStatus
@@ -70,7 +71,8 @@ const respondToPickup = async (req, res) => {
     const infoRes = await pool.query(
       `SELECT
          COALESCE(pp.name, u.first_name) AS person_name,
-         ch.first_name                   AS child_name
+         ch.first_name                   AS child_name,
+         pk.direction
        FROM pickups pk
        JOIN pickup_people pp ON pp.id = pk.person_id
        LEFT JOIN users u     ON u.id  = pp.user_id
@@ -78,23 +80,11 @@ const respondToPickup = async (req, res) => {
        WHERE pk.id = $1`,
       [pickupId]
     );
-    const { person_name, child_name } = infoRes.rows[0] || {};
+    const { person_name, child_name, direction } = infoRes.rows[0] || {};
 
     // 7. Build the message based on the new status
-    let pushTitle, pushBody, notifType;
-    if (newStatus === 'going') {
-      pushTitle = 'Pickup confirmed';
-      pushBody  = `${person_name} is going to pick up ${child_name}`;
-      notifType = 'pickup_going';
-    } else if (newStatus === 'declined' || newStatus === 'cancelled') {
-      pushTitle = 'Pickup needed';
-      pushBody  = `${person_name} can't pick up ${child_name}`;
-      notifType = 'pickup_needed';
-    } else if (newStatus === 'picked_up') {
-      pushTitle = 'Picked up';
-      pushBody  = `${child_name} has been picked up by ${person_name}`;
-      notifType = 'pickup_done';
-    }
+    const msg = statusText(direction, newStatus, person_name, child_name);
+    const pushTitle = msg?.title, pushBody = msg?.body, notifType = msg?.type;
 
     // 8. Notify all family admins/owners + the creator — everyone except the responder
     if (pushTitle) {

@@ -376,8 +376,8 @@
     "scan_for": "Scan schedule for {{name}}"
   },
   "pickup_people": {
-    "title": "Pickup People",
-    "subtitle": "People who can pick up your children",
+    "title": "Trusted people",
+    "subtitle": "People who can bring or pick up your children",
     "add_btn": "Add person",
     "add_family_member": "Family member",
     "add_external": "Someone else",
@@ -385,14 +385,14 @@
     "phone_placeholder": "Phone number",
     "family_member_badge": "Family member",
     "remove_title": "Remove Person",
-    "remove_confirm": "Remove {{name}} from your pickup list?",
+    "remove_confirm": "Remove {{name}} from your trusted people?",
     "remove": "Remove",
-    "empty": "No pickup people yet",
-    "empty_hint": "Add family members or others who can pick up your children.",
+    "empty": "No trusted people yet",
+    "empty_hint": "Add family members or others who can bring or pick up your children.",
     "save": "Save"
   },
   "pickup": {
-    "section_title": "Pickup",
+    "section_title": "Drop-off & pickup",
     "assign_btn": "Assign pickup person",
     "assigned_to": "Will be picked up by {{name}}",
     "status_asked": "Awaiting response",
@@ -408,7 +408,17 @@
     "cancel_confirm": "Cancel the pickup arrangement for {{name}}?",
     "select_child": "Who is being picked up?",
     "select_person": "Who will pick them up?",
-    "assign": "Assign"
+    "assign": "Assign",
+    "pickup_label": "Pickup",
+    "dropoff_label": "Drop-off",
+    "assign_dropoff_btn": "Assign drop-off person",
+    "dropoff_by": "Will be brought by {{name}}",
+    "status_dropped_off": "Dropped off",
+    "action_dropped_off": "Dropped off",
+    "cancel_dropoff": "Cancel drop-off",
+    "cancel_dropoff_confirm": "Cancel the drop-off arrangement for {{name}}?",
+    "select_child_dropoff": "Who is being brought?",
+    "select_person_dropoff": "Who will bring them?"
   },
   "voice": {
     "listening": "Listening…",

@@ -286,6 +286,16 @@
     "cancel_confirm": "{{name}}의 픽업 약속을 취소하시겠습니까?",
     "select_child": "누가 픽업될 예정인가요?",
     "select_person": "누가 픽업하나요?",
-    "assign": "지정"
+    "assign": "지정",
+    "pickup_label": "Pickup",
+    "dropoff_label": "Drop-off",
+    "assign_dropoff_btn": "Assign drop-off person",
+    "dropoff_by": "Will be brought by {{name}}",
+    "status_dropped_off": "Dropped off",
+    "action_dropped_off": "Dropped off",
+    "cancel_dropoff": "Cancel drop-off",
+    "cancel_dropoff_confirm": "Cancel the drop-off arrangement for {{name}}?",
+    "select_child_dropoff": "Who is being brought?",
+    "select_person_dropoff": "Who will bring them?"
   }
 }

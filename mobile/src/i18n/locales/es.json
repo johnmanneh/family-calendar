@@ -286,6 +286,16 @@
     "cancel_confirm": "¿Cancelar el acuerdo de recogida para {{name}}?",
     "select_child": "¿Quién va a ser recogido?",
     "select_person": "¿Quién va a recoger?",
-    "assign": "Asignar"
+    "assign": "Asignar",
+    "pickup_label": "Pickup",
+    "dropoff_label": "Drop-off",
+    "assign_dropoff_btn": "Assign drop-off person",
+    "dropoff_by": "Will be brought by {{name}}",
+    "status_dropped_off": "Dropped off",
+    "action_dropped_off": "Dropped off",
+    "cancel_dropoff": "Cancel drop-off",
+    "cancel_dropoff_confirm": "Cancel the drop-off arrangement for {{name}}?",
+    "select_child_dropoff": "Who is being brought?",
+    "select_person_dropoff": "Who will bring them?"
   }
 }

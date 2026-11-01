@@ -286,6 +286,16 @@
     "cancel_confirm": "إلغاء ترتيب الاستلام لـ {{name}}؟",
     "select_child": "من سيتم استلامه؟",
     "select_person": "من سيستلمه؟",
-    "assign": "تعيين"
+    "assign": "تعيين",
+    "pickup_label": "Pickup",
+    "dropoff_label": "Drop-off",
+    "assign_dropoff_btn": "Assign drop-off person",
+    "dropoff_by": "Will be brought by {{name}}",
+    "status_dropped_off": "Dropped off",
+    "action_dropped_off": "Dropped off",
+    "cancel_dropoff": "Cancel drop-off",
+    "cancel_dropoff_confirm": "Cancel the drop-off arrangement for {{name}}?",
+    "select_child_dropoff": "Who is being brought?",
+    "select_person_dropoff": "Who will bring them?"
   }
 }

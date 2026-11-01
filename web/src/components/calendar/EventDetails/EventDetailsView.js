@@ -109,13 +109,17 @@ const EventDetailsView = () => {
   const [selectedChild,   setSelectedChild]   = useState('');
   const [selectedPerson,  setSelectedPerson]  = useState('');
   const [pickupBusy,      setPickupBusy]      = useState(false);
+  // Drop-off (bring) or pickup (collect) — set by which Assign button was used
+  const [direction,       setDirection]       = useState('pickup');
+  const dirOf = pk => (pk.direction === 'dropoff' ? 'dropoff' : 'pickup');
 
   // Auto-select child when there's only one
   useEffect(() => {
     if (managedChildren.length === 1) setSelectedChild(String(managedChildren[0].id));
   }, [managedChildren.length]);
 
-  const openAssignForm = useCallback(async () => {
+  const openAssignForm = useCallback(async (dir = 'pickup') => {
+    setDirection(dir);
     setShowAssignForm(true);
     if (pickupPeople.length > 0) return;
     try {
@@ -127,15 +131,15 @@ const EventDetailsView = () => {
   const handleAssign = async () => {
     if (!selectedChild || !selectedPerson || pickupBusy) return;
     setPickupBusy(true);
-    await assignPickup(selectedEvent.id, Number(selectedChild), Number(selectedPerson));
+    await assignPickup(selectedEvent.id, Number(selectedChild), Number(selectedPerson), direction);
     setShowAssignForm(false);
     setSelectedPerson('');
     setPickupBusy(false);
   };
 
-  const handleCancelPickup = async () => {
-    if (!window.confirm('Cancel this pickup arrangement?')) return;
-    await cancelPickup(selectedEvent.id);
+  const handleCancelPickup = async (dir = 'pickup') => {
+    if (!window.confirm(dir === 'dropoff' ? 'Cancel this drop-off arrangement?' : 'Cancel this pickup arrangement?')) return;
+    await cancelPickup(selectedEvent.id, dir);
   };
 
   const handleRespond = async (pickupId, action) => {
@@ -291,56 +295,60 @@ const EventDetailsView = () => {
       {(pickups.length > 0 || managedChildren.length > 0) && (
         <div className="event-details-card">
           <div className="event-details-pickup">
-            <p className="event-details-pickup-label">Pickup</p>
+            <p className="event-details-pickup-label">Drop-off &amp; pickup</p>
 
-            {pickups.map(pk => {
-              const iAmPerson    = Number(pk.person_user_id) === Number(user?.id);
-              const respondActions = PICKUP_RESPOND_ACTIONS[pk.status] || [];
+            {['dropoff', 'pickup'].map(dir => {
+              const list = pickups.filter(pk => dirOf(pk) === dir);
+              if (list.length === 0 && managedChildren.length === 0) return null;
               return (
-                <div key={pk.id} style={{ marginBottom: 8 }}>
-                  <div className="event-details-pickup-row">
-                    <div>
-                      <p className="event-details-pickup-name">{pk.person_name}</p>
-                      <p className="event-details-pickup-child">{pk.child_name}</p>
-                    </div>
-                    <span className={`pickup-chip ${pk.status}`}>
-                      {PICKUP_STATUS_LABELS[pk.status] || pk.status}
-                    </span>
-                  </div>
-
-                  {/* Respond buttons — only for the pickup person */}
-                  {iAmPerson && respondActions.length > 0 && (
-                    <div className="pickup-respond-actions">
-                      {respondActions.map(btn => (
-                        <button
-                          key={btn.action}
-                          className={`pickup-respond-btn ${btn.primary ? 'primary' : 'secondary'}`}
-                          onClick={() => handleRespond(pk.id, btn.action)}
-                          disabled={pickupBusy}
-                        >
-                          {btn.label}
-                        </button>
-                      ))}
-                    </div>
+                <div key={dir} style={{ marginBottom: 12 }}>
+                  <p className="event-details-pickup-child" style={{ fontWeight: 700 }}>{dir === 'dropoff' ? 'Drop-off' : 'Pickup'}</p>
+                  {list.map(pk => {
+                    const iAmPerson      = Number(pk.person_user_id) === Number(user?.id);
+                    const respondActions = PICKUP_RESPOND_ACTIONS[pk.status] || [];
+                    const statusLabel    = dir === 'dropoff' && pk.status === 'picked_up' ? 'Dropped off' : (PICKUP_STATUS_LABELS[pk.status] || pk.status);
+                    return (
+                      <div key={pk.id} style={{ marginBottom: 8 }}>
+                        <div className="event-details-pickup-row">
+                          <div>
+                            <p className="event-details-pickup-name">{pk.person_name}</p>
+                            <p className="event-details-pickup-child">{pk.child_name}</p>
+                          </div>
+                          <span className={`pickup-chip ${pk.status}`}>{statusLabel}</span>
+                        </div>
+                        {iAmPerson && respondActions.length > 0 && (
+                          <div className="pickup-respond-actions">
+                            {respondActions.map(btn => (
+                              <button
+                                key={btn.action}
+                                className={`pickup-respond-btn ${btn.primary ? 'primary' : 'secondary'}`}
+                                onClick={() => handleRespond(pk.id, btn.action)}
+                                disabled={pickupBusy}
+                              >
+                                {btn.action === 'picked_up' && dir === 'dropoff' ? 'Dropped off' : btn.label}
+                              </button>
+                            ))}
+                          </div>
+                        )}
+                      </div>
+                    );
+                  })}
+                  {list.length > 0 && isManager && (
+                    <button className="pickup-cancel-link" onClick={() => handleCancelPickup(dir)}>
+                      {dir === 'dropoff' ? 'Cancel drop-off' : 'Cancel pickup'}
+                    </button>
+                  )}
+                  {managedChildren.length > 0 && !showAssignForm && (
+                    <button className="pickup-assign-btn" onClick={() => openAssignForm(dir)}>
+                      <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round"><path d="M16 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"/><circle cx="8.5" cy="7" r="4"/><line x1="20" y1="8" x2="20" y2="14"/><line x1="23" y1="11" x2="17" y2="11"/></svg>
+                      {dir === 'dropoff'
+                        ? (list.length > 0 ? 'Reassign drop-off person' : 'Assign drop-off person')
+                        : (list.length > 0 ? 'Reassign pickup person' : 'Assign pickup person')}
+                    </button>
                   )}
                 </div>
               );
             })}
-
-            {/* Cancel link — managers only, when a pickup exists */}
-            {pickups.length > 0 && isManager && (
-              <button className="pickup-cancel-link" onClick={handleCancelPickup}>
-                Cancel pickup
-              </button>
-            )}
-
-            {/* Assign / reassign button */}
-            {managedChildren.length > 0 && !showAssignForm && (
-              <button className="pickup-assign-btn" onClick={openAssignForm}>
-                <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round"><path d="M16 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"/><circle cx="8.5" cy="7" r="4"/><line x1="20" y1="8" x2="20" y2="14"/><line x1="23" y1="11" x2="17" y2="11"/></svg>
-                {pickups.length > 0 ? 'Reassign pickup person' : 'Assign pickup person'}
-              </button>
-            )}
 
             {/* Inline assign form */}
             {showAssignForm && (
@@ -348,7 +356,7 @@ const EventDetailsView = () => {
                 {/* Child picker — hidden when only one child */}
                 {managedChildren.length > 1 && (
                   <select value={selectedChild} onChange={e => setSelectedChild(e.target.value)}>
-                    <option value="">Who is being picked up?</option>
+                    <option value="">{direction === 'dropoff' ? 'Who is being brought?' : 'Who is being picked up?'}</option>
                     {managedChildren.map(c => (
                       <option key={c.id} value={c.id}>{c.first_name}</option>
                     ))}
@@ -357,7 +365,7 @@ const EventDetailsView = () => {
 
                 {/* Pickup person picker */}
                 <select value={selectedPerson} onChange={e => setSelectedPerson(e.target.value)}>
-                  <option value="">Who will pick them up?</option>
+                  <option value="">{direction === 'dropoff' ? 'Who will bring them?' : 'Who will pick them up?'}</option>
                   {pickupPeople.map(pp => {
                     const name = pp.user_id
                       ? [pp.member_first_name, pp.member_last_name].filter(Boolean).join(' ')

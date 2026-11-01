@@ -233,18 +233,18 @@ export const EventProvider = ({ children }) => {
     }
   };
 
-  const assignPickup = async (eventId, childId, personId) => {
+  const assignPickup = async (eventId, childId, personId, direction = 'pickup') => {
     try {
-      await API.post(`/events/${eventId}/pickup`, { child_id: childId, person_id: personId });
+      await API.post(`/events/${eventId}/pickup`, { child_id: childId, person_id: personId, direction });
       await openEventById(eventId);
     } catch (err) {
       setError(err.response?.data?.message || 'Failed to assign pickup');
     }
   };
 
-  const cancelPickup = async (eventId) => {
+  const cancelPickup = async (eventId, direction = 'pickup') => {
     try {
-      await API.delete(`/events/${eventId}/pickup`);
+      await API.delete(`/events/${eventId}/pickup?direction=${direction}`);
       await openEventById(eventId);
     } catch (err) {
       setError(err.response?.data?.message || 'Failed to cancel pickup');

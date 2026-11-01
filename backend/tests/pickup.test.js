@@ -31,5 +31,16 @@ const expect=(label, got, want)=>{ const ok = want instanceof Function ? want(go
   const exp=(await q('SELECT expires_at FROM pickups WHERE event_id=3 AND revoked_at IS NULL')).rows[0].expires_at;
   expect('link lasts until the pickup day, not just tonight',
     new Date(exp).toISOString().slice(0,10), iso.slice(0,10));
+  // Drop-off and pickup live side by side on one event
+  r=await call(assign,{user:{id:1},params:{id:3},body:{child_id:2,person_id:1,direction:'dropoff'}});
+  expect('assign a drop-off → created', r.c, 201);
+  expect('…stored as dropoff', r.b.pickup?.direction, 'dropoff');
+  const active=(await q("SELECT direction FROM pickups WHERE event_id=3 AND revoked_at IS NULL ORDER BY direction")).rows.map(x=>x.direction).join(',');
+  expect('the pickup on the same event is kept (one of each)', active, 'dropoff,pickup');
+  r=await call(ctl.cancelPickup,{user:{id:1},params:{id:3},query:{direction:'dropoff'},body:{}});
+  expect('cancel only the drop-off', r.c, 200);
+  expect('…pickup still active', (await q("SELECT 1 FROM pickups WHERE event_id=3 AND direction='pickup' AND revoked_at IS NULL")).rows.length, 1);
+  const { statusText } = require('../src/utils/pickupText');
+  expect('drop-off wording', statusText('dropoff','picked_up','Nana','Emmanuel').body, 'Emmanuel has been dropped off by Nana');
   console.log(`\n${pass} passed, ${fail} failed`); process.exit(fail?1:0);
 })().catch(e=>{console.error(e);process.exit(1)});

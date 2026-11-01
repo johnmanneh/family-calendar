@@ -286,6 +286,16 @@
     "cancel_confirm": "取消 {{name}} 的接送安排？",
     "select_child": "谁需要被接走？",
     "select_person": "谁来接？",
-    "assign": "指定"
+    "assign": "指定",
+    "pickup_label": "Pickup",
+    "dropoff_label": "Drop-off",
+    "assign_dropoff_btn": "Assign drop-off person",
+    "dropoff_by": "Will be brought by {{name}}",
+    "status_dropped_off": "Dropped off",
+    "action_dropped_off": "Dropped off",
+    "cancel_dropoff": "Cancel drop-off",
+    "cancel_dropoff_confirm": "Cancel the drop-off arrangement for {{name}}?",
+    "select_child_dropoff": "Who is being brought?",
+    "select_person_dropoff": "Who will bring them?"
   }
 }

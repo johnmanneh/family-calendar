@@ -3,15 +3,18 @@ const pool = require('../../config/db');
 const notifyUser = require('../../utils/notifyUser');
 const { successResponse, errorResponse } = require('../../utils/response/responseHandlers');
 const { managesChild } = require('../../utils/access');
+const { normDirection, requestText } = require('../../utils/pickupText');
 
-// POST /api/events/:id/pickup   { child_id, person_id }
-// Assigns a pickup person to an event for a child.
+// POST /api/events/:id/pickup   { child_id, person_id, direction? }
+// Assigns a person to bring (direction 'dropoff') or collect (default 'pickup')
+// a child for an event.
 // Only the child's manager (parent or family admin) can do this.
 // Any existing active pickup for this event is revoked first.
 const assignPickup = async (req, res) => {
   const userId  = Number(req.user.id);
   const eventId = Number(req.params.id);
   const { child_id, person_id } = req.body || {};
+  const direction = normDirection(req.body?.direction);
 
   if (!child_id || !person_id) {
     return errorResponse(res, 400, 'child_id and person_id are required');
@@ -52,14 +55,15 @@ const assignPickup = async (req, res) => {
       return errorResponse(res, 404, 'Pickup person not found');
     }
 
-    // 4. Revoke any existing active pickup — one active pickup per event
-    // Soft delete: keep the history row, just mark it revoked
+    // 4. Revoke any existing active one of the same direction — one drop-off and
+    //    one pickup per event. Soft delete: keep the history row, mark it revoked.
     await pool.query(
       `UPDATE pickups SET revoked_at = NOW()
        WHERE event_id = $1
+         AND direction = $2
          AND revoked_at IS NULL
          AND status NOT IN ('cancelled', 'declined')`,
-      [eventId]
+      [eventId, direction]
     );
 
     // 5. Token — 64 hex chars (32 random bytes), same pattern as event sharing
@@ -76,10 +80,10 @@ const assignPickup = async (req, res) => {
     // 7. Insert the new pickup record
     const insertResult = await pool.query(
       `INSERT INTO pickups
-         (event_id, child_id, person_id, token, status, expires_at, created_by)
-       VALUES ($1, $2, $3, $4, 'asked', $5, $6)
-       RETURNING id, token, status, expires_at`,
-      [eventId, child_id, person_id, token, expiresAt, userId]
+         (event_id, child_id, person_id, token, status, expires_at, created_by, direction)
+       VALUES ($1, $2, $3, $4, 'asked', $5, $6, $7)
+       RETURNING id, token, status, expires_at, direction`,
+      [eventId, child_id, person_id, token, expiresAt, userId, direction]
     );
 
     const pickup = insertResult.rows[0];
@@ -98,9 +102,9 @@ const assignPickup = async (req, res) => {
         weekday: 'short', day: 'numeric', month: 'short', hour: '2-digit', minute: '2-digit',
         timeZone: 'Europe/Zurich',
       });
-      notifyUser(p.user_id, 'pickup_request', 'Pickup request',
-        `${p.asker} asks you to pick up ${p.child_name} · ${when}`,
-        { pickupId: pickup.id, eventId });
+      const msg = requestText(direction, p.asker, p.child_name, when);
+      notifyUser(p.user_id, 'pickup_request', msg.title, msg.body,
+        { pickupId: pickup.id, eventId, direction });
     }
 
     return successResponse(res, 201, 'Pickup assigned', {
@@ -116,21 +120,23 @@ const assignPickup = async (req, res) => {
   }
 };
 
-// DELETE /api/events/:id/pickup
-// Cancels the active pickup for this event.
+// DELETE /api/events/:id/pickup?direction=pickup|dropoff
+// Cancels the active pickup (default) or drop-off for this event.
 // Only the child's manager can cancel.
 const cancelPickup = async (req, res) => {
   const userId  = Number(req.user.id);
   const eventId = Number(req.params.id);
+  const direction = normDirection(req.query?.direction || req.body?.direction);
 
   try {
-    // Find the active pickup for this event
+    // Find the active one for this event and direction
     const existing = await pool.query(
       `SELECT id, child_id FROM pickups
        WHERE event_id = $1
+         AND direction = $2
          AND revoked_at IS NULL
          AND status NOT IN ('cancelled', 'declined')`,
-      [eventId]
+      [eventId, direction]
     );
 
     if (existing.rows.length === 0) {
