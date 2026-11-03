@@ -92,6 +92,51 @@ function MemberRow({ member, isMe, navigation }) {
   );
 }
 
+// ─── Pick people to invite into a new family ────────────────────────────────
+// People you already share a family with. Children you manage join straight
+// away; adults get an invitation they accept in Notifications.
+function InvitePicker({ people, selected, onToggle }) {
+  const { t } = useTranslation();
+  const styles = useStyles();
+  if (!people.length) return null;
+  return (
+    <View style={{ marginBottom: 12 }}>
+      <Text style={[styles.leaveDescription, { marginBottom: 6 }]}>
+        {t('family.invite_pick', { defaultValue: 'Add people you know (optional)' })}
+      </Text>
+      <View style={{ flexDirection: 'row', flexWrap: 'wrap', gap: 8 }}>
+        {people.map(p => {
+          const on = selected.has(Number(p.id));
+          return (
+            <TouchableOpacity
+              key={p.id}
+              onPress={() => onToggle(Number(p.id))}
+              accessibilityRole="checkbox"
+              accessibilityState={{ checked: on }}
+              style={{
+                flexDirection: 'row', alignItems: 'center', gap: 6,
+                paddingVertical: 7, paddingHorizontal: 12, borderRadius: 16,
+                borderWidth: 1, borderColor: '#1a8fa8',
+                backgroundColor: on ? '#1a8fa8' : 'transparent',
+              }}
+            >
+              <Ionicons name={on ? 'checkmark-circle' : 'ellipse-outline'} size={15} color={on ? '#fff' : '#1a8fa8'} />
+              <Text style={{ color: on ? '#fff' : '#1a8fa8', fontWeight: '600', fontSize: 14 }}>
+                {p.first_name}{p.is_managed ? ` · ${t('child.badge')}` : ''}
+              </Text>
+            </TouchableOpacity>
+          );
+        })}
+      </View>
+      {selected.size > 0 && (
+        <Text style={[styles.leaveDescription, { marginTop: 6, marginBottom: 0, fontSize: 12 }]}>
+          {t('family.invite_note', { defaultValue: 'Adults get an invitation to accept. Your children join right away.' })}
+        </Text>
+      )}
+    </View>
+  );
+}
+
 // ─── FamilyScreen ─────────────────────────────────────────────────────────────
 
 export default function FamilyScreen({ navigation }) {
@@ -122,14 +167,40 @@ export default function FamilyScreen({ navigation }) {
   const [busy,      setBusy]      = useState(false);
   const [creating,  setCreating]  = useState(false);   // "Create a family" form when already in one
   const personal = !!family?.is_personal;
+  const [knownPeople, setKnownPeople] = useState([]);
+  const [inviteIds,   setInviteIds]   = useState(new Set());
+  const toggleInvite = (id) => setInviteIds(prev => {
+    const next = new Set(prev);
+    next.has(id) ? next.delete(id) : next.add(id);
+    return next;
+  });
+  // Load people you know when a create form is on screen
+  useEffect(() => {
+    if (!(creating || personal)) return;
+    let alive = true;
+    API.get('/family/known-people')
+      .then(r => { if (alive) setKnownPeople(r.data.people || []); })
+      .catch(() => { if (alive) setKnownPeople([]); });
+    return () => { alive = false; };
+  }, [creating, personal]);
 
   const saveName = async (kind) => {
     const name = nameInput.trim();
     if (!name) return;
     setBusy(true);
     try {
-      if (kind === 'create') await API.post('/family/create', { name });
-      else await API.put('/family/name', { name });
+      if (kind === 'create') {
+        const res = await API.post('/family/create', { name, invite_user_ids: [...inviteIds] });
+        const invited = res.data?.invited || 0;
+        const added = res.data?.added || 0;
+        if (invited || added) {
+          Alert.alert(name, [
+            added ? t('family.added_now', { count: added, defaultValue: `${added} added` }) : null,
+            invited ? t('family.invited_wait', { count: invited, defaultValue: `${invited} invited — they join once they accept` }) : null,
+          ].filter(Boolean).join('\n'));
+        }
+        setInviteIds(new Set());
+      } else await API.put('/family/name', { name });
       await fetchFamily();
       setRenaming(false);
       setCreating(false);
@@ -264,6 +335,7 @@ export default function FamilyScreen({ navigation }) {
                 returnKeyType="done"
                 onSubmitEditing={() => saveName('create')}
               />
+              <InvitePicker people={knownPeople} selected={inviteIds} onToggle={toggleInvite} />
               <TouchableOpacity
                 style={[styles.primaryBtn, !nameInput.trim() && { opacity: 0.5 }]}
                 disabled={!nameInput.trim() || busy}
@@ -482,6 +554,7 @@ export default function FamilyScreen({ navigation }) {
                 returnKeyType="done"
                 onSubmitEditing={() => saveName('create')}
               />
+              <InvitePicker people={knownPeople} selected={inviteIds} onToggle={toggleInvite} />
               <View style={{ flexDirection: 'row', gap: 8 }}>
                 <TouchableOpacity
                   style={[styles.primaryBtn, { flex: 1 }, !nameInput.trim() && { opacity: 0.5 }]}
@@ -494,7 +567,7 @@ export default function FamilyScreen({ navigation }) {
                 </TouchableOpacity>
                 <TouchableOpacity
                   style={[styles.switchBtn, { flex: 1 }]}
-                  onPress={() => { setCreating(false); setNameInput(''); }}
+                  onPress={() => { setCreating(false); setNameInput(''); setInviteIds(new Set()); }}
                 >
                   <Text style={styles.switchBtnText}>{t('common.cancel')}</Text>
                 </TouchableOpacity>

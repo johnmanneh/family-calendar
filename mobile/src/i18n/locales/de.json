@@ -237,7 +237,11 @@
     "remove_member_title": "Aus der Familie entfernen",
     "remove_member_confirm": "{{name}} aus {{family}} entfernen? Der Zugriff auf Familienkalender, Chat und Abholungen endet sofort.",
     "remove_member_btn": "Entfernen",
-    "remove_member_named": "{{name}} aus der Familie entfernen"
+    "remove_member_named": "{{name}} aus der Familie entfernen",
+    "invite_pick": "Personen hinzufügen, die du kennst (optional)",
+    "invite_note": "Erwachsene erhalten eine Einladung zum Annehmen. Deine Kinder kommen direkt dazu.",
+    "added_now": "{{count}} hinzugefügt",
+    "invited_wait": "{{count}} eingeladen – sie kommen dazu, sobald sie annehmen"
   },
   "profile": {
     "title": "Profil",

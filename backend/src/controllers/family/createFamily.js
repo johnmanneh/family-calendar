@@ -1,5 +1,6 @@
 const pool = require('../../config/db');
 const { successResponse, errorResponse } = require('../../utils/response/responseHandlers');
+const { inviteKnownPeople } = require('./familyInvites');
 const { generateLongCode, generateShortCode, storedShortCode } = require('../../utils/inviteCodes');
 
 /**
@@ -85,7 +86,12 @@ const createFamily = async (req, res) => {
       [userId, family.id]
     );
 
-    return successResponse(res, 201, 'Family created successfully', { family });
+    // People picked from your other families: children you manage join now,
+    // adults get an invitation to accept.
+    const { added, invited } = await inviteKnownPeople(userId, family, req.body.invite_user_ids);
+    if (added || invited) family.is_personal = false;
+
+    return successResponse(res, 201, 'Family created successfully', { family, added, invited });
   } catch (error) {
     console.error('createFamily error:', error.message);
     return errorResponse(res, 500, 'Server error');

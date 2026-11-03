@@ -11,6 +11,7 @@ import { SafeAreaView } from 'react-native-safe-area-context';
 import { Ionicons } from '@expo/vector-icons';
 import { useTranslation } from 'react-i18next';
 import { useSSE } from '../context/SSEContext';
+import { useFamily } from '../context/FamilyContext';
 import TreadmillList from '../components/TreadmillList';
 import API from '../api/axios';
 import { setAppBadge } from '../utils/appBadge';
@@ -33,6 +34,9 @@ const TYPE_CONFIG = {
   task_completed:   { icon: 'checkmark-done-outline',   color: '#34c759' },
   task_reminder:    { icon: 'alarm-outline',            color: '#f48c06' },
   family_removed:   { icon: 'person-remove-outline',    color: '#ff3b30' },
+  family_invite:    { icon: 'home-outline',             color: '#1a8fa8' },
+  family_invite_accepted: { icon: 'home-outline',       color: '#34c759' },
+  family_invite_declined: { icon: 'home-outline',       color: '#ff3b30' },
 };
 
 // ─── Time ago helper ─────────────────────────────────────────────────────────
@@ -126,15 +130,19 @@ export default function NotificationsScreen({ navigation }) {
   // What is still waiting for an answer, so only those rows get Accept / Decline
   const [openTasks,  setOpenTasks]  = useState(new Set());
   const [openEvents, setOpenEvents] = useState(new Set());
+  const [openFamilyInvites, setOpenFamilyInvites] = useState(new Set());
+  const { fetchFamily } = useFamily();
   const [busyId,     setBusyId]     = useState(null);
 
   const load = useCallback(async () => {
     try {
-      const [res, pend, inv] = await Promise.all([
+      const [res, pend, inv, fam] = await Promise.all([
         API.get('/notifications'),
         API.get('/tasks/pending').catch(() => null),
         API.get('/events/invitations').catch(() => null),
+        API.get('/family/invites').catch(() => null),
       ]);
+      setOpenFamilyInvites(new Set((fam?.data?.invites || []).map(x => Number(x.id))));
       setNotifications(res.data.notifications || []);
       setUnreadCount(res.data.unread_count   || 0);
       setAppBadge(res.data.unread_count || 0);
@@ -186,13 +194,19 @@ export default function NotificationsScreen({ navigation }) {
     if (item.type === 'event_invited' && data.eventId && openEvents.has(Number(data.eventId))) {
       return { kind: 'event', id: Number(data.eventId), busy: busyId === item.id };
     }
+    if (item.type === 'family_invite' && data.inviteId && openFamilyInvites.has(Number(data.inviteId))) {
+      return { kind: 'family', id: Number(data.inviteId), busy: busyId === item.id };
+    }
     return null;
   };
 
   const handleRespond = async (item, action, accept) => {
     setBusyId(item.id);
     try {
-      if (action.kind === 'task') {
+      if (action.kind === 'family') {
+        await API.put(`/family/invites/${action.id}`, { response: accept ? 'accepted' : 'declined' });
+        if (accept) await fetchFamily();   // the new family shows up straight away
+      } else if (action.kind === 'task') {
         await API.patch(`/tasks/${action.id}/respond`, { response: accept ? 'accepted' : 'declined' });
       } else {
         await API.put(`/events/invitations/${action.id}`, { response: accept ? 'accepted' : 'denied' });

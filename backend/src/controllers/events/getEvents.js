@@ -247,10 +247,17 @@ const getEvents = async (req, res) => {
       }));
     }
 
-    // Cross-family availability is queried explicitly for a chosen receiving
-    // family via POST /events/availability. Group membership alone must never
-    // publish someone's other commitments or source event IDs in calendar lists.
-    const allEvents = [...familyEvents, ...groupEvents]
+    // ── Busy from other families ─────────────────────────────────────────
+    // Members of THIS family who switched on "Share my busy times with <this
+    // family>" show their commitments from their other families as plain
+    // grey "Busy" blocks: time + whose calendar only. No title, no source
+    // family, no real event id. Your own other-family events show the same
+    // way to you, so you don't double-book yourself. Group membership alone
+    // never publishes anything.
+    const shownIds = new Set([...familyEvents, ...groupEvents].map(e => Number(e.id)));
+    const busyEvents = await crossFamilyBusy(familyId, Number(userId), shownIds);
+
+    const allEvents = [...familyEvents, ...groupEvents, ...busyEvents]
       .sort((a, b) => new Date(a.start_date) - new Date(b.start_date));
 
     return successResponse(res, 200, 'Events retrieved successfully', {
@@ -263,4 +270,50 @@ const getEvents = async (req, res) => {
   }
 };
 
+// Busy blocks for the receiving family from members' OTHER families.
+async function crossFamilyBusy(familyId, viewerId, shownIds) {
+  const subj = await pool.query(
+    `SELECT fm.user_id, fm.share_availability
+     FROM family_members fm JOIN users u ON u.id = fm.user_id
+     WHERE fm.family_id = $1 AND u.is_managed IS NOT TRUE
+       AND (fm.user_id = $2 OR fm.share_availability = true)`,
+    [familyId, viewerId]
+  );
+  const subjects = subj.rows.map(r => Number(r.user_id));
+  if (!subjects.length) return [];
+
+  const rows = await pool.query(
+    `SELECT DISTINCT ON (e.id, p.user_id)
+            p.user_id AS subject_id, e.id, e.start_date, e.end_date, e.is_all_day,
+            e.recurrence, e.recurrence_end_date
+     FROM (
+       SELECT id AS event_id, COALESCE(owner_id, created_by) AS user_id FROM events
+        WHERE COALESCE(owner_id, created_by) = ANY($2::int[])
+       UNION
+       SELECT event_id, user_id FROM event_attendees
+        WHERE status = 'accepted' AND user_id = ANY($2::int[])
+     ) p
+     JOIN events e ON e.id = p.event_id
+     WHERE e.family_id IS DISTINCT FROM $1
+       AND COALESCE(e.status, 'confirmed') <> 'cancelled'
+       AND (p.user_id = $3 OR e.hide_cross_family_availability IS NOT TRUE)
+       AND (e.recurrence IS NOT NULL
+              AND (e.recurrence_end_date IS NULL
+                   OR e.recurrence_end_date >= (NOW() AT TIME ZONE 'UTC') - interval '60 days')
+            OR COALESCE(e.end_date, e.start_date) >= (NOW() AT TIME ZONE 'UTC') - interval '60 days')
+     ORDER BY e.id, p.user_id`,
+    [familyId, subjects, viewerId]
+  );
+
+  return rows.rows
+    .filter(r => !shownIds.has(Number(r.id)))
+    .map((r, i) => normAllDay({
+      ...busyView({ ...r, owner_id: r.subject_id }, { withOwner: true }),
+      id: `busy-${i + 1}`,            // never the real event id
+      from_other_family: true,
+      from_group: false,
+    }));
+}
+
 module.exports = getEvents;
+module.exports.crossFamilyBusy = crossFamilyBusy;

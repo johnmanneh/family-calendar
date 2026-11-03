@@ -236,7 +236,11 @@
     "remove_member_title": "Remove from family",
     "remove_member_confirm": "Remove {{name}} from {{family}}? They lose access to the family calendar, chat and pickups.",
     "remove_member_btn": "Remove",
-    "remove_member_named": "Remove {{name}} from family"
+    "remove_member_named": "Remove {{name}} from family",
+    "invite_pick": "Add people you know (optional)",
+    "invite_note": "Adults get an invitation to accept. Your children join right away.",
+    "added_now": "{{count}} added",
+    "invited_wait": "{{count}} invited — they join once they accept"
   },
   "profile": {
     "title": "Profile",

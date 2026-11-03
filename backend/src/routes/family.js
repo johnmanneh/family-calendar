@@ -3,6 +3,7 @@ const router = express.Router();
 const rateLimit = require('express-rate-limit');
 const verifyToken = require('../middleware/auth');
 const createFamily = require('../controllers/family/createFamily');
+const { knownPeople, myInvites, respondInvite } = require('../controllers/family/familyInvites');
 const joinFamily = require('../controllers/family/joinFamily');
 const getInvite = require('../controllers/family/getInvite');
 const rotateInvite = require('../controllers/family/rotateInvite');
@@ -32,6 +33,9 @@ const joinLimiter = rateLimit({
 });
 
 router.post('/create', verifyToken, createFamily);
+router.get('/known-people', verifyToken, knownPeople);
+router.get('/invites', verifyToken, myInvites);
+router.put('/invites/:id', verifyToken, respondInvite);
 router.post('/join', joinLimiter, verifyToken, joinFamily);
 router.get('/invite', verifyToken, getInvite);
 router.post('/invite/rotate', verifyToken, rotateInvite);
