@@ -155,9 +155,10 @@ const getEvents = async (req, res) => {
       const isMember = isCreator || isAttendee;
 
       if (event.is_private && !isMember) {
-        // Use the canonical busyView shape — no created_by, family_id, or
-        // attendee IDs exposed (security pass-1: no identifying fields on Busy rows).
-        return normAllDay(busyView(event));
+        // Canonical busyView shape — no created_by, family_id, title or attendee
+        // IDs (security pass-1). Only the calendar owner, so the person filter
+        // on Home can show "Sarah: Busy" (viewer is in the same family).
+        return normAllDay(busyView(event, { withOwner: true }));
       }
 
       return normAllDay({ ...event, is_busy: false });

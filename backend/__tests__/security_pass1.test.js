@@ -285,6 +285,7 @@ describe('4. Busy mask in getEvents', () => {
     if (busyEvent) {
       expect(busyEvent).not.toHaveProperty('created_by');
       expect(busyEvent).not.toHaveProperty('family_id');
+      expect(busyEvent.title).toBe('Busy');   // owner_id may be present (person filter); nothing else
       // attendees must be empty (no IDs)
       expect(busyEvent.attendees).toEqual([]);
     }

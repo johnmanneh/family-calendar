@@ -221,8 +221,12 @@ async function filterListedTasks(userId, tasks, familyIds) {
 }
 
 // The minimal shape for a private event someone may only see as "Busy"
-const busyView = e => ({
+// withOwner: include whose calendar the block is on (only for viewers in the
+// same family, so "Sarah" filters show Sarah's busy time). Never the creator,
+// family, title or attendees.
+const busyView = (e, { withOwner = false } = {}) => ({
   id: e.id,
+  ...(withOwner ? { owner_id: e.owner_id ?? e.created_by ?? null } : {}),
   start_date: e.start_date,
   end_date: e.end_date,
   is_all_day: e.is_all_day,

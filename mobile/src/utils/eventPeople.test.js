@@ -21,3 +21,13 @@ describe('eventInvolvesPerson', () => {
     expect(eventInvolvesPerson({ attendees: [{ first_name: 'x' }] }, undefined)).toBe(false);
   });
 });
+
+test("a Busy block on Sarah's calendar shows under Sarah, not under John", () => {
+  const busy = { id: 10, title: 'Busy', is_busy: true, owner_id: 2, attendees: [] };
+  expect(eventInvolvesPerson(busy, 2)).toBe(true);
+  expect(eventInvolvesPerson(busy, 1)).toBe(false);
+});
+
+test('an attendee listed only by id still counts', () => {
+  expect(eventInvolvesPerson({ owner_id: 1, attendees: [{ id: 3 }] }, 3)).toBe(true);
+});
